@@ -1,6 +1,6 @@
 # HackYeah 2026 — Setup narzędzi
 
-Repo z konfiguracją AI skilli dla całego zespołu. Każdy powinien zainstalować te narzędzia przed hackathonm.
+Repo z AI skillami dla całego zespołu. Sklonuj i skopiuj pliki — gotowe.
 
 ## Filozofia
 
@@ -11,40 +11,25 @@ Repo z konfiguracją AI skilli dla całego zespołu. Każdy powinien zainstalowa
 
 ---
 
-## 1. Wymagania
-
-- [Node.js](https://nodejs.org/) (v18+)
-- [Claude Code](https://claude.ai/code)
-
----
-
-## 2. Instalacja skilli (jednorazowo)
-
-Odpal poniższe komendy — instalują wszystkie narzędzia globalnie.
-
-### Impeccable — jakość wizualna UI
+## Instalacja (jednorazowo)
 
 ```bash
+git clone https://github.com/akai-org/hackyeah2026.git
+cd hackyeah2026
+
+# Skopiuj skille do Claude Code
+cp -r .claude/skills/. ~/.claude/skills/
+
+# Skopiuj skille uniwersalne (Cursor, Copilot, itp.)
+cp -r .agents/skills/. ~/.agents/skills/
+
+# Impeccable — wymaga osobnej instalacji
 npx impeccable install
 ```
 
-Wybierz opcję `[1] Detected only` i `project` gdy zapyta o lokalizację.
-
-### Transitions.dev — gotowe CSS animacje
-
-```bash
-npx skills add Jakubantalik/transitions-dev
-```
-
-### GSAP — profesjonalne animacje JS
-
-```bash
-npx skills add https://github.com/greensock/gsap-skills
-```
-
 ---
 
-## 3. Co masz po instalacji
+## Co masz po instalacji
 
 | Skill | Do czego |
 |---|---|
@@ -61,7 +46,7 @@ npx skills add https://github.com/greensock/gsap-skills
 
 ---
 
-## 4. Workflow na hackathon
+## Workflow na hackathon
 
 ### Krok 1 — init projektu
 ```
@@ -85,7 +70,7 @@ Mów AI wprost o animacjach, a skille aktywują się automatycznie:
 
 ---
 
-## 5. Prompt do wklejenia na początku sesji
+## Prompt do wklejenia na początku sesji
 
 ```
 Jesteś programistą na hackathonie. Twoim głównym celem jest dowiezienie świetnie wyglądającego dema w jak najkrótszym czasie.
