@@ -81,7 +81,7 @@ export default function HomePage() {
       <section
         id="jak-to-dziala"
         aria-labelledby="jak-to-dziala-tytul"
-        className="scroll-mt-6 border-y-(length:--bw) border-deep bg-sage"
+        className="border-y-(length:--bw) border-deep bg-sage"
       >
         <div className="relative mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
           <PaperCloud shape="tall" className="absolute top-8 right-10 hidden w-44 rotate-2 lg:block" />
@@ -105,7 +105,7 @@ export default function HomePage() {
       </section>
 
       {/* Kondycja Małopolski + Indeks Luki Innowacyjnej (Zasobnik wiedzy) */}
-      <section id="kondycja-malopolski" aria-labelledby="kondycja-tytul" className="scroll-mt-6">
+      <section id="kondycja-malopolski" aria-labelledby="kondycja-tytul">
         <div className="mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
           <CutoutText id="kondycja-tytul" text="Kondycja Małopolski" />
           <p className="mt-4 max-w-[60ch] text-lg">
@@ -142,7 +142,7 @@ export default function HomePage() {
       </section>
 
       {/* Co już działa */}
-      <section id="co-juz-dziala" aria-labelledby="co-juz-dziala-tytul" className="scroll-mt-6">
+      <section id="co-juz-dziala" aria-labelledby="co-juz-dziala-tytul">
         <div className="relative mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
           <PaperCloud className="absolute -top-6 right-24 hidden w-52 -rotate-1 lg:block" />
           <FeaturedInnovations headingId="co-juz-dziala-tytul">
@@ -157,7 +157,7 @@ export default function HomePage() {
       </section>
 
       {/* Artykuł dnia */}
-      <section id="artykul-dnia" aria-labelledby="artykul-dnia-tytul" className="scroll-mt-6 border-y-(length:--bw) border-deep bg-sage">
+      <section id="artykul-dnia" aria-labelledby="artykul-dnia-tytul" className="border-y-(length:--bw) border-deep bg-sage">
         <div className="mx-auto max-w-content px-4 py-10 sm:px-6 lg:py-12">
           <article className="mx-auto max-w-3xl border-(length:--bw) border-deep bg-surface p-6 shadow-paper md:p-8">
             <p className="text-sm font-medium text-muted">Artykuł dnia z Biblioteki Innowacji ROPS</p>

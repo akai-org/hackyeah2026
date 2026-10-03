@@ -20,6 +20,19 @@
     overflow-x: clip;
   }
 
+  /* Płynne przewijanie do kotwic (tylko gdy użytkownik nie ogranicza ruchu). Zmiany strony w Next.js
+     przewijają bez animacji dzięki data-scroll-behavior="smooth" na <html>. */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  /* Cel kotwicy nie chowa się pod przyklejonym nagłówkiem. */
+  [id] {
+    scroll-margin-top: calc(var(--header-h) + 1rem);
+  }
+
   ::selection {
     background-color: theme(colors.mint);
     color: theme(colors.ink);

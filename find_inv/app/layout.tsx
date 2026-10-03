@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     // suppressHydrationWarning: skrypt ustawień dostępności może dodać atrybuty data-* przed hydracją.
-    <html lang="pl" className={fontVariables} suppressHydrationWarning>
+    <html lang="pl" className={fontVariables} data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: SIMPLE_MODE_SCRIPT }} />
       </head>
@@ -28,7 +28,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <SimpleModeProvider>
           <AuthProvider>
             <SiteHeader />
-            <main id="main" tabIndex={-1} className="flex-1 scroll-mt-(--header-h) focus:outline-none">
+            <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
               {children}
             </main>
             <SiteFooter />
