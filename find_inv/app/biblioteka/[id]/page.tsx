@@ -27,6 +27,7 @@ import { MiddlemanModal } from "@/components/middleman-modal";
 import { TesterApplyModal } from "@/components/tester-apply-modal";
 import { ForumThread } from "@/components/forum-thread";
 import { Toast, useToast } from "@/components/toast";
+import { TestRequestBox } from "@/components/test-request";
 import { PageBackdrop } from "@/components/page-backdrop";
 import { BackendInnovationCard, type BackendInnovation } from "@/components/backend-innovation-card";
 import { TAG_LABELS } from "@/data/mock";
@@ -272,6 +273,8 @@ export default function InnovationDetailPage() {
                 Drukuj
               </button>
             </div>
+
+            <TestRequestBox innovation={item} />
           </article>
 
           {/* Sidebar */}
