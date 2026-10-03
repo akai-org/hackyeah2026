@@ -23,6 +23,17 @@ Sprawdzone: `next build` OK (19 tras), pytest 28/28, wszystkie strony 200, admin
 
 ---
 
+## [FYI ALL] OpenRouter działa — 2 rzeczy do zrobienia u każdego (A3)
+1. Domyślny model był błędny (`anthropic/claude-haiku-4-5-20251001` → OpenRouter zwraca 400, czat/Middleman/autotagger
+   po cichu spadały na fallbacki). Poprawione na `anthropic/claude-haiku-4.5` w `config.py` i `.env.example`.
+   **Jeśli masz `OPENROUTER_MODEL=` w swoim `.env` — popraw ręcznie.**
+2. Z kluczem w `.env` odpal raz: `cd find_inv_server && python -m data.seed_innovations` → 114 wektorów w ChromaDB (~50 s).
+   Baza i ChromaDB są lokalne, więc każdy, kto odpala demo, musi to zrobić u siebie.
+Sprawdzone: embeddingi OK (1536 dim), /api/match na wektorach (autyzm → 5/5 kart o autyzmie), /api/chat streamuje,
+Middleman zadaje pytania z kontekstem innowacji i gminy.
+
+---
+
 ## STATUS BOARD
 
 | Agent | Robi teraz | Ostatni merge | Blokuje kogo |

@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
 
     openrouter_api_key: str = ""
-    openrouter_model: str = "anthropic/claude-haiku-4-5-20251001"
+    openrouter_model: str = "anthropic/claude-haiku-4.5"
     openrouter_embed_model: str = "openai/text-embedding-3-small"
 
     database_url: str = "sqlite+aiosqlite:///./findinv.db"
