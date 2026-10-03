@@ -22,6 +22,7 @@ export function MiddlemanModal({ innovationId, innovationTitle, onClose }: Props
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [plan, setPlan] = useState<Record<string, unknown> | null>(null);
+  const sessionRef = useRef<string | null>(null);
   const stopRef = useRef<(() => void) | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -32,7 +33,10 @@ export function MiddlemanModal({ innovationId, innovationTitle, onClose }: Props
       innovation_id: innovationId,
       problem_desc: "Chcę wdrożyć tę innowację w swojej instytucji.",
     })
-      .then((data) => setMessages([{ role: "assistant", content: data.first_question }]))
+      .then((data) => {
+        sessionRef.current = data.session_id;
+        setMessages([{ role: "assistant", content: data.first_question }]);
+      })
       .catch(() => setMessages([{ role: "assistant", content: "Ile osób zatrudnia Wasza instytucja?" }]))
       .finally(() => {
         setLoading(false);
@@ -73,29 +77,40 @@ export function MiddlemanModal({ innovationId, innovationTitle, onClose }: Props
     setMessages(newMessages);
     setLoading(true);
 
-    let buffer = "";
+    // Zdarzenia SSE Middlemana: {type: "delta"|"question"|"plan"|"error", content}.
+    // Tekst, który nie jest JSON-em, traktujemy jak fragment odpowiedzi.
+    let streamed = "";
+    const showAssistant = (content: string) =>
+      setMessages((prev) => {
+        const last = prev[prev.length - 1];
+        if (last?.role === "assistant" && prev.length > newMessages.length) {
+          return [...prev.slice(0, -1), { role: "assistant", content }];
+        }
+        return [...prev, { role: "assistant", content }];
+      });
+
     stopRef.current?.();
     stopRef.current = apiStream(
       "/api/middleman/answer",
-      { messages: newMessages, answer: text },
+      { session_id: sessionRef.current, innovation_id: innovationId, messages: newMessages, answer: text },
       (chunk) => {
-        buffer += chunk;
+        let event: { type?: string; content?: unknown } | null = null;
         try {
-          const parsed = JSON.parse(buffer);
-          if (parsed?.type === "plan") {
-            setPlan(parsed.content);
-            setLoading(false);
-            return;
-          }
+          event = JSON.parse(chunk);
         } catch {}
-        setMessages((prev) => {
-          const last = prev[prev.length - 1];
-          if (last?.role === "assistant") {
-            return [...prev.slice(0, -1), { role: "assistant", content: buffer }];
-          }
-          return [...prev, { role: "assistant", content: buffer }];
-        });
         setLoading(false);
+        if (event?.type === "plan" && event.content && typeof event.content === "object") {
+          setPlan(event.content as Record<string, unknown>);
+          return;
+        }
+        if (event?.type === "question" || event?.type === "error") {
+          streamed = String(event.content ?? "");
+        } else if (event?.type === "delta") {
+          streamed += String(event.content ?? "");
+        } else {
+          streamed += chunk;
+        }
+        showAssistant(streamed);
       },
     );
   }
@@ -126,6 +141,7 @@ export function MiddlemanModal({ innovationId, innovationTitle, onClose }: Props
           <div className="mt-6 space-y-4 text-sm">
             <p className="font-bold text-leaf">Plan wdrożenia gotowy</p>
             {([
+              ["Cel", plan.goal],
               ["Potrzebny personel", plan.staff_needed],
               ["Szacowany koszt", plan.estimated_cost],
               ["Lokalizacja", plan.location_suggestions],
@@ -146,6 +162,19 @@ export function MiddlemanModal({ innovationId, innovationTitle, onClose }: Props
                   {(plan.steps as string[]).map((s, i) => <li key={i}>{s}</li>)}
                 </ol>
               </div>
+            )}
+            {([
+              ["Ryzyka", plan.risks],
+              ["Do uzupełnienia", plan.missing],
+            ] as [string, unknown][]).map(([label, items]) =>
+              Array.isArray(items) && items.length ? (
+                <div key={label} className="border-l-4 border-leaf pl-4">
+                  <p className="font-bold text-muted">{label}</p>
+                  <ul className="mt-1 list-disc pl-5 space-y-1">
+                    {(items as string[]).map((item, i) => <li key={i}>{item}</li>)}
+                  </ul>
+                </div>
+              ) : null,
             )}
           </div>
         ) : (

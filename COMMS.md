@@ -89,6 +89,18 @@
 
 <!-- Dopisuj wpisy tutaj na górze -->
 
+[DONE] Middleman real (branch agent-5/middleman-real, na bazie main):
+  POST /api/middleman/start {innovation_id, problem_desc, institution_type?, location?}
+      → {session_id, first_question, question_index, max_questions, innovation, mode: "llm"|"local"}
+  POST /api/middleman/answer (SSE) {session_id?, innovation_id?, messages?, answer, finish?}
+      zdarzenia: {type:"delta"|"question"|"plan"|"error", content} | koniec `data: [DONE]`
+      Bez session_id (albo po restarcie serwera) sesja odtwarzana z `messages`.
+  Maks. 3 pytania, potem plan (goal, staff_needed, estimated_cost, location_suggestions, steps,
+      phases 30/60/90, timeline, funding_hints, risks, missing). Innowacja z SQLite (Innovation), fallback mocki.
+  LLM: app.llm.chat (A1). Bez OPENROUTER_API_KEY albo przy błędzie → lokalny generator planu.
+  Frontend: components/middleman-modal.tsx parsuje zdarzenia SSE, wysyła session_id, pokazuje Cel/Ryzyka/Do uzupełnienia.
+[FYI] Admin: zostaje wersja A1 z main (routers/admin.py na SQLite + /admin/*). Mój admin_panel/admin_store w pamięci porzucony.
+
 ```
 [DONE] — napisz gdy /api/middleman/start działa (to WOW feature na demo)
 [DONE] — napisz gdy /api/admin/* działa
