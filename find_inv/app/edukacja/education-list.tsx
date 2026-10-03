@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { BookOpen, ExternalLink, FileText, PlayCircle } from "lucide-react";
+import { BookOpen, ExternalLink, FileText, PlayCircle, X } from "lucide-react";
 
 import { API_URL } from "@/lib/api";
+import { matchesSearchTags, normalizeText, parseSearchTags, queryStems, type SearchTag } from "@/lib/search-tags";
 
 // Materiały edukacyjne z GET /api/resources?type=education (Zasobnik). Ten endpoint zwraca { items, total }
 // bez koperty { data }, dlatego zwykły fetch zamiast apiFetch.
@@ -43,15 +44,12 @@ function ResourceLink({ href, icon: Icon, children }: { href: string; icon: type
   );
 }
 
-function normalize(text: string) {
-  return text.toLocaleLowerCase("pl").normalize("NFD").replace(/\p{Diacritic}/gu, "");
-}
-
-export function EducationList({ initialQuery = "" }: { initialQuery?: string }) {
+export function EducationList({ initialQuery = "", initialTags = "" }: { initialQuery?: string; initialTags?: string }) {
   const [items, setItems] = useState<EducationResource[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [area, setArea] = useState("");
   const [query, setQuery] = useState(initialQuery);
+  const [tags, setTags] = useState<SearchTag[]>(() => parseSearchTags(initialTags));
 
   useEffect(() => {
     let active = true;
@@ -69,11 +67,12 @@ export function EducationList({ initialQuery = "" }: { initialQuery?: string }) 
     return [...all].sort((a, b) => a[1].localeCompare(b[1], "pl"));
   }, [items]);
 
-  const words = normalize(query).split(/\s+/).filter(Boolean);
+  const words = queryStems(query);
   const visible = (items ?? []).filter((item) => {
     if (area && !item.areas.some((entry) => entry.slug === area)) return false;
-    const haystack = normalize(`${item.title} ${item.summary} ${item.content} ${item.tags.join(" ")}`);
-    return words.every((word) => haystack.includes(word));
+    const text = `${item.title} ${item.summary} ${item.content} ${item.tags.join(" ")}`;
+    const haystack = normalizeText(text);
+    return words.every((word) => haystack.includes(word)) && matchesSearchTags(text, tags);
   });
 
   if (failed) {
@@ -100,6 +99,23 @@ export function EducationList({ initialQuery = "" }: { initialQuery?: string }) 
 
   return (
     <>
+      {tags.length > 0 && (
+        <div className="mb-6 flex flex-wrap items-center gap-2" aria-label="Wybrane tagi">
+          <span className="font-bold text-deep">Tagi:</span>
+          {tags.map((tag) => (
+            <button
+              key={tag.label}
+              type="button"
+              onClick={() => setTags((list) => list.filter((item) => item !== tag))}
+              aria-label={`Usuń tag ${tag.label}`}
+              className="inline-flex min-h-10 items-center gap-1 rounded-full border-2 border-deep bg-mint px-3 text-sm font-semibold text-deep hover:bg-sage"
+            >
+              #{tag.label}
+              <X aria-hidden="true" className="size-4" />
+            </button>
+          ))}
+        </div>
+      )}
       <label className="mb-6 grid max-w-md gap-1 font-bold text-deep">
         Szukaj materiału
         <input

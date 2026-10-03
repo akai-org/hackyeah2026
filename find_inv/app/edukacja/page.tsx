@@ -13,7 +13,9 @@ function first(value: string | string[] | undefined): string {
 }
 
 export default async function EducationPage({ searchParams }: PageProps<"/edukacja">) {
-  const query = first((await searchParams).q);
+  const params = await searchParams;
+  const query = first(params.q);
+  const tags = first(params.tagi);
 
   return (
     <>
@@ -31,7 +33,7 @@ export default async function EducationPage({ searchParams }: PageProps<"/edukac
           <h2 id="materialy-tytul" className="sr-only">
             Materiały edukacyjne
           </h2>
-          <EducationList key={query} initialQuery={query} />
+          <EducationList key={`${query}|${tags}`} initialQuery={query} initialTags={tags} />
         </div>
       </section>
     </>

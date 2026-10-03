@@ -15,7 +15,7 @@ function first(value: string | string[] | undefined): string {
 
 export default async function ChallengesPage({ searchParams }: PageProps<"/wyzwania">) {
   const params = await searchParams;
-  const initial = { query: first(params.q), powiat: first(params.powiat) };
+  const initial = { query: first(params.q), powiat: first(params.powiat), tags: first(params.tagi) };
 
   return (
     <div className="min-h-screen">
@@ -44,7 +44,12 @@ export default async function ChallengesPage({ searchParams }: PageProps<"/wyzwa
             Obszary wyzwań
           </h2>
           {/* key: nowe wyszukiwanie z nagłówka na tej samej stronie zaczyna od nowa. */}
-          <ChallengesView key={JSON.stringify(initial)} initialQuery={initial.query} initialPowiat={initial.powiat} />
+          <ChallengesView
+            key={JSON.stringify(initial)}
+            initialQuery={initial.query}
+            initialPowiat={initial.powiat}
+            initialTags={initial.tags}
+          />
         </div>
       </section>
     </div>

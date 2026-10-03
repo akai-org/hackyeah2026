@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { ExternalLink, Search } from "lucide-react";
+import { ExternalLink, Search, X } from "lucide-react";
 
 import { formatNumber } from "@/components/malopolska-stats";
 import type { Challenge } from "@/data/innovations";
 import { apiFetch } from "@/lib/api";
+import { matchesSearchTags, normalizeText, parseSearchTags, queryStems, type SearchTag } from "@/lib/search-tags";
 
 // Wyzwania społeczne z GET /api/challenges, pogrupowane po obszarze. Każda liczba ma powiat, rok i źródło
 // z linkiem. Bez danych z API — komunikat, nie przykładowe karty.
@@ -56,15 +57,20 @@ function SourceLink({ source, year }: { source: string; year?: number }) {
   );
 }
 
-function normalize(text: string) {
-  return text.toLocaleLowerCase("pl").normalize("NFD").replace(/\p{Diacritic}/gu, "");
-}
-
-export function ChallengesView({ initialQuery = "", initialPowiat = "" }: { initialQuery?: string; initialPowiat?: string }) {
+export function ChallengesView({
+  initialQuery = "",
+  initialPowiat = "",
+  initialTags = "",
+}: {
+  initialQuery?: string;
+  initialPowiat?: string;
+  initialTags?: string;
+}) {
   const [challenges, setChallenges] = useState<ApiChallenge[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [powiat, setPowiat] = useState(initialPowiat);
   const [query, setQuery] = useState(initialQuery);
+  const [tags, setTags] = useState<SearchTag[]>(() => parseSearchTags(initialTags));
 
   useEffect(() => {
     let active = true;
@@ -83,11 +89,13 @@ export function ChallengesView({ initialQuery = "", initialPowiat = "" }: { init
 
   const groups = useMemo(() => {
     const byArea = new Map<string, Group>();
-    const words = normalize(query).split(/\s+/).filter(Boolean);
+    const words = queryStems(query);
     for (const item of challenges ?? []) {
       if (powiat && item.powiat !== powiat) continue;
-      const haystack = normalize(`${item.title} ${item.description} ${item.area} ${item.powiat}`);
+      const text = `${item.title} ${item.description} ${item.area} ${item.indicator_unit} ${item.powiat}`;
+      const haystack = normalizeText(text);
       if (!words.every((word) => haystack.includes(word))) continue;
+      if (!matchesSearchTags(text, tags)) continue;
       const group = byArea.get(item.area) ?? {
         area: item.area,
         title: item.title,
@@ -103,7 +111,7 @@ export function ChallengesView({ initialQuery = "", initialPowiat = "" }: { init
     }
     // Najpierw obszary, które dotyczą najwięcej powiatów.
     return [...byArea.values()].sort((a, b) => b.items.length - a.items.length);
-  }, [challenges, powiat, query]);
+  }, [challenges, powiat, query, tags]);
 
   const sources = useMemo(
     () =>
@@ -138,6 +146,23 @@ export function ChallengesView({ initialQuery = "", initialPowiat = "" }: { init
 
   return (
     <>
+      {tags.length > 0 && (
+        <div className="mb-6 flex flex-wrap items-center gap-2" aria-label="Wybrane tagi">
+          <span className="font-bold text-deep">Tagi:</span>
+          {tags.map((tag) => (
+            <button
+              key={tag.label}
+              type="button"
+              onClick={() => setTags((list) => list.filter((item) => item !== tag))}
+              aria-label={`Usuń tag ${tag.label}`}
+              className="inline-flex min-h-10 items-center gap-1 rounded-full border-2 border-deep bg-mint px-3 text-sm font-semibold text-deep hover:bg-sage"
+            >
+              #{tag.label}
+              <X aria-hidden="true" className="size-4" />
+            </button>
+          ))}
+        </div>
+      )}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-wrap items-end gap-4">
           <label className="grid gap-1 font-bold text-deep">
@@ -180,6 +205,7 @@ export function ChallengesView({ initialQuery = "", initialPowiat = "" }: { init
             onClick={() => {
               setQuery("");
               setPowiat("");
+              setTags([]);
             }}
             className="font-bold text-leaf underline underline-offset-4 hover:text-deep"
           >
