@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Archive, ExternalLink, FileText, MessageSquareText, Video } from "lucide-react";
 
+import { TestRequestBox } from "@/components/test-request";
 import { buttonVariants } from "@/components/ui/button";
 import { COST_LABELS, type InnovationCard } from "@/data/innovations";
 import { TAG_LABELS, type Tag } from "@/data/mock";
@@ -188,6 +189,8 @@ export function InnovationDetail({ id }: { id: number }) {
           </a>
         )}
       </div>
+
+      <TestRequestBox innovation={innovation} />
     </article>
   );
 }

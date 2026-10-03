@@ -2,11 +2,24 @@ import type { Metadata } from "next";
 
 import { CutoutText } from "@/components/cutout-text";
 import { ForumBoard } from "@/components/forum-board";
+import { ForumThread } from "@/components/forum-thread";
 import { PageBackdrop } from "@/components/page-backdrop";
 
 export const metadata: Metadata = { title: "Forum" };
 
-export default function ForumPage() {
+export default async function ForumPage({ searchParams }: PageProps<"/forum">) {
+  const params = await searchParams;
+  const innowacja = Array.isArray(params.innowacja) ? params.innowacja[0] : params.innowacja;
+  const innovationId = innowacja ? Number(innowacja) : null;
+
+  if (innovationId && !Number.isNaN(innovationId)) {
+    return (
+      <PageBackdrop layout="corner-left">
+        <ForumThread innovationId={innovationId} />
+      </PageBackdrop>
+    );
+  }
+
   return (
     <PageBackdrop layout="corner-left">
       <div className="mx-auto max-w-content px-4 py-16 sm:px-6">
