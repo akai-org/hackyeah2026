@@ -7,7 +7,6 @@ import { GapIndex } from "@/components/gap-index";
 import { MalopolskaStatsTiles } from "@/components/malopolska-stats";
 import { PaperCloud } from "@/components/paper-cloud";
 import { PowiatMap } from "@/components/powiat-map";
-import { RotatingAudienceHeading } from "@/components/rotating-audience-heading";
 import { SearchForm } from "@/components/search-form";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -145,11 +144,11 @@ export default function HomePage() {
       <section id="co-juz-dziala" aria-labelledby="co-juz-dziala-tytul" className="scroll-mt-6">
         <div className="relative mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
           <PaperCloud className="absolute -top-6 right-24 hidden w-52 -rotate-1 lg:block" />
-          <RotatingAudienceHeading id="co-juz-dziala-tytul" />
-          <p className="mt-4 max-w-[60ch] text-lg">
-            Kilka innowacji z Biblioteki. Każda ma opis, informację, dla kogo jest, ile kosztuje i gdzie już działa.
-          </p>
-          <FeaturedInnovations />
+          <FeaturedInnovations headingId="co-juz-dziala-tytul">
+            <p className="mt-4 max-w-[60ch] text-lg">
+              Kilka innowacji z Biblioteki. Każda ma opis, informację, dla kogo jest, ile kosztuje i gdzie już działa.
+            </p>
+          </FeaturedInnovations>
           <Link href="/biblioteka" className={buttonVariants({ variant: "secondary", className: "mt-10" })}>
             Zobacz całą bibliotekę
           </Link>
