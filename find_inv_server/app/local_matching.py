@@ -286,6 +286,31 @@ _FRAMING = re.compile(
 )
 
 
+# Wulgarne idiomy → neutralny odpowiednik, żeby sens skargi został („mają nas w dupie” → „ignorują nas”).
+_PROFANE_IDIOMS = [
+    (re.compile(r"\bma(?:\s+(nas|to|go|ją|ich|mnie))?\s+w\s+dupie\b", re.IGNORECASE), "ignoruje"),
+    (re.compile(r"\bmają(?:\s+(nas|to|go|ją|ich|mnie))?\s+w\s+dupie\b", re.IGNORECASE), "ignorują"),
+    (re.compile(r"\bchuj\s+wie\b|\bhuj\s+wie\b|\bcholera\s+wie\b", re.IGNORECASE), "nie wiadomo"),
+    # opisowe wulgaryzmy nic nie dodają do sedna — znikają („autobus jeździ do dupy” → „autobus jeździ”)
+    (re.compile(r"\s*\b(?:do\s+dupy|do\s+bani|chujow[a-ząęółśżźćń]*|gównian[a-ząęółśżźćń]*)\b", re.IGNORECASE), ""),
+]
+# Przekleństwa i wulgaryzmy (rdzenie) — wypadają w całości, także jako przymiotnik („ta pieprzona gmina” → „ta gmina”).
+_PROFANITY = re.compile(
+    r"\b(?:kurw|skurw|wkurw|chuj|huj|pierdol|pierdziel|spierdal|wypierdal|zapierdal|jeb|zajeb|pojeb|wyjeb|odjeb|"
+    r"pizd|cholern|choler|pieprzon|zasran|gówn|sraj|srać|debil|idiot|kurde|kurczę|kurna|motyla\s+noga)"
+    r"[a-ząęółśżźćń]*(?:\s+mać)?\b"
+    # „dupa” tylko w tych formach — „Dupin”, „dupla” to nie przekleństwa
+    r"|\b(?:dupa|dupy|dupie|dupę|dupą|dupek|dupku|dupki)\b",
+    re.IGNORECASE,
+)
+
+
+def strip_profanity(text: str) -> str:
+    for pattern, replacement in _PROFANE_IDIOMS:
+        text = pattern.sub(lambda m: replacement + (f" {m.group(1)}" if m.lastindex and m.group(1) else ""), text)
+    return re.sub(r"\s+", " ", _PROFANITY.sub(" ", text)).strip()
+
+
 def _drop_framing(text: str) -> str:
     previous = None
     while text != previous:
@@ -302,6 +327,21 @@ def _drop_filler_runs(text: str) -> str:
     return _FILLER_RUN.sub(replace, text)
 
 
+# Przecinek przed spójnikami, przed którymi stawia się go po polsku („ignorują nas, a mama …”, „wiem, gdzie …”).
+_COMMA_BEFORE = re.compile(
+    r"(?<=[a-ząęółśżźćń])\s+(a|ale|bo|że|więc|który|która|które|którzy|którego|której|gdzie|żeby|aby|ponieważ|gdyż|"
+    r"jeśli|jeżeli|chociaż|choć|dlatego|lecz)\s+(?=\S)",
+    re.IGNORECASE,
+)
+# Wyjątki: „przez to że”, „tak że”, „mimo że”, „zanim”, „to że” — tam przecinek przed „że” jest błędem.
+_NO_COMMA_BEFORE_ZE = re.compile(r"\b(przez\s+to|tak|mimo|chyba|to|zwłaszcza|szczególnie|tylko|jedynie),\s+że\b", re.IGNORECASE)
+
+
+def _fix_punctuation(text: str) -> str:
+    text = _COMMA_BEFORE.sub(lambda m: f", {m.group(1)} ", text)
+    return _NO_COMMA_BEFORE_ZE.sub(lambda m: f"{m.group(1)} że", text)
+
+
 def _fix_casing(text: str) -> str:
     words = text.split(" ")
     for index in range(1, len(words)):
@@ -312,8 +352,8 @@ def _fix_casing(text: str) -> str:
 
 
 def strip_fillers(text: str) -> str:
-    """Wyrzuca wtrącenia mowy („ten no tak jakby”, „yyy”, „wiesz”, „w sumie”) bez skracania treści."""
-    cleaned = _drop_filler_runs(text)
+    """Wyrzuca wtrącenia mowy („ten no tak jakby”, „yyy”, „wiesz”, „w sumie”) i przekleństwa, bez skracania treści."""
+    cleaned = _drop_filler_runs(strip_profanity(text))
     cleaned = _FILLER_PRONOUNS.sub(" ", cleaned)
     cleaned = _TOPIC_FILLERS.sub(" ", cleaned)
     cleaned = _HESITATIONS.sub(" ", cleaned)
@@ -324,7 +364,7 @@ def strip_fillers(text: str) -> str:
     cleaned = re.sub(r",\s+(i|oraz|ani)\b", r" \1", cleaned)  # po polsku bez przecinka przed „i”
     cleaned = re.sub(r"\s+", " ", cleaned).strip(" ,")
     cleaned = _drop_framing(cleaned) or cleaned
-    cleaned = _fix_casing(cleaned)
+    cleaned = _fix_punctuation(_fix_casing(cleaned))
     causal = _CAUSAL_LEAD.match(cleaned)
     if causal:
         cleaned = f"{causal.group(1)}, więc {causal.group(2)}"
@@ -338,7 +378,7 @@ CONDENSE_MAX_WORDS = 25
 
 
 def _clauses(text: str) -> list[str]:
-    cleaned = _FILLER_PRONOUNS.sub(" ", _drop_filler_runs(text))
+    cleaned = _FILLER_PRONOUNS.sub(" ", _drop_filler_runs(strip_profanity(text)))
     cleaned = _HESITATIONS.sub(" ", _TOPIC_FILLERS.sub(" ", cleaned)).strip(" ,")
     cleaned = _drop_framing(cleaned) or cleaned
     cleaned = _TOPIC_FILLERS.sub(",", cleaned)
@@ -363,7 +403,8 @@ def _clauses(text: str) -> list[str]:
 _PROBLEM_SIGNAL = re.compile(
     r"\bnie\s+(?:ma|maja|mam|moze|mozna|moga|moge|umie|umieja|umiem|potrafi|wie|wiem|wiedza|stac|daje|dziala|"
     r"wychodzi|wychodza|chce|dojedzie|slyszy|widzi|radzi)\b|\bbrak|\bbrakuje"
-    r"|\btrudn|\bproblem|\bnikt\b|\bsamotn|\bboi\b|\bboja\b|\bkryzys|\bdepresj|\bnie\s+radzi|\bza\s+daleko",
+    r"|\btrudn|\bproblem|\bnikt\b|\bsamotn|\bboi\b|\bboja\b|\bkryzys|\bdepresj|\bnie\s+radzi|\bza\s+daleko"
+    r"|\bnie\s+wiadomo|\bszuka\w*\s+pomocy|\bignoruj|\bnic\s+nie\s+robi",
 )
 
 

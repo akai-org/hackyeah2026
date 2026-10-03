@@ -283,9 +283,11 @@ async def match(body: MatchRequest, background: BackgroundTasks):
 
 VOICE_FIX_PROMPT = (
     "Poprawiasz transkrypcję mowy po polsku. Popraw gramatykę, interpunkcję i oczywiste błędy "
-    "rozpoznawania mowy, NIE zmieniaj sensu ani nie dopisuj treści. "
+    "rozpoznawania mowy, NIE zmieniaj sensu ani nie dopisuj treści. Zdania mają być poprawne gramatycznie "
+    "i mieć sens — popraw szyk i odmianę, jeśli trzeba. "
     "Usuń wtrącenia mowy potocznej bez treści, np. „yyy”, „no”, „ten no”, „tak jakby”, „jakby”, „wiesz”, „w sumie”, "
-    "„generalnie”, „znaczy”, „po prostu”. "
+    "„generalnie”, „znaczy”, „po prostu”. Usuń przekleństwa i wulgaryzmy — wulgarny zwrot zastąp neutralnym "
+    "o tym samym sensie (np. „mają nas w dupie” → „ignorują nas”). "
     'Odpowiedz wyłącznie JSON: {"corrected": "...", "confidence": 0.0-1.0}'
 )
 
@@ -309,7 +311,10 @@ VOICE_CONDENSE_PROMPT = (
     "powtórzeniami i wtrąceniami. Wyciągnij SEDNO: jedno jasne zdanie (najwyżej 25 słów) — kogo dotyczy problem, "
     "na czym polega i gdzie, jeśli padło. Pomiń dygresje, historię, emocje mówiącego i szczegóły bez znaczenia "
     "dla problemu. Zawsze usuń wtrącenia bez treści, np. „yyy”, „no”, „ten no”, „tak jakby”, „jakby”, „wiesz”, "
-    "„w sumie”. Popraw gramatykę i błędy rozpoznawania mowy. Pisz z perspektywy mówiącego, jego słowami. "
+    "„w sumie”. Usuń przekleństwa i wulgaryzmy — wulgarny zwrot zastąp neutralnym o tym samym sensie "
+    "(np. „mają nas w dupie” → „ignorują nas”). Popraw gramatykę i błędy rozpoznawania mowy. "
+    "Pisz z perspektywy mówiącego, jego słowami. Każde zdanie ma być poprawne gramatycznie, z poprawną "
+    "interpunkcją i spójne logicznie — tak, żeby czytający od razu zrozumiał, o co chodzi. "
     "NIE dodawaj informacji, których nie było, NIE oceniaj. Jeśli wypowiedź już jest krótka i rzeczowa, tylko ją popraw. "
     'Odpowiedz wyłącznie JSON: {"corrected": "...", "condensed": true|false, "confidence": 0.0-1.0}'
 )

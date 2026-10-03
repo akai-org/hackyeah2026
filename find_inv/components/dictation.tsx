@@ -89,6 +89,8 @@ export function useDictation(
   const [message, setMessage] = useState("");
   const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
   const recognitionRef = useRef<Recognition | null>(null);
+  // Numer nagrania: poprawka, która spóźni się po rozpoczęciu nowego nagrania, nie nadpisze nowego tekstu.
+  const sessionRef = useRef(0);
   const silenceRef = useRef<number | null>(null);
 
   useEffect(
@@ -123,7 +125,13 @@ export function useDictation(
       recognitionRef.current?.stop();
       return;
     }
-    if (state === "checking" || state === "confirm") return;
+    // Tryb na żywo: nowe nagranie zaczyna od czystej karty — znika poprzednie pytanie i tekst w polu.
+    if (options.live) {
+      setSuggestion(null);
+      setText(() => "");
+    } else if (state === "checking" || state === "confirm") {
+      return;
+    }
 
     const RecognitionImpl = getRecognition();
     if (!RecognitionImpl) {
@@ -205,9 +213,11 @@ export function useDictation(
       }
       // Koniec mówienia: poprawka z LLM (albo prosta poprawka bez klucza) i pytanie do użytkownika.
       const original = spoken;
+      const session = sessionRef.current;
       setState("checking");
       setMessage("Sprawdzam tekst…");
       void correctTranscript(original, Boolean(options.condense)).then(({ corrected, condensed }) => {
+        if (session !== sessionRef.current) return; // w międzyczasie zaczęło się nowe nagranie
         if (corrected && corrected !== original) {
           setSuggestion({ original, corrected, condensed });
           setState("confirm");
@@ -220,6 +230,7 @@ export function useDictation(
     };
 
     recognitionRef.current = recognition;
+    sessionRef.current += 1;
     setSuggestion(null);
     setState("recording");
     setMessage(live ? "Słucham… Tekst pojawia się w polu na bieżąco." : "Nagrywam…");
@@ -244,14 +255,18 @@ export function DictationButton({ dictation, className }: { dictation: Dictation
       type="button"
       variant="secondary"
       onClick={dictation.toggle}
-      // Najpierw odpowiedź na „Czy o to chodziło?”, potem kolejne dyktowanie.
-      disabled={dictation.state === "checking" || dictation.state === "confirm"}
       className={className}
     >
       {dictation.state === "checking" ? (
         <>
           <Loader2 aria-hidden="true" className="animate-spin" />
           Sprawdzam…
+          <span className="sr-only"> — kliknij, żeby nagrać od nowa</span>
+        </>
+      ) : dictation.state === "confirm" ? (
+        <>
+          <Mic aria-hidden="true" />
+          Nagraj od nowa
         </>
       ) : dictation.state === "recording" ? (
         <>

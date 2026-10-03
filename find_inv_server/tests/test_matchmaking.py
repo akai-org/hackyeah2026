@@ -149,7 +149,7 @@ def test_voice_fix_makes_rambling_sentence_clear():
     said = "przez to że mama mieszka tak jakby no ten tego sama na wsi to jakby no nie ma Jak dojść do lekarza"
     assert fix(said)["corrected"] == "Mama mieszka sama na wsi, więc nie ma jak dojść do lekarza."
     # treść z tych samych słów zostaje
-    assert fix("to jest problem bo nikt tego nie robi")["corrected"] == "To jest problem bo nikt tego nie robi."
+    assert fix("to jest problem bo nikt tego nie robi")["corrected"] == "To jest problem, bo nikt tego nie robi."
     assert fix("syn ma piętnaście lat i no tego w ogóle nie wychodzi z pokoju")["corrected"] == (
         "Syn ma piętnaście lat i w ogóle nie wychodzi z pokoju."
     )
@@ -163,7 +163,7 @@ def test_voice_fix_extracts_the_gist():
         "a poza tym to wiesz mało kto ma internet więc nie wiedzą co się dzieje"
     )
     assert gmina["condensed"] and gmina["corrected"] == (
-        "U nas w gminie jest dużo starszych ludzi którzy są sami i nie mają z kim porozmawiać."
+        "U nas w gminie jest dużo starszych ludzi, którzy są sami i nie mają z kim porozmawiać."
     )
     mama = fix(RAMBLING)["corrected"]
     assert len(mama.split()) <= 25
@@ -185,5 +185,21 @@ def test_voice_fix_drops_framing_but_keeps_meaning():
         assert fix(said)["corrected"] == gist, said
     # treść, nie zapowiedź: „problem z czymś”, „to jest problem” i pytania zostają
     assert fix("jest problem z dojazdem do lekarza dla seniorów")["corrected"] == "Jest problem z dojazdem do lekarza dla seniorów."
-    assert fix("to jest problem bo nikt tego nie robi")["corrected"] == "To jest problem bo nikt tego nie robi."
+    assert fix("to jest problem bo nikt tego nie robi")["corrected"] == "To jest problem, bo nikt tego nie robi."
     assert fix("chciałam zapytać czy jest pomoc dla samotnych seniorów")["corrected"] == "Czy jest pomoc dla samotnych seniorów?"
+
+
+def test_voice_fix_removes_profanity_and_fixes_punctuation():
+    fix = lambda text: client.post("/api/voice-fix", json={"transcript": text, "condense": True}).json()["data"]  # noqa: E731
+    assert fix("w gminie mają nas w dupie a mama nie ma jak dojechać do lekarza")["corrected"] == (
+        "W gminie ignorują nas, a mama nie ma jak dojechać do lekarza."
+    )
+    assert fix("ta cholerna gmina nic nie robi i chuj wie gdzie szukać pomocy")["corrected"] == (
+        "Ta gmina nic nie robi i nie wiadomo, gdzie szukać pomocy."
+    )
+    assert fix("autobus jeździ do dupy raz dziennie")["corrected"] == "Autobus jeździ raz dziennie."
+    assert fix("syn mówi że nikt go nie rozumie bo w szkole nie ma psychologa")["corrected"] == (
+        "Syn mówi, że nikt go nie rozumie, bo w szkole nie ma psychologa."
+    )
+    # nazwy własne i zwykłe słowa podobne do wulgaryzmów zostają
+    assert "Dupinie" in fix("mieszkamy w Dupinie koło Krakowa")["corrected"]
