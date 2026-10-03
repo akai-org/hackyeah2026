@@ -5,9 +5,9 @@ import { CutoutText } from "@/components/cutout-text";
 import { FeaturedInnovations } from "@/components/featured-innovations";
 import { GapIndex } from "@/components/gap-index";
 import { MalopolskaStatsTiles } from "@/components/malopolska-stats";
-import { Monstera } from "@/components/monstera";
 import { PaperCloud } from "@/components/paper-cloud";
 import { PowiatMap } from "@/components/powiat-map";
+import { RotatingAudienceHeading } from "@/components/rotating-audience-heading";
 import { SearchForm } from "@/components/search-form";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -47,14 +47,7 @@ export default function HomePage() {
     <>
       {/* Hero */}
       <section aria-labelledby="hero-tytul" className="relative overflow-hidden">
-        {/* Mobile i tablet: jeden mały liść w rogu, nad nagłówkiem. */}
-        <Monstera
-          size="small"
-          color="leaf"
-          className="absolute -top-8 -right-10 w-28 rotate-[200deg] sm:w-32 lg:hidden"
-        />
-
-        <div className="relative mx-auto grid max-w-content gap-6 px-4 pt-20 pb-16 sm:px-6 lg:grid-cols-[minmax(0,40rem)_1fr] lg:gap-0 lg:pt-20 lg:pb-24">
+        <div className="relative mx-auto max-w-content px-4 pt-20 pb-16 sm:px-6 lg:pt-20 lg:pb-24">
           <div>
             <CutoutText id="hero-tytul" as="h1" size="hero" text="Z czym masz kłopot?" animate />
             <p className="mt-6 max-w-[38ch] text-lg">
@@ -81,18 +74,6 @@ export default function HomePage() {
             </nav>
           </div>
 
-          {/* Desktop: duży liść ucięty przez prawą krawędź ekranu, min. 24 px od treści. */}
-          <div aria-hidden="true" className="relative hidden lg:block">
-            {/* Chmurki wypełniają pustą przestrzeń pod liśćmi, z dala od pola wyszukiwania. */}
-            <PaperCloud className="absolute top-[35rem] left-6 w-60 -rotate-2" />
-            <PaperCloud shape="tall" color="mint" className="absolute top-[44rem] left-[18rem] w-36 rotate-3" />
-            <Monstera
-              size="small"
-              color="mint"
-              className="simple-hidden absolute top-72 left-48 w-72 rotate-[150deg]"
-            />
-            <Monstera size="hero" color="leaf" outlined className="absolute -top-6 left-10 rotate-[-28deg]" />
-          </div>
         </div>
       </section>
 
@@ -164,7 +145,7 @@ export default function HomePage() {
       <section id="co-juz-dziala" aria-labelledby="co-juz-dziala-tytul" className="scroll-mt-6">
         <div className="relative mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
           <PaperCloud className="absolute -top-6 right-24 hidden w-52 -rotate-1 lg:block" />
-          <CutoutText id="co-juz-dziala-tytul" text="Co już działa" />
+          <RotatingAudienceHeading id="co-juz-dziala-tytul" />
           <p className="mt-4 max-w-[60ch] text-lg">
             Kilka innowacji z Biblioteki. Każda ma opis, informację, dla kogo jest, ile kosztuje i gdzie już działa.
           </p>

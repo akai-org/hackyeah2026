@@ -13,7 +13,6 @@ const NAV_LINKS = [
   { href: "/biblioteka", label: "Biblioteka" },
   { href: "/kreator", label: "Kreator pomysłów" },
   { href: "/forum", label: "Forum" },
-  { href: "/testerzy", label: "Zostań testerem" },
 ];
 
 const SEARCH_TAGS = ["Aplikacja", "Małe firmy", "Niewidomi", "Seniorzy", "Transport", "Zdrowie"];
@@ -28,8 +27,13 @@ export function SiteHeader() {
   const [searchPlaceholder, setSearchPlaceholder] = useState("Szukaj");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const { user } = useAuth();
-  // Panel ROPS widać w menu tylko po zalogowaniu jako admin.
-  const links = user?.role === "admin" ? [...NAV_LINKS, { href: "/admin", label: "Panel ROPS" }] : NAV_LINKS;
+  // Panel ROPS widać w menu tylko po zalogowaniu jako admin, panel testera — jako tester.
+  const links =
+    user?.role === "admin"
+      ? [...NAV_LINKS, { href: "/admin", label: "Panel ROPS" }]
+      : user?.role === "tester"
+        ? [...NAV_LINKS, { href: "/testerzy/panel", label: "Panel testera" }]
+        : NAV_LINKS;
   const buttonRef = useRef<HTMLButtonElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const closeSearchRef = useRef<HTMLButtonElement>(null);

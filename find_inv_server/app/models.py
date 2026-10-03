@@ -145,3 +145,25 @@ class ForumPost(Base):
     author_name: Mapped[str] = mapped_column(String(128), default="Gość")
     badge: Mapped[str] = mapped_column(String(32), default="user")  # user|tester|admin|consultant
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class TestReport(Base):
+    """Tester zgłasza się do konkretnej innowacji, admin ROPS go przypisuje (albo odrzuca), potem tester ją ocenia."""
+
+    __tablename__ = "test_reports"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), index=True)
+    innovation_id: Mapped[int] = mapped_column(Integer, ForeignKey("innovations.id"))
+    status: Mapped[str] = mapped_column(String(32), default="requested")  # requested|assigned|rejected|submitted
+    motivation: Mapped[str | None] = mapped_column(Text, nullable=True)
+    rating: Mapped[int | None] = mapped_column(Integer, nullable=True)  # 1–5
+    what_worked: Mapped[str | None] = mapped_column(Text, nullable=True)
+    improvements: Mapped[str | None] = mapped_column(Text, nullable=True)
+    cost_note: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    submitted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    innovation: Mapped["Innovation"] = relationship("Innovation")
+    user: Mapped["User"] = relationship("User")

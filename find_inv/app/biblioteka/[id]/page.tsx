@@ -21,6 +21,7 @@ import {
 import { apiFetch } from "@/lib/api";
 import { buttonVariants } from "@/components/ui/button";
 import { MiddlemanModal } from "@/components/middleman-modal";
+import { TestRequestBox } from "@/components/test-request";
 import { PageBackdrop } from "@/components/page-backdrop";
 import { BackendInnovationCard, type BackendInnovation } from "@/components/backend-innovation-card";
 
@@ -247,6 +248,8 @@ export default function InnovationDetailPage() {
                 Drukuj
               </button>
             </div>
+
+            <TestRequestBox innovation={item} />
           </article>
 
           {/* Sidebar */}
