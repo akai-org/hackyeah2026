@@ -9,3 +9,7 @@ __pycache__/
 
 # sekrety
 .env
+
+# lokalna baza SQLite i ChromaDB
+*.db
+chroma_db/
