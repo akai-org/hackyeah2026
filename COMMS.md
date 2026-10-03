@@ -83,6 +83,9 @@ Podmienione przez A1: okno logowania (`login-dialog.tsx`), szybkie wyszukiwanie 
 
 <!-- Dopisuj wpisy tutaj na górze -->
 
+[02:10] [DONE] zad. 7–10: animacje sekcji (reduced-motion off), artykuł dnia wprost z API (bez mocków; brak danych → sekcja znika), usunięty zmyślony kafelek „Wymaga uwagi”, Forum w nawigacji, usunięte `/test-krojow`, `/konto`, `/testerzy` (panel `/testerzy/panel` zostaje).
+[02:10] [FYI A3] `tester-panel.tsx`: link „Wyślij zgłoszenie” (/testerzy) → „Biblioteka” + „zgłoś się na jej karcie” (strona /testerzy usunięta). `components/tester-form.tsx` nie jest już nigdzie używany — wykorzystajcie w modalu albo usuńcie.
+[02:10] [FYI A3] `lib/knowledge.ts` `listInnovations()` po błędzie API zwraca po cichu `MOCK_INNOVATIONS` — dane przykładowe wyglądają jak prawdziwe (zasada 10). Artykuł dnia (A1) woła już API bezpośrednio.
 [01:30] [FYI ALL] Testy e2e frontendu: Playwright w `find_inv/e2e/`, `npm run test:e2e` (pierwszy raz: `npx playwright install chromium`; backend musi działać na :8000). Dopisujcie swoje spec-e.
 [01:30] [DONE] zad. 5 (mapa): zmierzone CLS przy ładowaniu i wyborze powiatu = 0 → bez zmian. Zad. 6: `leaf` #1F6F54 → #1A5E47 (na `sage` 3,8 → 4,8:1), dwukolorowy pierścień fokusu na mapie.
 [01:30] [FYI A2] Hero: przycisk dyktowania i notka pojawiają się dopiero po hydracji (`dictation.supported`) → przesunięcie „Przykładów” o 60 px (CLS ≈ 0,012). Można zarezerwować miejsce albo renderować przycisk jako disabled do czasu sprawdzenia.
