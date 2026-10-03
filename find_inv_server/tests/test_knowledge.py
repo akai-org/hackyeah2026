@@ -42,10 +42,20 @@ def test_after_seed():
 def test_challenges_map_gap_pulse():
     with TestClient(app) as c:
         m = c.get("/api/challenges/map").json()["data"]
-        assert len(m) >= 20 and "gap_score" in m[0]["gap_index"]
+        assert len(m) == 22 and "gap_score" in m[0]["gap_index"]
         gap = c.get("/api/innovation-gap").json()["data"]
         assert gap[0]["gap_score"] >= gap[-1]["gap_score"]
         p = c.get("/api/gmina-pulse/limanowski").json()["data"]
         assert len(p["top_challenges"]) == 3 and len(p["matching_innovations"]) == 3
         assert c.get("/api/gmina-pulse/xyz").status_code == 404
         assert len(c.get("/api/challenges?powiat=miechowski").json()["data"]) == 3
+
+
+def test_gus_data_is_real_malopolska():
+    from data import challenges as ch
+
+    assert len(ch.POWIATY) == 22 and "żywiecki" not in ch.POWIATY  # żywiecki jest w śląskim
+    with TestClient(app) as c:
+        stats = c.get("/api/stats/malopolska").json()["data"]
+        assert len(stats["indicators"]) == 4 and all(i["source"].startswith("GUS") for i in stats["indicators"])
+        assert all(x["source"].startswith("GUS") for x in c.get("/api/challenges").json()["data"])
