@@ -8,6 +8,7 @@ import { InnovationOfTheDay } from "@/components/innovation-of-the-day";
 import { MalopolskaStatsTiles } from "@/components/malopolska-stats";
 import { PaperCloud } from "@/components/paper-cloud";
 import { PowiatMap } from "@/components/powiat-map";
+import { RevealOnScroll } from "@/components/reveal-on-scroll";
 import { SearchForm } from "@/components/search-form";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -53,6 +54,7 @@ export default function HomePage() {
 
   return (
     <>
+      <RevealOnScroll />
       {/* Hero */}
       <section aria-labelledby="hero-tytul" className="relative overflow-hidden">
         <div className="relative mx-auto max-w-content px-4 pt-20 pb-16 sm:px-6 lg:pt-20 lg:pb-24">
@@ -86,6 +88,7 @@ export default function HomePage() {
       {/* Jak to działa */}
       <section
         id="jak-to-dziala"
+        data-reveal
         aria-labelledby="jak-to-dziala-tytul"
         className="border-y-(length:--bw) border-deep bg-sage"
       >
@@ -96,7 +99,7 @@ export default function HomePage() {
             {STEPS.map((step, index) => {
               const Icon = step.icon;
               return (
-                <li key={step.title} className="border-(length:--bw) border-deep bg-surface p-6 shadow-paper">
+                <li key={step.title} className="hover-lift border-(length:--bw) border-deep bg-surface p-6 shadow-paper">
                   <div className="flex items-center justify-between gap-4">
                     <p className="font-medium text-muted">Krok {index + 1}</p>
                     <Icon aria-hidden="true" className="size-8 text-leaf" strokeWidth={1.75} />
@@ -111,7 +114,7 @@ export default function HomePage() {
       </section>
 
       {/* Kondycja Małopolski + Indeks Luki Innowacyjnej (Zasobnik wiedzy) */}
-      <section id="kondycja-malopolski" aria-labelledby="kondycja-tytul">
+      <section id="kondycja-malopolski" data-reveal aria-labelledby="kondycja-tytul">
         <div className="mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
           <CutoutText id="kondycja-tytul" text="Kondycja Małopolski" />
           <p className="mt-4 max-w-[60ch] text-lg">
@@ -148,7 +151,7 @@ export default function HomePage() {
       </section>
 
       {/* Co już działa */}
-      <section id="co-juz-dziala" aria-labelledby="co-juz-dziala-tytul">
+      <section id="co-juz-dziala" data-reveal aria-labelledby="co-juz-dziala-tytul">
         <div className="relative mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
           <PaperCloud className="absolute -top-6 right-24 hidden w-52 -rotate-1 lg:block" />
           <FeaturedInnovations headingId="co-juz-dziala-tytul">
@@ -163,7 +166,7 @@ export default function HomePage() {
       </section>
 
       {/* Artykuł dnia */}
-      <section id="artykul-dnia" aria-labelledby="artykul-dnia-tytul" className="border-y-(length:--bw) border-deep bg-sage">
+      <section id="artykul-dnia" data-reveal aria-labelledby="artykul-dnia-tytul" className="border-y-(length:--bw) border-deep bg-sage">
         <div className="mx-auto max-w-content px-4 py-10 sm:px-6 lg:py-12">
           <article className="mx-auto max-w-3xl border-(length:--bw) border-deep bg-surface p-6 shadow-paper md:p-8">
             <p className="text-sm font-medium text-muted">Artykuł dnia z Biblioteki Innowacji ROPS</p>
