@@ -109,6 +109,33 @@ class Idea(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
+class IdeaDetails(Base):
+    """Pola fiszki spoza tabeli ideas. Osobna tabela, bo create_all nie dodaje kolumn do istniejących tabel."""
+
+    __tablename__ = "idea_details"
+
+    idea_id: Mapped[int] = mapped_column(Integer, ForeignKey("ideas.id"), primary_key=True)
+    short_desc: Mapped[str | None] = mapped_column(Text, nullable=True)
+    place: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    stage: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    budget: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    partners: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    # Jednorazowy klucz do wgrania załączników — tylko autor zapisanej fiszki może do niej dołączyć pliki.
+    upload_token: Mapped[str] = mapped_column(String(64))
+
+
+class IdeaAttachment(Base):
+    __tablename__ = "idea_attachments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    idea_id: Mapped[int] = mapped_column(Integer, ForeignKey("ideas.id"), index=True)
+    filename: Mapped[str] = mapped_column(String(256))  # nazwa od użytkownika, tylko do wyświetlenia
+    stored_name: Mapped[str] = mapped_column(String(128))  # losowa nazwa na dysku
+    content_type: Mapped[str] = mapped_column(String(128))
+    size: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
 class ForumPost(Base):
     __tablename__ = "forum_posts"
 

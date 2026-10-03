@@ -14,6 +14,8 @@ class Settings(BaseSettings):
 
     database_url: str = "sqlite+aiosqlite:///./findinv.db"
     chroma_path: str = "./chroma_db"
+    # Załączniki do fiszek pomysłów (POST /api/ideas/{id}/attachments).
+    uploads_path: str = "./uploads"
 
     # ---------- Zasobnik wiedzy (app/zasobnik: obszary, zasoby, potrzeby) ----------
     # Osobna, synchroniczna baza SQLModel — własna zmienna, żeby nie zderzyć się z DATABASE_URL.

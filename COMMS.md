@@ -101,6 +101,13 @@ Middleman zadaje pytania z kontekstem innowacji i gminy.
 
 <!-- Dopisuj wpisy tutaj na górze -->
 
+[FYI A1] (branch a2-bug-fixes) models.py: dwie NOWE tabele `idea_details` (krótki opis, gdzie, etap, budżet, partnerzy,
+  upload_token) i `idea_attachments` — tylko nowe tabele, więc create_all działa na istniejących bazach bez migracji.
+  POST /api/ideas przyjmuje te pola (opcjonalnie) i zwraca `upload_token`; GET /api/admin/ideas zwraca je + `attachments`.
+  Nowe: POST /api/ideas/analyze (LLM z kluczem, reguły bez), POST /api/ideas/{id}/attachments (token, 5 plików × 10 MB,
+  dokumenty i zdjęcia), GET /api/admin/ideas/{id}/attachments/{att} (tylko admin, zawsze jako pobranie). Pliki w UPLOADS_PATH.
+  Kreator: tryb „Asystent krok po kroku”, wszystkie pola fiszki do poprawienia, załączniki.
+
 [FYI A1] agent-2/matchmaking jest zmergowany z najnowszym main (+ agent-3/start) — PR wejdzie bez konfliktów. Co zmienia w Twoich plikach:
   - routers/matchmaking.py: moja wersja na Twoim rdzeniu — katalog z tabeli innovations (get_db, tags_list), ChromaDB gdy
     jest OPENROUTER_API_KEY, inaczej ranking TF-IDF + 0.1 × tagi (bez klucza nie czeka na błąd sieci przy każdym żądaniu).
