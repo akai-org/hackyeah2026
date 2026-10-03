@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Archive, ExternalLink, FileText, MessageSquareText, Video } from "lucide-react";
 
+import { ForumThread } from "@/components/forum-thread";
+import { TesterApplyModal } from "@/components/tester-apply-modal";
+import { Toast, useToast } from "@/components/toast";
 import { TestRequestBox } from "@/components/test-request";
 import { buttonVariants } from "@/components/ui/button";
 import { COST_LABELS, type InnovationCard } from "@/data/innovations";
@@ -43,6 +46,15 @@ function Description({ text }: { text: string }) {
 
 export function InnovationDetail({ id }: { id: number }) {
   const [innovation, setInnovation] = useState<InnovationCard | null | undefined>(undefined);
+  const [testerModalOpen, setTesterModalOpen] = useState(false);
+  const [testerStatus, setTesterStatus] = useState<"none" | "pending">("none");
+  const toast = useToast();
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(`hubmi-tester-${id}`)) setTesterStatus("pending");
+    } catch {}
+  }, [id]);
 
   useEffect(() => {
     getInnovation(id).then(setInnovation);
@@ -191,6 +203,51 @@ export function InnovationDetail({ id }: { id: number }) {
       </div>
 
       <TestRequestBox innovation={innovation} />
+
+      {/* Zgłoś się jako tester */}
+      <div className="mt-8 rounded-ui border-(length:--bw) border-deep bg-sage p-5 sm:p-6">
+        <h2 className="text-xl font-bold text-deep">Testowanie</h2>
+        <p className="mt-2 text-base">Masz doświadczenie z tym tematem? Zgłoś się jako tester i pomóż ocenić tę innowację w praktyce.</p>
+        {testerStatus === "pending" ? (
+          <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-mint px-4 py-2 text-sm font-bold text-deep">
+            Zgłoszenie wysłane — czekamy na odpowiedź
+          </p>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setTesterModalOpen(true)}
+            className="mt-4 inline-flex min-h-12 items-center gap-2 rounded-ui border-(length:--bw) border-deep bg-deep px-5 font-bold text-surface hover:bg-leaf"
+          >
+            Zgłoś się jako tester
+          </button>
+        )}
+      </div>
+
+      {/* Forum dyskusji */}
+      <section aria-labelledby="dyskusja-tytul" className="mt-12 border-t-2 border-sage pt-10">
+        <h2 id="dyskusja-tytul" className="text-2xl font-bold text-deep">Dyskusja społeczności</h2>
+        <p className="mt-1 text-base text-muted">Komentarze mieszkańców, testerów i konsultantów dotyczące tej innowacji.</p>
+        <div className="mt-6">
+          <ForumThread
+            innovationId={id}
+            embedded
+            innovation={innovation.title ? { title: innovation.title, tags: innovation.tags } : undefined}
+          />
+        </div>
+      </section>
+
+      {testerModalOpen && (
+        <TesterApplyModal
+          innovationId={id}
+          innovationTitle={innovation.title}
+          onClose={() => setTesterModalOpen(false)}
+          onSuccess={() => {
+            setTesterStatus("pending");
+            toast.show("Zgłoszenie wysłane!");
+          }}
+        />
+      )}
+      <Toast message={toast.message} onClose={toast.hide} />
     </article>
   );
 }

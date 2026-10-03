@@ -1,3 +1,90 @@
+---
+name: findinv — HubMI.pl
+description: Małopolska's civic almanac for social innovation discovery
+colors:
+  deep: "#1B4332"
+  leaf: "#2D6A4F"
+  butter: "#F2E2A0"
+  mint: "#B8DCC4"
+  sage: "#D3E3D0"
+  paper: "#EEF3EA"
+  surface: "#FAFCF7"
+  ink: "#14251C"
+  muted: "#3D5A4A"
+  alert: "#8A2D1F"
+typography:
+  display:
+    fontFamily: "Atkinson Hyperlegible, system-ui, sans-serif"
+    fontSize: "clamp(2.75rem, 7vw, 5rem)"
+    fontWeight: 700
+    lineHeight: 1.15
+  headline:
+    fontFamily: "Atkinson Hyperlegible, system-ui, sans-serif"
+    fontSize: "2.125rem"
+    fontWeight: 700
+    lineHeight: 1.2
+  title:
+    fontFamily: "Atkinson Hyperlegible, system-ui, sans-serif"
+    fontSize: "1.625rem"
+    fontWeight: 700
+    lineHeight: 1.3
+  body:
+    fontFamily: "Atkinson Hyperlegible, system-ui, sans-serif"
+    fontSize: "1.125rem"
+    fontWeight: 400
+    lineHeight: 1.6
+  label:
+    fontFamily: "Atkinson Hyperlegible, system-ui, sans-serif"
+    fontSize: "1rem"
+    fontWeight: 400
+    lineHeight: 1.5
+rounded:
+  ui: "12px"
+spacing:
+  xs: "8px"
+  sm: "12px"
+  md: "16px"
+  lg: "24px"
+  xl: "32px"
+  2xl: "48px"
+components:
+  button-primary:
+    backgroundColor: "{colors.deep}"
+    textColor: "{colors.surface}"
+    rounded: "{rounded.ui}"
+    padding: "8px 20px"
+    height: "48px"
+  button-primary-hover:
+    backgroundColor: "{colors.leaf}"
+    textColor: "{colors.surface}"
+    rounded: "{rounded.ui}"
+  button-secondary:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.deep}"
+    rounded: "{rounded.ui}"
+    padding: "8px 20px"
+    height: "48px"
+  button-secondary-hover:
+    backgroundColor: "{colors.sage}"
+    textColor: "{colors.deep}"
+    rounded: "{rounded.ui}"
+  chip:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.ui}"
+    padding: "8px 16px"
+    height: "48px"
+  chip-hover:
+    backgroundColor: "{colors.mint}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.ui}"
+  card:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.ui}"
+    padding: "24px"
+---
+
 # DESIGN.md – HubMI.pl (Małopolski Hub Innowacji Społecznych)
 
 Plik dla osób i narzędzi AI budujących interfejs. Czytaj go przed każdym nowym ekranem i trzymaj się go. Jeśli coś w kodzie łamie te zasady, popraw kod, nie plik.

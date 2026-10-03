@@ -1,18 +1,20 @@
-import { BadgeCheck, FlaskConical, ShieldCheck, UserRound, type LucideIcon } from "lucide-react";
+import { BadgeCheck, FlaskConical, Lightbulb, ShieldCheck, UserCheck, UserRound, type LucideIcon } from "lucide-react";
 
-import { ROLE_LABELS, type Role } from "@/data/mock";
+import { FORUM_BADGE_LABELS, type ForumBadge } from "@/data/mock";
 import { cn } from "@/lib/utils";
 
 // Plakietka roli: ikona + słowo, więc rola nie jest przekazywana samym kolorem.
 // Każda para tło/tekst ma kontrast ≥ 4,5:1 (DESIGN.md, sekcja 3).
-const STYLES: Record<Role, { icon: LucideIcon; className: string }> = {
+const STYLES: Record<ForumBadge, { icon: LucideIcon; className: string }> = {
   user: { icon: UserRound, className: "bg-sage text-ink" },
   tester: { icon: FlaskConical, className: "bg-mint text-ink" },
   consultant: { icon: BadgeCheck, className: "bg-butter text-deep" },
   admin: { icon: ShieldCheck, className: "bg-deep text-surface" },
+  creator: { icon: Lightbulb, className: "bg-butter text-deep" },
+  user_of: { icon: UserCheck, className: "bg-mint text-ink" },
 };
 
-export function RoleBadge({ role, className }: { role: Role; className?: string }) {
+export function RoleBadge({ role, className }: { role: ForumBadge; className?: string }) {
   const { icon: Icon, className: colors } = STYLES[role];
   return (
     <span
@@ -23,7 +25,7 @@ export function RoleBadge({ role, className }: { role: Role; className?: string 
       )}
     >
       <Icon aria-hidden="true" className="size-4 shrink-0" strokeWidth={2.25} />
-      {ROLE_LABELS[role]}
+      {FORUM_BADGE_LABELS[role]}
     </span>
   );
 }
