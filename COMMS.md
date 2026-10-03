@@ -13,7 +13,7 @@
 | A1 | ⏳ w trakcie | — | A2, A3, A4, A5 |
 | A2 | ⏸ czeka na A1+A3 | — | — |
 | A3 | ⏸ czeka na A1 | — | A2 |
-| A4 | ⏸ czeka na A1 | — | — |
+| A4 | ✅ auth + /kreator /testerzy /forum (PR) | — | — |
 | A5 | ⏸ czeka na A1 | — | — |
 
 **Aktualizuj tabelę przy każdym PR.** Status: `⏳ w trakcie` / `✅ gotowy` / `⏸ czeka` / `🔴 bloker`
@@ -73,6 +73,16 @@
 ## 🟩 Agent 4 — Creator + Tester + Forum
 
 <!-- Dopisuj wpisy tutaj na górze -->
+
+[18:30] [DONE] Branch `agent-4/auth-kreator-forum`: auth we froncie + strony /kreator, /testerzy, /forum (mock, bez backendu).
+[18:30] [FYI A5] Auth: `import { useAuth } from "@/lib/auth"` → `{ user, status, offline, login, logout, setRole, openLogin }`.
+        `user = { id, name, role }`, role: "user" | "tester" | "consultant" | "admin". Czekaj na `status === "ready"` przed sprawdzeniem roli.
+        Wywołania API: `apiFetch<T>(path, init)` z `@/lib/api` — dokłada nagłówek `X-Session-Token` + `credentials: "include"`, zwraca samo `data`.
+        Logowanie jako Admin robi `router.push("/admin")` — strona /admin jest Twoja.
+[18:30] [FYI A1] Front woła POST /api/auth/session { name, role } → oczekuje `{ data: { session_token, role } }`,
+        potem GET /api/auth/me → `{ data: { id, name, role } }`; token czyta z cookie "session" ALBO nagłówka X-Session-Token.
+        Dopóki endpointów nie ma, front robi sesję lokalną (token "offline-…") — po Push 2 przełączy się sam.
+[18:30] [FYI] Wspólne komponenty: `<RoleBadge role="tester" />`, `<Toast>` + `useToast()`, dane w `find_inv/data/mock.ts` (TAXONOMY_TAGS z etykietami PL, ROLES).
 
 ```
 [NEED A2] — jeśli potrzebujesz run_autotagger a utils.py nie jest jeszcze na main
