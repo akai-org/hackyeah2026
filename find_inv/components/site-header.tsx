@@ -58,10 +58,10 @@ export function SiteHeader() {
   }, [open, searchOpen, openSearch]);
 
   return (
-    <header className="relative z-10 border-b-(length:--bw) border-deep bg-paper">
+    <header className="sticky top-0 z-40 border-b-(length:--bw) border-deep bg-paper">
       <a
-        href="#tresc"
-        className="focus-on-deep sr-only rounded-ui bg-deep px-5 py-3 font-bold text-surface focus:not-sr-only focus:absolute focus:top-3 focus:left-4 focus:z-20"
+        href="#main"
+        className="focus-on-deep sr-only rounded-ui bg-deep px-5 py-3 font-bold text-surface focus:not-sr-only focus:absolute focus:top-3 focus:left-4 focus:z-50"
       >
         Przejdź do treści
       </a>
@@ -117,7 +117,7 @@ export function SiteHeader() {
       <div
         id="menu-mobilne"
         hidden={!open}
-        className="nav-mobile border-t-(length:--bw) border-deep bg-surface xl:hidden"
+        className="nav-mobile max-h-[calc(100dvh-5rem)] overflow-y-auto border-t-(length:--bw) border-deep bg-surface xl:hidden"
       >
         <nav aria-label="Główna, wersja mobilna" className="mx-auto max-w-content px-4 py-3 sm:px-6">
           <button

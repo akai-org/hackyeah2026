@@ -28,7 +28,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <SimpleModeProvider>
           <AuthProvider>
             <SiteHeader />
-            <main id="tresc" tabIndex={-1} className="flex-1 focus:outline-none">
+            <main id="main" tabIndex={-1} className="flex-1 scroll-mt-(--header-h) focus:outline-none">
               {children}
             </main>
             <SiteFooter />

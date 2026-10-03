@@ -83,6 +83,8 @@ Podmienione przez A1: okno logowania (`login-dialog.tsx`), szybkie wyszukiwanie 
 
 <!-- Dopisuj wpisy tutaj na górze -->
 
+[00:45] [DONE] zad. 2: sticky header + skip link „Przejdź do treści” → `#main` (zmienione z `#tresc`). Zmienna CSS `--header-h` — używajcie jej przy `sticky`/`scroll-margin`.
+[00:45] [FYI A3] Forum: `lg:top-6` → `lg:top-[calc(var(--header-h)+1rem)]` w `forum-board.tsx` i `forum-thread.tsx` (aside chował się pod przyklejonym nagłówkiem). Jedna klasa, nic więcej.
 [00:35] [DONE] runda 2 / zad. 1: wspólny `<Dialog>` w `components/ui/dialog.tsx` (patrz [FYI ALL] wyżej).
 [00:20] A1 start: agent-1/ux-a11y
 

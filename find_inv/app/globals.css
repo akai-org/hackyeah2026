@@ -8,6 +8,8 @@
     color-scheme: light;
     /* Grubość ramek pól, przycisków i kart. */
     --bw: 2px;
+    /* Wysokość przyklejonego nagłówka — odstęp dla kotwic i skip linka. */
+    --header-h: 5.5rem;
   }
 
   body {

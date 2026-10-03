@@ -36,7 +36,7 @@ const CONDITION_LEVELS = [
 
 export default function ChallengesPage() {
   return (
-    <main id="tresc" className="min-h-screen">
+    <div className="min-h-screen">
       <section aria-labelledby="wyzwania-tytul" className="border-b-(length:--bw) border-deep bg-paper">
         <div className="mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-24">
           <Link href="/" className="inline-flex min-h-12 items-center gap-2 font-semibold text-leaf underline underline-offset-4 hover:text-deep">
@@ -94,6 +94,6 @@ export default function ChallengesPage() {
           </ul>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

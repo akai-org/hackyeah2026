@@ -115,7 +115,7 @@ export function PowiatMap() {
   return (
     <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
       {/* Mapa */}
-      <div className="relative border-(length:--bw) border-deep bg-surface p-4 shadow-paper sm:p-6 lg:sticky lg:top-6">
+      <div className="relative border-(length:--bw) border-deep bg-surface p-4 shadow-paper sm:p-6 lg:sticky lg:top-[calc(var(--header-h)+1rem)]">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <label className="grid gap-1 text-sm font-bold text-muted">
             Wybierz powiat

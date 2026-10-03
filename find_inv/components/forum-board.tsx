@@ -152,7 +152,7 @@ export function ForumBoard() {
 
   return (
     <div className="mt-10 grid gap-12 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
-      <aside aria-labelledby={`${ids}-nowy`} className="lg:sticky lg:top-6 lg:col-start-2 lg:row-start-1">
+      <aside aria-labelledby={`${ids}-nowy`} className="lg:sticky lg:top-[calc(var(--header-h)+1rem)] lg:col-start-2 lg:row-start-1">
         <form onSubmit={addThread} noValidate className="border-(length:--bw) border-deep bg-sage p-5 sm:p-6">
           <h2 id={`${ids}-nowy`} className="text-xl font-bold text-deep">
             Zadaj pytanie
