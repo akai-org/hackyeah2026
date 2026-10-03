@@ -279,12 +279,24 @@ VOICE_FIX_PROMPT = (
 )
 
 
+def _tidy_transcript(text: str) -> str:
+    """Poprawka bez LLM: wielka litera na początku, kropka na końcu, bez spacji przed interpunkcją."""
+    text = re.sub(r"\s+", " ", text).strip()
+    text = re.sub(r"\s+([,.!?;:])", r"\1", text)
+    if not text:
+        return text
+    text = text[0].upper() + text[1:]
+    return text if text[-1] in ".!?…" else f"{text}."
+
+
 @router.post("/voice-fix")
 async def voice_fix(body: VoiceFixRequest):
     transcript = body.transcript.strip()[:MAX_TEXT]
     llm_chat = _llm_chat()
-    if llm_chat is None or not transcript:
-        return _ok({"corrected": transcript, "confidence": 1.0})
+    if not transcript:
+        return _ok({"corrected": transcript, "confidence": 1.0, "source": "none"})
+    if llm_chat is None:
+        return _ok({"corrected": _tidy_transcript(transcript), "confidence": 0.6, "source": "rules"})
 
     try:
         raw = await llm_chat(
@@ -298,11 +310,12 @@ async def voice_fix(body: VoiceFixRequest):
             {
                 "corrected": parsed.get("corrected") or transcript,
                 "confidence": float(parsed.get("confidence", 0.8)),
+                "source": "llm",
             }
         )
     except Exception:
         log.exception("voice-fix failed")
-        return _ok({"corrected": transcript, "confidence": 0.5})
+        return _ok({"corrected": _tidy_transcript(transcript), "confidence": 0.5, "source": "rules"})
 
 
 CHAT_SYSTEM_PROMPT = (

@@ -25,9 +25,13 @@ def test_match_returns_cards_with_flags():
     assert all({"id", "title", "match_score", "is_unmaintained"} <= i.keys() for i in innovations)
 
 
-def test_voice_fix_keeps_transcript_without_llm():
-    body = client.post("/api/voice-fix", json={"transcript": "mama mieszka sama"}).json()
-    assert body["data"]["corrected"] == "mama mieszka sama"
+def test_voice_fix_tidies_transcript_without_llm():
+    """Bez klucza OpenRouter: wielka litera, kropka i interpunkcja bez spacji — sens bez zmian."""
+    fix = lambda text: client.post("/api/voice-fix", json={"transcript": text}).json()["data"]  # noqa: E731
+    assert fix("mama mieszka sama")["corrected"] == "Mama mieszka sama."
+    assert fix("mama mieszka sama , na wsi")["corrected"] == "Mama mieszka sama, na wsi."
+    assert fix("Czy jest pomoc dla seniorów?")["corrected"] == "Czy jest pomoc dla seniorów?"
+    assert fix("mama mieszka sama")["source"] == "rules"
 
 
 def test_chat_streams_sse_until_done():
