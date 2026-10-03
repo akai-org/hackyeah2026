@@ -32,7 +32,7 @@ import {
   type ChatMessage,
   type CostLevel,
   type MatchedInnovation,
-} from "@/lib/api";
+} from "@/lib/matchmaking-api";
 import { cn } from "@/lib/utils";
 
 type Phase = "tagging" | "matching" | "ready" | "irrelevant" | "error";

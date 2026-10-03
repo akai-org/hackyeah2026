@@ -1,4 +1,5 @@
 // Klient API matchmakingu (FastAPI, find_inv_server/app/routers/matchmaking.py).
+// Osobny plik od lib/api.ts (auth, A4), żeby moduły nie kolidowały.
 // Odpowiedzi mają kształt { data, error }, czat przychodzi jako SSE zakończone "data: [DONE]".
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";

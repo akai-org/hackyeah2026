@@ -5,7 +5,7 @@ import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react"
 import { CircleAlert, Info, Mic, Search, Square } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { fixTranscript } from "@/lib/api";
+import { fixTranscript } from "@/lib/matchmaking-api";
 import { cn } from "@/lib/utils";
 
 const EXAMPLES = [
