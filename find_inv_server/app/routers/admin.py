@@ -285,6 +285,7 @@ async def admin_stats(_: bool = AdminDep):
             pending_count = (await db.execute(select(func.count()).select_from(Tester).where(Tester.approved == False))).scalar() or 0  # noqa: E712
             search_count = (await db.execute(select(func.count()).select_from(SearchLog))).scalar() or 0
             idea_count = (await db.execute(select(func.count()).select_from(Idea))).scalar() or 0
+            pending_ideas = (await db.execute(select(func.count()).select_from(Idea).where(Idea.status == "pending"))).scalar() or 0
 
         return {"data": {
             "innovations": inn_count,
@@ -293,6 +294,7 @@ async def admin_stats(_: bool = AdminDep):
             "pending_testers": pending_count,
             "searches": search_count,
             "ideas": idea_count,
+            "pending_ideas": pending_ideas,
         }}
     except Exception:
         return {"data": {
@@ -302,7 +304,44 @@ async def admin_stats(_: bool = AdminDep):
             "pending_testers": 3,
             "searches": 156,
             "ideas": 0,
+            "pending_ideas": 0,
         }}
+
+
+@router.get("/recent")
+async def admin_recent(_: bool = AdminDep):
+    try:
+        from app.database import get_db
+        from app.models import SearchLog, ForumPost, Idea
+        from sqlalchemy import select
+        import json as _json
+
+        async with get_db() as db:
+            search_rows = await db.execute(select(SearchLog).order_by(SearchLog.created_at.desc()).limit(5))
+            searches = search_rows.scalars().all()
+
+            forum_rows = await db.execute(select(ForumPost).order_by(ForumPost.created_at.desc()).limit(5))
+            posts = forum_rows.scalars().all()
+
+            idea_rows = await db.execute(select(Idea).order_by(Idea.created_at.desc()).limit(5))
+            ideas = idea_rows.scalars().all()
+
+        return {"data": {
+            "searches": [
+                {"query": s.query, "tags": _json.loads(s.tags) if s.tags else [], "created_at": s.created_at.isoformat() if s.created_at else None}
+                for s in searches
+            ],
+            "forum_posts": [
+                {"content": p.content[:80], "author_name": p.author_name, "badge": p.badge, "created_at": p.created_at.isoformat() if p.created_at else None}
+                for p in posts
+            ],
+            "ideas": [
+                {"title": i.title, "status": i.status, "created_at": i.created_at.isoformat() if i.created_at else None}
+                for i in ideas
+            ],
+        }}
+    except Exception:
+        return {"data": {"searches": [], "forum_posts": [], "ideas": []}}
 
 
 @router.get("/ideas")

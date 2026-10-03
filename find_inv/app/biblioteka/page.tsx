@@ -27,12 +27,18 @@ function BiblotekaContent() {
     return () => { document.title = "HubMI – znajdź rozwiązanie, które już działa"; };
   }, []);
 
+  const [searchInput, setSearchInput] = useState(searchParams.get("search") ?? "");
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
   const [status, setStatus] = useState(searchParams.get("status") ?? "");
   const [selectedTags, setSelectedTags] = useState<string[]>(
     searchParams.get("tags")?.split(",").filter(Boolean) ?? [],
   );
   const [showFilters, setShowFilters] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setSearch(searchInput), 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   useEffect(() => {
     setLoading(true);
@@ -64,8 +70,8 @@ function BiblotekaContent() {
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-3.5 size-4 text-muted" aria-hidden="true" />
           <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Szukaj innowacji…"
             aria-label="Szukaj innowacji"
             className="w-full rounded-ui border-(length:--bw) border-deep bg-surface py-3 pl-10 pr-4"
@@ -139,7 +145,7 @@ function BiblotekaContent() {
         ) : items.length === 0 ? (
           <p className="mt-8 text-lg text-muted">
             Brak innowacji spełniających kryteria. Zmień filtry lub{" "}
-            <button onClick={() => { setSearch(""); setStatus(""); setSelectedTags([]); }} className="underline text-deep">
+            <button onClick={() => { setSearch(""); setSearchInput(""); setStatus(""); setSelectedTags([]); }} className="underline text-deep">
               wyczyść wyszukiwanie
             </button>
             .

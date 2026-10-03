@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Check, Archive, AlertCircle, Search, ExternalLink } from "lucide-react";
+import { Check, Archive, AlertCircle, Download, Search, ExternalLink } from "lucide-react";
 import { apiFetch, apiPost } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -52,9 +52,36 @@ export default function InnowacjePage() {
     }
   }
 
+  function exportCsv() {
+    const header = ["ID", "Tytuł", "Status", "Kategoria", "Tagi"];
+    const rows = items.map((inn) => [
+      inn.id,
+      `"${inn.title.replace(/"/g, '""')}"`,
+      inn.status,
+      inn.category ?? "",
+      `"${inn.tags.join(", ")}"`,
+    ]);
+    const csv = [header.join(";"), ...rows.map((r) => r.join(";"))].join("\n");
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `innowacje_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div>
-      <h1 className="text-2xl font-bold text-deep">Zarządzanie innowacjami</h1>
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-2xl font-bold text-deep">Zarządzanie innowacjami</h1>
+        {items.length > 0 && (
+          <Button variant="secondary" onClick={exportCsv} className="gap-2 text-sm">
+            <Download className="size-4" aria-hidden="true" />
+            Eksportuj CSV
+          </Button>
+        )}
+      </div>
 
       <div className="mt-6 flex flex-wrap gap-3">
         <div className="relative">

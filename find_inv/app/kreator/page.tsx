@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { CheckCircle, ChevronRight, Lightbulb, Loader2, Send, Tag } from "lucide-react";
 
 import { CutoutText } from "@/components/cutout-text";
@@ -26,8 +27,9 @@ function makeTitleFromText(text: string): string {
   return first.length > 60 ? first.slice(0, 57) + "…" : first;
 }
 
-export default function KreatorPage() {
-  const [text, setText] = useState("");
+function KreatorContent() {
+  const searchParams = useSearchParams();
+  const [text, setText] = useState(decodeURIComponent(searchParams.get("prefill") ?? ""));
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [fiszka, setFiszka] = useState<Fiszka | null>(null);
@@ -252,5 +254,13 @@ export default function KreatorPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function KreatorPage() {
+  return (
+    <Suspense fallback={<div className="mx-auto max-w-content px-4 py-16 sm:px-6"><p className="text-lg text-muted">Wczytuję…</p></div>}>
+      <KreatorContent />
+    </Suspense>
   );
 }

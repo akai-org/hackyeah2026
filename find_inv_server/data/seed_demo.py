@@ -14,7 +14,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from app.database import get_db, init_db
-from app.models import Innovation, Challenge, InnovationGapIndex
+from app.models import Innovation, Challenge, InnovationGapIndex, ForumPost
 
 INNOVATIONS = [
     # Istniejące mocki (znormalizowane)
@@ -521,6 +521,31 @@ async def seed():
             db.add(gap)
 
         await db.commit()
+
+    # Seed forum posts (only if empty)
+    async with get_db() as db:
+        from sqlalchemy import select, func as sqlfunc
+        forum_count = (await db.execute(select(sqlfunc.count()).select_from(ForumPost))).scalar() or 0
+        if forum_count == 0:
+            print("Seedowanie wpisów forum...")
+            demo_posts = [
+                ForumPost(content="Szukam partnera do realizacji projektu dla seniorów w powiecie krakowskim. Mamy już finansowanie z FIO, szukamy doświadczonej NGO z doświadczeniem w pracy z osobami 65+.", author_name="Anna K.", badge="consultant"),
+                ForumPost(parent_id=None, content="Jesteśmy NGO z Wieliczki, działamy z seniorami od 10 lat. Chętnie porozmawiamy — proszę o kontakt na kontakt@ngo-wieliczka.pl", author_name="Jan W.", badge="user"),
+                ForumPost(content="Testowałem program Cyfrowy Senior w Nowym Sączu — wyniki są bardzo obiecujące. 87% uczestników oceniło zajęcia jako bardzo przydatne. Mogę podzielić się raportem.", author_name="Piotr M.", badge="tester"),
+                ForumPost(parent_id=None, content="Proszę o raport! Rozważamy wdrożenie tego programu w naszej gminie w 2027 roku.", author_name="Maria Z.", badge="user"),
+                ForumPost(content="Przypominam o aktualizacji wpisów w Bibliotece ROPS — kilka innowacji ma nieaktualne dane kontaktowe i linki do zasobów.", author_name="Admin ROPS", badge="admin"),
+                ForumPost(content="Mamy wolne miejsce w naszym projekcie streetworkingu — szukamy wolontariuszy z min. rocznym doświadczeniem w pracy z osobami bezdomnymi. Praca w Krakowie, okolice Kazimierza.", author_name="Tomasz B.", badge="consultant"),
+            ]
+            # Fix parent_ids — posts 2 and 4 are replies to posts 1 and 3
+            # We add them in order, then fix references
+            for i, post in enumerate(demo_posts):
+                db.add(post)
+            await db.flush()
+            # Set reply parent_ids
+            demo_posts[1].parent_id = demo_posts[0].id
+            demo_posts[3].parent_id = demo_posts[2].id
+            await db.commit()
+            print(f"Zaseedowano {len(demo_posts)} wpisów forum.")
 
     print(f"[DONE] Seeded: {len(INNOVATIONS)} innowacji, {len(CHALLENGES)} wyzwań, {len(GAP_INDEX)} indeks luki")
     print("Uwaga: ChromaDB nie zostało zaseedowane — wyszukiwanie semantyczne używa mock scoring.")

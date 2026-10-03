@@ -19,12 +19,13 @@ if [ ! -f .env ]; then
 fi
 
 echo ""
-echo "[1b/4] Seeduję bazę danych (114 innowacji ROPS)..."
+echo "[1b/5] Seeduję bazę danych (forum + 114 innowacji ROPS)..."
+# seed_demo najpierw: wgrywa forum (i innowacje demo, gdy baza pusta); seed_innovations podmienia innowacje na ROPS
+python -m data.seed_demo || echo "  ⚠  seed_demo pominięty"
 if python -m data.seed_innovations; then
     echo "  ✓ Baza zaseedowana danymi ROPS"
 else
-    python -m data.seed_demo && echo "  ⚠  Seed ROPS nieudany — wgrano 21 innowacji demo" \
-        || echo "  ⚠  Seed pominięty (uruchom ręcznie: python -m data.seed_innovations)"
+    echo "  ⚠  Seed ROPS nieudany — zostają innowacje demo (uruchom ręcznie: python -m data.seed_innovations)"
 fi
 
 deactivate
@@ -56,7 +57,7 @@ fi
 
 # ── Gotowe ───────────────────────────────────────────────
 echo ""
-echo "[5/5] Gotowe! Uruchom w dwóch osobnych terminalach:"
+echo "[4/5] Gotowe! Uruchom w dwóch osobnych terminalach:"
 echo ""
 echo "  BACKEND:"
 echo "    cd find_inv_server"

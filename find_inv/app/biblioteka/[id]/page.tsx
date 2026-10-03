@@ -14,12 +14,13 @@ import {
   ExternalLink,
   FileText,
   PlayCircle,
+  ChevronRight,
 } from "lucide-react";
 
 import { apiFetch } from "@/lib/api";
 import { buttonVariants } from "@/components/ui/button";
 import { MiddlemanModal } from "@/components/middleman-modal";
-import { type BackendInnovation } from "@/components/backend-innovation-card";
+import { BackendInnovationCard, type BackendInnovation } from "@/components/backend-innovation-card";
 
 const COST_LABEL: Record<string, string> = {
   low: "Niski koszt",
@@ -67,6 +68,7 @@ export default function InnovationDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [middlemanOpen, setMiddlemanOpen] = useState(false);
+  const [similar, setSimilar] = useState<BackendInnovation[]>([]);
 
   useEffect(() => {
     if (!id) return;
@@ -74,6 +76,12 @@ export default function InnovationDetailPage() {
       .then((data) => {
         setItem(data);
         if (data?.title) document.title = `${data.title} – HubMI`;
+        if (data?.tags?.length) {
+          const tagsParam = data.tags.slice(0, 3).join(",");
+          apiFetch<BackendInnovation[]>(`/api/innovations?tags=${encodeURIComponent(tagsParam)}&limit=4`)
+            .then((all) => setSimilar((all ?? []).filter((i) => i.id !== id).slice(0, 3)))
+            .catch(() => {});
+        }
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false));
@@ -206,6 +214,15 @@ export default function InnovationDetailPage() {
                   <span className="sr-only">(otwiera się w nowej karcie)</span>
                 </Link>
               )}
+
+              <button
+                onClick={() => window.print()}
+                className={buttonVariants({ variant: "secondary", className: "gap-2 print:hidden" })}
+                aria-label="Drukuj fiszkę innowacji"
+              >
+                <ChevronRight className="size-4 rotate-90" aria-hidden="true" />
+                Drukuj
+              </button>
             </div>
           </article>
 
@@ -287,6 +304,19 @@ export default function InnovationDetailPage() {
           </aside>
         </div>
       </div>
+
+      {similar.length > 0 && (
+        <section aria-labelledby="podobne-tytul" className="mx-auto max-w-content border-t-2 border-sage px-4 py-12 sm:px-6">
+          <h2 id="podobne-tytul" className="text-xl font-bold text-deep">Podobne innowacje</h2>
+          <ul className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {similar.map((inn) => (
+              <li key={inn.id} className="flex">
+                <BackendInnovationCard innovation={inn} headingLevel="h3" />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {middlemanOpen && (
         <MiddlemanModal
