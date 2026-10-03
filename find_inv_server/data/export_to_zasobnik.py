@@ -70,7 +70,7 @@ def to_resource(item: dict) -> dict:
         "url": item["source_url"],
         "video_url": item.get("video_url"),
         "attachment_url": item.get("materials_url"),
-        "source": SOURCE + (f" – {item['project'].title()}" if item.get("project") else ""),
+        "source": SOURCE + (f" – {item['project']}" if item.get("project") else ""),
         "region": None,
         "published": item["status"] == "active",
         "area_slugs": areas,

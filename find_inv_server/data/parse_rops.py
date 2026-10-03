@@ -130,7 +130,7 @@ def main() -> None:
         _, cat, slug = f.stem.split("__", 2)
         h = f.read_text(encoding="utf-8")
         i = h.find('content__main')
-        j = h.find("btns-holder-justify", i)
+        j = h.find('<div class="btns-holder-justify"', i)
         block = h[i:j]
         m = re.search(r'<h2 class="page-title">(.*?)</h2>', block, flags=re.S)
         if not m:
@@ -145,7 +145,9 @@ def main() -> None:
         authors = find(secs, "autor")
         if not (what or problem):
             continue
-        lead = clean(re.search(r"<strong>(.*?)</strong>", block, flags=re.S).group(1)) if "<strong>" in block else ""
+        # "INNOWACJA WYBRANA DO UPOWSZECHNIANIA W RAMACH PROJEKTU "INKUBATOR DOSTĘPNOŚCI"" -> "Inkubator Dostępności"
+        lead_m = re.search(r"PROJEKTU\s*[\"„”]([^\"„”]+)[\"„”]", clean(block))
+        lead = lead_m.group(1).strip().title() if lead_m else ""
         video = re.search(r'href="(https?://(?:www\.)?youtu[^"]+)"', block)
         pdf = re.search(r'href="(/mpliki/[^"]+\.pdf)"', block)
         key = re.sub(r"\W+", " ", title.lower()).strip()  # ta sama innowacja bywa pod kilkoma slugami
