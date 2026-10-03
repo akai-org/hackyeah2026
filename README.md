@@ -7,7 +7,28 @@ Monorepo projektu na HackYeah.
 | [`find_inv/`](find_inv) | client – frontend | Next.js, React, Tailwind |
 | [`find_inv_server/`](find_inv_server) | server – backend API | FastAPI (Python 3.12+) |
 
-## Szybki start
+## Szybki start — jeden skrypt
+
+```bash
+# Sklonuj repo
+git clone https://github.com/akai-org/hackyeah2026.git
+cd hackyeah2026
+
+# Linux / Mac — podaj numer swojego agenta (1-5)
+bash setup.sh 2
+
+# Windows PowerShell — podaj numer swojego agenta (1-5)
+.\setup.ps1 -Agent 2
+```
+
+Skrypt tworzy venv, instaluje zależności, ustawia .env i tworzy Twój branch.
+Potem uruchom backend i frontend w dwóch osobnych terminalach (instrukcja wyświetli się po setup).
+
+**Przed kodowaniem przeczytaj:** `CONTEXT.md` → `AGENTS.md` → `PROMPTS.md` (Twój numer)
+
+---
+
+## Szybki start — ręcznie
 
 ### Server (port 8000)
 
