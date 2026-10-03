@@ -183,10 +183,19 @@ _SEARCH_QUERIES = [
 _QUERY_WEIGHTS = [14, 11, 10, 7, 6, 5, 5, 4, 3, 2, 2, 2]
 
 
+def _catalog_seed() -> list[dict]:
+    """Innowacje ROPS z katalogu A3 (te same id co w /api/match i /api/innovations), a bez niego mocki."""
+    try:
+        from app.knowledge_store import load_innovations
+    except ImportError:
+        return MOCK_INNOVATIONS
+    return load_innovations() or MOCK_INNOVATIONS
+
+
 def _seed() -> dict:
     now = _now()
     innovations = []
-    for i, item in enumerate(copy.deepcopy(MOCK_INNOVATIONS)):
+    for i, item in enumerate(copy.deepcopy(_catalog_seed())):
         item.pop("match_score", None)
         item.pop("is_unmaintained", None)
         item["created_at"] = _iso(now - timedelta(days=60 - i * 3))
