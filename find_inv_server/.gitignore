@@ -9,3 +9,6 @@ __pycache__/
 
 # sekrety
 .env
+rops_raw/
+*.db
+chroma_db/

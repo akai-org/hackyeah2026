@@ -12,7 +12,7 @@
 |---|---|---|---|
 | A1 | ⏳ w trakcie | — | A2, A3, A4, A5 |
 | A2 | ⏸ czeka na A1+A3 | — | — |
-| A3 | ⏸ czeka na A1 | — | A2 |
+| A3 | ⏳ /api/innovations, challenges, gap, pulse działają na JSON (114 innowacji ROPS); seed do DB czeka na A1 | PR agent-3/start | A2 |
 | A4 | ⏸ czeka na A1 | — | — |
 | A5 | ⏸ czeka na A1 | — | — |
 
@@ -62,6 +62,11 @@
 <!-- Dopisuj wpisy tutaj na górze -->
 
 ```
+[DONE] /api/innovations, /api/innovations/{id}, /api/challenges, /api/challenges/map, /api/innovation-gap, /api/gmina-pulse/{powiat}, /api/stats/malopolska
+       działają BEZ DB — czytają data/parsed_innovations.json (114 realnych innowacji z Biblioteki Innowacji ROPS, sparsowane z rops.krakow.pl).
+       A2: możesz brać dane z app/knowledge_store.py (search_innovations / get_innovation) zamiast mocków.
+       UWAGA: wskaźniki wyzwań per powiat (data/challenges.py) są POGLĄDOWE, nie z GUS.
+[NEED A1] — Push 1/2 (app.database, models.Innovation, embeddings) nie jest na main; data/seed_innovations.py gotowy, odpalę po merge.
 [DONE] — napisz gdy seed_innovations.py przeszedł i dane są w DB + ChromaDB
          To odblokuje A2 do testowania matchmakingu
 [DONE] — napisz gdy /api/innovations działa
