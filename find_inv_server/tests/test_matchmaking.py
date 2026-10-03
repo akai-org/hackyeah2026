@@ -153,3 +153,19 @@ def test_voice_fix_makes_rambling_sentence_clear():
     assert fix("syn ma piętnaście lat i no tego w ogóle nie wychodzi z pokoju")["corrected"] == (
         "Syn ma piętnaście lat i w ogóle nie wychodzi z pokoju."
     )
+
+
+def test_voice_fix_extracts_the_gist():
+    """Sedno: sytuacja + problem; dygresje bez problemu odpadają."""
+    fix = lambda text: client.post("/api/voice-fix", json={"transcript": text, "condense": True}).json()["data"]  # noqa: E731
+    gmina = fix(
+        "generalnie u nas w gminie jest dużo starszych ludzi którzy są sami i no nie mają z kim porozmawiać "
+        "a poza tym to wiesz mało kto ma internet więc nie wiedzą co się dzieje"
+    )
+    assert gmina["condensed"] and gmina["corrected"] == (
+        "U nas w gminie jest dużo starszych ludzi którzy są sami i nie mają z kim porozmawiać."
+    )
+    mama = fix(RAMBLING)["corrected"]
+    assert len(mama.split()) <= 25
+    assert "nie ma jak dojechać do lekarza" in mama and "samotna" in mama
+    assert "pracuję w krakowie" not in mama  # dygresja mówiącego, nie problem

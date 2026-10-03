@@ -302,11 +302,11 @@ def _tidy_transcript(text: str) -> str:
 
 VOICE_CONDENSE_PROMPT = (
     "Dostajesz transkrypcję mowy po polsku: ktoś opisuje problem społeczny, często chaotycznie, z dygresjami, "
-    "powtórzeniami i wtrąceniami. Popraw gramatykę i błędy rozpoznawania mowy, a jeśli wypowiedź krąży wokół tematu, "
-    "streść ją do sedna: kogo dotyczy problem, co się dzieje, gdzie — 1–2 krótkie zdania, najwyżej 40 słów. "
-    "Zawsze usuń wtrącenia bez treści, np. „yyy”, „no”, „ten no”, „tak jakby”, „jakby”, „wiesz”, „w sumie”. "
-    "Pisz z perspektywy mówiącego, jego słowami. NIE dodawaj informacji, których nie było, NIE oceniaj. "
-    "Krótkiej i rzeczowej wypowiedzi nie skracaj, tylko popraw. "
+    "powtórzeniami i wtrąceniami. Wyciągnij SEDNO: jedno jasne zdanie (najwyżej 25 słów) — kogo dotyczy problem, "
+    "na czym polega i gdzie, jeśli padło. Pomiń dygresje, historię, emocje mówiącego i szczegóły bez znaczenia "
+    "dla problemu. Zawsze usuń wtrącenia bez treści, np. „yyy”, „no”, „ten no”, „tak jakby”, „jakby”, „wiesz”, "
+    "„w sumie”. Popraw gramatykę i błędy rozpoznawania mowy. Pisz z perspektywy mówiącego, jego słowami. "
+    "NIE dodawaj informacji, których nie było, NIE oceniaj. Jeśli wypowiedź już jest krótka i rzeczowa, tylko ją popraw. "
     'Odpowiedz wyłącznie JSON: {"corrected": "...", "condensed": true|false, "confidence": 0.0-1.0}'
 )
 

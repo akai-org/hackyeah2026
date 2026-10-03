@@ -15,7 +15,7 @@ from app.utils import TAXONOMY_TAGS  # zamknięta taksonomia z rdzenia (A1)
 TAG_KEYWORDS: dict[str, list[str]] = {
     "seniorzy": ["senior", "starsz", "starsi", "osob starsz", "podeszl", "emeryt", "babci", "babcia", "dziadk", "staruszk", "65+"],
     "wykluczenie_cyfrowe": ["internet", "komputer", "smartfon", "cyfrow", "aplikacj", "online", "mail", "technolog"],
-    "samotność": ["samotn", "osamotn", "izolac", "mieszka sam", "zyje sam", "zostal sam", "zostala sam", "nie ma z kim", "nikogo nie ma", "sam w domu", "sama w domu"],
+    "samotność": ["samotn", "osamotn", "izolac", "mieszka sam", "zyje sam", "zostal sam", "zostala sam", "nie ma z kim", "nie maja z kim", "z kim porozmawiac", "nikogo nie ma", "sam w domu", "sama w domu"],
     "zdrowie_psychiczne": ["psychi", "psycholog", "depresj", "kryzys", "stres", "terapi", "zalaman", "samoboj", "lekow"],
     "niepełnosprawność": ["niepelnospraw", "wozek", "wozku", "niewidom", "nieslysz", "gluch", "autyz", "niesprawn"],
     "ubóstwo": ["ubost", "ubog", "bied", "zasilk", "nie stac", "dlug", "glod", "pieniedz"],
@@ -307,8 +307,8 @@ def strip_fillers(text: str) -> str:
 
 _EDGE_CONJUNCTIONS = re.compile(r"^(?:i|a|że|bo|ale|więc|to)\s+|\s+(?:i|a|że|bo|ale|więc|to|który|którzy|która)$", re.IGNORECASE)
 
-CONDENSE_MIN_WORDS = 25
-CONDENSE_MAX_WORDS = 40
+CONDENSE_MIN_WORDS = 12
+CONDENSE_MAX_WORDS = 25
 
 
 def _clauses(text: str) -> list[str]:
@@ -323,23 +323,38 @@ def _clauses(text: str) -> list[str]:
         previous = None
         while part != previous:  # „i …”, „… że” na brzegach po wycięciu wtrąceń
             previous, part = part, _EDGE_CONJUNCTIONS.sub("", part).strip(" ,")
-        if len(part.split()) >= 2:
-            clauses.append(part)
+        if len(part.split()) < 2:
+            continue
+        # Długi łańcuch „… i … i …” to kilka myśli — dzielimy, żeby sedno nie przepadło razem z dygresją.
+        pieces = re.split(r"\s+i\s+", part) if len(part.split()) > 12 else [part]
+        clauses.extend(piece.strip(" ,") for piece in pieces if len(piece.split()) >= 2)
     return clauses
+
+
+# Myśl, która nazywa problem: przeczenie możliwości, brak, trudność, uczucie, kryzys.
+_PROBLEM_SIGNAL = re.compile(
+    r"\bnie\s+(?:ma|maja|mam|moze|mozna|moga|moge|umie|umieja|umiem|potrafi|wie|wiem|wiedza|stac|daje|dziala|"
+    r"wychodzi|wychodza|chce|dojedzie|slyszy|widzi|radzi)\b|\bbrak|\bbrakuje"
+    r"|\btrudn|\bproblem|\bnikt\b|\bsamotn|\bboi\b|\bboja\b|\bkryzys|\bdepresj|\bnie\s+radzi|\bza\s+daleko",
+)
+
+
+def _is_problem(clause: str) -> bool:
+    return bool(_PROBLEM_SIGNAL.search(fold(clause)))
 
 
 def _clause_score(index: int, clause: str) -> float:
     tags = len(local_tags(clause))
     content = len(_stems(clause))
-    # Ludzie zwykle mówią sedno na początku, dygresje i powtórzenia później.
-    position = 1.5 if index == 0 else 0.75 if index == 1 else 0.0
-    return tags * 2 + content * 0.3 + position
+    # Sedno to krótka myśl z problemem — dłuższa przegrywa z równie trafną krótszą.
+    return (3 if _is_problem(clause) else 0) + tags * 2 + content * 0.2 - len(clause.split()) * 0.15 - index * 0.1
 
 
 def condense_locally(text: str) -> tuple[str, bool]:
-    """Skrót długiej, krążącej wypowiedzi: bez wtrąceń i powtórzeń, tylko zdania najbliższe tematowi.
+    """Sedno wypowiedzi: kto i jaka sytuacja (pierwsza myśl) + myśli nazywające problem, do ~25 słów.
 
-    Zwraca (tekst, czy_skrócono). Krótkich wypowiedzi nie rusza — wtedy tylko się je porządkuje.
+    Dygresje bez problemu („ja pracuję w Krakowie”) i powtórzenia odpadają. Zwraca (tekst, czy_skrócono);
+    krótkich wypowiedzi i takich, z których nic nie trzeba wyrzucać, nie rusza — wtedy tylko się je porządkuje.
     """
     words = text.split()
     if len(words) < CONDENSE_MIN_WORDS:
@@ -358,10 +373,19 @@ def condense_locally(text: str) -> tuple[str, bool]:
         seen |= stems
         unique.append((index, clause))
 
-    # Kolejność wypowiedzi zostaje; jeśli dalej za długo, odpadają najmniej związane z tematem myśli (nigdy pierwsza).
-    chosen = list(unique)
-    while sum(len(clause.split()) for _, clause in chosen) > CONDENSE_MAX_WORDS and len(chosen) > 1:
-        weakest = min(chosen[1:], key=lambda item: _clause_score(item[0], item[1]))
-        chosen.remove(weakest)
-    summary = ", ".join(clause for _, clause in sorted(chosen))
-    return summary, len(summary.split()) < len(words)
+    first, rest = unique[0], unique[1:]
+    chosen = [first]
+    budget = CONDENSE_MAX_WORDS - len(first[1].split())
+    # Najpierw myśli z problemem, potem pasujące do tematu; dygresje bez problemu i tagów nie wchodzą wcale.
+    for index, clause in sorted(rest, key=lambda item: _clause_score(*item), reverse=True):
+        relevant = _is_problem(clause) or local_tags(clause)
+        length = len(clause.split())
+        if relevant and length <= budget:
+            chosen.append((index, clause))
+            budget -= length
+    if len(chosen) == len(unique) and len(unique) == len(clauses):
+        return text, False  # nic do wyrzucenia — zostaje pełne zdanie (wtrącenia zdejmie strip_fillers)
+
+    ordered = [clause for _, clause in sorted(chosen)]
+    gist = " i ".join(ordered) if len(ordered) == 2 else ", ".join(ordered)
+    return gist, len(gist.split()) < len(words)
