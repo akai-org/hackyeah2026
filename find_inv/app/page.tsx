@@ -110,7 +110,7 @@ export default function HomePage() {
           <p className="mt-4 max-w-[60ch] text-lg">
             Z czym mierzą się mieszkańcy regionu. Te liczby pomagają zdecydować, od czego zacząć.
           </p>
-          <div className="mt-8 grid max-w-3xl items-center gap-4 rounded-ui border-(length:--bw) border-deep bg-surface p-5 md:grid-cols-[auto_1fr_auto]">
+          <div className="mt-8 grid items-center gap-4 rounded-ui border-(length:--bw) border-deep bg-surface p-5 md:grid-cols-[auto_1fr_auto]">
             <ConditionIcon aria-hidden="true" strokeWidth={1.5} className="size-16 text-leaf" />
             <span>
               <span className="block text-xl font-bold text-deep">{condition.status}</span>
