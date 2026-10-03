@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Check, Archive, AlertCircle, Search } from "lucide-react";
+import { Check, Archive, AlertCircle, Search, ExternalLink } from "lucide-react";
 import { apiFetch, apiPost } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -93,8 +94,21 @@ export default function InnowacjePage() {
             {items.map((inn) => (
               <tr key={inn.id} className="border-b border-sage hover:bg-paper">
                 <td className="py-3 pr-4">
-                  <p className="font-bold text-deep">{inn.title}</p>
-                  <p className="text-muted line-clamp-1">{inn.short_desc}</p>
+                  <div className="flex items-start gap-2">
+                    <div>
+                      <p className="font-bold text-deep">{inn.title}</p>
+                      <p className="text-muted line-clamp-1">{inn.short_desc}</p>
+                    </div>
+                    <Link
+                      href={`/biblioteka/${inn.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`Otwórz ${inn.title} w bibliotece`}
+                      className="mt-0.5 inline-flex size-6 shrink-0 items-center justify-center rounded text-muted hover:text-leaf"
+                    >
+                      <ExternalLink className="size-4" aria-hidden="true" />
+                    </Link>
+                  </div>
                 </td>
                 <td className="py-3 pr-4">
                   <span className={cn(
