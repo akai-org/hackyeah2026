@@ -18,7 +18,10 @@ def _events(response) -> list:
 
 def test_full_flow_ends_with_plan_after_three_questions():
     start = client.post("/api/middleman/start", json={"innovation_id": 2, "problem_desc": "samotni seniorzy"}).json()["data"]
-    assert start["first_question"] and start["innovation"]["title"] == "Sąsiedzka Pomoc"
+    # Tytuł z tego samego magazynu, którego używa Middleman (katalog ROPS albo mocki) — test nie zależy od danych.
+    from app import admin_store
+
+    assert start["first_question"] and start["innovation"]["title"] == admin_store.get_innovation(2)["title"]
     sid = start["session_id"]
 
     q2 = _events(client.post("/api/middleman/answer", json={"session_id": sid, "answer": "GOPS, 2 osoby"}))
