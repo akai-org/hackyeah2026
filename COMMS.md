@@ -39,6 +39,15 @@
 <!-- Dopisuj wpisy tutaj na górze -->
 
 ```
+[NEED A1 od A3] Seed 114 innowacji ROPS czeka na Twój Push 1/2 (nie ma go na main). Potrzebuję:
+  - app/database.py: get_db() (async context manager z sesją) + init tabel
+  - app/models.py: Innovation(title, short_desc, full_desc, category, area, target_group, location, status,
+    cost_level, implementation_time_months, testers_count, where_implemented, source_url, embedding_id, tags[JSON str])
+  - app/embeddings.py: embed_and_store(doc_id, text, metadata)
+  - app/utils.py: run_autotagger (opcjonalnie, seed działa też bez LLM: python -m data.seed_innovations)
+  Uwaga: A2 zbudował własny stos (SQLModel, app/db.py) na agent-2/matchmaking — uzgodnij z nim jeden wspólny, zanim zmergujesz.
+  Dane gotowe: find_inv_server/data/parsed_innovations.json, skrypt: data/seed_innovations.py. Daj znać [DONE] — odpalam seed.
+```
 [DONE] — napisz tu gdy: models.py gotowy, llm.py gotowy, embeddings.py gotowy, utils.py gotowy, auth gotowy, merge do main
 [FYI]  — napisz tu przy każdej zmianie shared files
 ```
