@@ -63,11 +63,12 @@ STOPWORDS = {
     "jest", "nie", "jak", "ale", "oraz", "albo", "czy", "dla", "przez", "przy", "który", "ktory",
     "ktora", "ktore", "mamy", "nasz", "nasza", "nasze", "nasi", "moja", "moje", "mojej", "mieszka",
     "bardzo", "tylko", "jego", "jej", "ich", "tego", "taki", "takie", "sobie", "jestem", "potrzeb",
-    "problem", "problemu", "gminie", "gminy", "sama", "samo", "sami", "same", "samego", "samej",
+    "problem", "problemu", "gminie", "gminy", "moze", "moga", "osoba", "osoby", "osob", "sama", "samo", "sami", "same", "samego", "samej",
 }  # fmt: skip
 
 MAX_TAGS = 5
 MIN_RELATIVE_SCORE = 0.5
+LEXICAL_SCALE = 3.0
 _FOLD = str.maketrans("ąćęłńóśźżĄĆĘŁŃÓŚŹŻ", "acelnoszzACELNOSZZ")
 
 
@@ -146,17 +147,27 @@ def lexical_scores(query: str, innovations: list[dict]) -> list[float]:
     n = len(docs)
     idf = {stem: math.log((n + 1) / (count + 1)) + 1 for stem, count in df.items()}
     query_vec = {stem: tf * idf.get(stem, math.log(n + 1) + 1) for stem, tf in Counter(_stems(query)).items()}
-    return [
-        _cosine(query_vec, {stem: (1 + math.log(tf)) * idf[stem] for stem, tf in doc.items()}) for doc in docs
-    ]
+    query_weight = sum(query_vec.values()) or 1.0
+    scores = []
+    for doc in docs:
+        cosine = _cosine(query_vec, {stem: (1 + math.log(tf)) * idf[stem] for stem, tf in doc.items()})
+        # Pokrycie zapytania (jak „coord” w Lucene): dokument z większością słów zapytania wygrywa
+        # z krótkim opisem, który przypadkiem wielokrotnie powtarza jedno z nich.
+        coverage = sum(w for stem, w in query_vec.items() if stem in doc) / query_weight
+        scores.append(cosine * (0.5 + 0.5 * coverage))
+    return scores
 
 
 def rank_locally(query: str, tags: list[str], innovations: list[dict]) -> list[dict]:
     """score = podobieństwo + 0.1 * liczba wspólnych tagów (ta sama formuła co w trybie ChromaDB)."""
     # Tylko tagi od klienta: użytkownik mógł usunąć chip i to ma zmienić wyniki.
     query_tags = set(tags)
+    scores = lexical_scores(query, innovations)
     ranked = []
-    for innov, similarity in zip(innovations, lexical_scores(query, innovations)):
+    for innov, raw in zip(innovations, scores):
+        # TF-IDF daje ~0–0.2, a kosinus embeddingów ~0.3–0.9. Stała skala (nie względem najlepszego trafienia,
+        # bo wtedy jedno przypadkowe słowo wygrywa) sprawia, że +0.1 za tag waży podobnie jak w trybie ChromaDB.
+        similarity = min(1.0, LEXICAL_SCALE * raw)
         score = similarity + 0.1 * len(set(innov.get("tags", [])) & query_tags)
         ranked.append({**innov, "match_score": round(score, 4)})
     ranked.sort(key=lambda i: i["match_score"], reverse=True)
