@@ -19,7 +19,7 @@ if [ ! -f .env ]; then
 fi
 
 echo ""
-echo "[1b/4] Seeduję bazę danych (21 innowacji)..."
+echo "[1b/5] Seeduję bazę danych (21 innowacji + forum)..."
 python -m data.seed_demo && echo "  ✓ Baza zaseedowana" || echo "  ⚠  Seed pominięty (uruchom ręcznie: python -m data.seed_demo)"
 
 deactivate
@@ -51,7 +51,7 @@ fi
 
 # ── Gotowe ───────────────────────────────────────────────
 echo ""
-echo "[5/5] Gotowe! Uruchom w dwóch osobnych terminalach:"
+echo "[4/5] Gotowe! Uruchom w dwóch osobnych terminalach:"
 echo ""
 echo "  BACKEND:"
 echo "    cd find_inv_server"
