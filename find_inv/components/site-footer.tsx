@@ -22,7 +22,7 @@ export function SiteFooter() {
         </div>
 
         <div>
-          <h2 id="kontakt" className="scroll-mt-6 text-lg font-bold text-deep">
+          <h2 className="text-lg font-bold text-deep">
             Kontakt
           </h2>
           <address className="mt-2 not-italic">
