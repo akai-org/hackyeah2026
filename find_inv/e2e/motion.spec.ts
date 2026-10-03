@@ -64,3 +64,20 @@ test("prefers-reduced-motion: okno zamyka się od razu, bez animacji", async ({ 
   await expect(page.locator("dialog[data-closing]")).toHaveCount(0);
   await expect(page.getByRole("dialog", { name: "Czego szukasz?" })).toBeHidden();
 });
+
+test("hover przycisku-opcji: uniesienie z twardym cieniem", async ({ page, isMobile }) => {
+  test.skip(isMobile, "na ekranie dotykowym nie ma hover");
+  await page.goto("/");
+  await page.locator("body").press("Control+k");
+  const option = page.getByRole("dialog").getByRole("button", { name: "Innowacje", exact: true });
+  await option.hover();
+  await expect.poll(() => option.evaluate((el) => getComputedStyle(el).translate)).toBe("-2px -2px");
+  expect(await option.evaluate((el) => getComputedStyle(el).boxShadow)).toContain("3px 3px 0px");
+});
+
+test("hover głównego przycisku też ma płynne przejście", async ({ page }) => {
+  await page.goto("/");
+  const submit = page.getByRole("main").getByRole("button", { name: "Szukaj" });
+  const transition = await submit.evaluate((el) => getComputedStyle(el).transitionProperty);
+  for (const property of ["background-color", "box-shadow", "translate"]) expect(transition).toContain(property);
+});

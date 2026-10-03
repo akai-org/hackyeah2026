@@ -240,6 +240,33 @@ html[data-contrast="high"] ::selection {
   }
 }
 
+/* ---------- Hover przycisków i opcji ----------
+   Obramowane przyciski, opcje (kategorie, tagi, role, tryby kreatora) i karty-wybory z klasą hover:bg-*:
+   płynna zmiana koloru, a na hover lekkie uniesienie z twardym „papierowym” cieniem; wciśnięcie dociska je. */
+
+@layer base {
+  :where(button, a, label, summary, [role="button"]) {
+    transition:
+      background-color 160ms ease-out,
+      border-color 160ms ease-out,
+      color 160ms ease-out,
+      box-shadow 160ms ease-out,
+      translate 160ms ease-out;
+  }
+
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    :where(button, a, label, [role="button"])[class*="border-deep"][class*="hover:bg-"]:not(:disabled, [aria-disabled="true"]):hover {
+      translate: -2px -2px;
+      box-shadow: 3px 3px 0 theme(colors.deep);
+    }
+
+    :where(button, a, label, [role="button"])[class*="border-deep"][class*="hover:bg-"]:not(:disabled):active {
+      translate: 0 0;
+      box-shadow: 0 0 0 theme(colors.deep);
+    }
+  }
+}
+
 /* ---------- Wspólne okno <Dialog>: wejście i wyjście okna oraz rozmytego tła ---------- */
 
 @media (prefers-reduced-motion: no-preference) {
