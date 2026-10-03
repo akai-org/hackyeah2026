@@ -1,4 +1,5 @@
 import json
+import secrets
 import uuid
 from typing import Literal
 
@@ -195,6 +196,11 @@ async def innovation_gap():
     return {"data": sorted(gaps, key=lambda g: -g["gap_score"])}
 
 
+def _optional(body: dict, key: str, limit: int) -> str | None:
+    value = str(body.get(key) or "").strip()
+    return value[:limit] or None
+
+
 @router.post("/ideas")
 async def submit_idea(body: dict):
     title = (body.get("title") or "").strip()
@@ -204,7 +210,7 @@ async def submit_idea(body: dict):
 
     try:
         from app.database import get_db
-        from app.models import Idea
+        from app.models import Idea, IdeaDetails
 
         async with get_db() as db:
             idea = Idea(
@@ -217,10 +223,22 @@ async def submit_idea(body: dict):
                 status="pending",
             )
             db.add(idea)
+            await db.flush()
+            # Pola fiszki spoza tabeli ideas + klucz, którym autor dołącza pliki (POST /api/ideas/{id}/attachments).
+            upload_token = secrets.token_urlsafe(24)
+            db.add(IdeaDetails(
+                idea_id=idea.id,
+                short_desc=_optional(body, "short_desc", 1000),
+                place=_optional(body, "place", 256),
+                stage=_optional(body, "stage", 128),
+                budget=_optional(body, "budget", 256),
+                partners=_optional(body, "partners", 512),
+                upload_token=upload_token,
+            ))
             await db.commit()
             await db.refresh(idea)
 
-        return {"data": {"id": idea.id, "message": "Pomysł przyjęty — dziękujemy!"}}
+        return {"data": {"id": idea.id, "upload_token": upload_token, "message": "Pomysł przyjęty — dziękujemy!"}}
     except HTTPException:
         raise
     except Exception:

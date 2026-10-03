@@ -6,7 +6,7 @@ from sqlmodel import Session
 
 from app.config import settings
 from app.database import init_db
-from app.routers import admin, admin_panel, health, knowledge, matchmaking, middleman
+from app.routers import admin, admin_panel, health, ideas, knowledge, matchmaking, middleman
 from app.routers import auth as auth_router
 from app.zasobnik.db import engine as zasobnik_engine
 from app.zasobnik.db import init_db as init_zasobnik_db
@@ -40,6 +40,7 @@ app.include_router(health.router, prefix="/api")
 app.include_router(auth_router.router)
 app.include_router(matchmaking.router)
 app.include_router(knowledge.router)
+app.include_router(ideas.router)
 # Panel admina A5 przed routerem A1: wspólne ścieżki /api/admin/* obsługuje A5 (jego frontend),
 # ścieżki tylko z A1 (np. /api/admin/ideas) dalej trafiają do admin.router.
 app.include_router(admin_panel.router)
