@@ -6,6 +6,7 @@ import { FeaturedInnovations } from "@/components/featured-innovations";
 import { GapIndex } from "@/components/gap-index";
 import { MalopolskaStatsTiles } from "@/components/malopolska-stats";
 import { Monstera } from "@/components/monstera";
+import { PaperCloud } from "@/components/paper-cloud";
 import { SearchForm } from "@/components/search-form";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -69,6 +70,9 @@ export default function HomePage() {
 
           {/* Desktop: duży liść ucięty przez prawą krawędź ekranu, min. 24 px od treści. */}
           <div aria-hidden="true" className="relative hidden lg:block">
+            {/* Chmurki wypełniają pustą przestrzeń pod liśćmi, z dala od pola wyszukiwania. */}
+            <PaperCloud className="absolute top-[35rem] left-6 w-60 -rotate-2" />
+            <PaperCloud shape="tall" color="mint" className="absolute top-[44rem] left-[18rem] w-36 rotate-3" />
             <Monstera
               size="small"
               color="mint"
@@ -85,7 +89,8 @@ export default function HomePage() {
         aria-labelledby="jak-to-dziala-tytul"
         className="scroll-mt-6 border-y-(length:--bw) border-deep bg-sage"
       >
-        <div className="mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
+        <div className="relative mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
+          <PaperCloud shape="tall" className="absolute top-8 right-10 hidden w-44 rotate-2 lg:block" />
           <CutoutText id="jak-to-dziala-tytul" text="Jak to działa" />
           <ol className="mt-10 grid gap-6 md:grid-cols-3">
             {STEPS.map((step, index) => {
@@ -125,7 +130,8 @@ export default function HomePage() {
 
       {/* Co już działa */}
       <section id="co-juz-dziala" aria-labelledby="co-juz-dziala-tytul" className="scroll-mt-6">
-        <div className="mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
+        <div className="relative mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
+          <PaperCloud className="absolute -top-6 right-24 hidden w-52 -rotate-1 lg:block" />
           <CutoutText id="co-juz-dziala-tytul" text="Co już działa" />
           <p className="mt-4 max-w-[60ch] text-lg">
             Kilka innowacji z Biblioteki. Każda ma opis, informację, dla kogo jest, ile kosztuje i gdzie już działa.
