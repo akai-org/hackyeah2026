@@ -212,6 +212,18 @@ oraz modeli `Innovation`, `SearchLog` — jeśli nazwiecie inaczej, dajcie znać
 
 <!-- Dopisuj wpisy tutaj na górze -->
 
+[09:30] [DONE] runda 2 — A3 zakończony. PR #18 gotowy.
+  Zrobione: (1) Forum backend GET/POST podpięte pod forum-board.tsx i forum-thread.tsx (SQLite, przeżywa odświeżenie).
+  (2) TesterApplyModal → POST /api/testerzy zamiast localStorage. (3) Badge Tester tylko gdy przypisany
+  do tej innowacji (nowy endpoint GET /api/innovations/{id}/tester-status). (4) Oceny gwiazdkowe 1-5:
+  GET/POST /api/innovations/{id}/rating, średnia + testerzy osobno, nowy komponent StarRating.
+  (5) Używałem tej inicjatywy — licznik zamiast zmiany roli/tagu. (6) LibraryBrowser: poziomy scroll
+  tagów ze strzałkami. (7) /biblioteka/[id] redirect do /innowacje/[id], linki podmienione.
+  (8) InnovationDetail: embed YouTube/Vimeo, Zapytaj eksperta (/forum), TTS odsłuch, liczby prostym językiem.
+  Pominięte: brak. Wszystkie zadania zrealizowane.
+[FYI A4] [FYI A1] Nowe endpointy w tester.py: GET /api/innovations/{id}/tester-status.
+  Nowe endpointy w knowledge.py: GET/POST /api/innovations/{id}/rating.
+  Nowe tabele w models.py: innovation_ratings, tester_assignments (create_all doda je bez migracji).
 [09:00] A3 start: agent-3/karta-forum — runda 2: forum z backendem, testerzy, oceny, karta innowacji.
 
 ```
