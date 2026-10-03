@@ -72,6 +72,19 @@ html[data-simple="true"] *::after {
   transition: none !important;
 }
 
+/* Tryb prosty: tekst 20 px nie mieści pełnej nawigacji w jednym rzędzie, więc menu mobilne zostaje do 1536 px. */
+@media (min-width: 80rem) and (max-width: 95.99rem) {
+  html[data-simple="true"] .nav-desktop {
+    display: none;
+  }
+  html[data-simple="true"] button.nav-mobile {
+    display: inline-flex;
+  }
+  html[data-simple="true"] div.nav-mobile:not([hidden]) {
+    display: block;
+  }
+}
+
 /* ---------- Kolaż: <CutoutText> (DESIGN.md, sekcja 6) ---------- */
 
 @layer components {
@@ -183,36 +196,21 @@ html[data-simple="true"] .simple-hidden {
   }
 }
 
-/* ---------- Wydruk / PDF planu wdrożenia ---------- */
+/* ---------- Druk: „Pobierz plan (PDF)” (window.print) ---------- */
 
 @media print {
+  body {
+    background: #fff;
+  }
+
   header,
   footer,
   .print-hidden,
-  nextjs-portal {
+  .simple-hidden {
     display: none !important;
   }
 
-  body {
-    background: #fff !important;
-  }
-
-  main article {
-    border: none !important;
+  .shadow-paper {
     box-shadow: none !important;
-    padding: 0 !important;
-  }
-}
-
-/* Tryb prosty: tekst 20 px nie mieści pełnej nawigacji w jednym rzędzie, więc menu mobilne zostaje do 1536 px. */
-@media (min-width: 80rem) and (max-width: 95.99rem) {
-  html[data-simple="true"] .nav-desktop {
-    display: none;
-  }
-  html[data-simple="true"] button.nav-mobile {
-    display: inline-flex;
-  }
-  html[data-simple="true"] div.nav-mobile:not([hidden]) {
-    display: block;
   }
 }

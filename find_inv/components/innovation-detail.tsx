@@ -120,7 +120,7 @@ export function InnovationDetail({ id }: { id: number }) {
       </div>
 
       <div className="mt-8 flex flex-wrap gap-3">
-        <Link href={`/wdrozenie/${innovation.id}`} className={buttonVariants({ variant: "primary" })}>
+        <Link href={`/wdrozenie?innowacja=${innovation.id}`} className={buttonVariants({ variant: "primary" })}>
           <MessageSquareText aria-hidden="true" />
           Dostosuj do mojej instytucji
         </Link>

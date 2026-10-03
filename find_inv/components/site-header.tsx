@@ -7,6 +7,7 @@ import { Menu, X } from "lucide-react";
 import { CutoutText } from "@/components/cutout-text";
 import { SimpleModeToggle } from "@/components/simple-mode";
 import { UserMenu } from "@/components/user-menu";
+import { useAuth } from "@/lib/auth";
 
 const NAV_LINKS = [
   { href: "/biblioteka", label: "Biblioteka" },
@@ -20,6 +21,9 @@ const linkClass =
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
+  const { user } = useAuth();
+  // Panel ROPS widać w menu tylko po zalogowaniu jako admin.
+  const links = user?.role === "admin" ? [...NAV_LINKS, { href: "/admin", label: "Panel ROPS" }] : NAV_LINKS;
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   // Escape zamyka menu i oddaje focus przyciskowi. Menu nie więzi focusa.
@@ -51,7 +55,7 @@ export function SiteHeader() {
 
         <nav aria-label="Główna" className="nav-desktop hidden xl:block">
           <ul className="flex items-center gap-1">
-            {NAV_LINKS.map((link) => (
+            {links.map((link) => (
               <li key={link.href}>
                 <Link href={link.href} className={linkClass}>
                   {link.label}
@@ -86,7 +90,7 @@ export function SiteHeader() {
       >
         <nav aria-label="Główna, wersja mobilna" className="mx-auto max-w-content px-4 py-3 sm:px-6">
           <ul className="flex flex-col">
-            {NAV_LINKS.map((link) => (
+            {links.map((link) => (
               <li key={link.href}>
                 <Link href={link.href} className={`${linkClass} w-full`} onClick={() => setOpen(false)}>
                   {link.label}

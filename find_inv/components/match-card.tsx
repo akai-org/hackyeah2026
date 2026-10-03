@@ -35,7 +35,8 @@ export function MatchCard({
   const unmaintained = innovation.is_unmaintained ?? innovation.status === "unmaintained";
   const shared = innovation.tags.filter((tag) => queryTags.includes(tag));
   const score = innovation.match_score ? Math.round(innovation.match_score * 100) : null;
-  const deployHref = `/wdrozenie/${innovation.id}${query ? `?q=${encodeURIComponent(query)}` : ""}`;
+  // Middleman (A5): /wdrozenie?innowacja={id}&problem={opis}
+  const deployHref = `/wdrozenie?innowacja=${innovation.id}${query ? `&problem=${encodeURIComponent(query)}` : ""}`;
 
   return (
     <article
