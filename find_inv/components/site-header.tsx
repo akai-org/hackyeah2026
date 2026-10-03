@@ -12,6 +12,8 @@ const NAV_LINKS = [
   { href: "/forum", label: "Forum" },
 ];
 
+const SEARCH_TAGS = ["Aplikacja", "Małe firmy", "Niewidomi", "Seniorzy", "Transport", "Zdrowie"];
+
 const linkClass =
   "inline-flex min-h-12 items-center rounded-ui px-3 text-base font-bold text-deep underline-offset-4 hover:underline";
 
@@ -20,6 +22,7 @@ export function SiteHeader() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchPlaceholder, setSearchPlaceholder] = useState("Szukaj");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const closeSearchRef = useRef<HTMLButtonElement>(null);
@@ -71,7 +74,7 @@ export function SiteHeader() {
 
   function trapSearchFocus(event: React.KeyboardEvent<HTMLDivElement>) {
     if (event.key !== "Tab") return;
-    const focusable = Array.from(searchDialogRef.current?.querySelectorAll<HTMLElement>("button, input") ?? []);
+    const focusable = Array.from(searchDialogRef.current?.querySelectorAll<HTMLElement>("button, input, summary") ?? []);
     const currentIndex = focusable.indexOf(document.activeElement as HTMLElement);
     const nextIndex = event.shiftKey
       ? (currentIndex <= 0 ? focusable.length - 1 : currentIndex - 1)
@@ -231,22 +234,47 @@ export function SiteHeader() {
             </div>
             <form action="/wyniki" method="get" role="search" className="mt-6 flex gap-3">
               <label htmlFor="quick-search" className="sr-only">Szukaj</label>
-              <input
-                ref={searchInputRef}
-                id="quick-search"
-                name="q"
-                type="search"
-                autoComplete="off"
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder={searchPlaceholder}
-                className="min-h-12 min-w-0 flex-1 rounded-ui border-(length:--bw) border-deep bg-paper px-4 text-base text-ink outline-none placeholder:text-muted"
-              />
+              <input type="hidden" name="tags" value={selectedTags.join(",")} />
+              <div className="flex min-h-12 min-w-0 flex-1 flex-wrap items-center gap-2 rounded-ui border-(length:--bw) border-deep bg-paper px-3 py-2">
+                {selectedTags.map((tag) => (
+                  <span key={tag} className="rounded-full bg-mint px-2 py-1 text-sm font-semibold text-deep">#{tag}</span>
+                ))}
+                <input
+                  ref={searchInputRef}
+                  id="quick-search"
+                  name="q"
+                  type="search"
+                  autoComplete="off"
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder={searchPlaceholder}
+                  className="min-w-[8rem] flex-1 bg-transparent px-1 text-base text-ink outline-none placeholder:text-muted"
+                />
+              </div>
               <button type="submit" className="inline-flex min-h-12 items-center gap-2 rounded-ui border-(length:--bw) border-deep bg-deep px-5 font-bold text-surface hover:bg-leaf">
                 <Search aria-hidden="true" className="size-5" />
                 Szukaj
               </button>
             </form>
+            <details className="mt-4 rounded-ui border-(length:--bw) border-sage bg-paper">
+              <summary className="flex min-h-12 cursor-pointer items-center justify-between gap-4 px-4 font-semibold text-deep">
+                Wybierz tagi
+                <span className="text-sm text-muted">{selectedTags.length ? `Wybrano: ${selectedTags.length}` : "wielokrotny wybór"}</span>
+              </summary>
+              <div className="grid gap-1 border-t-(length:--bw) border-sage p-3 sm:grid-cols-2" aria-label="Lista tagów wyszukiwania">
+                {SEARCH_TAGS.map((tag) => (
+                  <label key={tag} className="flex min-h-12 cursor-pointer items-center gap-3 rounded-ui px-3 hover:bg-sage">
+                    <input
+                      type="checkbox"
+                      checked={selectedTags.includes(tag)}
+                      onChange={() => setSelectedTags((current) => (current.includes(tag) ? current.filter((item) => item !== tag) : [...current, tag]))}
+                      className="size-5 accent-deep"
+                    />
+                    <span className="text-base text-deep">#{tag}</span>
+                  </label>
+                ))}
+              </div>
+            </details>
             <p className="mt-4 text-sm text-muted">Naciśnij Escape, aby zamknąć.</p>
           </div>
         </div>
