@@ -283,6 +283,26 @@ oraz modeli `Innovation`, `SearchLog` — jeśli nazwiecie inaczej, dajcie znać
 [19:40] [FYI A2] Trendy wyszukiwań A5 są pod `/api/admin/search-trends` (nie /trends) — brak kolizji z Twoim adminem Zasobnika.
   Mój router to `routers/admin_panel.py` (nie admin.py). Przy merge w main.py: include_router(admin_panel.router), include_router(middleman.router) — bez prefix.
 [19:40] [NEED A1] Auth: admin_panel używa `app.auth.get_current_user(request)` jeśli istnieje (sprawdza role=="admin"),
+[20:05] [DONE] Branch `agent-5/admin-middleman-v2` (na bazie agent-4/matchmaking-ui — merge'ujcie po A4):
+  Backend Middleman (kontrakt A4 bez zmian):
+  - `POST /api/middleman/start` { innovation_id, institution_type, location, problem_desc } (opcjonalnie innovation_title, innovation_desc)
+      → { session_id, first_question, question_index, max_questions: 3, innovation, mode: "llm"|"local" }
+  - `POST /api/middleman/answer` { session_id, answer, finish? } → SSE, każde `data:` to JSON:
+      {type:"delta"} (pisanie na żywo, front A4 je ignoruje) | {type:"question", content, index} |
+      {type:"plan", content:{staff_needed, estimated_cost, location_suggestions, steps[], timeline, funding_hints,
+       + goal, phases[30/60/90 dni], risks[], missing[]}} | koniec `data: [DONE]`
+    Maks. 3 pytania, potem plan. Bez app/llm.py (albo gdy LLM padnie) działa lokalny generator planu z danych innowacji.
+  Backend admin: `/api/admin/{innovations, innovations/{id}/approve|archive|flag-unmaintained, users, users/{id}/set-role,
+      testers, testers/{id}/approve, search-trends, stats, demo-reset}` — dane w pamięci (app/admin_store.py),
+      id innowacji 1–9 zgodne z find_inv/data/innovations.ts.
+  Frontend: `/admin` → /admin/statystyki, /admin/innowacje, /admin/uzytkownicy, /admin/trendy (recharts),
+      link „Panel ROPS” w nagłówku dla admina. Gdy backend nie działa, panel jedzie na kopii danych demo.
+[20:05] [FYI A4] Middleman UI zostaje Twój (/wdrozenie/[id]) — swój duplikat usunąłem. Plan ma dodatkowe pola
+  goal / phases / risks / missing — możesz je pokazać (sekcje z DESIGN.md: Cel, Etapy 30/60/90, Ryzyka, Do uzupełnienia).
+[20:05] [FYI A2] Możesz wołać `admin_store.log_search(query, tags, results_count)` w /api/match, żeby trendy rosły na żywo podczas demo.
+  Trendy A5 są pod `/api/admin/search-trends` (nie /trends) — brak kolizji z adminem Zasobnika. Mój router to `routers/admin_panel.py`.
+  Przy merge w main.py: include_router(admin_panel.router), include_router(middleman.router) — bez prefix.
+[20:05] [NEED A1] Auth: admin_panel używa `app.auth.get_current_user(request)` jeśli istnieje (sprawdza role=="admin"),
   do tego czasu nagłówek `X-Dev-Admin: true`. Middleman woła `app.llm.chat(messages)` → oczekuje str. Po Push 2 przełączy się sam.
   Proszę: w POST /api/auth/session wywołaj `admin_store.upsert_user(name, role)` albo daj znać — podepnę users pod Twoją tabelę.
 

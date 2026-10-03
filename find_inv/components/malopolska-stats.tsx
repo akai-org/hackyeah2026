@@ -22,29 +22,21 @@ export function MalopolskaStatsTiles() {
     getStats().then(setStats);
   }, []);
 
-  const tiles = [
-    { value: `${formatNumber(stats.aging_pct)}%`, label: "mieszkańców ma 65 lat lub więcej" },
-    { value: `${formatNumber(stats.digital_exclusion_pct)}%`, label: "osób jest wykluczonych cyfrowo" },
-    { value: `${formatNumber(stats.loneliness_pct)}%`, label: "osób jest zagrożonych samotnością" },
-    {
-      value: formatNumber(stats.poverty_per_10k),
-      label: "osób na 10 tys. mieszkańców dostaje pomoc z powodu ubóstwa",
-    },
-    { value: formatNumber(stats.mental_health_facilities), label: "placówek wsparcia zdrowia psychicznego" },
-  ];
+  const tiles = stats.indicators?.length ? stats.indicators : MOCK_STATS_MALOPOLSKA.indicators ?? [];
 
   return (
     <div>
-      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {tiles.map((tile) => (
           <li key={tile.label} className="border-(length:--bw) border-deep bg-surface p-5 shadow-paper">
             <p className="text-2xl font-bold text-deep tabular-nums">{tile.value}</p>
             <p className="mt-1">{tile.label}</p>
+            <p className="mt-2 text-sm text-muted">{tile.source}</p>
           </li>
         ))}
       </ul>
       <p className="mt-4 text-sm text-muted">
-        Źródło: {stats.source ?? "GUS, ROPS Kraków"}, dane z {stats.source_year} r.
+        Źródło: {stats.source ?? "GUS, Bank Danych Lokalnych"}.
       </p>
     </div>
   );

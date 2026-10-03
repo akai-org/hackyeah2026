@@ -237,15 +237,17 @@ export type Challenge = {
 
 export type GapEntry = { powiat: string; gap_score: number; top_area: string; innovations_count: number };
 
+export type StatTile = { value: string; label: string; source: string };
+
 export type MalopolskaStats = {
   aging_pct: number;
-  loneliness_pct: number;
-  digital_exclusion_pct: number;
   poverty_per_10k: number;
-  mental_health_facilities: number;
+  unemployment_pct?: number;
   disability_count?: number;
   source_year: number;
   source?: string;
+  /** Gotowe kafelki z /api/stats/malopolska – każdy z własnym rokiem danych GUS. */
+  indicators?: StatTile[];
 };
 
 export const MOCK_CHALLENGES: Challenge[] = [
@@ -292,13 +294,18 @@ export const MOCK_GAP_INDEX: GapEntry[] = [
   { powiat: "myślenicki", gap_score: 2.4, top_area: "zdrowie psychiczne", innovations_count: 4 },
 ];
 
+// Dane GUS BDL dla Małopolski (te same co z /api/stats/malopolska) – gdy backend nie odpowiada.
 export const MOCK_STATS_MALOPOLSKA: MalopolskaStats = {
-  aging_pct: 22.4,
-  loneliness_pct: 18.1,
-  digital_exclusion_pct: 31.0,
-  poverty_per_10k: 145,
-  mental_health_facilities: 23,
-  disability_count: 187400,
-  source_year: 2024,
-  source: "GUS BDL, NSP 2021, ROPS Kraków",
+  aging_pct: 19.2,
+  poverty_per_10k: 273,
+  unemployment_pct: 4.7,
+  disability_count: 394309,
+  source_year: 2025,
+  source: "GUS, Bank Danych Lokalnych (bdl.stat.gov.pl)",
+  indicators: [
+    { value: "19,2%", label: "mieszkańców ma 65 lat lub więcej", source: "GUS 2025" },
+    { value: "273", label: "na 10 tys. osób korzysta z pomocy społecznej", source: "GUS 2024" },
+    { value: "4,7%", label: "stopa bezrobocia rejestrowanego", source: "GUS 2025" },
+    { value: "394 tys.", label: "osób z niepełnosprawnością", source: "GUS, spis 2011" },
+  ],
 };

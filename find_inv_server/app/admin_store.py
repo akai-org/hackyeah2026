@@ -29,7 +29,8 @@ def _iso(value: datetime) -> str:
 
 # ── Seed ─────────────────────────────────────────────────
 
-# Zgłoszenia czekające na weryfikację ROPS — dzięki nim przycisk „Zatwierdź” ma co robić na demo.
+# Id 6–9 jak w find_inv/data/innovations.ts (frontend A4) — Middleman dostaje id z kart i musi trafić w tę samą innowację.
+# Kolejne to zgłoszenia czekające na weryfikację ROPS i przykłady pozostałych statusów.
 _EXTRA_INNOVATIONS = [
     {
         "title": "Gminny bus na telefon",
@@ -58,6 +59,36 @@ _EXTRA_INNOVATIONS = [
         "tags": ["młodzież", "zdrowie_psychiczne", "edukacja"],
     },
     {
+        "title": "Klub Rodzica w świetlicy",
+        "short_desc": "Spotkania i warsztaty dla rodziców małych dzieci w świetlicy wiejskiej",
+        "full_desc": "Cotygodniowe spotkania rodziców z dziećmi do 6 lat. Prowadzą je asystent rodziny i wolontariusze. "
+        "W programie zabawy rozwojowe, porady położnej i wymiana ubrań dziecięcych.",
+        "category": "rodzina",
+        "area": "wsparcie rodziny",
+        "target_group": "rodziny z małymi dziećmi",
+        "location": "gmina wiejska",
+        "status": "active",
+        "cost_level": "low",
+        "implementation_time_months": 1,
+        "where_implemented": "gminy powiatu miechowskiego",
+        "tags": ["rodzina", "dzieci", "gmina_wiejska", "wolontariat", "samotność"],
+    },
+    {
+        "title": "Mentor dla migranta",
+        "short_desc": "Wolontariusze pomagają nowym mieszkańcom w urzędach, szkole i pracy",
+        "full_desc": "Każda rodzina migrancka dostaje mentora z sąsiedztwa na pierwsze 3 miesiące. Mentor pomaga w "
+        "załatwieniu PESEL, zapisaniu dzieci do szkoły i szukaniu pracy. Koordynacja przez CUS lub NGO.",
+        "category": "integracja",
+        "area": "włączenie społeczne",
+        "target_group": "migranci i uchodźcy",
+        "location": "Kraków",
+        "status": "active",
+        "cost_level": "low",
+        "implementation_time_months": 2,
+        "where_implemented": "Kraków, Wieliczka",
+        "tags": ["migranci", "wolontariat", "rynek_pracy", "CUS", "NGO"],
+    },
+    {
         "title": "Wspólna kuchnia w świetlicy",
         "short_desc": "Cotygodniowe wspólne gotowanie, posiłki dowożone sąsiadom",
         "category": "samotność",
@@ -82,19 +113,6 @@ _EXTRA_INNOVATIONS = [
         "implementation_time_months": 8,
         "where_implemented": "Tarnów, Gorlice",
         "tags": ["niepełnosprawność", "OPS", "samorząd"],
-    },
-    {
-        "title": "Klub Rodzica",
-        "short_desc": "Grupy wsparcia i warsztaty dla rodzin w kryzysie",
-        "category": "rodzina",
-        "area": "wsparcie rodziny",
-        "target_group": "rodzice dzieci 0–10 lat",
-        "location": "Oświęcim",
-        "status": "active",
-        "cost_level": "low",
-        "implementation_time_months": 2,
-        "where_implemented": "Oświęcim, Chrzanów",
-        "tags": ["rodzina", "dzieci", "NGO"],
     },
     {
         "title": "Kawiarenka integracyjna",
@@ -187,7 +205,7 @@ def _seed() -> dict:
     for i, extra in enumerate(_EXTRA_INNOVATIONS):
         item = {
             "id": next_id + i,
-            "full_desc": extra["short_desc"],
+            "full_desc": extra.get("full_desc", extra["short_desc"]),
             "testers_count": 0 if extra["status"] == "pending" else 4 + i,
             "source_url": "https://rops.krakow.pl",
             **extra,
