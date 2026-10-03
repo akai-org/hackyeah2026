@@ -79,8 +79,9 @@ def sections(body: str) -> dict[str, str]:
     out: dict[str, str] = {}
     for i in range(1, len(parts) - 1, 2):
         name = re.sub(r"^\d+\.\s*", "", clean(parts[i])).rstrip("?").strip().lower()
-        paragraphs = [clean(p) for p in re.findall(r"<p>(.*?)</p>", parts[i + 1], flags=re.S)]
-        out[name] = "\n".join(p for p in paragraphs if p)
+        # treść bywa w <p>, w listach <li> albo luzem – dziel na bloki po tagach blokowych
+        blocks = re.split(r"</?(?:p|li|ul|ol|div)[^>]*>", parts[i + 1])
+        out[name] = "\n".join(b for b in (clean(x) for x in blocks) if b)
     return out
 
 
@@ -179,7 +180,8 @@ def main() -> None:
             "cost_level": cost_level(searchable),
             "implementation_time_months": None,
             "testers_count": 0,
-            "where_implemented": shorten(who, 200) if who else "Małopolska",
+            "where_implemented": "Małopolska",
+            "who_can_use": who or None,
             "source_url": f"{BASE}{LIB}/{cat},{slug}",
             "video_url": video.group(1) if video else None,
             "materials_url": BASE + pdf.group(1) if pdf else None,

@@ -75,7 +75,7 @@ def gmina_pulse(powiat: str):
         raise HTTPException(404, "Nieznany powiat")
     top = sorted((c for c in store.all_challenges() if c["powiat"] == name), key=lambda c: -c["severity"])[:3]
     hints = {t for c in top for t in ch.AREAS[c["area"]][3]}
-    matching = store.innovations_for_area(top[0]["area"], list(hints), limit=3)
+    matching = store.innovations_for_area(list(hints), limit=3)
     return ok({
         "powiat": name,
         "top_challenges": top,
