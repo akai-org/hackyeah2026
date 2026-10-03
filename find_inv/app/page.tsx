@@ -2,11 +2,26 @@ import Link from "next/link";
 import { MessageSquareText, Puzzle, ScanSearch, TrendingUp, AlertTriangle, type LucideIcon } from "lucide-react";
 
 import { CutoutText } from "@/components/cutout-text";
+import { BackendInnovationCard, type BackendInnovation } from "@/components/backend-innovation-card";
 import { InnovationCard } from "@/components/innovation-card";
 import { Monstera } from "@/components/monstera";
 import { SearchForm } from "@/components/search-form";
 import { buttonVariants } from "@/components/ui/button";
 import { innovations } from "@/data/innovations.mock";
+
+async function getShowcaseInnovations(): Promise<BackendInnovation[] | null> {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}/api/innovations?limit=3&status=active`,
+      { next: { revalidate: 120 } },
+    );
+    if (!res.ok) return null;
+    const json = await res.json();
+    return (json.data ?? []).slice(0, 3) as BackendInnovation[];
+  } catch {
+    return null;
+  }
+}
 
 const STATS = [
   { value: "22,4%", label: "osób 65+ w Małopolsce", source: "GUS 2024" },
@@ -60,7 +75,8 @@ const AUDIENCES = [
   },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const liveInnovations = await getShowcaseInnovations();
   return (
     <>
       {/* Hero */}
@@ -132,11 +148,18 @@ export default function HomePage() {
             Kilka innowacji z Biblioteki. Każda ma opis, informację, dla kogo jest, i ocenę dowodów skuteczności.
           </p>
           <ul className="mt-10 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {innovations.slice(0, 3).map((innovation) => (
-              <li key={innovation.id} className="flex">
-                <InnovationCard innovation={innovation} />
-              </li>
-            ))}
+            {liveInnovations
+              ? liveInnovations.map((inn) => (
+                  <li key={inn.id} className="flex">
+                    <BackendInnovationCard innovation={inn} headingLevel="h3" />
+                  </li>
+                ))
+              : innovations.slice(0, 3).map((innovation) => (
+                  <li key={innovation.id} className="flex">
+                    <InnovationCard innovation={innovation} />
+                  </li>
+                ))
+            }
           </ul>
           <Link href="/biblioteka" className={buttonVariants({ variant: "secondary", className: "mt-10" })}>
             Zobacz całą bibliotekę

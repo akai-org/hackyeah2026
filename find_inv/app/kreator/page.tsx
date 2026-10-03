@@ -1,26 +1,36 @@
 "use client";
 
-import type { Metadata } from "next";
+import Link from "next/link";
 import { useState } from "react";
-import { Lightbulb, Loader2, Tag } from "lucide-react";
+import { ChevronRight, Lightbulb, Loader2, Tag } from "lucide-react";
 
 import { CutoutText } from "@/components/cutout-text";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { TAXONOMY_TAGS } from "@/data/mock";
+import { apiPost } from "@/lib/api";
+import { type BackendInnovation } from "@/components/backend-innovation-card";
 import { cn } from "@/lib/utils";
 
-const MOCK_FISZKA = {
-  title: "Mobilna biblioteka wsparcia dla seniorów",
-  essence: "Program regularnych odwiedzin wolontariuszy u seniorów mieszkających samotnie, połączony z dostępem do cyfrowych usług publicznych.",
-  forWhom: "Seniorzy 65+ mieszkający samotnie, szczególnie na terenach wiejskich i oddalonych od centrum gminy.",
-  stage: "Pomysł — wymaga partnera instytucjonalnego (OPS lub NGO) do pilotażu.",
-};
+interface Fiszka {
+  title: string;
+  essence: string;
+  forWhom: string;
+  stage: string;
+  autoTags: string[];
+  similar: BackendInnovation[];
+}
+
+function makeTitleFromText(text: string): string {
+  const words = text.trim().split(/\s+/).slice(0, 8);
+  const first = words.join(" ");
+  return first.length > 60 ? first.slice(0, 57) + "…" : first;
+}
 
 export default function KreatorPage() {
   const [text, setText] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [fiszka, setFiszka] = useState<typeof MOCK_FISZKA | null>(null);
+  const [fiszka, setFiszka] = useState<Fiszka | null>(null);
 
   function toggleTag(tag: string) {
     setSelectedTags((prev) =>
@@ -28,14 +38,39 @@ export default function KreatorPage() {
     );
   }
 
-  function analyze() {
+  async function analyze() {
     if (!text.trim()) return;
     setLoading(true);
     setFiszka(null);
-    setTimeout(() => {
-      setFiszka(MOCK_FISZKA);
+    try {
+      const [tagResult, matchResult] = await Promise.all([
+        apiPost<{ tags: string[]; area: string; target_group: string }>("/api/tag", { text }),
+        apiPost<{ innovations: BackendInnovation[] }>("/api/match", {
+          text,
+          tags: selectedTags,
+        }),
+      ]);
+      const allTags = [...new Set([...selectedTags, ...tagResult.tags])];
+      setFiszka({
+        title: makeTitleFromText(text),
+        essence: text.trim(),
+        forWhom: tagResult.target_group || "Osoby potrzebujące wsparcia w Małopolsce",
+        stage: "Pomysł — wymaga partnera instytucjonalnego (OPS lub NGO) do pilotażu.",
+        autoTags: allTags,
+        similar: matchResult.innovations.slice(0, 2),
+      });
+    } catch {
+      setFiszka({
+        title: makeTitleFromText(text),
+        essence: text.trim(),
+        forWhom: "Osoby potrzebujące wsparcia w Małopolsce",
+        stage: "Pomysł — wymaga partnera instytucjonalnego (OPS lub NGO) do pilotażu.",
+        autoTags: selectedTags,
+        similar: [],
+      });
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   }
 
   return (
@@ -102,36 +137,71 @@ export default function KreatorPage() {
       </div>
 
       {fiszka && (
-        <div className="mt-12 max-w-2xl border-(length:--bw) border-deep bg-surface p-8 shadow-paper">
-          <h2 className="text-xl font-bold text-deep">Fiszka pomysłu</h2>
-          <dl className="mt-6 space-y-5">
-            {[
-              ["Tytuł", fiszka.title],
-              ["Istota pomysłu", fiszka.essence],
-              ["Dla kogo", fiszka.forWhom],
-              ["Etap realizacji", fiszka.stage],
-            ].map(([label, value]) => (
-              <div key={label} className="border-l-4 border-leaf pl-4">
-                <dt className="text-sm font-bold text-muted">{label}</dt>
-                <dd className="mt-1">{value}</dd>
-              </div>
-            ))}
-            {selectedTags.length > 0 && (
-              <div className="border-l-4 border-leaf pl-4">
-                <dt className="text-sm font-bold text-muted">Tagi</dt>
-                <dd className="mt-2 flex flex-wrap gap-2">
-                  {selectedTags.map((t) => (
-                    <span key={t} className="rounded-full border-2 border-leaf bg-paper px-2.5 py-0.5 text-sm text-leaf">
-                      {t}
-                    </span>
-                  ))}
-                </dd>
-              </div>
-            )}
-          </dl>
-          <p className="mt-6 text-sm text-muted">
-            Fiszka zapisana lokalnie. Pełne zgłoszenie do bazy ROPS będzie dostępne po weryfikacji przez administratora.
-          </p>
+        <div className="mt-12 max-w-2xl space-y-6">
+          <div className="border-(length:--bw) border-deep bg-surface p-8 shadow-paper">
+            <h2 className="text-xl font-bold text-deep">Fiszka pomysłu</h2>
+            <dl className="mt-6 space-y-5">
+              {[
+                ["Tytuł (roboczo)", fiszka.title],
+                ["Istota pomysłu", fiszka.essence],
+                ["Dla kogo", fiszka.forWhom],
+                ["Etap realizacji", fiszka.stage],
+              ].map(([label, value]) => (
+                <div key={label} className="border-l-4 border-leaf pl-4">
+                  <dt className="text-sm font-bold text-muted">{label}</dt>
+                  <dd className="mt-1">{value}</dd>
+                </div>
+              ))}
+              {fiszka.autoTags.length > 0 && (
+                <div className="border-l-4 border-leaf pl-4">
+                  <dt className="text-sm font-bold text-muted">Tematy (rozpoznane przez AI)</dt>
+                  <dd className="mt-2 flex flex-wrap gap-2">
+                    {fiszka.autoTags.map((t) => (
+                      <span key={t} className="rounded-full border-2 border-leaf bg-paper px-2.5 py-0.5 text-sm text-leaf">
+                        {t}
+                      </span>
+                    ))}
+                  </dd>
+                </div>
+              )}
+            </dl>
+            <p className="mt-6 text-sm text-muted">
+              Fiszka wygenerowana lokalnie. Zgłoś się jako tester, żeby zgłosić pomysł do bazy ROPS.
+            </p>
+            <Link
+              href="/testerzy"
+              className={buttonVariants({ variant: "secondary", className: "mt-4 gap-2 text-sm" })}
+            >
+              Zostań testerem
+              <ChevronRight className="size-4" aria-hidden="true" />
+            </Link>
+          </div>
+
+          {fiszka.similar.length > 0 && (
+            <div className="border-(length:--bw) border-sage bg-paper p-6">
+              <h3 className="font-bold text-deep">Podobne innowacje już w Bibliotece</h3>
+              <p className="mt-1 text-sm text-muted">
+                Może nie musisz zaczynać od zera — sprawdź, co już działa.
+              </p>
+              <ul className="mt-4 space-y-3">
+                {fiszka.similar.map((inn) => (
+                  <li key={inn.id} className="flex items-start gap-3 border-(length:--bw) border-sage bg-surface p-4">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-deep">{inn.title}</p>
+                      <p className="mt-1 text-sm text-muted line-clamp-2">{inn.short_desc}</p>
+                    </div>
+                    <Link
+                      href={`/biblioteka/${inn.id}`}
+                      className={buttonVariants({ variant: "secondary", className: "shrink-0 text-sm" })}
+                    >
+                      <ChevronRight className="size-4" aria-hidden="true" />
+                      <span className="sr-only">Szczegóły: {inn.title}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
     </div>

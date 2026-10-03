@@ -6,6 +6,7 @@ import { MessageSquare, Send } from "lucide-react";
 import { CutoutText } from "@/components/cutout-text";
 import { Button } from "@/components/ui/button";
 import { MOCK_FORUM_POSTS, type ForumPost, type ForumBadge } from "@/data/mock";
+import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 const BADGE_STYLES: Record<ForumBadge, string> = {
@@ -58,6 +59,7 @@ function PostItem({ post }: { post: ForumPost }) {
 }
 
 export default function ForumPage() {
+  const { user } = useAuth();
   const [posts, setPosts] = useState<ForumPost[]>(MOCK_FORUM_POSTS);
   const [newContent, setNewContent] = useState("");
 
@@ -68,8 +70,8 @@ export default function ForumPage() {
       id: Date.now(),
       parentId: null,
       content,
-      authorName: "Gość",
-      badge: "user",
+      authorName: user?.name ?? "Gość",
+      badge: (user?.role as ForumBadge) ?? "user",
       createdAt: new Date().toISOString(),
     };
     setPosts((prev) => [...prev, newPost]);
@@ -106,7 +108,11 @@ export default function ForumPage() {
             <span className="sr-only">Wyślij</span>
           </Button>
         </div>
-        <p className="mt-2 text-xs text-muted">Wpisz jako Gość — zaloguj się, żeby wyświetlać swoją rolę.</p>
+        <p className="mt-2 text-xs text-muted">
+          {user
+            ? `Postujesz jako ${user.name} (${user.role})`
+            : "Zaloguj się, żeby dodawać wpisy pod swoim imieniem."}
+        </p>
       </div>
 
       {/* Wątki */}
