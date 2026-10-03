@@ -7,6 +7,7 @@ import { GapIndex } from "@/components/gap-index";
 import { MalopolskaStatsTiles } from "@/components/malopolska-stats";
 import { Monstera } from "@/components/monstera";
 import { PaperCloud } from "@/components/paper-cloud";
+import { PowiatMap } from "@/components/powiat-map";
 import { SearchForm } from "@/components/search-form";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -142,6 +143,14 @@ export default function HomePage() {
           </div>
           <div className="mt-10">
             <MalopolskaStatsTiles />
+          </div>
+
+          <h3 className="mt-14 text-xl font-bold text-deep">Mapa powiatów</h3>
+          <p className="mt-2 max-w-[60ch]">
+            Kliknij powiat, żeby zobaczyć jego najważniejsze wyzwania i innowacje, które mogą pomóc.
+          </p>
+          <div className="mt-6">
+            <PowiatMap />
           </div>
 
           <h3 className="mt-14 text-xl font-bold text-deep">Gdzie najbardziej brakuje rozwiązań</h3>
