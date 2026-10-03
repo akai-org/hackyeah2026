@@ -38,8 +38,9 @@ export function SearchForm({ initialText = "", showExamples = true, className }:
   const [error, setError] = useState(false);
   const [errorKey, setErrorKey] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  // Na żywo: tekst pojawia się w polu w trakcie mówienia, potem AI proponuje poprawkę do akceptacji.
-  const dictation = useDictation(setText, () => setError(false), { live: true });
+  // Na żywo: tekst pojawia się w polu w trakcie mówienia, potem AI proponuje poprawkę do akceptacji —
+  // a długą wypowiedź „naokoło” skraca do sedna, bo krótki opis daje lepsze wyniki wyszukiwania.
+  const dictation = useDictation(setText, () => setError(false), { live: true, condense: true });
   const supported = dictation.supported;
 
   function updateText(value: string) {

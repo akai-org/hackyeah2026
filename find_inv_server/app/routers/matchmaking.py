@@ -20,7 +20,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app import knowledge_store
 from app.config import settings
-from app.local_matching import TAXONOMY_TAGS, local_chat_answer, local_tag_result, rank_locally
+from app.local_matching import TAXONOMY_TAGS, condense_locally, local_chat_answer, local_tag_result, rank_locally
 
 log = logging.getLogger(__name__)
 
@@ -78,6 +78,8 @@ class MatchRequest(BaseModel):
 
 class VoiceFixRequest(BaseModel):
     transcript: str
+    # Wyszukiwarka: wypowiedź „naokoło” skracamy do sedna (kto, co, gdzie). Kreator zostawia pełny tekst.
+    condense: bool = False
 
 
 class ChatMessage(BaseModel):
@@ -289,33 +291,52 @@ def _tidy_transcript(text: str) -> str:
     return text if text[-1] in ".!?…" else f"{text}."
 
 
+VOICE_CONDENSE_PROMPT = (
+    "Dostajesz transkrypcję mowy po polsku: ktoś opisuje problem społeczny, często chaotycznie, z dygresjami, "
+    "powtórzeniami i wtrąceniami. Popraw gramatykę i błędy rozpoznawania mowy, a jeśli wypowiedź krąży wokół tematu, "
+    "streść ją do sedna: kogo dotyczy problem, co się dzieje, gdzie — 1–2 krótkie zdania, najwyżej 40 słów. "
+    "Pisz z perspektywy mówiącego, jego słowami. NIE dodawaj informacji, których nie było, NIE oceniaj. "
+    "Krótkiej i rzeczowej wypowiedzi nie skracaj, tylko popraw. "
+    'Odpowiedz wyłącznie JSON: {"corrected": "...", "condensed": true|false, "confidence": 0.0-1.0}'
+)
+
+
+def _local_fix(transcript: str, condense: bool) -> dict:
+    condensed = False
+    if condense:
+        transcript, condensed = condense_locally(transcript)
+    return {"corrected": _tidy_transcript(transcript), "condensed": condensed, "confidence": 0.6, "source": "rules"}
+
+
 @router.post("/voice-fix")
 async def voice_fix(body: VoiceFixRequest):
     transcript = body.transcript.strip()[:MAX_TEXT]
     llm_chat = _llm_chat()
     if not transcript:
-        return _ok({"corrected": transcript, "confidence": 1.0, "source": "none"})
+        return _ok({"corrected": transcript, "condensed": False, "confidence": 1.0, "source": "none"})
     if llm_chat is None:
-        return _ok({"corrected": _tidy_transcript(transcript), "confidence": 0.6, "source": "rules"})
+        return _ok(_local_fix(transcript, body.condense))
 
     try:
         raw = await llm_chat(
             [
-                {"role": "system", "content": VOICE_FIX_PROMPT},
+                {"role": "system", "content": VOICE_CONDENSE_PROMPT if body.condense else VOICE_FIX_PROMPT},
                 {"role": "user", "content": transcript},
             ]
         )
         parsed = _parse_json_object(raw)
+        corrected = (parsed.get("corrected") or transcript).strip()
         return _ok(
             {
-                "corrected": parsed.get("corrected") or transcript,
+                "corrected": corrected,
+                "condensed": bool(parsed.get("condensed")) and len(corrected.split()) < len(transcript.split()),
                 "confidence": float(parsed.get("confidence", 0.8)),
                 "source": "llm",
             }
         )
     except Exception:
         log.exception("voice-fix failed")
-        return _ok({"corrected": _tidy_transcript(transcript), "confidence": 0.5, "source": "rules"})
+        return _ok({**_local_fix(transcript, body.condense), "confidence": 0.5})
 
 
 CHAT_SYSTEM_PROMPT = (

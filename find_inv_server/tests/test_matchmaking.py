@@ -98,3 +98,29 @@ def test_chat_accepts_a4_field_names():
     )
     events = [e[6:] for e in response.text.split("\n\n") if e and e != "data: [DONE]"]
     assert innovation["title"] in "".join(json.loads(e)["content"] for e in events)
+
+
+RAMBLING = (
+    "no więc yyy chodzi o to że moja mama no mieszka sama na wsi wiesz od kiedy tata umarł i w sumie to jest tak że "
+    "ona nie ma jak dojechać do lekarza bo autobus jeździ raz dziennie a ja pracuję w krakowie i nie mogę jej wozić "
+    "no i generalnie ona się czuje samotna i tak dalej no i nie ma jak dojechać do lekarza"
+)
+
+
+def test_voice_fix_condenses_rambling_speech_on_request():
+    data = client.post("/api/voice-fix", json={"transcript": RAMBLING, "condense": True}).json()["data"]
+    assert data["condensed"] is True
+    assert len(data["corrected"].split()) <= 40 < len(RAMBLING.split())
+    text = data["corrected"].lower()
+    assert "mama mieszka sama na wsi" in text and "lekarza" in text  # sedno zostaje
+    for filler in ("yyy", "wiesz", "w sumie", "generalnie", "i tak dalej"):
+        assert filler not in text
+    assert text.count("dojechać do lekarza") == 1  # powtórzona myśl tylko raz
+
+
+def test_voice_fix_keeps_short_or_unflagged_text():
+    short = client.post("/api/voice-fix", json={"transcript": "mama mieszka sama na wsi", "condense": True}).json()
+    assert short["data"] == {**short["data"], "corrected": "Mama mieszka sama na wsi.", "condensed": False}
+    # bez condense (Kreator) długi tekst zostaje w całości
+    full = client.post("/api/voice-fix", json={"transcript": RAMBLING}).json()["data"]
+    assert full["condensed"] is False and len(full["corrected"].split()) == len(RAMBLING.split())

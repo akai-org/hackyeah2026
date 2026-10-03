@@ -136,6 +136,21 @@ export async function* streamChat(
 }
 
 /** Poprawia transkrypcję z dyktowania (POST /api/voice-fix). Przy błędzie zwraca tekst bez zmian. */
+export type TranscriptCorrection = { corrected: string; condensed: boolean };
+
+/** Poprawka dyktowania z informacją, czy backend skrócił wypowiedź do sedna (`condense`). */
+export async function correctTranscript(transcript: string, condense = false): Promise<TranscriptCorrection> {
+  try {
+    const result = await apiFetch<{ corrected: string; condensed?: boolean }>("/api/voice-fix", {
+      method: "POST",
+      body: JSON.stringify({ transcript, condense }),
+    });
+    return { corrected: result.corrected || transcript, condensed: Boolean(result.condensed) };
+  } catch {
+    return { corrected: transcript, condensed: false };
+  }
+}
+
 export async function fixTranscript(transcript: string): Promise<string> {
   try {
     const result = await apiFetch<{ corrected: string; confidence: number }>("/api/voice-fix", {

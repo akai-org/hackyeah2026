@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react"
 import { Check, CircleAlert, Info, Loader2, Mic, Square, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { fixTranscript } from "@/lib/matchmaking";
+import { correctTranscript, fixTranscript } from "@/lib/matchmaking";
 import { cn } from "@/lib/utils";
 
 // Dyktowanie (Web Speech API) wspólne dla wyszukiwarki i Kreatora pomysłów.
@@ -66,9 +66,11 @@ export type DictationOptions = {
    * czeka na decyzję użytkownika („Czy to miałeś na myśli?”). Bez tej opcji poprawka wchodzi od razu.
    */
   live?: boolean;
+  /** Razem z `live`: wypowiedź „naokoło” backend skraca do sedna (kto, co, gdzie). */
+  condense?: boolean;
 };
 
-export type Suggestion = { original: string; corrected: string };
+export type Suggestion = { original: string; corrected: string; condensed: boolean };
 
 // W trybie na żywo nagrywanie kończy się samo po tej przerwie w mówieniu albo przyciskiem „Zatrzymaj”.
 const SILENCE_MS = 3000;
@@ -205,9 +207,9 @@ export function useDictation(
       const original = spoken;
       setState("checking");
       setMessage("Sprawdzam tekst…");
-      void fixTranscript(original).then((corrected) => {
+      void correctTranscript(original, Boolean(options.condense)).then(({ corrected, condensed }) => {
         if (corrected && corrected !== original) {
-          setSuggestion({ original, corrected });
+          setSuggestion({ original, corrected, condensed });
           setState("confirm");
           setMessage("");
         } else {
@@ -337,6 +339,7 @@ export function DictationSuggestion({ dictation }: { dictation: Dictation }) {
 
   if (!suggestion) return null;
   const words = markChanges(suggestion.original, suggestion.corrected);
+  const count = (text: string) => text.split(/\s+/).filter(Boolean).length;
 
   return (
     <section
@@ -344,17 +347,34 @@ export function DictationSuggestion({ dictation }: { dictation: Dictation }) {
       className="appear mt-3 max-w-[65ch] rounded-ui border-(length:--bw) border-deep bg-mint p-4"
     >
       <p id={`${ids}-pytanie`} ref={headingRef} tabIndex={-1} className="font-bold text-deep focus:outline-none">
-        Czy o to chodziło?
+        Czy to miałeś na myśli?
       </p>
-      <p className="mt-2 rounded-ui bg-surface px-3 py-2 text-lg">
-        {words.map(({ word, changed }, index) => (
-          <span key={index}>
-            {index > 0 && " "}
-            {changed ? <strong className="underline decoration-2 underline-offset-4">{word}</strong> : word}
-          </span>
-        ))}
-      </p>
-      <p className="mt-1 text-sm text-muted">Poprawione słowa są pogrubione i podkreślone.</p>
+      {suggestion.condensed ? (
+        <>
+          {/* Przy streszczeniu prawie każde słowo jest „zmienione”, więc zamiast podświetleń — skrót i pełna wypowiedź. */}
+          <p className="mt-2 rounded-ui bg-surface px-3 py-2 text-lg">{suggestion.corrected}</p>
+          <p className="mt-1 text-sm text-muted">
+            Skróciliśmy wypowiedź do najważniejszych informacji (z {count(suggestion.original)} do{" "}
+            {count(suggestion.corrected)} słów).
+          </p>
+          <details className="mt-2 text-sm">
+            <summary className="cursor-pointer font-bold text-deep">Pokaż całą wypowiedź</summary>
+            <p className="mt-1 rounded-ui bg-surface px-3 py-2 text-muted">{suggestion.original}</p>
+          </details>
+        </>
+      ) : (
+        <>
+          <p className="mt-2 rounded-ui bg-surface px-3 py-2 text-lg">
+            {words.map(({ word, changed }, index) => (
+              <span key={index}>
+                {index > 0 && " "}
+                {changed ? <strong className="underline decoration-2 underline-offset-4">{word}</strong> : word}
+              </span>
+            ))}
+          </p>
+          <p className="mt-1 text-sm text-muted">Poprawione słowa są pogrubione i podkreślone.</p>
+        </>
+      )}
       <div className="mt-3 flex flex-wrap gap-3">
         <Button type="button" onClick={dictation.accept}>
           <Check aria-hidden="true" />

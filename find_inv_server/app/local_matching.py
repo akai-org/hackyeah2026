@@ -215,3 +215,86 @@ def local_chat_answer(question: str, innovations: list[dict]) -> str:
     if unmaintained:
         lines.append(f"Uwaga: {', '.join(unmaintained)} może już nie działać. Sprawdź to przed wdrożeniem.")
     return "\n".join(lines)
+
+
+# ---------- Streszczanie wypowiedzi (dyktowanie „naokoło”) ----------
+
+# Zawahania w środku zdania — znikają bez śladu („moja mama no mieszka” → „moja mama mieszka”).
+_HESITATIONS = re.compile(
+    r"\b(?:y+|e+|m+|hm+|yy+m+|no|wiesz|wie pan|wie pani|rozumie pan|rozumie pani|tak jakby|znaczy się|znaczy|"
+    r"po prostu|że tak powiem|kurczę|kurde|jakoś tak|właściwie|szczerze mówiąc|tak naprawdę|"
+    r"(?:ja\s+)?(?:dzwonię|piszę))\b,?",
+    re.IGNORECASE,
+)
+# Wtrącenia, którymi mówiący zmienia wątek albo zbiera myśli — w ich miejscu kończy się jedna myśl.
+_TOPIC_FILLERS = re.compile(
+    r"\b(?:dzień dobry|dobry wieczór|witam|cześć|no więc|no to|no i|w sumie|generalnie|w każdym razie|krótko mówiąc|"
+    r"i tak dalej|itd|itp|coś tam|chodzi o to,? że|chodzi o to|sprawa jest taka,? że|"
+    r"to jest tak,? że|jest tak,? że)\b,?",
+    re.IGNORECASE,
+)
+# Granice myśli w mowie bez interpunkcji: znaki końca zdania, przecinki i spójniki, którymi ludzie łączą wątki.
+_CLAUSE_SPLIT = re.compile(
+    r"[.!?;,]+\s*|\s+(?:a poza tym|a jeszcze|i jeszcze|ale wracając|a w ogóle|bo|ale|a)\s+"
+    # „… do lekarza i ona się czuje …” — nowa myśl zaczyna się od „i” + zaimek albo przeczenie
+    r"|\s+i\s+(?=(?:ona|on|ja|my|oni|one|ono|nie|to|tam|teraz)\b)",
+    re.IGNORECASE,
+)
+_EDGE_CONJUNCTIONS = re.compile(r"^(?:i|a|że|bo|ale|więc|to)\s+|\s+(?:i|a|że|bo|ale|więc|to|który|którzy|która)$", re.IGNORECASE)
+
+CONDENSE_MIN_WORDS = 25
+CONDENSE_MAX_WORDS = 40
+
+
+def _clauses(text: str) -> list[str]:
+    cleaned = _TOPIC_FILLERS.sub(",", text)
+    cleaned = _HESITATIONS.sub(" ", cleaned)
+    cleaned = re.sub(r"\b(\w+)(?:\s+\1\b)+", r"\1", cleaned, flags=re.IGNORECASE)  # „że że”, „i i”
+    clauses = []
+    for part in _CLAUSE_SPLIT.split(cleaned):
+        part = re.sub(r"\s+", " ", part).strip(" ,")
+        previous = None
+        while part != previous:  # „i …”, „… że” na brzegach po wycięciu wtrąceń
+            previous, part = part, _EDGE_CONJUNCTIONS.sub("", part).strip(" ,")
+        if len(part.split()) >= 2:
+            clauses.append(part)
+    return clauses
+
+
+def _clause_score(index: int, clause: str) -> float:
+    tags = len(local_tags(clause))
+    content = len(_stems(clause))
+    # Ludzie zwykle mówią sedno na początku, dygresje i powtórzenia później.
+    position = 1.5 if index == 0 else 0.75 if index == 1 else 0.0
+    return tags * 2 + content * 0.3 + position
+
+
+def condense_locally(text: str) -> tuple[str, bool]:
+    """Skrót długiej, krążącej wypowiedzi: bez wtrąceń i powtórzeń, tylko zdania najbliższe tematowi.
+
+    Zwraca (tekst, czy_skrócono). Krótkich wypowiedzi nie rusza — wtedy tylko się je porządkuje.
+    """
+    words = text.split()
+    if len(words) < CONDENSE_MIN_WORDS:
+        return text, False
+    clauses = _clauses(text)
+    if not clauses:
+        return text, False
+
+    # Bez powtórzeń tej samej myśli: zdanie, którego rdzenie już padły, odpada.
+    unique: list[tuple[int, str]] = []
+    seen: set[str] = set()
+    for index, clause in enumerate(clauses):
+        stems = set(_stems(clause))
+        if stems and stems <= seen:
+            continue
+        seen |= stems
+        unique.append((index, clause))
+
+    # Kolejność wypowiedzi zostaje; jeśli dalej za długo, odpadają najmniej związane z tematem myśli (nigdy pierwsza).
+    chosen = list(unique)
+    while sum(len(clause.split()) for _, clause in chosen) > CONDENSE_MAX_WORDS and len(chosen) > 1:
+        weakest = min(chosen[1:], key=lambda item: _clause_score(item[0], item[1]))
+        chosen.remove(weakest)
+    summary = ", ".join(clause for _, clause in sorted(chosen))
+    return summary, len(summary.split()) < len(words)
