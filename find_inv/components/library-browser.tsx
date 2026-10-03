@@ -235,11 +235,17 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
         </ul>
       )}
 
-      {!loading && innovations.length < total && (
-        <Button type="button" variant="secondary" onClick={loadMore} disabled={loadingMore} className="mt-10">
-          {loadingMore && <Loader2 aria-hidden="true" className="animate-spin" />}
-          Pokaż więcej
-        </Button>
+      {!loading && innovations.length > 0 && innovations.length < total && (
+        <div className="mt-10 flex flex-wrap items-center gap-4">
+          <Button type="button" variant="secondary" onClick={loadMore} disabled={loadingMore}>
+            {loadingMore && <Loader2 aria-hidden="true" className="animate-spin" />}
+            Pokaż więcej
+          </Button>
+          {/* aria-live: czytnik ekranu słyszy, że doszły nowe karty. */}
+          <p role="status" aria-live="polite" className="text-muted">
+            Pokazano {innovations.length} z {total}
+          </p>
+        </div>
       )}
     </>
   );

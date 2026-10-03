@@ -80,8 +80,14 @@ export default function InnovationDetailPage() {
         if (data?.title) document.title = `${data.title} – HubMI`;
         if (data?.tags?.length) {
           const tagsParam = data.tags.slice(0, 3).join(",");
-          apiFetch<BackendInnovation[]>(`/api/innovations?tags=${encodeURIComponent(tagsParam)}&limit=4`)
-            .then((all) => setSimilar((all ?? []).filter((i) => i.id !== id).slice(0, 3)))
+          // API zwraca { innovations, total }; goła lista ze starszego backendu też działa.
+          apiFetch<BackendInnovation[] | { innovations: BackendInnovation[] }>(
+            `/api/innovations?tags=${encodeURIComponent(tagsParam)}&limit=4`,
+          )
+            .then((result) => {
+              const all = Array.isArray(result) ? result : (result?.innovations ?? []);
+              setSimilar(all.filter((i) => i.id !== id).slice(0, 3));
+            })
             .catch(() => {});
         }
       })

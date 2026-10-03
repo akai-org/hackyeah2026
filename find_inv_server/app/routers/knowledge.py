@@ -2,7 +2,7 @@ import json
 import uuid
 
 from fastapi import APIRouter, HTTPException
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 
 from app import knowledge_store as store
 from app.database import get_db
@@ -72,15 +72,22 @@ async def list_innovations(
                 # tagi trzymane jako JSON string – dopasowanie z cudzysłowami, żeby "OPS" nie trafiał w "DOPS"
                 q = q.where(or_(*[Innovation.tags.ilike(f'%"{t}"%') for t in tag_filter]))
             items = (await db.execute(q.offset(offset).limit(limit))).scalars().all()
+            # total z tymi samymi filtrami, bez limit/offset — frontend potrzebuje go do „Pokaż więcej”.
+            total = (await db.execute(select(func.count()).select_from(q.order_by(None).subquery()))).scalar_one()
             has_data = items or (await db.execute(select(Innovation.id).limit(1))).first()
         if has_data:
-            return {"data": [_row(i) for i in items]}
+            return {"data": _page([_row(i) for i in items], total, limit, offset)}
     except Exception:
         pass
 
     # Fallback bez bazy: te same 114 innowacji ROPS z parsed_innovations.json
     found = store.search_innovations(search or None, tag_filter or None, category or None, area or None, status or None)
-    return {"data": [store.public(i) for i in found[offset : offset + limit]]}
+    return {"data": _page([store.public(i) for i in found[offset : offset + limit]], len(found), limit, offset)}
+
+
+def _page(innovations: list[dict], total: int, limit: int, offset: int) -> dict:
+    """Strona wyników z łączną liczbą trafień — bez `total` lista nie wie, że jest coś poza pierwszą stroną."""
+    return {"innovations": innovations, "total": total, "limit": limit, "offset": offset}
 
 
 @router.get("/innovations/{innovation_id}")
