@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 // Nawigacja główna: linki do najważniejszych działów, na desktopie i w menu mobilnym.
 
-const LINKS = ["Biblioteka", "Kreator pomysłów", "Forum"];
+const LINKS = ["Biblioteka", "Kreator pomysłów", "Forum", "Edukacja"];
 
 test("nawigacja zawiera najważniejsze działy", async ({ page, isMobile }) => {
   await page.goto("/");
