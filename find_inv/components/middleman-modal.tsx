@@ -123,7 +123,7 @@ export function MiddlemanModal({ innovationId, innovationTitle, onClose }: Props
       aria-labelledby="middleman-tytul"
       className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 px-4"
     >
-      <div ref={containerRef} className="relative flex w-full max-w-lg flex-col rounded-ui border-(length:--bw) border-deep bg-surface p-6 shadow-paper max-h-[90vh] overflow-y-auto">
+      <div ref={containerRef} className="relative flex w-full max-w-lg flex-col rounded-ui border-(length:--bw) border-line bg-surface p-6 shadow-paper max-h-[90vh] overflow-y-auto">
         <button
           ref={closeRef}
           onClick={onClose}
@@ -161,7 +161,7 @@ export function MiddlemanModal({ innovationId, innovationTitle, onClose }: Props
                 }}
                 aria-label="Kopiuj plan do schowka"
                 title="Kopiuj do schowka"
-                className="inline-flex items-center gap-1.5 rounded-ui border-(length:--bw) border-deep bg-paper px-3 py-1.5 text-xs font-bold hover:bg-sage"
+                className="inline-flex items-center gap-1.5 rounded-ui border-(length:--bw) border-line bg-paper px-3 py-1.5 text-xs font-bold hover:bg-sage"
               >
                 {copied ? <ClipboardCheck className="size-3.5 text-leaf" aria-hidden="true" /> : <Clipboard className="size-3.5" aria-hidden="true" />}
                 {copied ? "Skopiowano!" : "Kopiuj"}
@@ -226,7 +226,7 @@ export function MiddlemanModal({ innovationId, innovationTitle, onClose }: Props
                 onKeyDown={(e) => e.key === "Enter" && sendAnswer()}
                 placeholder="Twoja odpowiedź…"
                 aria-label="Odpowiedź dla AI"
-                className="flex-1 rounded-ui border-(length:--bw) border-deep bg-paper px-4 py-2 text-sm"
+                className="flex-1 rounded-ui border-(length:--bw) border-field bg-paper px-4 py-2 text-sm"
               />
               <Button onClick={sendAnswer} disabled={loading || !input.trim()}>
                 <Send className="size-4" />

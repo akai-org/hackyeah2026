@@ -112,7 +112,7 @@ function TextAnswer({
         placeholder={step.placeholder}
         className={cn(
           "mt-4 w-full resize-y rounded-ui border-(length:--bw) bg-surface p-4 text-base text-ink placeholder:text-muted",
-          invalid ? "border-alert" : "border-deep",
+          invalid ? "border-alert" : "border-field",
         )}
       />
       <p id={`${ids}-podp`} className="sr-only">
@@ -173,7 +173,7 @@ export function IdeaWizard({ onFinish, busy }: { onFinish: (answers: WizardAnswe
   }
 
   return (
-    <form onSubmit={next} noValidate className="mt-8 max-w-3xl rounded-ui border-(length:--bw) border-deep bg-surface p-6 sm:p-8">
+    <form onSubmit={next} noValidate className="mt-8 max-w-3xl rounded-ui border-(length:--bw) border-line bg-surface p-6 sm:p-8">
       <p className="font-bold text-muted">
         Krok {index + 1} z {STEPS.length}
       </p>
@@ -209,7 +209,7 @@ export function IdeaWizard({ onFinish, busy }: { onFinish: (answers: WizardAnswe
           <ul className="space-y-2">
             {STAGES.map((stage) => (
               <li key={stage}>
-                <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-ui border-(length:--bw) border-deep bg-surface px-4 has-checked:bg-mint">
+                <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-ui border-(length:--bw) border-line bg-surface px-4 has-checked:bg-mint">
                   <input
                     type="radio"
                     name={`${ids}-etap`}
@@ -238,7 +238,7 @@ export function IdeaWizard({ onFinish, busy }: { onFinish: (answers: WizardAnswe
               value={answers.budget}
               onChange={(event) => setAnswer("budget")(() => event.target.value)}
               placeholder="np. ok. 5 tys. zł rocznie"
-              className="mt-2 min-h-12 w-full rounded-ui border-(length:--bw) border-deep bg-surface px-4 text-base text-ink placeholder:text-muted"
+              className="mt-2 min-h-12 w-full rounded-ui border-(length:--bw) border-field bg-surface px-4 text-base text-ink placeholder:text-muted"
             />
           </div>
           <div>
@@ -251,7 +251,7 @@ export function IdeaWizard({ onFinish, busy }: { onFinish: (answers: WizardAnswe
               value={answers.partners}
               onChange={(event) => setAnswer("partners")(() => event.target.value)}
               placeholder="np. GOPS, szkoła"
-              className="mt-2 min-h-12 w-full rounded-ui border-(length:--bw) border-deep bg-surface px-4 text-base text-ink placeholder:text-muted"
+              className="mt-2 min-h-12 w-full rounded-ui border-(length:--bw) border-field bg-surface px-4 text-base text-ink placeholder:text-muted"
             />
           </div>
         </div>
@@ -260,7 +260,7 @@ export function IdeaWizard({ onFinish, busy }: { onFinish: (answers: WizardAnswe
       {invalid && (
         <p
           role="alert"
-          className="mt-3 flex items-start gap-2 rounded-ui border-2 border-alert bg-surface px-4 py-3 font-bold text-alert"
+          className="mt-3 flex items-start gap-2 rounded-ui border border-alert bg-surface px-4 py-3 font-bold text-alert"
         >
           <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
           Napisz choć jedno zdanie, żeby przejść dalej.

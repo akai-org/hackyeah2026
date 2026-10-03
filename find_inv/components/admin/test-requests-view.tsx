@@ -68,14 +68,14 @@ export function AdminTestRequestsView() {
               Zgłoszenia do testów <span className="tabular-nums">({requested.length})</span>
             </h2>
             {requested.length === 0 ? (
-              <p className="mt-4 flex items-center gap-2 rounded-ui border-2 border-deep bg-mint px-4 py-3 font-bold">
+              <p className="mt-4 flex items-center gap-2 rounded-ui border border-line bg-mint px-4 py-3 font-bold">
                 <CircleCheck aria-hidden="true" className="size-5 text-deep" />
                 Wszystkie zgłoszenia rozpatrzone.
               </p>
             ) : (
               <ul className="mt-4 grid gap-4 md:grid-cols-2">
                 {requested.map((report) => (
-                  <li key={report.id} className="appear flex flex-col border-(length:--bw) border-deep bg-surface p-5 shadow-paper">
+                  <li key={report.id} className="appear flex flex-col border-(length:--bw) border-line bg-surface p-5 rounded-ui shadow-paper">
                     <h3 className="text-lg font-bold text-deep">{report.tester_name}</h3>
                     <p className="mt-1">chce testować: {innovationLink(report)}</p>
                     <dl className="mt-2 space-y-1 text-base">
@@ -143,7 +143,7 @@ export function AdminTestRequestsView() {
             {assigned.length === 0 ? (
               <p className="mt-4 text-muted">Nikt teraz niczego nie testuje.</p>
             ) : (
-              <div className="mt-4 overflow-x-auto border-(length:--bw) border-deep bg-surface">
+              <div className="mt-4 overflow-x-auto border-(length:--bw) border-line bg-surface">
                 <table className="w-full min-w-[32rem] border-collapse text-left">
                   <caption className="sr-only">Testerzy przypisani do innowacji</caption>
                   <thead className="bg-sage">
@@ -155,7 +155,7 @@ export function AdminTestRequestsView() {
                   </thead>
                   <tbody>
                     {assigned.map((report) => (
-                      <tr key={report.id} className="border-t-2 border-sage">
+                      <tr key={report.id} className="border-t border-line">
                         <th scope="row" className="px-4 py-3 text-left font-bold text-deep">
                           {report.tester_name}
                         </th>
@@ -180,7 +180,7 @@ export function AdminTestRequestsView() {
             ) : (
               <ul className="mt-4 grid gap-4">
                 {submitted.map((report) => (
-                  <li key={report.id} className="border-(length:--bw) border-deep bg-surface p-5 shadow-paper">
+                  <li key={report.id} className="border-(length:--bw) border-line bg-surface p-5 rounded-ui shadow-paper">
                     <h3 className="text-lg">{innovationLink(report)}</h3>
                     <p className="mt-1 text-muted">
                       {report.tester_name}

@@ -98,7 +98,7 @@ export default function PomyslyPage() {
             key={value}
             onClick={() => setFilter(value)}
             className={cn(
-              "rounded-ui border-(length:--bw) border-deep px-4 py-2 text-sm font-bold",
+              "rounded-ui border-(length:--bw) border-line px-4 py-2 text-sm font-bold",
               filter === value ? "bg-deep text-surface" : "bg-surface text-deep hover:bg-sage",
             )}
           >
@@ -117,11 +117,11 @@ export default function PomyslyPage() {
               ? new Date(idea.created_at).toLocaleDateString("pl-PL", { day: "numeric", month: "short", year: "numeric" })
               : "—";
             return (
-              <li key={idea.id} className="rounded-ui border-(length:--bw) border-deep bg-surface p-5 shadow-paper">
+              <li key={idea.id} className="rounded-ui border-(length:--bw) border-line bg-surface p-5 shadow-paper">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className={cn("rounded-full border border-deep px-2 py-0.5 text-xs font-bold", badge.className)}>
+                      <span className={cn("rounded-full border border-line px-2 py-0.5 text-xs font-bold", badge.className)}>
                         {badge.label}
                       </span>
                       <span className="flex items-center gap-1 text-xs text-muted">
@@ -155,7 +155,7 @@ export default function PomyslyPage() {
                             <button
                               type="button"
                               onClick={() => downloadAttachment(idea.id, attachment).catch(() => alert("Nie udało się pobrać pliku."))}
-                              className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-ui border-2 border-deep bg-paper px-3 text-sm hover:bg-sage"
+                              className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-ui border border-line bg-paper px-3 text-sm hover:bg-sage"
                             >
                               <Paperclip className="size-4" aria-hidden="true" />
                               {attachment.filename}
@@ -190,7 +190,7 @@ export default function PomyslyPage() {
                         disabled={pending === idea.id}
                         aria-label={`Oznacz jako przejrzany: ${idea.title}`}
                         title="Przejrzany"
-                        className="inline-flex size-9 items-center justify-center rounded-ui border-(length:--bw) border-deep bg-mint hover:bg-leaf hover:text-surface disabled:opacity-40"
+                        className="inline-flex size-9 items-center justify-center rounded-ui border-(length:--bw) border-line bg-mint hover:bg-leaf hover:text-surface disabled:opacity-40"
                       >
                         <CheckCircle className="size-4" aria-hidden="true" />
                       </button>
@@ -199,7 +199,7 @@ export default function PomyslyPage() {
                         disabled={pending === idea.id}
                         aria-label={`Odrzuć: ${idea.title}`}
                         title="Odrzuć"
-                        className="inline-flex size-9 items-center justify-center rounded-ui border-(length:--bw) border-deep bg-paper hover:bg-alert hover:text-surface disabled:opacity-40"
+                        className="inline-flex size-9 items-center justify-center rounded-ui border-(length:--bw) border-line bg-paper hover:bg-alert hover:text-surface disabled:opacity-40"
                       >
                         <X className="size-4" aria-hidden="true" />
                       </button>

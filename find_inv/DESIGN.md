@@ -2,16 +2,18 @@
 name: findinv — HubMI.pl
 description: Małopolska's civic almanac for social innovation discovery
 colors:
-  deep: "#1B4332"
-  leaf: "#2D6A4F"
-  butter: "#F2E2A0"
-  mint: "#B8DCC4"
-  sage: "#D3E3D0"
-  paper: "#EEF3EA"
-  surface: "#FAFCF7"
-  ink: "#14251C"
-  muted: "#3D5A4A"
-  alert: "#8A2D1F"
+  deep: "#0E2A47"
+  leaf: "#1D5BA6"
+  butter: "#F7E4B0"
+  mint: "#D8E6F7"
+  sage: "#E9EFF6"
+  paper: "#F5F7FA"
+  surface: "#FFFFFF"
+  ink: "#15202E"
+  muted: "#4A5A6E"
+  alert: "#B42318"
+  line: "#D3DBE5"
+  field: "#7B8898"
 typography:
   display:
     fontFamily: "Atkinson Hyperlegible, system-ui, sans-serif"
@@ -39,7 +41,7 @@ typography:
     fontWeight: 400
     lineHeight: 1.5
 rounded:
-  ui: "12px"
+  ui: "8px"
 spacing:
   xs: "8px"
   sm: "12px"
@@ -49,13 +51,13 @@ spacing:
   2xl: "48px"
 components:
   button-primary:
-    backgroundColor: "{colors.deep}"
+    backgroundColor: "{colors.leaf}"
     textColor: "{colors.surface}"
     rounded: "{rounded.ui}"
     padding: "8px 20px"
     height: "48px"
   button-primary-hover:
-    backgroundColor: "{colors.leaf}"
+    backgroundColor: "{colors.deep}"
     textColor: "{colors.surface}"
     rounded: "{rounded.ui}"
   button-secondary:
@@ -93,7 +95,7 @@ Plik dla osób i narzędzi AI budujących interfejs. Czytaj go przed każdym now
 
 ## 1. Idea w trzech zdaniach
 
-Platforma wygląda jak **spokojna szklarnia z liśćmi monstery**, w której ktoś **wyciął litery z gazet i okleił nimi tablicę ogłoszeń**. Zielone, ciche tło daje odpoczynek i zaufanie. Wycięte litery (ransom note) są jedynym głośnym elementem i pojawiają się tylko tam, gdzie służą nazwie, nagłówkom i hasłom. Cała reszta (formularze, wyniki, plan wdrożenia) jest bardzo czytelna, bo korzystają z niej seniorzy, urzędnicy i osoby z niepełnosprawnościami.
+Platforma wygląda jak **rzetelny serwis administracji publicznej**: jasne, chłodne tło, granatowe nagłówki, jeden niebieski akcent i cienkie, jasne ramki. Głównymi odbiorcami są pracownicy gmin, powiatów i ROPS, więc interfejs ma budzić zaufanie i nie rozpraszać. Cała treść (formularze, wyniki, plan wdrożenia) jest bardzo czytelna, bo korzystają z niej także seniorzy i osoby z niepełnosprawnościami.
 
 **Skąd ten pomysł:** innowacja społeczna to wycinanie rozwiązań z różnych miejsc i sklejanie ich w całość, która pasuje do konkretnej gminy. Kolaż z wyciętych liter mówi dokładnie to samo, tylko wizualnie. Monstera (liście z dziurami) to rośliną, która rośnie w każdym domu i w każdym urzędzie, więc jest swojska, nie korporacyjna.
 
@@ -114,30 +116,45 @@ Platforma wygląda jak **spokojna szklarnia z liśćmi monstery**, w której kto
 
 ## 3. Kolory
 
-Wszystkie pary kontrastów poniżej policzone wg WCAG (wartości po dwukropku to współczynniki kontrastu). Wymagane minimum: 4,5:1 dla zwykłego tekstu, 3:1 dla dużego tekstu i elementów interfejsu.
+Paleta instytucjonalna dla pracowników gmin, powiatów i ROPS: chłodne, neutralne tło, granat do nagłówków i **jeden niebieski akcent** (kolor administracji publicznej, kojarzony z zaufaniem). Nazwy tokenów zostały z poprzedniej, zielonej wersji, żeby nie przepisywać komponentów; liczy się rola, nie nazwa.
 
-| Nazwa | Hex | Rola |
+Wszystkie pary kontrastów poniżej policzone wg WCAG. Wymagane minimum: 4,5:1 dla zwykłego tekstu, 3:1 dla dużego tekstu i elementów interfejsu.
+
+| Token | Hex | Rola |
 |---|---|---|
-| **Papier** (`paper`) | `#EEF3EA` | tło strony |
-| **Biała kartka** (`surface`) | `#FAFCF7` | karty, pola, panele z treścią |
-| **Szałwia** (`sage`) | `#D3E3D0` | tło sekcji, drugie tło, litery kolażu |
-| **Mięta** (`mint`) | `#B8DCC4` | zaznaczenie, aktywne chipy, litery kolażu |
-| **Masło** (`butter`) | `#F2E2A0` | jedyny ciepły akcent: wycięte litery, plakietka „wstępne wyniki" |
-| **Głęboka monstera** (`deep`) | `#1B4332` | nagłówki, główne przyciski, ramka focusu |
-| **Liść** (`leaf`) | `#2D6A4F` | linki, ikony, stany aktywne |
-| **Atrament** (`ink`) | `#14251C` | tekst podstawowy |
-| **Mech** (`muted`) | `#3D5A4A` | tekst pomocniczy |
-| **Alarm** (`alert`) | `#8A2D1F` | błędy i ostrzeżenia (zawsze z ikoną i tekstem) |
+| `paper` | `#F5F7FA` | tło strony |
+| `surface` | `#FFFFFF` | karty, pola, panele z treścią, nagłówek i stopka |
+| `sage` | `#E9EFF6` | tło sekcji, hover przycisków drugorzędnych |
+| `mint` | `#D8E6F7` | zaznaczenie, aktywne chipy, tło ikon |
+| `butter` | `#F7E4B0` | jedyny ciepły kolor: statusy „do weryfikacji”, „wstępne wyniki” |
+| `deep` | `#0E2A47` | nagłówki, tekst przycisków drugorzędnych, focus, hover przycisku głównego |
+| `leaf` | `#1D5BA6` | **akcent**: przycisk główny, linki, ikony, pasek nad nagłówkiem, wykresy |
+| `ink` | `#15202E` | tekst podstawowy |
+| `muted` | `#4A5A6E` | tekst pomocniczy |
+| `alert` | `#B42318` | błędy i ostrzeżenia (zawsze z ikoną i tekstem) |
+| `line` | `#D3DBE5` | ramki kart, sekcji, tabel i separatory |
+| `field` | `#7B8898` | ramki pól formularzy (3,6:1 na białym) |
+
+**Akcenty dodatkowe** (oszczędnie, żeby strona nie była jednolita): tło ikony w jasnym odcieniu, ikona w ciemnym. Nigdy na przyciskach i linkach, te zostają niebieskie. Kolor zawsze idzie w parze z ikoną albo słowem.
+
+| Token | Hex | Gdzie |
+|---|---|---|
+| `forest` / `forest-soft` | `#1A7F55` / `#DFF2E8` | „Aktywna”, testerzy, „Dobra kondycja”, niski koszt, wykres tagów |
+| `ember` / `ember-soft` | `#A84B19` / `#FCE6D8` | „Wymaga uwagi”, „Nieaktualna”, średni koszt |
+| `plum` / `plum-soft` | `#6B44A6` / `#ECE5F7` | konsultanci, czwarty kafelek w zestawach |
+
+Zestawy kafelków (kroki, kafelki statystyk, wyzwania, liczniki w panelu) dostają barwy w stałej kolejności: niebieski, zielony, ceglasty, fioletowy. Zestaw sprawdzony walidatorem palet (rozróżnialność także przy daltonizmie, z podpisem tekstowym).
+
+**Mapa i Indeks Luki:** jedna skala zieleni od jasnej (mała luka) do ciemnej (duża luka), `lib/gap-scale.ts`, wspólna dla mapy i listy powiatów.
 
 **Sprawdzone kontrasty:**
-- `ink` na `paper` 14,22 · na `surface` 15,51 · na `sage` 11,95 · na `mint` 10,73 · na `butter` 12,33
-- `muted` na `paper` 6,76 · na `surface` 7,37 · na `sage` 5,68
-- `deep` na `paper` 9,84 · na `sage` 8,27 · na `butter` 8,53
-- `surface` na `deep` 10,73 · `surface` na `leaf` 6,19 (tekst na przyciskach)
-- `leaf` na `paper` 5,67 · na `surface` 6,19 (linki)
-- `alert` na `surface` 8,21 · na `paper` 7,53
+- `surface` na `leaf` 6,8 (tekst przycisku głównego) · `surface` na `deep` 14,6
+- `leaf` na `surface` 6,8 · na `paper` 6,4 · na `sage` 6,0 · na `mint` 5,5 (linki)
+- `muted` na `surface` 7,1 · na `paper` 6,6 · na `sage` 5,9
+- `alert` na `surface` 6,4
+- `field` na `surface` 3,6 (granica pola)
 
-**Zakazy:** żadnych gradientów jako ozdoby; żadnego tekstu na liściach; nie używać `butter` jako tła dużych obszarów (to przyprawa, nie danie); informacja nigdy nie jest przekazywana samym kolorem.
+**Zakazy:** żadnych gradientów jako ozdoby; akcent tylko w kolorze `leaf` (bez drugiego koloru akcentowego); nie używać `butter` jako tła dużych obszarów; informacja nigdy nie jest przekazywana samym kolorem.
 
 ---
 
@@ -187,8 +204,10 @@ Nagłówki zwykłe: Atkinson 700, kolor `deep`. **Bez WIELKICH LITER w etykietac
 - **Dwa rodzaje krawędzi:**
   - **Kartki dekoracyjne** (nagłówki, plakietki, litery): lekko nieregularny wielokąt przez `clip-path`, rotacja −3° do +3°.
   - **Elementy interaktywne** (przyciski, pola, chipy): prosty zaokrąglony prostokąt, promień 12 px, bo muszą wyglądać jak coś, w co można kliknąć.
-- **Cień:** jeden, twardy, mały: `3px 3px 0 rgba(27, 67, 50, 0.25)` dla kartek, brak cienia dla pól i przycisków (mają ramkę 2 px).
-- **Ramki pól i przycisków:** 2 px `deep`. Obszary dotykowe minimum **48 × 48 px**.
+- **Cień:** jeden, miękki i płytki (`shadow-paper`): `0 1px 2px` + `0 4px 16px` w odcieniu granatu, przezroczystość 6%. Tylko karty i okna dialogowe.
+- **Ramki:** 1 px (`--bw`). Karty, sekcje i tabele: `line`. Pola formularzy: `field`. Przycisk główny: ramka w kolorze tła. Obszary dotykowe minimum **48 × 48 px**.
+- **Promień:** 8 px (`rounded-ui`) dla wszystkich kart, pól i przycisków.
+- **Nagłówek strony:** białe tło, pasek 4 px w kolorze `leaf` u góry, znak „H” w niebieskim kwadracie obok nazwy.
 
 ### Struktura strony głównej (szkic)
 
@@ -265,7 +284,9 @@ Nie używaj `Math.random()` przy renderowaniu (błąd hydracji w Next.js i liter
 
 ---
 
-## 7. Monstera
+## 7. Monstera (wycofana)
+
+> Liście monstery, papierowe chmurki i „taśmy” na kartach zostały usunięte przy przejściu na paletę instytucjonalną. Poniższy opis zostaje tylko jako historia; nie dodawaj tych ozdób z powrotem.
 
 - **Format:** własne SVG (lub wygenerowane przez AI i uproszczone). Jednokolorowe, płaskie, z charakterystycznymi dziurami i nacięciami liścia, bez gradientów.
 - **Kolory liści:** `mint` i `sage` (tło), `leaf` i `deep` dla jednego akcentowego liścia. Opacity 100%, bo kolory są już spokojne.
@@ -287,8 +308,8 @@ Nie używaj `Math.random()` przy renderowaniu (błąd hydracji w Next.js i liter
 - Przykłady problemów jako chipy pod polem (po kliknięciu wpisują tekst).
 
 ### Przyciski
-- **Główny:** tło `deep`, tekst `surface`, ramka 2 px `deep`, wysokość min. 48 px, tekst 18 px/700. Hover: tło `leaf`. Active: przesunięcie o 1 px.
-- **Drugorzędny:** tło `surface`, tekst `deep`, ramka 2 px `deep`.
+- **Główny:** tło `leaf`, tekst `surface`, wysokość min. 48 px, tekst 18 px/700. Hover: tło `deep`. Active: przesunięcie o 1 px.
+- **Drugorzędny:** tło `surface`, tekst `deep`, ramka 1 px `field`. Hover: ramka `leaf`, tło `sage`.
 - **Etykiety opisują akcję:** „Szukaj", „Dostosuj do mojej instytucji", „Pobierz plan (PDF)". Nie „Dalej" i nie „Wyślij".
 - Brak strzałek `→` doklejanych do przycisków.
 
@@ -317,7 +338,7 @@ Nie używaj `Math.random()` przy renderowaniu (błąd hydracji w Next.js i liter
 - Kryzys (słowa wskazujące przemoc, myśli samobójcze): zamiast wyników spokojny panel z numerami pomocowymi, bez kolażu i bez ozdób.
 
 ### Focus
-- Każdy element interaktywny: `outline: 3px solid #1B4332; outline-offset: 3px;` a na tle `deep` (np. przycisk główny): dodatkowy biały pierścień `box-shadow: 0 0 0 3px #FAFCF7`. Nigdy `outline: none` bez zamiennika.
+- Każdy element interaktywny: `outline: 3px solid #0E2A47; outline-offset: 3px;` a na ciemnym tle (np. przycisk główny): dodatkowy biały pierścień `box-shadow: 0 0 0 3px #FFFFFF`. Nigdy `outline: none` bez zamiennika.
 
 ---
 
@@ -358,16 +379,18 @@ export default {
   theme: {
     extend: {
       colors: {
-        paper:   "#EEF3EA",
-        surface: "#FAFCF7",
-        sage:    "#D3E3D0",
-        mint:    "#B8DCC4",
-        butter:  "#F2E2A0",
-        deep:    "#1B4332",
-        leaf:    "#2D6A4F",
-        ink:     "#14251C",
-        muted:   "#3D5A4A",
-        alert:   "#8A2D1F",
+        paper:   "#F5F7FA",
+        surface: "#FFFFFF",
+        sage:    "#E9EFF6",
+        mint:    "#D8E6F7",
+        butter:  "#F7E4B0",
+        deep:    "#0E2A47",
+        leaf:    "#1D5BA6",
+        ink:     "#15202E",
+        muted:   "#4A5A6E",
+        alert:   "#B42318",
+        line:    "#D3DBE5",
+        field:   "#7B8898",
       },
       fontFamily: {
         body: ["Atkinson Hyperlegible", "system-ui", "Segoe UI", "Roboto", "sans-serif"],
@@ -384,8 +407,8 @@ export default {
         xl:   ["1.625rem",{ lineHeight: "1.3" }],
         "2xl":["2.125rem",{ lineHeight: "1.2" }],
       },
-      borderRadius: { ui: "12px" },
-      boxShadow: { paper: "3px 3px 0 rgba(27, 67, 50, 0.25)" },
+      borderRadius: { ui: "8px" },
+      boxShadow: { paper: "0 1px 2px rgba(14, 42, 71, 0.06), 0 4px 16px rgba(14, 42, 71, 0.06)" },
     },
   },
 };
@@ -393,8 +416,8 @@ export default {
 
 ```css
 :root { color-scheme: light; }
-body { background: #EEF3EA; color: #14251C; font-size: 1.125rem; }
-:focus-visible { outline: 3px solid #1B4332; outline-offset: 3px; }
+body { background: #F5F7FA; color: #15202E; font-size: 1.125rem; }
+:focus-visible { outline: 3px solid #0E2A47; outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }

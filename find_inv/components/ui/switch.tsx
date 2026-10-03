@@ -12,7 +12,7 @@ function Switch({ className, ...props }: React.ComponentProps<typeof SwitchPrimi
     <SwitchPrimitive.Root
       className={cn(
         // after: powiększa obszar dotyku do 48 px wysokości bez zmiany wyglądu.
-        "peer relative inline-flex h-8 w-14 shrink-0 cursor-pointer items-center rounded-full border-(length:--bw) border-deep bg-surface transition-colors after:absolute after:-inset-x-1 after:-inset-y-2.5 after:content-[''] data-[state=checked]:bg-deep",
+        "peer relative inline-flex h-8 w-14 shrink-0 cursor-pointer items-center rounded-full border-(length:--bw) border-line bg-surface transition-colors after:absolute after:-inset-x-1 after:-inset-y-2.5 after:content-[''] data-[state=checked]:bg-deep",
         className,
       )}
       {...props}

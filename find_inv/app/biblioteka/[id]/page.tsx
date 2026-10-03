@@ -28,7 +28,6 @@ import { TesterApplyModal } from "@/components/tester-apply-modal";
 import { ForumThread } from "@/components/forum-thread";
 import { Toast, useToast } from "@/components/toast";
 import { TestRequestBox } from "@/components/test-request";
-import { PageBackdrop } from "@/components/page-backdrop";
 import { BackendInnovationCard, type BackendInnovation } from "@/components/backend-innovation-card";
 import { TAG_LABELS } from "@/data/mock";
 
@@ -145,7 +144,7 @@ export default function InnovationDetailPage() {
   }
 
   return (
-    <PageBackdrop layout="gutters">
+    <>
       <div className="mx-auto max-w-content px-4 py-12 sm:px-6">
         <Link
           href="/biblioteka"
@@ -159,7 +158,7 @@ export default function InnovationDetailPage() {
           {/* Main */}
           <article>
             {item.is_unmaintained && (
-              <div className="mb-4 inline-flex items-center gap-2 rounded-ui border-2 border-muted bg-paper px-3 py-1.5 text-sm text-muted">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-ui border border-muted bg-paper px-3 py-1.5 text-sm text-muted">
                 <CircleHelp className="size-4" aria-hidden="true" />
                 Nieaktualna innowacja — może wymagać aktualizacji
               </div>
@@ -279,7 +278,7 @@ export default function InnovationDetailPage() {
 
           {/* Sidebar */}
           <aside aria-label="Szczegóły innowacji">
-            <dl className="divide-y divide-sage rounded-ui border-(length:--bw) border-deep bg-surface shadow-paper">
+            <dl className="divide-y divide-sage rounded-ui border-(length:--bw) border-line bg-surface shadow-paper">
               {item.category && (
                 <div className="px-5 py-4">
                   <dt className="text-sm text-muted">Kategoria</dt>
@@ -357,11 +356,11 @@ export default function InnovationDetailPage() {
       </div>
 
       {/* Community action cards */}
-      <div className="mx-auto max-w-content border-t-2 border-sage px-4 pt-10 pb-4 sm:px-6">
+      <div className="mx-auto max-w-content border-t border-line px-4 pt-10 pb-4 sm:px-6">
         <div className="grid gap-6 sm:grid-cols-2">
 
           {/* Testowanie */}
-          <div className="border-(length:--bw) border-deep bg-surface p-6 shadow-paper">
+          <div className="border-(length:--bw) border-line bg-surface p-6 rounded-ui shadow-paper">
             <div className="flex items-center gap-3">
               <FlaskConical className="size-6 shrink-0 text-leaf" aria-hidden="true" />
               <h2 className="text-lg font-bold text-deep">Testowanie</h2>
@@ -370,7 +369,7 @@ export default function InnovationDetailPage() {
               Przetestuj innowację i podziel się opinią z twórcami.
             </p>
             {testerStatus === "pending" ? (
-              <div className="mt-5 flex items-center gap-2 rounded-ui border-2 border-leaf bg-paper px-4 py-3 text-base font-bold text-leaf">
+              <div className="mt-5 flex items-center gap-2 rounded-ui border border-leaf bg-paper px-4 py-3 text-base font-bold text-leaf">
                 <CircleCheck className="size-5 shrink-0" aria-hidden="true" />
                 Zgłoszenie wysłane — oczekuje na akceptację
               </div>
@@ -387,7 +386,7 @@ export default function InnovationDetailPage() {
           </div>
 
           {/* Zainteresowanie */}
-          <div className="border-(length:--bw) border-deep bg-surface p-6 shadow-paper">
+          <div className="border-(length:--bw) border-line bg-surface p-6 rounded-ui shadow-paper">
             <div className="flex items-center gap-3">
               <Bell className="size-6 shrink-0 text-leaf" aria-hidden="true" />
               <h2 className="text-lg font-bold text-deep">Podobne innowacje</h2>
@@ -397,7 +396,7 @@ export default function InnovationDetailPage() {
             </p>
 
             {interestSaved ? (
-              <div className="mt-5 flex items-center gap-2 rounded-ui border-2 border-leaf bg-paper px-4 py-3 text-base font-bold text-leaf">
+              <div className="mt-5 flex items-center gap-2 rounded-ui border border-leaf bg-paper px-4 py-3 text-base font-bold text-leaf">
                 <CircleCheck className="size-5 shrink-0" aria-hidden="true" />
                 Zainteresowanie zapisane
               </div>
@@ -457,7 +456,7 @@ export default function InnovationDetailPage() {
       {/* Embedded forum thread */}
       <section
         aria-labelledby="dyskusja-tytul"
-        className="mx-auto max-w-content border-t-2 border-sage px-4 py-12 sm:px-6"
+        className="mx-auto max-w-content border-t border-line px-4 py-12 sm:px-6"
       >
         <h2 id="dyskusja-tytul" className="text-xl font-bold text-deep">
           Dyskusja społeczności
@@ -475,7 +474,7 @@ export default function InnovationDetailPage() {
       </section>
 
       {similar.length > 0 && (
-        <section aria-labelledby="podobne-tytul" className="mx-auto max-w-content border-t-2 border-sage px-4 py-12 sm:px-6">
+        <section aria-labelledby="podobne-tytul" className="mx-auto max-w-content border-t border-line px-4 py-12 sm:px-6">
           <h2 id="podobne-tytul" className="text-xl font-bold text-deep">Podobne innowacje</h2>
           <ul className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {similar.map((inn) => (
@@ -508,6 +507,6 @@ export default function InnovationDetailPage() {
       )}
 
       <Toast message={toast.message} onClose={toast.hide} />
-    </PageBackdrop>
+    </>
   );
 }

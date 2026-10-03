@@ -42,7 +42,7 @@ const INSTITUTIONS = [
 ];
 
 const fieldClass =
-  "mt-2 w-full rounded-ui border-(length:--bw) border-deep bg-surface px-4 text-base text-ink placeholder:text-muted";
+  "mt-2 w-full rounded-ui border-(length:--bw) border-field bg-surface px-4 text-base text-ink placeholder:text-muted";
 
 type Message = { role: "ai" | "user"; text: string };
 type Phase = "intro" | "chat" | "plan";
@@ -60,7 +60,7 @@ function Missing() {
 
 function PlanSection({ icon: Icon, title, children }: { icon: LucideIcon; title: string; children: React.ReactNode }) {
   return (
-    <section className="break-inside-avoid border-t-2 border-sage pt-6">
+    <section className="break-inside-avoid border-t border-line pt-6">
       <h3 className="flex items-center gap-2 text-xl font-bold text-deep">
         <Icon aria-hidden="true" className="size-6 shrink-0 text-leaf" />
         {title}
@@ -75,7 +75,7 @@ function PlanDocument({ plan, innovationTitle, onRestart }: { plan: MiddlemanPla
   useEffect(() => headingRef.current?.focus(), []);
 
   return (
-    <article aria-labelledby="plan-tytul" className="appear border-(length:--bw) border-deep bg-surface p-6 shadow-paper sm:p-10">
+    <article aria-labelledby="plan-tytul" className="appear border-(length:--bw) border-line bg-surface p-6 rounded-ui shadow-paper sm:p-10">
       <h2 id="plan-tytul" ref={headingRef} tabIndex={-1} className="focus:outline-none">
         <CutoutText as="span" size="section" text="Twój plan wdrożenia" labelled={false} />
         <span className="sr-only">Twój plan wdrożenia</span>
@@ -85,7 +85,7 @@ function PlanDocument({ plan, innovationTitle, onRestart }: { plan: MiddlemanPla
         {plan.source?.where_implemented && <span className="text-muted"> · działa już w: {plan.source.where_implemented}</span>}
       </p>
 
-      <p className="mt-6 flex items-start gap-3 rounded-ui border-2 border-deep bg-sage px-4 py-3">
+      <p className="mt-6 flex items-start gap-3 rounded-ui border border-line bg-sage px-4 py-3">
         <Info aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-deep" />
         To jest szkic. Sprawdź koszty i przepisy przed wdrożeniem.
       </p>
@@ -101,14 +101,14 @@ function PlanDocument({ plan, innovationTitle, onRestart }: { plan: MiddlemanPla
 
         <PlanSection icon={ClipboardList} title="Czego potrzeba">
           <dl className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-ui border-2 border-deep bg-paper p-4">
+            <div className="rounded-ui border border-line bg-paper p-4">
               <dt className="flex items-center gap-2 font-bold text-deep">
                 <Banknote aria-hidden="true" className="size-5 text-leaf" />
                 Szacowany koszt
               </dt>
               <dd className="mt-1">{plan.estimated_cost || <Missing />}</dd>
             </div>
-            <div className="rounded-ui border-2 border-deep bg-paper p-4">
+            <div className="rounded-ui border border-line bg-paper p-4">
               <dt className="flex items-center gap-2 font-bold text-deep">
                 <MapPin aria-hidden="true" className="size-5 text-leaf" />
                 Gdzie zorganizować
@@ -122,7 +122,7 @@ function PlanDocument({ plan, innovationTitle, onRestart }: { plan: MiddlemanPla
           {plan.phases?.length ? (
             <ol className="grid gap-4 md:grid-cols-3">
               {plan.phases.map((phase) => (
-                <li key={phase.label} className="rounded-ui border-2 border-deep bg-paper p-4">
+                <li key={phase.label} className="rounded-ui border border-line bg-paper p-4">
                   <p className="font-bold text-deep">{phase.label}</p>
                   <ul className="mt-2 list-disc space-y-1 pl-5 text-base">
                     {phase.items.map((item) => (
@@ -183,7 +183,7 @@ function PlanDocument({ plan, innovationTitle, onRestart }: { plan: MiddlemanPla
         </PlanSection>
       </div>
 
-      <div className="print-hidden mt-10 flex flex-wrap gap-3 border-t-2 border-sage pt-6">
+      <div className="print-hidden mt-10 flex flex-wrap gap-3 border-t border-line pt-6">
         <Button type="button" onClick={() => window.print()}>
           <Download aria-hidden="true" />
           Pobierz plan (PDF)
@@ -333,7 +333,7 @@ export function Middleman({ innovationId, problem = "" }: MiddlemanProps) {
               key={step}
               aria-current={phase === step ? "step" : undefined}
               className={cn(
-                "rounded-full border-2 border-deep px-3 py-1 font-bold",
+                "rounded-full border border-line px-3 py-1 font-bold",
                 phase === step ? "bg-deep text-surface" : "bg-surface text-deep",
               )}
             >
@@ -344,7 +344,7 @@ export function Middleman({ innovationId, problem = "" }: MiddlemanProps) {
       </div>
 
       {error && (
-        <p role="alert" className="print-hidden mt-6 flex max-w-2xl items-start gap-3 rounded-ui border-2 border-alert bg-surface px-4 py-3 font-bold text-alert">
+        <p role="alert" className="print-hidden mt-6 flex max-w-2xl items-start gap-3 rounded-ui border border-alert bg-surface px-4 py-3 font-bold text-alert">
           <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
           {error}
         </p>
@@ -352,7 +352,7 @@ export function Middleman({ innovationId, problem = "" }: MiddlemanProps) {
 
       <div className="mt-8">
         {phase === "intro" && (
-          <form onSubmit={begin} className="max-w-3xl border-(length:--bw) border-deep bg-surface p-6 shadow-paper sm:p-8">
+          <form onSubmit={begin} className="max-w-3xl border-(length:--bw) border-line bg-surface p-6 rounded-ui shadow-paper sm:p-8">
             {needsPicker ? (
               <fieldset>
                 <legend className="text-xl font-bold text-deep">Którą innowację chcesz wdrożyć?</legend>
@@ -362,7 +362,7 @@ export function Middleman({ innovationId, problem = "" }: MiddlemanProps) {
                       key={item.id}
                       className={cn(
                         "flex cursor-pointer items-start gap-3 rounded-ui border-(length:--bw) p-4",
-                        picked === item.id ? "border-deep bg-mint" : "border-sage bg-surface hover:border-deep",
+                        picked === item.id ? "border-leaf bg-mint" : "border-line bg-surface hover:border-field",
                       )}
                     >
                       <input
@@ -449,8 +449,8 @@ export function Middleman({ innovationId, problem = "" }: MiddlemanProps) {
                 <div key={index} className={cn("appear flex", message.role === "user" ? "justify-end" : "justify-start")}>
                   <div
                     className={cn(
-                      "max-w-[85%] rounded-ui border-2 border-deep px-5 py-3 text-lg",
-                      message.role === "ai" ? "bg-surface shadow-paper" : "bg-mint",
+                      "max-w-[85%] rounded-ui border border-line px-5 py-3 text-lg",
+                      message.role === "ai" ? "bg-surface rounded-ui shadow-paper" : "bg-mint",
                     )}
                   >
                     <p className="text-sm font-bold text-muted">{message.role === "ai" ? "Asystent" : "Ty"}</p>
@@ -460,7 +460,7 @@ export function Middleman({ innovationId, problem = "" }: MiddlemanProps) {
               ))}
               {busy && (
                 <div className="flex justify-start" aria-hidden={streaming ? undefined : true}>
-                  <div className="max-w-[85%] rounded-ui border-2 border-deep bg-surface px-5 py-3 text-lg shadow-paper">
+                  <div className="max-w-[85%] rounded-ui border border-line bg-surface px-5 py-3 text-lg shadow-paper">
                     <p className="text-sm font-bold text-muted">Asystent</p>
                     {streaming ? (
                       <p>{streaming}</p>
@@ -481,7 +481,7 @@ export function Middleman({ innovationId, problem = "" }: MiddlemanProps) {
                 event.preventDefault();
                 send(false);
               }}
-              className="mt-6 border-(length:--bw) border-deep bg-surface p-5"
+              className="mt-6 border-(length:--bw) border-line bg-surface p-5"
             >
               <label htmlFor={`${ids}-odpowiedz`} className="block font-bold text-deep">
                 Twoja odpowiedź

@@ -6,7 +6,10 @@ import { COST_LABELS, type InnovationCard } from "@/data/innovations";
 import { TAG_LABELS, type Tag } from "@/data/mock";
 import { cn, plural } from "@/lib/utils";
 
-// Karta innowacji w wynikach matchmakingu (DESIGN.md 8): stoi prosto, taśma tylko dekoracją,
+// Kolor ikony monet wzmacnia słowo „Niski / Średni / Wysoki koszt”, nigdy go nie zastępuje.
+const COST_TONE: Record<string, string> = { low: "text-forest", medium: "text-ember", high: "text-alert" };
+
+// Karta innowacji w wynikach matchmakingu (DESIGN.md 8): stoi prosto,
 // „Dlaczego pasuje” w blockquote z lewą linią. „Nieaktualna” to szara plakietka z ikoną i słowem.
 
 /** Dane ROPS mają czasem całe akapity w polach „dla kogo” i „gdzie” — na karcie skrót, pełny tekst w karcie innowacji. */
@@ -48,15 +51,10 @@ export function MatchCard({
     <article
       aria-labelledby={titleId}
       className={cn(
-        "relative flex h-full flex-col border-(length:--bw) border-deep p-6 shadow-paper",
+        "relative flex h-full flex-col border-(length:--bw) border-line p-6 rounded-ui shadow-paper",
         unmaintained ? "bg-paper" : "bg-surface",
       )}
     >
-      <span
-        aria-hidden="true"
-        className="simple-hidden absolute -top-3 right-6 h-6 w-20 rotate-[4deg] bg-butter [clip-path:polygon(0_8%,6%_0,100%_4%,95%_50%,100%_96%,4%_100%,0_55%)]"
-      />
-
       {rank !== undefined && (
         <p className="mb-1 flex flex-wrap items-center gap-2 text-sm font-bold text-muted">
           {/* Bez procentu dopasowania: wynik TF-IDF nie jest skalibrowany, „28%” czyta się jak „nie pasuje”. */}
@@ -69,7 +67,7 @@ export function MatchCard({
       </Heading>
 
       {unmaintained && (
-        <p className="mt-3 inline-flex items-start gap-2 self-start rounded-ui border-2 border-muted bg-sage px-3 py-1 font-bold text-ink">
+        <p className="mt-3 inline-flex items-start gap-2 self-start rounded-ui border border-muted bg-sage px-3 py-1 font-bold text-ink">
           <Archive aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
           Nieaktualna: nikt już jej nie prowadzi
         </p>
@@ -107,7 +105,7 @@ export function MatchCard({
           <div>
             <dt className="sr-only">Koszt</dt>
             <dd className="flex items-start gap-2">
-              <Coins aria-hidden="true" className="mt-1 size-5 shrink-0 text-leaf" />
+              <Coins aria-hidden="true" className={cn("mt-1 size-5 shrink-0", COST_TONE[innovation.cost_level] ?? "text-leaf")} />
               <span>
                 {COST_LABELS[innovation.cost_level]}
                 {innovation.implementation_time_months

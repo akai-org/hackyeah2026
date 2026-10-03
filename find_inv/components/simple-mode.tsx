@@ -171,7 +171,7 @@ export function AccessibilitySettings({ className }: { className?: string }) {
         aria-haspopup="dialog"
         onClick={() => setOpen((value) => !value)}
         title="Ustawienia dostępności"
-        className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-full border-(length:--bw) border-deep bg-deep text-surface shadow-paper hover:bg-leaf"
+        className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-full border-(length:--bw) border-line bg-deep text-surface shadow-paper hover:bg-leaf"
       >
         <Accessibility aria-hidden="true" className="size-7" />
         <span className="sr-only">Dostępność</span>
@@ -182,7 +182,7 @@ export function AccessibilitySettings({ className }: { className?: string }) {
           id={panelId}
           role="dialog"
           aria-label="Ustawienia dostępności"
-          className="fixed right-4 bottom-20 z-30 w-[min(22rem,calc(100vw-2rem))] rounded-ui border-(length:--bw) border-deep bg-surface p-4 shadow-paper"
+          className="fixed right-4 bottom-20 z-30 w-[min(22rem,calc(100vw-2rem))] rounded-ui border-(length:--bw) border-line bg-surface p-4 shadow-paper"
         >
           <p className="text-lg font-semibold text-deep">Ustawienia dostępności</p>
           <div className="mt-3 grid gap-2">
@@ -192,7 +192,7 @@ export function AccessibilitySettings({ className }: { className?: string }) {
             <AccessibilityOption id={`${panelId}-contrast`} checked={contrast} onCheckedChange={setContrast}>
               Wysoki kontrast
             </AccessibilityOption>
-            <fieldset className="mt-2 border-t-2 border-sage pt-3">
+            <fieldset className="mt-2 border-t border-line pt-3">
               <legend className="text-base font-semibold text-deep">Rozmiar czcionki</legend>
               <div className="mt-2 flex gap-2">
                 <button
@@ -200,7 +200,7 @@ export function AccessibilitySettings({ className }: { className?: string }) {
                   aria-label="Zmniejsz czcionkę"
                   aria-pressed={fontSize === "small"}
                   onClick={() => setFontSize("small")}
-                  className="min-h-12 min-w-12 rounded-ui border-(length:--bw) border-deep bg-surface px-3 text-base font-semibold text-deep hover:bg-sage aria-pressed:bg-deep aria-pressed:text-surface"
+                  className="min-h-12 min-w-12 rounded-ui border-(length:--bw) border-line bg-surface px-3 text-base font-semibold text-deep hover:bg-sage aria-pressed:bg-deep aria-pressed:text-surface"
                 >
                   A-
                 </button>
@@ -209,7 +209,7 @@ export function AccessibilitySettings({ className }: { className?: string }) {
                   aria-label="Zwiększ czcionkę"
                   aria-pressed={fontSize === "large"}
                   onClick={() => setFontSize("large")}
-                  className="min-h-12 min-w-12 rounded-ui border-(length:--bw) border-deep bg-surface px-3 text-xl font-semibold text-deep hover:bg-sage aria-pressed:bg-deep aria-pressed:text-surface"
+                  className="min-h-12 min-w-12 rounded-ui border-(length:--bw) border-line bg-surface px-3 text-xl font-semibold text-deep hover:bg-sage aria-pressed:bg-deep aria-pressed:text-surface"
                 >
                   A+
                 </button>

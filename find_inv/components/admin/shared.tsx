@@ -54,7 +54,7 @@ export function useAdminData<T>(load: () => Promise<Result<T>>, key = "") {
 export function OfflineNote({ offline }: { offline: boolean }) {
   if (!offline) return null;
   return (
-    <p className="mb-6 flex items-start gap-3 rounded-ui border-2 border-deep bg-sage px-4 py-3">
+    <p className="mb-6 flex items-start gap-3 rounded-ui border border-line bg-sage px-4 py-3">
       <CloudOff aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-deep" />
       Serwer nie odpowiada. Pokazuję kopię danych demo, zmiany znikną po odświeżeniu.
     </p>
@@ -64,7 +64,7 @@ export function OfflineNote({ offline }: { offline: boolean }) {
 export function ErrorNote({ message }: { message: string | null }) {
   if (!message) return null;
   return (
-    <p role="alert" className="mb-6 flex items-start gap-3 rounded-ui border-2 border-alert bg-surface px-4 py-3 font-bold text-alert">
+    <p role="alert" className="mb-6 flex items-start gap-3 rounded-ui border border-alert bg-surface px-4 py-3 font-bold text-alert">
       <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
       {message}
     </p>
@@ -83,11 +83,21 @@ export function LoadingRows({ label }: { label: string }) {
 
 // ---------- Status innowacji: ikona + słowo ----------
 
-export const STATUS_META: Record<InnovationStatus, { label: string; icon: LucideIcon; className: string }> = {
-  pending: { label: "Do weryfikacji", icon: Clock, className: "bg-butter text-deep" },
-  active: { label: "Aktywna", icon: CircleCheck, className: "bg-mint text-ink" },
-  unmaintained: { label: "Nieaktualna", icon: CircleAlert, className: "bg-paper text-ink" },
-  archived: { label: "Zarchiwizowana", icon: Archive, className: "bg-sage text-ink" },
+// `tone` to kolor ikony i paska na wykresie statusów; status zawsze ma też ikonę i słowo.
+export const STATUS_META: Record<
+  InnovationStatus,
+  { label: string; icon: LucideIcon; className: string; tone: string; bar: string }
+> = {
+  pending: { label: "Do weryfikacji", icon: Clock, className: "bg-butter text-deep", tone: "text-leaf", bar: "bg-leaf" },
+  active: { label: "Aktywna", icon: CircleCheck, className: "bg-forest-soft text-ink", tone: "text-forest", bar: "bg-forest" },
+  unmaintained: {
+    label: "Nieaktualna",
+    icon: CircleAlert,
+    className: "bg-ember-soft text-ink",
+    tone: "text-ember",
+    bar: "bg-ember",
+  },
+  archived: { label: "Zarchiwizowana", icon: Archive, className: "bg-sage text-ink", tone: "text-muted", bar: "bg-field" },
 };
 
 export function StatusBadge({ status, className }: { status: InnovationStatus; className?: string }) {
@@ -96,7 +106,7 @@ export function StatusBadge({ status, className }: { status: InnovationStatus; c
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border-2 border-deep px-2.5 py-0.5 text-sm font-bold whitespace-nowrap",
+        "inline-flex items-center gap-1.5 rounded-full border border-line px-2.5 py-0.5 text-sm font-bold whitespace-nowrap",
         meta.className,
         className,
       )}

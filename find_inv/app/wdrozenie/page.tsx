@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 
 import { Middleman } from "@/components/middleman";
-import { PageBackdrop } from "@/components/page-backdrop";
 
 export const metadata: Metadata = { title: "Plan wdrożenia" };
 
@@ -14,8 +13,6 @@ export default async function ImplementationPage({ searchParams }: PageProps<"/w
   const { innowacja, problem } = await searchParams;
   const innovationId = first(innowacja);
   return (
-    <PageBackdrop layout="gutters" leafColor="leaf">
-      <Middleman key={innovationId ?? "wybor"} innovationId={innovationId} problem={first(problem) ?? ""} />
-    </PageBackdrop>
+    <Middleman key={innovationId ?? "wybor"} innovationId={innovationId} problem={first(problem) ?? ""} />
   );
 }

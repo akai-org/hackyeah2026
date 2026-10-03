@@ -26,7 +26,7 @@ export function TestStatusBadge({ status }: { status: TestStatus }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border-2 border-deep px-2.5 py-0.5 text-sm font-bold",
+        "inline-flex items-center gap-1.5 rounded-full border border-line px-2.5 py-0.5 text-sm font-bold",
         className,
       )}
     >
@@ -103,7 +103,7 @@ export function TestRequestForm({
           value={motivation}
           onChange={(event) => setMotivation(event.target.value)}
           aria-describedby={`${ids}-podpowiedz`}
-          className="mt-2 w-full rounded-ui border-(length:--bw) border-deep bg-surface px-4 py-3 text-base text-ink"
+          className="mt-2 w-full rounded-ui border-(length:--bw) border-field bg-surface px-4 py-3 text-base text-ink"
         />
       </div>
       {error && (
@@ -148,7 +148,7 @@ export function TestRequestBox({ innovation }: { innovation: Innovation }) {
   return (
     <section
       aria-labelledby="test-innowacji"
-      className="mt-8 border-(length:--bw) border-deep bg-surface p-6 shadow-paper print:hidden"
+      className="mt-8 border-(length:--bw) border-line bg-surface p-6 rounded-ui shadow-paper print:hidden"
     >
       <h2 id="test-innowacji" className="flex items-center gap-2 text-xl font-bold text-deep">
         <FlaskConical aria-hidden="true" className="size-6 text-leaf" />

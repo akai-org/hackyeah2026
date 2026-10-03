@@ -37,7 +37,7 @@ function syncUrl({ search, tags, cost, archived }: Filters) {
   window.history.replaceState(null, "", query ? `?${query}` : window.location.pathname);
 }
 
-const fieldClass = "min-h-12 rounded-ui border-(length:--bw) border-deep bg-surface px-4 text-base text-ink";
+const fieldClass = "min-h-12 rounded-ui border-(length:--bw) border-field bg-surface px-4 text-base text-ink";
 
 export function LibraryBrowser({ initial }: { initial: Filters }) {
   const ids = useId();
@@ -170,7 +170,7 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
               {filters.tags.map((tag) => (
                 <li
                   key={tag}
-                  className="inline-flex min-h-10 items-center gap-1 rounded-ui border-(length:--bw) border-deep bg-mint py-0.5 pr-0.5 pl-3 text-base text-ink"
+                  className="inline-flex min-h-10 items-center gap-1 rounded-ui border-(length:--bw) border-line bg-mint py-0.5 pr-0.5 pl-3 text-base text-ink"
                 >
                   {TAG_LABELS[tag]}
                   <button

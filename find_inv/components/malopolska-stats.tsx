@@ -7,6 +7,8 @@ import { getStats } from "@/lib/knowledge";
 
 // Kondycja Małopolski: kafelki z jedną liczbą (to nie wykres, tylko nagłówkowe wartości).
 // Liczby w kolorze tekstu, nie danych; źródło zawsze pod kafelkami.
+// Pasek u góry kafelka to tylko akcent (stała kolejność barw), nie koduje wartości.
+const TILE_ACCENTS = ["border-t-leaf", "border-t-forest", "border-t-ember", "border-t-plum"];
 
 /** 22.4 → „22,4”, 187400 → „187 400” — bez Intl, żeby serwer i przeglądarka dały ten sam tekst. */
 export function formatNumber(value: number): string {
@@ -27,8 +29,11 @@ export function MalopolskaStatsTiles() {
   return (
     <div>
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {tiles.map((tile) => (
-          <li key={tile.label} className="border-(length:--bw) border-deep bg-surface p-5 shadow-paper">
+        {tiles.map((tile, index) => (
+          <li
+            key={tile.label}
+            className={`border-(length:--bw) border-t-4 border-line bg-surface p-5 rounded-ui shadow-paper ${TILE_ACCENTS[index % TILE_ACCENTS.length]}`}
+          >
             <p className="text-2xl font-bold text-deep tabular-nums">{tile.value}</p>
             <p className="mt-1">{tile.label}</p>
             <p className="mt-2 text-sm text-muted">{tile.source}</p>

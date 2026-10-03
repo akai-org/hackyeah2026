@@ -36,7 +36,7 @@ export function Toast({ message, onClose }: ToastProps) {
       {message && (
         <div
           key={message.key}
-          className="toast-in pointer-events-auto flex max-w-xl items-start gap-3 rounded-ui border-(length:--bw) border-deep bg-surface py-3 pr-2 pl-4 text-base font-bold text-deep shadow-paper"
+          className="toast-in pointer-events-auto flex max-w-xl items-start gap-3 rounded-ui border-(length:--bw) border-line bg-surface py-3 pr-2 pl-4 text-base font-bold text-deep shadow-paper"
         >
           <CircleCheck aria-hidden="true" className="mt-0.5 size-6 shrink-0 text-leaf" />
           <p className="flex-1 py-0.5">{message.text}</p>

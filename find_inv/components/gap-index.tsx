@@ -8,11 +8,12 @@ import { formatNumber } from "@/components/malopolska-stats";
 import { MatchCard } from "@/components/match-card";
 import { Button } from "@/components/ui/button";
 import { MOCK_GAP_INDEX, type GapEntry } from "@/data/innovations";
+import { gapBin } from "@/lib/gap-scale";
 import { getGapIndex, getPulse, type GminaPulse } from "@/lib/knowledge";
 import { cn, plural } from "@/lib/utils";
 
 // Indeks Luki Innowacyjnej: gdzie problemów jest dużo, a innowacji mało („białe plamy”).
-// Jedna seria → jeden kolor (leaf), bez legendy; słupki ≤ 24 px z zaokrąglonym końcem, wartość przy końcu słupka
+// Kolor słupka = przedział tej samej skali zieleni co na mapie powiatów (lib/gap-scale.ts), bez legendy; słupki ≤ 24 px z zaokrąglonym końcem, wartość przy końcu słupka
 // w kolorze tekstu. Każdy wiersz jest też zwykłym tekstem, więc wykres nie potrzebuje osobnej tabeli.
 
 type GapIndexProps = {
@@ -109,7 +110,7 @@ export function GapIndex({ limit, level = 3 }: GapIndexProps) {
           const panelId = `${ids}-puls-${index}`;
           const expanded = open === entry.powiat;
           return (
-            <li key={entry.powiat} className="border-(length:--bw) border-deep bg-surface">
+            <li key={entry.powiat} className="border-(length:--bw) border-line bg-surface">
               <div className="grid items-center gap-x-6 gap-y-2 p-4 md:grid-cols-[11rem_minmax(0,1fr)_15rem]">
                 <RowHeading className="text-lg font-bold text-deep">
                   <span className="sr-only">{index + 1}. </span>Powiat {entry.powiat}
@@ -117,7 +118,10 @@ export function GapIndex({ limit, level = 3 }: GapIndexProps) {
 
                 <div className="flex items-center gap-3">
                   <div className="relative h-6 flex-1 border-l border-muted" aria-hidden="true">
-                    <div className="h-full rounded-r-[4px] bg-leaf" style={{ width: `${width}%` }} />
+                    <div
+                      className="h-full rounded-r-[4px]"
+                      style={{ width: `${width}%`, background: gapBin(entry.gap_score, scaleMax).fill }}
+                    />
                   </div>
                   <p className="w-24 shrink-0 tabular-nums">
                     <span className="sr-only">Indeks luki: </span>
@@ -137,7 +141,7 @@ export function GapIndex({ limit, level = 3 }: GapIndexProps) {
               </div>
 
               {!limit && (
-                <div className="border-t-2 border-sage px-4 py-3">
+                <div className="border-t border-line px-4 py-3">
                   <Button
                     type="button"
                     variant="secondary"

@@ -370,7 +370,7 @@ export function DictationSuggestion({ dictation }: { dictation: Dictation }) {
   return (
     <section
       aria-labelledby={`${ids}-pytanie`}
-      className="appear mt-3 max-w-[65ch] rounded-ui border-(length:--bw) border-deep bg-mint p-4"
+      className="appear mt-3 max-w-[65ch] rounded-ui border-(length:--bw) border-line bg-mint p-4"
     >
       <p id={`${ids}-pytanie`} ref={headingRef} tabIndex={-1} className="font-bold text-deep focus:outline-none">
         Czy o to chodziło?

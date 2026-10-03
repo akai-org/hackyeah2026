@@ -47,7 +47,7 @@ export function LoginDialog() {
       onClick={(event) => {
         if (event.target === event.currentTarget) closeLogin();
       }}
-      className="m-auto w-[calc(100%-2rem)] max-w-xl rounded-ui border-(length:--bw) border-deep bg-surface p-0 text-ink shadow-paper backdrop:bg-ink/60"
+      className="m-auto w-[calc(100%-2rem)] max-w-xl rounded-ui border-(length:--bw) border-line bg-surface p-0 text-ink shadow-paper backdrop:bg-ink/60"
     >
       <div className="p-6 sm:p-8">
         <div className="flex items-start justify-between gap-4">
@@ -78,7 +78,7 @@ export function LoginDialog() {
                   type="button"
                   onClick={() => choose(role.value)}
                   disabled={pending !== null}
-                  className="flex min-h-12 w-full cursor-pointer items-center gap-4 rounded-ui border-(length:--bw) border-deep bg-surface px-4 py-3 text-left hover:bg-mint disabled:cursor-wait disabled:opacity-70"
+                  className="flex min-h-12 w-full cursor-pointer items-center gap-4 rounded-ui border-(length:--bw) border-line bg-surface px-4 py-3 text-left hover:bg-mint disabled:cursor-wait disabled:opacity-70"
                 >
                   <RoleBadge role={role.value} className="w-36 shrink-0 justify-center" />
                   <span className="flex-1 text-base">{role.description}</span>

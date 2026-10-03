@@ -47,7 +47,7 @@ export function CrisisPanel({ children }: { children?: React.ReactNode }) {
   return (
     <section
       aria-labelledby="pomoc-kryzysowa"
-      className="max-w-3xl rounded-ui border-(length:--bw) border-deep bg-surface p-6 sm:p-8"
+      className="max-w-3xl rounded-ui border-(length:--bw) border-line bg-surface p-6 sm:p-8"
     >
       <h2 id="pomoc-kryzysowa" className="text-2xl font-bold text-deep">
         Pomoc jest blisko
@@ -60,7 +60,7 @@ export function CrisisPanel({ children }: { children?: React.ReactNode }) {
           <li key={line.tel}>
             <a
               href={`tel:${line.tel}`}
-              className="flex min-h-12 items-center gap-4 rounded-ui border-(length:--bw) border-deep bg-paper px-4 py-3 hover:bg-sage"
+              className="flex min-h-12 items-center gap-4 rounded-ui border-(length:--bw) border-line bg-paper px-4 py-3 hover:bg-sage"
             >
               <Phone aria-hidden="true" className="size-6 shrink-0 text-deep" />
               <span>

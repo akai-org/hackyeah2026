@@ -41,7 +41,7 @@ function Missing() {
 }
 
 const FIELD_CLASS =
-  "w-full rounded-ui border-(length:--bw) border-deep px-4 text-base text-ink placeholder:text-muted read-only:bg-paper";
+  "w-full rounded-ui border-(length:--bw) border-field px-4 text-base text-ink placeholder:text-muted read-only:bg-paper";
 
 type FieldProps = {
   id: string;
@@ -178,10 +178,7 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
 
   return (
     <section aria-labelledby={`${ids}-fiszka`} className="appear mt-12 max-w-3xl">
-      <article className="relative border-(length:--bw) border-deep bg-surface p-6 shadow-paper sm:p-8">
-        {/* Kawałek taśmy przyklejający fiszkę do tablicy (DESIGN.md 8, karta innowacji). */}
-        <span aria-hidden="true" className="simple-hidden absolute -top-3 right-10 h-6 w-24 rotate-[4deg] bg-butter/90" />
-
+      <article className="relative border-(length:--bw) border-line bg-surface p-6 rounded-ui shadow-paper sm:p-8">
         <p className="font-bold text-muted">Fiszka pomysłu</p>
         <h2 id={`${ids}-fiszka`} ref={headingRef} tabIndex={-1} className="mt-1 text-xl font-bold text-deep">
           {draft.title.trim() || "Bez tytułu"}
@@ -264,7 +261,7 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
               value={draft.stage}
               disabled={locked}
               onChange={(event) => set("stage")(event.target.value)}
-              className="min-h-12 w-full rounded-ui border-(length:--bw) border-deep bg-surface px-3 text-base text-ink disabled:bg-paper"
+              className="min-h-12 w-full rounded-ui border-(length:--bw) border-field bg-surface px-3 text-base text-ink disabled:bg-paper"
             >
               {STAGES.map((stage) => (
                 <option key={stage} value={stage}>
@@ -298,7 +295,7 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
                 {draft.tags.map((tag) => (
                   <li
                     key={tag}
-                    className="inline-flex min-h-10 items-center gap-1.5 rounded-ui border-2 border-deep bg-mint px-3 text-base"
+                    className="inline-flex min-h-10 items-center gap-1.5 rounded-ui border border-line bg-mint px-3 text-base"
                   >
                     {draft.suggestedTags.includes(tag) && <Sparkles aria-hidden="true" className="size-4 text-deep" />}
                     {TAG_LABELS[tag]}
@@ -335,11 +332,11 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
                 disabled={locked || files.length >= MAX_FILES}
                 aria-describedby={`${ids}-pliki-opis`}
                 onChange={(event) => addFiles(event.target.files)}
-                className="mt-2 block w-full text-base text-ink file:mr-4 file:min-h-12 file:cursor-pointer file:rounded-ui file:border-(length:--bw) file:border-deep file:bg-surface file:px-4 file:font-bold file:text-deep hover:file:bg-sage disabled:opacity-60"
+                className="mt-2 block w-full text-base text-ink file:mr-4 file:min-h-12 file:cursor-pointer file:rounded-ui file:border-(length:--bw) file:border-field file:bg-surface file:px-4 file:font-bold file:text-deep hover:file:bg-sage disabled:opacity-60"
               />
             )}
             {fileErrors.length > 0 && (
-              <div role="alert" className="mt-2 rounded-ui border-2 border-alert bg-surface px-4 py-2 text-alert">
+              <div role="alert" className="mt-2 rounded-ui border border-alert bg-surface px-4 py-2 text-alert">
                 <p className="flex items-center gap-2 font-bold">
                   <CircleAlert aria-hidden="true" className="size-5 shrink-0" />
                   Nie dodano części plików
@@ -379,7 +376,7 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
         {invalid && (
           <p
             role="alert"
-            className="mt-6 flex items-start gap-2 rounded-ui border-2 border-alert bg-surface px-4 py-3 font-bold text-alert"
+            className="mt-6 flex items-start gap-2 rounded-ui border border-alert bg-surface px-4 py-3 font-bold text-alert"
           >
             <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
             Uzupełnij tytuł i istotę pomysłu, żeby zapisać fiszkę.
@@ -411,7 +408,7 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
         {/* Potwierdzenie na fiszce, przy przycisku — komunikat na dole ekranu łatwo przeoczyć. */}
         <div role="status" aria-live="polite">
           {saved && !saving && (
-            <div className="mt-4 rounded-ui border-2 border-leaf bg-mint px-4 py-3 text-ink">
+            <div className="mt-4 rounded-ui border border-leaf bg-mint px-4 py-3 text-ink">
               <p className="flex items-start gap-2 font-bold">
                 <CircleCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-deep" />
                 {saved.id ? `Fiszka zapisana (nr ${saved.id}).` : "Fiszka zapisana."} Ekspert ROPS przejrzy ją w ciągu
@@ -427,7 +424,7 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
           )}
         </div>
         {failed.length > 0 && !saving && (
-          <div role="alert" className="mt-3 rounded-ui border-2 border-alert bg-surface px-4 py-3 text-alert">
+          <div role="alert" className="mt-3 rounded-ui border border-alert bg-surface px-4 py-3 text-alert">
             <p className="flex items-center gap-2 font-bold">
               <CircleAlert aria-hidden="true" className="size-5 shrink-0" />
               Nie udało się wysłać części plików
@@ -444,7 +441,7 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
         {saveError && (
           <p
             role="alert"
-            className="mt-4 flex items-start gap-2 rounded-ui border-2 border-alert bg-surface px-4 py-3 font-bold text-alert"
+            className="mt-4 flex items-start gap-2 rounded-ui border border-alert bg-surface px-4 py-3 font-bold text-alert"
           >
             <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
             Nie udało się zapisać fiszki. Sprawdź połączenie i spróbuj jeszcze raz.

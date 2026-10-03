@@ -37,7 +37,7 @@ export function ReportNeed({ query }: { query: string }) {
       {state === "error" && (
         <p
           role="alert"
-          className="mt-3 flex items-start gap-2 rounded-ui border-2 border-alert bg-surface px-4 py-3 font-bold text-alert"
+          className="mt-3 flex items-start gap-2 rounded-ui border border-alert bg-surface px-4 py-3 font-bold text-alert"
         >
           <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
           Nie udało się wysłać zgłoszenia. Spróbuj jeszcze raz za chwilę.

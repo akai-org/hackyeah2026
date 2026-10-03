@@ -96,7 +96,7 @@ export function IdeaCreator() {
             {MODES.map(({ value, label, text: description, icon: Icon }) => (
               <label
                 key={value}
-                className="flex cursor-pointer items-start gap-3 rounded-ui border-(length:--bw) border-deep bg-surface p-4 has-checked:bg-mint"
+                className="flex cursor-pointer items-start gap-3 rounded-ui border-(length:--bw) border-line bg-surface p-4 has-checked:bg-mint"
               >
                 <input
                   type="radio"
@@ -153,7 +153,7 @@ export function IdeaCreator() {
             placeholder="Na przykład: chcę zorganizować w świetlicy wiejskiej spotkania, na których młodzież uczy seniorów obsługi smartfona"
             className={cn(
               "mt-2 min-h-[160px] w-full resize-y rounded-ui border-(length:--bw) bg-surface p-4 text-base text-ink placeholder:text-muted",
-              error ? "border-alert" : "border-deep",
+              error ? "border-alert" : "border-field",
             )}
           />
           <DictationButton dictation={dictation} className="mt-3" />
@@ -163,7 +163,7 @@ export function IdeaCreator() {
             <p
               id={errorId}
               role="alert"
-              className="mt-3 flex items-start gap-2 rounded-ui border-2 border-alert bg-surface px-4 py-3 font-bold text-alert"
+              className="mt-3 flex items-start gap-2 rounded-ui border border-alert bg-surface px-4 py-3 font-bold text-alert"
             >
               <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
               Opisz pomysł w co najmniej jednym zdaniu, żeby AI mogło go przeanalizować.
@@ -188,7 +188,7 @@ export function IdeaCreator() {
                           aria-pressed={active}
                           onClick={() => toggleTag(tag)}
                           className={cn(
-                            "inline-flex min-h-12 cursor-pointer items-center gap-1.5 rounded-ui border-(length:--bw) border-deep px-4 py-2 text-base",
+                            "inline-flex min-h-12 cursor-pointer items-center gap-1.5 rounded-ui border-(length:--bw) border-line px-4 py-2 text-base",
                             active ? "bg-mint font-bold text-ink" : "bg-surface text-ink hover:bg-sage",
                           )}
                         >
@@ -213,7 +213,7 @@ export function IdeaCreator() {
       <p role="status" aria-live="polite" className={cn("flex items-center gap-2 font-bold text-deep", analyzing && "mt-4")}>
         {analyzing && (
           <>
-            <span className="rounded-ui border-2 border-deep bg-butter px-3 py-1">AI analizuje pomysł</span>
+            <span className="rounded-ui border border-line bg-butter px-3 py-1">AI analizuje pomysł</span>
             Rozpisuję opis na pola fiszki…
           </>
         )}

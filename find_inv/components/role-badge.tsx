@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils";
 // Każda para tło/tekst ma kontrast ≥ 4,5:1 (DESIGN.md, sekcja 3).
 const STYLES: Record<ForumBadge, { icon: LucideIcon; className: string }> = {
   user: { icon: UserRound, className: "bg-sage text-ink" },
-  tester: { icon: FlaskConical, className: "bg-mint text-ink" },
-  consultant: { icon: BadgeCheck, className: "bg-butter text-deep" },
+  tester: { icon: FlaskConical, className: "bg-forest-soft text-ink" },
+  consultant: { icon: BadgeCheck, className: "bg-plum-soft text-ink" },
   admin: { icon: ShieldCheck, className: "bg-deep text-surface" },
   creator: { icon: Lightbulb, className: "bg-butter text-deep" },
   user_of: { icon: UserCheck, className: "bg-mint text-ink" },
@@ -19,7 +19,7 @@ export function RoleBadge({ role, className }: { role: ForumBadge; className?: s
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border-2 border-deep px-2.5 py-0.5 text-sm font-bold whitespace-nowrap",
+        "inline-flex items-center gap-1.5 rounded-full border border-line px-2.5 py-0.5 text-sm font-bold whitespace-nowrap",
         colors,
         className,
       )}

@@ -89,7 +89,7 @@ export function InnovationOfTheDay({ headingId }: { headingId: string }) {
         {innovation.title}
       </h2>
       {innovation.category && (
-        <p className="mt-2 inline-flex rounded-ui border-2 border-deep bg-mint px-3 py-0.5 text-sm font-medium text-ink">
+        <p className="mt-2 inline-flex rounded-ui border border-line bg-mint px-3 py-0.5 text-sm font-medium text-ink">
           {innovation.category}
         </p>
       )}

@@ -29,7 +29,7 @@ function validate(values: Values): Errors {
 }
 
 const inputClass =
-  "mt-2 min-h-12 w-full rounded-ui border-(length:--bw) bg-surface px-4 text-base text-ink placeholder:text-muted";
+  "mt-2 min-h-12 w-full rounded-ui border-(length:--bw) border-field bg-surface px-4 text-base text-ink placeholder:text-muted";
 
 export function TesterForm() {
   const { user } = useAuth();
@@ -89,7 +89,7 @@ export function TesterForm() {
     );
 
   const content = sentAs ? (
-    <div className="appear border-(length:--bw) border-deep bg-surface p-6 shadow-paper sm:p-8">
+    <div className="appear border-(length:--bw) border-line bg-surface p-6 rounded-ui shadow-paper sm:p-8">
       <h2 ref={successRef} tabIndex={-1} className="flex items-center gap-3 text-xl font-bold text-deep">
         <CircleCheck aria-hidden="true" className="size-7 shrink-0 text-leaf" />
         Dziękujemy, {sentAs}
@@ -107,7 +107,7 @@ export function TesterForm() {
       onSubmit={submit}
       noValidate
       aria-labelledby={`${ids}-tytul`}
-      className="border-(length:--bw) border-deep bg-surface p-6 shadow-paper sm:p-8"
+      className="border-(length:--bw) border-line bg-surface p-6 rounded-ui shadow-paper sm:p-8"
     >
       <h2 id={`${ids}-tytul`} className="text-xl font-bold text-deep">
         Formularz zgłoszeniowy
@@ -129,7 +129,7 @@ export function TesterForm() {
           onChange={(event) => update("name", event.target.value)}
           aria-invalid={!!errors.name || undefined}
           aria-describedby={describedBy("name")}
-          className={cn(inputClass, errors.name ? "border-alert" : "border-deep")}
+          className={cn(inputClass, errors.name ? "border-alert" : "border-field")}
         />
         {errorText("name")}
       </div>
@@ -150,7 +150,7 @@ export function TesterForm() {
           onChange={(event) => update("email", event.target.value)}
           aria-invalid={!!errors.email || undefined}
           aria-describedby={describedBy("email")}
-          className={cn(inputClass, errors.email ? "border-alert" : "border-deep")}
+          className={cn(inputClass, errors.email ? "border-alert" : "border-field")}
         />
         {errorText("email")}
       </div>
@@ -172,7 +172,7 @@ export function TesterForm() {
           value={values.organization}
           onChange={(event) => update("organization", event.target.value)}
           aria-describedby={describedBy("organization", `${id("organization")}-podpowiedz`)}
-          className={cn(inputClass, "border-deep")}
+          className={cn(inputClass, "border-field")}
         />
       </div>
 
@@ -189,7 +189,7 @@ export function TesterForm() {
           onChange={(event) => update("expertise", event.target.value)}
           aria-invalid={!!errors.expertise || undefined}
           aria-describedby={describedBy("expertise")}
-          className={cn(inputClass, "cursor-pointer", errors.expertise ? "border-alert" : "border-deep")}
+          className={cn(inputClass, "cursor-pointer", errors.expertise ? "border-alert" : "border-field")}
         >
           <option value="">Wybierz z listy</option>
           {TESTER_SPECIALIZATIONS.map((item) => (

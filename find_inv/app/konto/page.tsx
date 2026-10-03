@@ -16,7 +16,7 @@ export default function AccountPage() {
             Zaloguj się, aby zapisywać ulubione innowacje, obserwować wyzwania i wracać do swoich pomysłów.
           </p>
         </div>
-        <div className="mt-12 border-(length:--bw) border-deep bg-surface p-6 shadow-paper md:p-8">
+        <div className="mt-12 border-(length:--bw) border-line bg-surface p-6 rounded-ui shadow-paper md:p-8">
           <h2 className="text-2xl font-bold text-deep">Konto w przygotowaniu</h2>
           <p className="mt-3 max-w-[65ch]">Wkrótce będzie można utworzyć profil i zachować swoje wyszukiwania w jednym miejscu.</p>
         </div>

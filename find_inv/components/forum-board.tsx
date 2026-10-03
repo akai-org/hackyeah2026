@@ -46,7 +46,7 @@ function repliesLabel(count: number): string {
 }
 
 const fieldClass =
-  "mt-2 w-full rounded-ui border-(length:--bw) bg-surface px-4 text-base text-ink placeholder:text-muted";
+  "mt-2 w-full rounded-ui border-(length:--bw) border-field bg-surface px-4 text-base text-ink placeholder:text-muted";
 
 function PostBody({ post }: { post: ForumPost }) {
   return (
@@ -153,7 +153,7 @@ export function ForumBoard() {
   return (
     <div className="mt-10 grid gap-12 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
       <aside aria-labelledby={`${ids}-nowy`} className="lg:sticky lg:top-6 lg:col-start-2 lg:row-start-1">
-        <form onSubmit={addThread} noValidate className="border-(length:--bw) border-deep bg-sage p-5 sm:p-6">
+        <form onSubmit={addThread} noValidate className="border-(length:--bw) border-line bg-sage p-5 sm:p-6">
           <h2 id={`${ids}-nowy`} className="text-xl font-bold text-deep">
             Zadaj pytanie
           </h2>
@@ -194,7 +194,7 @@ export function ForumBoard() {
             aria-invalid={threadError === "title" || undefined}
             aria-describedby={threadError === "title" ? `${ids}-blad` : undefined}
             placeholder="Na przykład: jak znaleźć wolontariuszy na wsi?"
-            className={cn(fieldClass, "min-h-12", threadError === "title" ? "border-alert" : "border-deep")}
+            className={cn(fieldClass, "min-h-12", threadError === "title" ? "border-alert" : "border-field")}
           />
 
           <label htmlFor={`${ids}-tresc`} className="mt-5 block font-bold text-deep">
@@ -211,7 +211,7 @@ export function ForumBoard() {
             }}
             aria-invalid={threadError === "content" || undefined}
             aria-describedby={threadError === "content" ? `${ids}-blad` : undefined}
-            className={cn(fieldClass, "min-h-28 py-3", threadError === "content" ? "border-alert" : "border-deep")}
+            className={cn(fieldClass, "min-h-28 py-3", threadError === "content" ? "border-alert" : "border-field")}
           />
 
           {threadError && (
@@ -244,7 +244,7 @@ export function ForumBoard() {
                 <article
                   aria-labelledby={`${ids}-wpis-${thread.id}`}
                   className={cn(
-                    "border-(length:--bw) border-deep bg-surface p-5 shadow-paper sm:p-6",
+                    "border-(length:--bw) border-line bg-surface p-5 rounded-ui shadow-paper sm:p-6",
                     focusPost === thread.id && "appear",
                   )}
                 >
@@ -290,7 +290,7 @@ export function ForumBoard() {
                         }}
                         aria-invalid={replyError || undefined}
                         aria-describedby={replyError ? `${replyFieldId}-blad` : undefined}
-                        className={cn(fieldClass, "min-h-24 py-3", replyError ? "border-alert" : "border-deep")}
+                        className={cn(fieldClass, "min-h-24 py-3", replyError ? "border-alert" : "border-field")}
                       />
                       {replyError && (
                         <p id={`${replyFieldId}-blad`} className="mt-2 flex items-start gap-2 font-bold text-alert">

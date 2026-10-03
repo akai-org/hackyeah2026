@@ -27,14 +27,8 @@ export function InnovationCard({ innovation, headingLevel: Heading = "h3", showL
     <article
       id={innovation.id}
       aria-labelledby={titleId}
-      className="relative flex scroll-mt-6 flex-col border-(length:--bw) border-deep bg-surface p-6 shadow-paper"
+      className="relative flex scroll-mt-6 flex-col border-(length:--bw) border-line bg-surface p-6 rounded-ui shadow-paper"
     >
-      {/* Kawałek taśmy klejącej: tylko dekoracja. */}
-      <span
-        aria-hidden="true"
-        className="simple-hidden absolute -top-3 right-6 h-6 w-20 rotate-[4deg] bg-butter [clip-path:polygon(0_8%,6%_0,100%_4%,95%_50%,100%_96%,4%_100%,0_55%)]"
-      />
-
       <Heading id={titleId} className="pr-16 text-xl font-semibold text-deep">
         {innovation.title}
       </Heading>
@@ -51,7 +45,7 @@ export function InnovationCard({ innovation, headingLevel: Heading = "h3", showL
           <dd className="mt-1">
             <span
               className={cn(
-                "inline-flex items-center gap-2 rounded-ui border-2 border-deep px-3 py-1 font-semibold text-ink",
+                "inline-flex items-center gap-2 rounded-ui border border-line px-3 py-1 font-semibold text-ink",
                 evidence.className,
               )}
             >

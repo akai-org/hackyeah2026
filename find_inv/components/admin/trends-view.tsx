@@ -19,18 +19,20 @@ import { CutoutText } from "@/components/cutout-text";
 import { ErrorNote, LoadingRows, OfflineNote, tagLabel, useAdminData } from "@/components/admin/shared";
 import { getTrends } from "@/lib/admin-api";
 
-// Jedna seria na wykres → jeden kolor marki (leaf, kontrast 6,19:1 na surface), bez legendy.
+// Jedna seria na wykres → jeden kolor na wykres, bez legendy: wyszukiwania dzienne niebieskie (leaf, 6,8:1),
+// tagi zielone (forest, 5,0:1), żeby dwa różne wykresy nie zlewały się w jeden.
 // Każdy wykres ma tabelę z tymi samymi danymi dla czytników ekranu i bez myszy.
-const LEAF = "#2D6A4F";
-const INK = "#14251C";
-const MUTED = "#3D5A4A";
-const GRID = "#D3E3D0";
-const SURFACE = "#FAFCF7";
+const LEAF = "#1D5BA6";
+const FOREST = "#1A7F55";
+const INK = "#15202E";
+const MUTED = "#4A5A6E";
+const GRID = "#E2E8F0";
+const SURFACE = "#FFFFFF";
 
 const tooltipStyle = {
   background: SURFACE,
-  border: `2px solid #1B4332`,
-  borderRadius: 12,
+  border: "1px solid #D3DBE5",
+  borderRadius: 8,
   color: INK,
   fontSize: 16,
   padding: "8px 12px",
@@ -49,14 +51,14 @@ function DataTable({ caption, head, rows }: { caption: string; head: [string, st
       <table className="mt-2 w-full border-collapse text-left">
         <caption className="sr-only">{caption}</caption>
         <thead>
-          <tr className="border-b-2 border-deep">
+          <tr className="border-b border-line">
             <th scope="col" className="py-2 pr-4 font-bold text-deep">{head[0]}</th>
             <th scope="col" className="py-2 text-right font-bold text-deep">{head[1]}</th>
           </tr>
         </thead>
         <tbody>
           {rows.map(([label, value]) => (
-            <tr key={label} className="border-b border-sage">
+            <tr key={label} className="border-b border-line">
               <th scope="row" className="py-1.5 pr-4 text-left font-normal">{label}</th>
               <td className="py-1.5 text-right tabular-nums">{value}</td>
             </tr>
@@ -89,7 +91,7 @@ export function AdminTrendsView() {
         <LoadingRows label="Wczytuję trendy" />
       ) : data ? (
         <div className="grid gap-6 lg:grid-cols-2">
-          <section aria-labelledby={`${ids}-dni`} className="border-(length:--bw) border-deep bg-surface p-6 lg:col-span-2">
+          <section aria-labelledby={`${ids}-dni`} className="border-(length:--bw) border-line bg-surface p-6 lg:col-span-2">
             <div className="flex flex-wrap items-baseline justify-between gap-3">
               <h2 id={`${ids}-dni`} className="text-xl font-bold text-deep">
                 Wyszukiwania dzień po dniu
@@ -97,7 +99,9 @@ export function AdminTrendsView() {
               <p className="flex items-center gap-2 font-bold text-deep">
                 <span className="tabular-nums">{data.total}</span> w ostatnich 14 dniach
                 {change !== null && change !== undefined && (
-                  <span className="inline-flex items-center gap-1 rounded-full border-2 border-deep bg-mint px-2.5 text-sm">
+                  <span
+                    className={`inline-flex items-center gap-1 rounded-full border border-line px-2.5 text-sm ${change >= 0 ? "bg-forest-soft" : "bg-ember-soft"}`}
+                  >
                     {change >= 0 ? <TrendingUp aria-hidden="true" className="size-4" /> : <TrendingDown aria-hidden="true" className="size-4" />}
                     {change >= 0 ? "+" : ""}
                     {change.toLocaleString("pl-PL")}% tydzień do tygodnia
@@ -132,7 +136,7 @@ export function AdminTrendsView() {
             <DataTable caption="Liczba wyszukiwań każdego dnia" head={["Dzień", "Wyszukiwania"]} rows={days.map((d) => [d.date, d.count])} />
           </section>
 
-          <section aria-labelledby={`${ids}-tagi`} className="border-(length:--bw) border-deep bg-surface p-6">
+          <section aria-labelledby={`${ids}-tagi`} className="border-(length:--bw) border-line bg-surface p-6">
             <h2 id={`${ids}-tagi`} className="text-xl font-bold text-deep">
               Najczęstsze tematy
             </h2>
@@ -150,7 +154,7 @@ export function AdminTrendsView() {
                     axisLine={false}
                   />
                   <Tooltip contentStyle={tooltipStyle} cursor={{ fill: GRID, opacity: 0.6 }} formatter={(value) => [`${value}`, "Wyszukiwania"]} />
-                  <Bar dataKey="count" fill={LEAF} radius={[0, 4, 4, 0]} isAnimationActive={false}>
+                  <Bar dataKey="count" fill={FOREST} radius={[0, 4, 4, 0]} isAnimationActive={false}>
                     <LabelList dataKey="count" position="right" fill={INK} fontSize={15} />
                   </Bar>
                 </BarChart>
@@ -160,7 +164,7 @@ export function AdminTrendsView() {
           </section>
 
           <div className="flex flex-col gap-6">
-            <section aria-labelledby={`${ids}-zapytania`} className="border-(length:--bw) border-deep bg-surface p-6">
+            <section aria-labelledby={`${ids}-zapytania`} className="border-(length:--bw) border-line bg-surface p-6">
               <h2 id={`${ids}-zapytania`} className="text-xl font-bold text-deep">
                 Najczęstsze zapytania
               </h2>

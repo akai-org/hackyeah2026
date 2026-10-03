@@ -7,7 +7,7 @@
   :root {
     color-scheme: light;
     /* Grubość ramek pól, przycisków i kart. */
-    --bw: 2px;
+    --bw: 1px;
   }
 
   body {
@@ -185,7 +185,7 @@ html[data-contrast="high"] .bg-leaf * {
   stroke: #000 !important;
 }
 
-html[data-contrast="high"] :where(.border-deep, .border-sage, .border-leaf) {
+html[data-contrast="high"] :where(.border-deep, .border-line, .border-field, .border-leaf) {
   border-color: #fff500 !important;
 }
 

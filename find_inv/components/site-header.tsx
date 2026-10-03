@@ -17,7 +17,7 @@ const NAV_LINKS = [
 const SEARCH_TAGS = ["Aplikacja", "Małe firmy", "Niewidomi", "Seniorzy", "Transport", "Zdrowie"];
 
 const linkClass =
-  "inline-flex min-h-12 items-center whitespace-nowrap rounded-ui px-2.5 text-base font-bold text-deep underline-offset-4 hover:underline";
+  "inline-flex min-h-12 items-center whitespace-nowrap rounded-ui px-3 text-base font-bold text-deep underline-offset-4 hover:bg-sage hover:text-leaf";
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
@@ -103,7 +103,7 @@ export function SiteHeader() {
   }
 
   return (
-    <header className="relative z-10 border-b-(length:--bw) border-deep bg-paper">
+    <header className="relative z-10 border-t-4 border-b-(length:--bw) border-t-leaf border-b-line bg-surface">
       <a
         href="#tresc"
         className="focus-on-deep sr-only rounded-ui bg-deep px-5 py-3 font-bold text-surface focus:not-sr-only focus:absolute focus:top-3 focus:left-4 focus:z-20"
@@ -112,8 +112,14 @@ export function SiteHeader() {
       </a>
 
       <div className="relative mx-auto flex max-w-content items-center gap-4 px-4 py-3 sm:px-6">
-        <Link href="/" aria-label="HubMI, strona główna" className="inline-flex min-h-12 shrink-0 items-center rounded-ui py-1">
-          <CutoutText text="HubMI" as="span" size="logo" labelled={false} />
+        <Link href="/" aria-label="HubMI, strona główna" className="inline-flex min-h-12 shrink-0 items-center gap-3 rounded-ui py-1">
+          <span aria-hidden="true" className="inline-flex size-9 items-center justify-center rounded-ui bg-leaf text-base font-bold text-surface">
+            H
+          </span>
+          <span className="flex flex-col leading-tight">
+            <CutoutText text="HubMI" as="span" size="logo" labelled={false} className="leading-none" />
+            <span className="hidden text-sm text-muted 2xl:block">Małopolski Hub Innowacji Społecznych</span>
+          </span>
         </Link>
 
         <div className="flex min-w-0 flex-1 justify-center px-2 sm:px-4">
@@ -121,7 +127,7 @@ export function SiteHeader() {
             <label htmlFor="header-search" className="sr-only">
               Szukaj
             </label>
-            <div className="flex min-h-12 w-full items-center rounded-ui border-(length:--bw) border-deep bg-surface">
+            <div className="flex min-h-12 w-full items-center rounded-ui border-(length:--bw) border-field bg-surface">
               <Search aria-hidden="true" className="ml-3 size-5 text-leaf" />
               <input
                 id="header-search"
@@ -132,7 +138,7 @@ export function SiteHeader() {
                 onFocus={openSearch}
                 className="min-w-0 flex-1 bg-transparent px-3 text-base text-ink outline-none placeholder:text-muted"
               />
-              <kbd className="mr-3 rounded border border-sage px-2 py-1 text-sm font-semibold text-muted">Ctrl+K</kbd>
+              <kbd className="mr-3 rounded border border-line px-2 py-1 text-sm font-semibold text-muted">Ctrl+K</kbd>
             </div>
           </form>
         </div>
@@ -158,7 +164,7 @@ export function SiteHeader() {
             aria-expanded={open}
             aria-controls="menu-mobilne"
             onClick={() => setOpen((value) => !value)}
-            className="inline-flex min-h-12 min-w-12 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-ui border-(length:--bw) border-deep bg-surface px-4 font-bold text-deep hover:bg-sage nav-mobile xl:hidden"
+            className="inline-flex min-h-12 min-w-12 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-ui border-(length:--bw) border-line bg-surface px-4 font-bold text-deep hover:bg-sage nav-mobile xl:hidden"
           >
             {open ? <X aria-hidden="true" className="size-5" /> : <Menu aria-hidden="true" className="size-5" />}
             {open ? "Zamknij" : "Menu"}
@@ -169,14 +175,14 @@ export function SiteHeader() {
       <div
         id="menu-mobilne"
         hidden={!open}
-        className="nav-mobile border-t-(length:--bw) border-deep bg-surface xl:hidden"
+        className="nav-mobile border-t-(length:--bw) border-line bg-surface xl:hidden"
       >
         <nav aria-label="Główna, wersja mobilna" className="mx-auto max-w-content px-4 py-3 sm:px-6">
           <form action="/wyniki" method="get" role="search" className="mb-3 flex sm:hidden" onClick={(event) => { event.preventDefault(); openSearch(); }}>
             <label htmlFor="mobile-header-search" className="sr-only">
               Szukaj
             </label>
-            <div className="flex min-h-12 w-full items-center rounded-ui border-(length:--bw) border-deep bg-paper">
+            <div className="flex min-h-12 w-full items-center rounded-ui border-(length:--bw) border-field bg-surface">
               <Search aria-hidden="true" className="ml-3 size-5 text-leaf" />
               <input
                 id="mobile-header-search"
@@ -198,7 +204,7 @@ export function SiteHeader() {
               </li>
             ))}
           </ul>
-          <UserMenu className="mt-2 border-t-2 border-sage px-3 pt-3 sm:hidden" />
+          <UserMenu className="mt-2 border-t border-line px-3 pt-3 sm:hidden" />
         </nav>
       </div>
       {searchOpen && (
@@ -211,7 +217,7 @@ export function SiteHeader() {
             aria-modal="true"
             aria-labelledby="szybkie-wyszukiwanie-tytul"
             onKeyDown={trapSearchFocus}
-            className="w-full max-w-2xl rounded-ui border-(length:--bw) border-deep bg-surface p-5 shadow-paper sm:p-8"
+            className="w-full max-w-2xl rounded-ui border-(length:--bw) border-line bg-surface p-5 shadow-paper sm:p-8"
           >
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -223,7 +229,7 @@ export function SiteHeader() {
                 aria-label="Zamknij wyszukiwanie"
                 title="Zamknij wyszukiwanie"
                 onClick={closeSearch}
-                className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-ui border-(length:--bw) border-deep bg-surface text-deep hover:bg-sage"
+                className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-ui border-(length:--bw) border-line bg-surface text-deep hover:bg-sage"
               >
                 <X aria-hidden="true" className="size-6" />
               </button>
@@ -242,7 +248,7 @@ export function SiteHeader() {
                     setSearchPlaceholder(placeholder);
                     searchInputRef.current?.focus();
                   }}
-                  className="min-h-12 rounded-ui border-(length:--bw) border-deep bg-paper px-4 font-semibold text-deep hover:bg-sage"
+                  className="min-h-12 rounded-ui border-(length:--bw) border-line bg-paper px-4 font-semibold text-deep hover:bg-sage"
                 >
                   {label}
                 </button>
@@ -251,7 +257,7 @@ export function SiteHeader() {
             <form action="/wyniki" method="get" role="search" className="mt-6 flex gap-3">
               <label htmlFor="quick-search" className="sr-only">Szukaj</label>
               <input type="hidden" name="tags" value={selectedTags.join(",")} />
-              <div className="flex min-h-12 min-w-0 flex-1 flex-wrap items-center gap-2 rounded-ui border-(length:--bw) border-deep bg-paper px-3 py-2">
+              <div className="flex min-h-12 min-w-0 flex-1 flex-wrap items-center gap-2 rounded-ui border-(length:--bw) border-field bg-surface px-3 py-2">
                 {selectedTags.map((tag) => (
                   <span key={tag} className="rounded-full bg-mint px-2 py-1 text-sm font-semibold text-deep">#{tag}</span>
                 ))}
@@ -267,17 +273,17 @@ export function SiteHeader() {
                   className="min-w-[8rem] flex-1 bg-transparent px-1 text-base text-ink outline-none placeholder:text-muted"
                 />
               </div>
-              <button type="submit" className="inline-flex min-h-12 items-center gap-2 rounded-ui border-(length:--bw) border-deep bg-deep px-5 font-bold text-surface hover:bg-leaf">
+              <button type="submit" className="inline-flex min-h-12 items-center gap-2 rounded-ui border-(length:--bw) border-leaf bg-leaf px-5 font-bold text-surface hover:border-deep hover:bg-deep">
                 <Search aria-hidden="true" className="size-5" />
                 Szukaj
               </button>
             </form>
-            <details className="mt-4 rounded-ui border-(length:--bw) border-sage bg-paper">
+            <details className="mt-4 rounded-ui border-(length:--bw) border-line bg-paper">
               <summary className="flex min-h-12 cursor-pointer items-center justify-between gap-4 px-4 font-semibold text-deep">
                 Wybierz tagi
                 <span className="text-sm text-muted">{selectedTags.length ? `Wybrano: ${selectedTags.length}` : "wielokrotny wybór"}</span>
               </summary>
-              <div className="grid gap-1 border-t-(length:--bw) border-sage p-3 sm:grid-cols-2" aria-label="Lista tagów wyszukiwania">
+              <div className="grid gap-1 border-t-(length:--bw) border-line p-3 sm:grid-cols-2" aria-label="Lista tagów wyszukiwania">
                 {SEARCH_TAGS.map((tag) => (
                   <label key={tag} className="flex min-h-12 cursor-pointer items-center gap-3 rounded-ui px-3 hover:bg-sage">
                     <input

@@ -6,26 +6,29 @@ import { FeaturedInnovations } from "@/components/featured-innovations";
 import { GapIndex } from "@/components/gap-index";
 import { InnovationOfTheDay } from "@/components/innovation-of-the-day";
 import { MalopolskaStatsTiles } from "@/components/malopolska-stats";
-import { PaperCloud } from "@/components/paper-cloud";
 import { PowiatMap } from "@/components/powiat-map";
 import { SearchForm } from "@/components/search-form";
 import { buttonVariants } from "@/components/ui/button";
 
-const STEPS: Array<{ icon: LucideIcon; title: string; text: string }> = [
+// Każdy krok ma własny kolor ikony (niebieski, zielony, ceglasty), żeby sekcja nie była jednolita.
+const STEPS: Array<{ icon: LucideIcon; title: string; text: string; tone: string }> = [
   {
     icon: MessageSquareText,
     title: "Opisz problem",
     text: "Napisz albo podyktuj, co się dzieje. Nie musisz znać fachowych słów.",
+    tone: "bg-mint text-leaf",
   },
   {
     icon: ScanSearch,
     title: "Zobacz, co już działa",
     text: "Pokażemy innowacje z Biblioteki, które pomogły w podobnej sytuacji. Przy każdej zobaczysz, czy ma dowody skuteczności.",
+    tone: "bg-forest-soft text-forest",
   },
   {
     icon: Smile,
     title: "Dostosuj do swojej instytucji",
     text: "Wybierz rozwiązanie i przygotuj szkic planu wdrożenia dla swojej gminy albo organizacji.",
+    tone: "bg-ember-soft text-ember",
   },
 ];
 
@@ -33,10 +36,16 @@ type RegionCondition = "happy" | "mid" | "sad";
 
 const REGION_CONDITION: RegionCondition = "mid";
 
-const CONDITION_LABELS: Record<RegionCondition, { icon: LucideIcon; status: string; detail: string }> = {
-  happy: { icon: Smile, status: "Dobra kondycja", detail: "Wskaźniki społeczne są stabilne." },
-  mid: { icon: Meh, status: "Wymaga uwagi", detail: "Część obszarów potrzebuje dodatkowego wsparcia." },
-  sad: { icon: Frown, status: "Trudna sytuacja", detail: "Dane pokazują pilną potrzebę działania." },
+// Status zawsze z ikoną i słowem; kolor tylko go wzmacnia.
+const CONDITION_LABELS: Record<RegionCondition, { icon: LucideIcon; status: string; detail: string; tone: string }> = {
+  happy: { icon: Smile, status: "Dobra kondycja", detail: "Wskaźniki społeczne są stabilne.", tone: "bg-forest-soft text-forest" },
+  mid: {
+    icon: Meh,
+    status: "Wymaga uwagi",
+    detail: "Część obszarów potrzebuje dodatkowego wsparcia.",
+    tone: "bg-ember-soft text-ember",
+  },
+  sad: { icon: Frown, status: "Trudna sytuacja", detail: "Dane pokazują pilną potrzebę działania.", tone: "bg-alert/10 text-alert" },
 };
 
 export default function HomePage() {
@@ -81,19 +90,20 @@ export default function HomePage() {
       <section
         id="jak-to-dziala"
         aria-labelledby="jak-to-dziala-tytul"
-        className="scroll-mt-6 border-y-(length:--bw) border-deep bg-sage"
+        className="scroll-mt-6 border-y-(length:--bw) border-line bg-sage"
       >
         <div className="relative mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
-          <PaperCloud shape="tall" className="absolute top-8 right-10 hidden w-44 rotate-2 lg:block" />
           <CutoutText id="jak-to-dziala-tytul" text="Jak to działa" />
           <ol className="mt-10 grid gap-6 md:grid-cols-3">
             {STEPS.map((step, index) => {
               const Icon = step.icon;
               return (
-                <li key={step.title} className="border-(length:--bw) border-deep bg-surface p-6 shadow-paper">
+                <li key={step.title} className="border-(length:--bw) border-line bg-surface p-6 rounded-ui shadow-paper">
                   <div className="flex items-center justify-between gap-4">
                     <p className="font-medium text-muted">Krok {index + 1}</p>
-                    <Icon aria-hidden="true" className="size-8 text-leaf" strokeWidth={1.75} />
+                    <span className={`inline-flex size-12 items-center justify-center rounded-ui ${step.tone}`}>
+                      <Icon aria-hidden="true" className="size-6" strokeWidth={1.75} />
+                    </span>
                   </div>
                   <h3 className="mt-3 text-xl font-medium text-deep">{step.title}</h3>
                   <p className="mt-2">{step.text}</p>
@@ -111,8 +121,10 @@ export default function HomePage() {
           <p className="mt-4 max-w-[60ch] text-lg">
             Z czym mierzą się mieszkańcy regionu. Te liczby pomagają zdecydować, od czego zacząć.
           </p>
-          <div className="mt-8 grid items-center gap-4 rounded-ui border-(length:--bw) border-deep bg-surface p-5 md:grid-cols-[auto_1fr_auto]">
-            <ConditionIcon aria-hidden="true" strokeWidth={1.5} className="size-16 text-leaf" />
+          <div className="mt-8 grid items-center gap-4 rounded-ui border-(length:--bw) border-line bg-surface p-5 md:grid-cols-[auto_1fr_auto]">
+            <span className={`inline-flex size-16 items-center justify-center rounded-ui ${condition.tone}`}>
+              <ConditionIcon aria-hidden="true" strokeWidth={1.5} className="size-10" />
+            </span>
             <span>
               <span className="block text-xl font-bold text-deep">{condition.status}</span>
               <span className="mt-1 block">{condition.detail}</span>
@@ -144,7 +156,6 @@ export default function HomePage() {
       {/* Co już działa */}
       <section id="co-juz-dziala" aria-labelledby="co-juz-dziala-tytul" className="scroll-mt-6">
         <div className="relative mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
-          <PaperCloud className="absolute -top-6 right-24 hidden w-52 -rotate-1 lg:block" />
           <FeaturedInnovations headingId="co-juz-dziala-tytul">
             <p className="mt-4 max-w-[60ch] text-lg">
               Kilka innowacji z Biblioteki. Każda ma opis, informację, dla kogo jest, ile kosztuje i gdzie już działa.
@@ -157,9 +168,9 @@ export default function HomePage() {
       </section>
 
       {/* Artykuł dnia */}
-      <section id="artykul-dnia" aria-labelledby="artykul-dnia-tytul" className="scroll-mt-6 border-y-(length:--bw) border-deep bg-sage">
+      <section id="artykul-dnia" aria-labelledby="artykul-dnia-tytul" className="scroll-mt-6 border-y-(length:--bw) border-line bg-sage">
         <div className="mx-auto max-w-content px-4 py-10 sm:px-6 lg:py-12">
-          <article className="mx-auto max-w-3xl border-(length:--bw) border-deep bg-surface p-6 shadow-paper md:p-8">
+          <article className="mx-auto max-w-3xl border-(length:--bw) border-line bg-surface p-6 rounded-ui shadow-paper md:p-8">
             <p className="text-sm font-medium text-muted">Artykuł dnia z Biblioteki Innowacji ROPS</p>
             {/* Każdego dnia inna innowacja z katalogu, ta sama dla wszystkich przez cały dzień. */}
             <InnovationOfTheDay headingId="artykul-dnia-tytul" />

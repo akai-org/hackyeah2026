@@ -4,40 +4,40 @@ import { ArrowLeft, ArrowRight, Frown, HeartHandshake, MapPin, Meh, Smile, Users
 const CHALLENGES = [
   {
     icon: Users,
+    tone: "bg-mint text-leaf",
     title: "Samotność i izolacja seniorów",
     text: "Wiele starszych osób potrzebuje regularnego kontaktu, łatwego dostępu do pomocy i bezpiecznych miejsc spotkań blisko domu.",
-    accent: "bg-mint",
   },
   {
     icon: MapPin,
+    tone: "bg-forest-soft text-forest",
     title: "Dostęp do transportu i usług",
     text: "Mieszkańcy mniejszych miejscowości często mają trudności z dojazdem do lekarza, urzędu, szkoły lub centrum aktywności.",
-    accent: "bg-butter",
   },
   {
     icon: Wifi,
+    tone: "bg-ember-soft text-ember",
     title: "Wykluczenie cyfrowe",
     text: "Internet coraz częściej jest bramą do usług publicznych i zdrowotnych, ale nie każdy ma sprzęt, kompetencje albo kogoś, kto pomoże.",
-    accent: "bg-sage",
   },
   {
     icon: HeartHandshake,
+    tone: "bg-plum-soft text-plum",
     title: "Wsparcie opiekunów i rodzin",
     text: "Rodziny opiekujące się osobami zależnymi potrzebują wytchnienia, praktycznej wiedzy i rozwiązań, które da się wdrożyć lokalnie.",
-    accent: "bg-surface",
   },
 ];
 
 const CONDITION_LEVELS = [
-  { icon: Smile, label: "Dobra", text: "stabilne wskaźniki" },
-  { icon: Meh, label: "Wymaga uwagi", text: "obszar do obserwacji" },
-  { icon: Frown, label: "Trudna", text: "pilna potrzeba działania" },
+  { icon: Smile, label: "Dobra", tone: "text-forest", text: "stabilne wskaźniki" },
+  { icon: Meh, label: "Wymaga uwagi", tone: "text-ember", text: "obszar do obserwacji" },
+  { icon: Frown, label: "Trudna", tone: "text-alert", text: "pilna potrzeba działania" },
 ];
 
 export default function ChallengesPage() {
   return (
     <main id="tresc" className="min-h-screen">
-      <section aria-labelledby="wyzwania-tytul" className="border-b-(length:--bw) border-deep bg-paper">
+      <section aria-labelledby="wyzwania-tytul" className="border-b-(length:--bw) border-line bg-paper">
         <div className="mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-24">
           <Link href="/" className="inline-flex min-h-12 items-center gap-2 font-semibold text-leaf underline underline-offset-4 hover:text-deep">
             <ArrowLeft aria-hidden="true" className="size-5" />
@@ -54,8 +54,8 @@ export default function ChallengesPage() {
             {CONDITION_LEVELS.map((level) => {
               const Icon = level.icon;
               return (
-                <div key={level.label} className="inline-flex min-h-12 items-center gap-2 rounded-ui border-(length:--bw) border-deep bg-surface px-3 py-2">
-                  <Icon aria-hidden="true" className="size-5 text-leaf" />
+                <div key={level.label} className="inline-flex min-h-12 items-center gap-2 rounded-ui border-(length:--bw) border-line bg-surface px-3 py-2">
+                  <Icon aria-hidden="true" className={`size-5 ${level.tone}`} />
                   <span className="font-semibold text-deep">{level.label}</span>
                   <span className="text-sm text-muted">({level.text})</span>
                 </div>
@@ -67,7 +67,7 @@ export default function ChallengesPage() {
 
       <section aria-labelledby="obszary-tytul" className="bg-surface">
         <div className="mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
-          <div className="flex flex-col gap-4 border-b-(length:--bw) border-deep pb-8 md:flex-row md:items-end md:justify-between">
+          <div className="flex flex-col gap-4 border-b-(length:--bw) border-line pb-8 md:flex-row md:items-end md:justify-between">
             <div>
               <h2 id="obszary-tytul" className="text-2xl font-bold text-deep">Obszary, które wymagają uwagi</h2>
               <p className="mt-3 max-w-[58ch] text-lg">Każde wyzwanie może stać się punktem wyjścia do znalezienia rozwiązania, które już działa gdzie indziej.</p>
@@ -82,9 +82,9 @@ export default function ChallengesPage() {
             {CHALLENGES.map((challenge) => {
               const Icon = challenge.icon;
               return (
-                <li key={challenge.title} className="border-(length:--bw) border-deep bg-paper p-6 shadow-paper md:p-8">
-                  <div className={`flex size-14 items-center justify-center rounded-ui border-(length:--bw) border-deep ${challenge.accent}`}>
-                    <Icon aria-hidden="true" className="size-7 text-deep" />
+                <li key={challenge.title} className="border-(length:--bw) border-line bg-paper p-6 rounded-ui shadow-paper md:p-8">
+                  <div className={`flex size-14 items-center justify-center rounded-ui ${challenge.tone}`}>
+                    <Icon aria-hidden="true" className="size-7" />
                   </div>
                   <h3 className="mt-6 text-xl font-bold text-deep">{challenge.title}</h3>
                   <p className="mt-3 max-w-[55ch]">{challenge.text}</p>

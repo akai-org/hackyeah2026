@@ -78,14 +78,14 @@ export function AdminUsersView() {
               Zgłoszenia testerów <span className="tabular-nums">({pending.length})</span>
             </h2>
             {pending.length === 0 ? (
-              <p className="mt-4 flex items-center gap-2 rounded-ui border-2 border-deep bg-mint px-4 py-3 font-bold">
+              <p className="mt-4 flex items-center gap-2 rounded-ui border border-line bg-mint px-4 py-3 font-bold">
                 <CircleCheck aria-hidden="true" className="size-5 text-deep" />
                 Wszystkie zgłoszenia rozpatrzone.
               </p>
             ) : (
               <ul className="mt-4 grid gap-4 md:grid-cols-2">
                 {pending.map((tester) => (
-                  <li key={tester.id} className="appear flex flex-col border-(length:--bw) border-deep bg-surface p-5 shadow-paper">
+                  <li key={tester.id} className="appear flex flex-col border-(length:--bw) border-line bg-surface p-5 rounded-ui shadow-paper">
                     <h3 className="text-lg font-bold text-deep">{tester.name}</h3>
                     <dl className="mt-2 space-y-1 text-base">
                       <div className="flex items-center gap-2">
@@ -131,7 +131,7 @@ export function AdminUsersView() {
             <h2 id={`${ids}-lista`} className="text-xl font-bold text-deep">
               Wszyscy użytkownicy <span className="tabular-nums">({data.users.length})</span>
             </h2>
-            <div className="mt-4 overflow-x-auto border-(length:--bw) border-deep bg-surface">
+            <div className="mt-4 overflow-x-auto border-(length:--bw) border-line bg-surface">
               <table className="w-full min-w-[36rem] border-collapse text-left">
                 <caption className="sr-only">Użytkownicy platformy i ich role</caption>
                 <thead className="bg-sage">
@@ -145,12 +145,12 @@ export function AdminUsersView() {
                   {data.users.map((user) => {
                     const selectId = `${ids}-rola-${user.id}`;
                     return (
-                      <tr key={user.id} className="border-t-2 border-sage">
+                      <tr key={user.id} className="border-t border-line">
                         <th scope="row" className="px-4 py-3 text-left font-normal">
                           <span className="block font-bold text-deep">{user.name}</span>
                           <span className="text-sm text-muted">od {formatDate(user.created_at)}</span>
                           {user.tester_pending && (
-                            <span className="ml-2 rounded-full border border-deep bg-butter px-2 text-sm font-bold text-deep">
+                            <span className="ml-2 rounded-full border border-line bg-butter px-2 text-sm font-bold text-deep">
                               chce zostać testerem
                             </span>
                           )}
@@ -172,7 +172,7 @@ export function AdminUsersView() {
                                   value={user.role}
                                   disabled={busy !== null}
                                   onChange={(event) => changeRole(user, event.target.value as Exclude<Role, "admin">)}
-                                  className="min-h-12 cursor-pointer rounded-ui border-(length:--bw) border-deep bg-surface px-3 text-base"
+                                  className="min-h-12 cursor-pointer rounded-ui border-(length:--bw) border-field bg-surface px-3 text-base"
                                 >
                                   {ASSIGNABLE.map((role) => (
                                     <option key={role} value={role}>

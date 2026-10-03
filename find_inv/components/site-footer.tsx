@@ -1,14 +1,11 @@
 import Link from "next/link";
-import { Smile } from "lucide-react";
 
 const linkClass = "inline-flex min-h-12 items-center font-bold text-leaf underline underline-offset-4 hover:text-deep";
 
 export function SiteFooter() {
   return (
-    <footer className="relative overflow-hidden border-t-(length:--bw) border-deep">
-      <Smile aria-hidden="true" className="simple-hidden absolute -bottom-10 -left-10 size-32 text-leaf opacity-60" />
-
-      <div className="relative mx-auto grid max-w-content gap-10 px-4 py-12 sm:px-6 md:grid-cols-3">
+    <footer className="border-t-(length:--bw) border-line bg-surface">
+      <div className="mx-auto grid max-w-content gap-10 px-4 py-12 sm:px-6 md:grid-cols-3">
         <div>
           <p className="text-lg font-bold text-deep">HubMI</p>
           <p className="mt-2 max-w-[38ch] text-muted">
@@ -21,7 +18,7 @@ export function SiteFooter() {
             Kontakt
           </h2>
           <address className="mt-2 not-italic">
-            <p>ROPS Kraków — Regionalny Ośrodek Polityki Społecznej</p>
+            <p>Regionalny Ośrodek Polityki Społecznej w Krakowie</p>
             <p className="mt-1">ul. Piastowska 32, 30-070 Kraków</p>
             <p className="mt-1">
               <a href="https://rops.krakow.pl" className={linkClass}>

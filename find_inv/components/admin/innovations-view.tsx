@@ -23,7 +23,7 @@ import { getInnovations, setInnovationStatus, type InnovationAction, type Innova
 import { cn } from "@/lib/utils";
 
 const fieldClass =
-  "mt-2 min-h-12 w-full rounded-ui border-(length:--bw) border-deep bg-surface px-4 text-base text-ink placeholder:text-muted";
+  "mt-2 min-h-12 w-full rounded-ui border-(length:--bw) border-field bg-surface px-4 text-base text-ink placeholder:text-muted";
 
 const ACTIONS: Array<{ action: InnovationAction; label: string; done: string; icon: typeof CircleCheck; hideFor: InnovationStatus }> = [
   { action: "approve", label: "Zatwierdź", done: "zatwierdzona", icon: CircleCheck, hideFor: "active" },
@@ -111,7 +111,7 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
           event.preventDefault();
           applyFilters({ ...filters, search: draftSearch.trim() });
         }}
-        className="mb-8 grid gap-4 border-(length:--bw) border-deep bg-surface p-5 md:grid-cols-[1fr_auto_auto_auto] md:items-end"
+        className="mb-8 grid gap-4 border-(length:--bw) border-line bg-surface p-5 md:grid-cols-[1fr_auto_auto_auto] md:items-end"
       >
         <div>
           <label htmlFor={`${ids}-szukaj`} className="block font-bold text-deep">
@@ -193,14 +193,14 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
       {loading && !data ? (
         <LoadingRows label="Wczytuję innowacje" />
       ) : items.length === 0 ? (
-        <div className="border-(length:--bw) border-deep bg-surface p-8">
+        <div className="border-(length:--bw) border-line bg-surface p-8">
           <CutoutText as="p" size="section" text="Nic tu nie ma" />
           <p className="mt-3">Żadna innowacja nie pasuje do filtrów. Zmień status albo wyczyść filtry.</p>
         </div>
       ) : (
         <>
           {/* Szeroki ekran: tabela. */}
-          <div className="hidden overflow-x-auto border-(length:--bw) border-deep bg-surface lg:block">
+          <div className="hidden overflow-x-auto border-(length:--bw) border-line bg-surface lg:block">
             <table className="w-full border-collapse text-left">
               <caption className="sr-only">Innowacje w Bibliotece, {items.length} pozycji</caption>
               <thead className="bg-sage">
@@ -213,7 +213,7 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
               </thead>
               <tbody>
                 {items.map((item) => (
-                  <tr key={item.id} className={cn("border-t-2 border-sage align-top", item.status === "pending" && "bg-butter/30")}>
+                  <tr key={item.id} className={cn("border-t border-line align-top", item.status === "pending" && "bg-butter/30")}>
                     <th scope="row" className="max-w-md px-4 py-4 text-left font-normal">
                       <span className="block font-bold text-deep">{item.title}</span>
                       <span className="mt-1 block text-muted">{item.short_desc}</span>
@@ -223,7 +223,7 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
                           {item.where_implemented || "brak danych"}
                         </span>
                         {item.tags.slice(0, 3).map((tag) => (
-                          <span key={tag} className="rounded-full border border-deep bg-mint px-2">
+                          <span key={tag} className="rounded-full border border-line bg-mint px-2">
                             {tagLabel(tag)}
                           </span>
                         ))}
@@ -245,7 +245,7 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
           {/* Wąski ekran: karty. */}
           <ul className="space-y-4 lg:hidden">
             {items.map((item) => (
-              <li key={item.id} className="border-(length:--bw) border-deep bg-surface p-5">
+              <li key={item.id} className="border-(length:--bw) border-line bg-surface p-5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <h2 className="text-lg font-bold text-deep">{item.title}</h2>
                   <StatusBadge status={item.status} />

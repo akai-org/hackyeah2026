@@ -75,7 +75,7 @@ export function MatchChat({ innovations, tags }: MatchChatProps) {
   }
 
   return (
-    <section aria-labelledby={`${ids}-tytul`} className="border-(length:--bw) border-deep bg-surface p-5 sm:p-6">
+    <section aria-labelledby={`${ids}-tytul`} className="border-(length:--bw) border-line bg-surface p-5 sm:p-6">
       <h2 id={`${ids}-tytul`} className="text-xl font-bold text-deep">
         Zapytaj o te rozwiązania
       </h2>
@@ -103,8 +103,8 @@ export function MatchChat({ innovations, tags }: MatchChatProps) {
                   <Icon aria-hidden="true" className="mt-2 size-6 shrink-0 text-leaf" />
                   <div
                     className={cn(
-                      "max-w-[60ch] rounded-ui border-2 px-4 py-3 whitespace-pre-line",
-                      mine ? "border-deep bg-mint" : "border-sage bg-paper",
+                      "max-w-[60ch] rounded-ui border px-4 py-3 whitespace-pre-line",
+                      mine ? "border-line bg-mint" : "border-line bg-paper",
                     )}
                   >
                     <p className="sr-only">{mine ? "Ty:" : "Asystent:"}</p>
@@ -125,7 +125,7 @@ export function MatchChat({ innovations, tags }: MatchChatProps) {
       {failed && (
         <p
           role="alert"
-          className="mt-4 flex items-start gap-2 rounded-ui border-2 border-alert bg-surface px-4 py-3 font-bold text-alert"
+          className="mt-4 flex items-start gap-2 rounded-ui border border-alert bg-surface px-4 py-3 font-bold text-alert"
         >
           <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
           Odpowiedź urwała się. Zadaj pytanie jeszcze raz.
@@ -139,7 +139,7 @@ export function MatchChat({ innovations, tags }: MatchChatProps) {
               <button
                 type="button"
                 onClick={() => ask(suggestion)}
-                className="min-h-12 cursor-pointer rounded-ui border-(length:--bw) border-deep bg-surface px-4 py-2 text-left text-base hover:bg-mint"
+                className="min-h-12 cursor-pointer rounded-ui border-(length:--bw) border-line bg-surface px-4 py-2 text-left text-base hover:bg-mint"
               >
                 {suggestion}
               </button>
@@ -166,7 +166,7 @@ export function MatchChat({ innovations, tags }: MatchChatProps) {
               }
             }}
             placeholder="Na przykład: które z tych rozwiązań da się zrobić bez nowego etatu?"
-            className="min-h-12 w-full resize-y rounded-ui border-(length:--bw) border-deep bg-surface px-4 py-2.5 text-base text-ink placeholder:text-muted sm:flex-1"
+            className="min-h-12 w-full resize-y rounded-ui border-(length:--bw) border-field bg-surface px-4 py-2.5 text-base text-ink placeholder:text-muted sm:flex-1"
           />
           {streaming ? (
             <Button type="button" variant="secondary" onClick={() => abortRef.current?.abort()}>

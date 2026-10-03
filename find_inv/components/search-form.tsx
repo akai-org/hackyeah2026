@@ -94,7 +94,7 @@ export function SearchForm({ initialText = "", showExamples = true, className }:
           placeholder="Na przykład: mama mieszka sama na wsi i nie ma jak dojechać do lekarza"
           className={cn(
             "min-h-[120px] w-full resize-y rounded-ui border-(length:--bw) bg-surface p-4 text-base text-ink placeholder:text-muted md:flex-1",
-            error ? "border-alert" : "border-deep",
+            error ? "border-alert" : "border-field",
           )}
         />
 
@@ -112,7 +112,7 @@ export function SearchForm({ initialText = "", showExamples = true, className }:
           key={errorKey}
           id={errorId}
           role="alert"
-          className="mt-3 flex items-start gap-2 rounded-ui border-2 border-alert bg-surface px-4 py-3 font-semibold text-alert"
+          className="mt-3 flex items-start gap-2 rounded-ui border border-alert bg-surface px-4 py-3 font-semibold text-alert"
         >
           <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
           Wpisz kilka słów o problemie, żeby zacząć szukać.
@@ -134,7 +134,7 @@ export function SearchForm({ initialText = "", showExamples = true, className }:
                 <button
                   type="button"
                   onClick={() => applyExample(example)}
-                  className="min-h-12 cursor-pointer rounded-ui border-(length:--bw) border-deep bg-surface px-4 py-2 text-left text-base text-ink hover:bg-mint"
+                  className="min-h-12 cursor-pointer rounded-ui border-(length:--bw) border-line bg-surface px-4 py-2 text-left text-base text-ink hover:bg-mint"
                 >
                   {example}
                 </button>

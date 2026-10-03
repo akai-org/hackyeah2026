@@ -30,7 +30,7 @@ function nowLocalIso(): string {
 }
 
 const fieldClass =
-  "mt-2 w-full rounded-ui border-(length:--bw) bg-surface px-4 text-base text-ink placeholder:text-muted";
+  "mt-2 w-full rounded-ui border-(length:--bw) border-field bg-surface px-4 text-base text-ink placeholder:text-muted";
 
 interface Innovation {
   title: string;
@@ -181,7 +181,7 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
           )}
           <Link
             href={`/biblioteka/${innovationId}`}
-            className="ml-auto inline-flex items-center gap-1.5 rounded-ui border-2 border-deep bg-surface px-4 py-2 text-sm font-bold text-deep shadow-paper hover:bg-sage"
+            className="ml-auto inline-flex items-center gap-1.5 rounded-ui border border-line bg-surface px-4 py-2 text-sm font-bold text-deep shadow-paper hover:bg-sage"
           >
             Szczegóły innowacji
             <ChevronRight className="size-4" aria-hidden="true" />
@@ -192,7 +192,7 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
       <div className="mt-10 grid gap-12 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
         {/* Comment form (sidebar) */}
         <aside aria-labelledby={`${ids}-nowy`} className="lg:sticky lg:top-6 lg:col-start-2 lg:row-start-1">
-          <form onSubmit={addComment} noValidate className="border-(length:--bw) border-deep bg-sage p-5 sm:p-6">
+          <form onSubmit={addComment} noValidate className="border-(length:--bw) border-line bg-sage p-5 sm:p-6">
             <h2 id={`${ids}-nowy`} className="text-xl font-bold text-deep">
               Dołącz do dyskusji
             </h2>
@@ -241,7 +241,7 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
               aria-invalid={commentError || undefined}
               aria-describedby={commentError ? `${ids}-blad` : undefined}
               placeholder="Napisz o swoich doświadczeniach z tą innowacją…"
-              className={cn(fieldClass, "min-h-28 py-3", commentError ? "border-alert" : "border-deep")}
+              className={cn(fieldClass, "min-h-28 py-3", commentError ? "border-alert" : "border-field")}
             />
             {commentError && (
               <p id={`${ids}-blad`} className="mt-3 flex items-start gap-2 font-bold text-alert">
@@ -278,7 +278,7 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
                     tabIndex={-1}
                     aria-label={`Komentarz od ${post.author_name}`}
                     className={cn(
-                      "border-(length:--bw) border-deep bg-surface p-5 shadow-paper sm:p-6",
+                      "border-(length:--bw) border-line bg-surface p-5 rounded-ui shadow-paper sm:p-6",
                       focusPost === post.id && "appear",
                     )}
                   >
@@ -331,7 +331,7 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
                             if (e.target.value.trim()) setReplyError(false);
                           }}
                           aria-invalid={replyError || undefined}
-                          className={cn(fieldClass, "min-h-24 py-3", replyError ? "border-alert" : "border-deep")}
+                          className={cn(fieldClass, "min-h-24 py-3", replyError ? "border-alert" : "border-field")}
                         />
                         <div className="mt-3 flex flex-wrap gap-3">
                           <Button type="submit">

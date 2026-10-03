@@ -10,11 +10,15 @@ import { getStats } from "@/lib/admin-api";
 
 const NUMBER = new Intl.NumberFormat("pl-PL");
 
-function Counter({ label, value, hint, icon: Icon }: { label: string; value: number; hint?: string; icon: LucideIcon }) {
+type CounterProps = { label: string; value: number; hint?: string; icon: LucideIcon; tone: string };
+
+function Counter({ label, value, hint, icon: Icon, tone }: CounterProps) {
   return (
-    <div className="appear flex flex-col border-(length:--bw) border-deep bg-surface p-6 shadow-paper">
+    <div className="appear flex flex-col border-(length:--bw) border-line bg-surface p-6 rounded-ui shadow-paper">
       <dt className="flex items-center gap-2 font-bold text-muted">
-        <Icon aria-hidden="true" className="size-5 shrink-0 text-leaf" />
+        <span className={`inline-flex size-9 shrink-0 items-center justify-center rounded-ui ${tone}`}>
+          <Icon aria-hidden="true" className="size-5" />
+        </span>
         {label}
       </dt>
       <dd className="mt-2 text-[3.5rem] leading-none font-bold text-deep tabular-nums">{NUMBER.format(value)}</dd>
@@ -39,14 +43,14 @@ export function AdminStatsView() {
       ) : data ? (
         <>
           <dl className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            <Counter icon={Library} label="Innowacje" value={data.innovations} hint={`${data.innovations_by_status.active} aktywnych`} />
-            <Counter icon={Users} label="Użytkownicy" value={data.users} />
-            <Counter icon={FlaskConical} label="Aktywni testerzy" value={data.testers} hint={`${data.pending_testers} czeka na zatwierdzenie`} />
-            <Counter icon={Search} label="Wyszukiwania" value={data.searches} hint={`dziś: ${data.searches_today}`} />
+            <Counter icon={Library} tone="bg-mint text-leaf" label="Innowacje" value={data.innovations} hint={`${data.innovations_by_status.active} aktywnych`} />
+            <Counter icon={Users} tone="bg-forest-soft text-forest" label="Użytkownicy" value={data.users} />
+            <Counter icon={FlaskConical} tone="bg-plum-soft text-plum" label="Aktywni testerzy" value={data.testers} hint={`${data.pending_testers} czeka na zatwierdzenie`} />
+            <Counter icon={Search} tone="bg-ember-soft text-ember" label="Wyszukiwania" value={data.searches} hint={`dziś: ${data.searches_today}`} />
           </dl>
 
           <div className="mt-10 grid gap-6 lg:grid-cols-2">
-            <div className="border-(length:--bw) border-deep bg-surface p-6">
+            <div className="border-(length:--bw) border-line bg-surface p-6">
               <h2 className="text-xl font-bold text-deep">Innowacje według statusu</h2>
               <ul className="mt-4 space-y-3">
                 {(Object.keys(STATUS_META) as InnovationStatus[]).map((status) => {
@@ -57,13 +61,13 @@ export function AdminStatsView() {
                     <li key={status}>
                       <div className="flex items-center justify-between gap-4">
                         <span className="flex items-center gap-2 font-bold">
-                          <Icon aria-hidden="true" className="size-5 text-leaf" />
+                          <Icon aria-hidden="true" className={`size-5 ${STATUS_META[status].tone}`} />
                           {STATUS_META[status].label}
                         </span>
                         <span className="font-bold tabular-nums">{count}</span>
                       </div>
                       <div aria-hidden="true" className="mt-1.5 h-3 rounded-full bg-sage">
-                        <div className="h-3 rounded-full bg-leaf" style={{ width: `${share}%` }} />
+                        <div className={`h-3 rounded-full ${STATUS_META[status].bar}`} style={{ width: `${share}%` }} />
                       </div>
                     </li>
                   );
@@ -71,7 +75,7 @@ export function AdminStatsView() {
               </ul>
             </div>
 
-            <div className="border-(length:--bw) border-deep bg-surface p-6">
+            <div className="border-(length:--bw) border-line bg-surface p-6">
               <h2 className="text-xl font-bold text-deep">Do zrobienia</h2>
               <ul className="mt-4 space-y-4">
                 <li className="flex items-start gap-3">

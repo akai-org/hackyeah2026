@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 const RATING_LABELS = ["", "Nie działa", "Słabo", "Średnio", "Dobrze", "Bardzo dobrze"];
 
 const inputClass =
-  "mt-2 w-full rounded-ui border-(length:--bw) bg-surface px-4 py-3 text-base text-ink placeholder:text-muted";
+  "mt-2 w-full rounded-ui border-(length:--bw) border-field bg-surface px-4 py-3 text-base text-ink placeholder:text-muted";
 
 const GROUPS: Array<{ status: TestStatus; title: string; empty?: string }> = [
   { status: "assigned", title: "Przypisane do mnie", empty: "ROPS nie przypisał Ci jeszcze żadnej innowacji." },
@@ -42,7 +42,7 @@ export function TesterPanel() {
 
   if (user?.role !== "tester" && user?.role !== "admin") {
     return (
-      <div className="max-w-xl border-(length:--bw) border-deep bg-surface p-6 shadow-paper sm:p-8">
+      <div className="max-w-xl border-(length:--bw) border-line bg-surface p-6 rounded-ui shadow-paper sm:p-8">
         <h2 className="flex items-center gap-3 text-xl font-bold text-deep">
           <FlaskConical aria-hidden="true" className="size-7 shrink-0 text-leaf" />
           Ta część jest dla testerów
@@ -110,7 +110,7 @@ function Dashboard({ userId }: { userId: number | string }) {
 
       <dl className="grid max-w-2xl grid-cols-3 gap-4">
         {(["assigned", "requested", "submitted"] as const).map((status) => (
-          <div key={status} className="border-(length:--bw) border-deep bg-surface p-4 shadow-paper">
+          <div key={status} className="border-(length:--bw) border-line bg-surface p-4 rounded-ui shadow-paper">
             <dt className="font-bold text-muted">{GROUPS.find((group) => group.status === status)!.title}</dt>
             <dd className="text-3xl font-bold text-deep">{tests ? count(status) : "–"}</dd>
           </div>
@@ -200,7 +200,7 @@ function TestItem({
   const assigned = report.status === "assigned";
 
   return (
-    <li className="border-(length:--bw) border-deep bg-surface p-5 shadow-paper">
+    <li className="border-(length:--bw) border-line bg-surface p-5 rounded-ui shadow-paper">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-lg font-bold text-deep">
@@ -292,7 +292,7 @@ function FeedbackForm({ id, title, onSubmit }: { id: string; title: string; onSu
     );
 
   return (
-    <form id={id} onSubmit={submit} noValidate aria-label={`Ocena testu: ${title}`} className="appear mt-6 border-t-2 border-deep pt-6">
+    <form id={id} onSubmit={submit} noValidate aria-label={`Ocena testu: ${title}`} className="appear mt-6 border-t border-line pt-6">
       <fieldset aria-describedby={errors.rating ? `${ids}-rating-blad` : undefined}>
         <legend className="font-bold text-deep">
           Jak oceniasz innowację? <span className="font-normal text-muted">(wymagane)</span>
@@ -302,7 +302,7 @@ function FeedbackForm({ id, title, onSubmit }: { id: string; title: string; onSu
             <label
               key={value}
               className={cn(
-                "inline-flex min-h-12 cursor-pointer items-center gap-2 rounded-ui border-(length:--bw) border-deep px-4 py-2 has-focus-visible:outline-3 has-focus-visible:outline-offset-3 has-focus-visible:outline-deep",
+                "inline-flex min-h-12 cursor-pointer items-center gap-2 rounded-ui border-(length:--bw) border-line px-4 py-2 has-focus-visible:outline-3 has-focus-visible:outline-offset-3 has-focus-visible:outline-deep",
                 rating === value ? "bg-mint font-bold text-ink" : "bg-surface text-ink hover:bg-sage",
               )}
             >
@@ -340,7 +340,7 @@ function FeedbackForm({ id, title, onSubmit }: { id: string; title: string; onSu
           }}
           aria-invalid={!!errors.what_worked || undefined}
           aria-describedby={errors.what_worked ? `${ids}-what_worked-blad` : undefined}
-          className={cn(inputClass, errors.what_worked ? "border-alert" : "border-deep")}
+          className={cn(inputClass, errors.what_worked ? "border-alert" : "border-field")}
         />
         {errorText("what_worked")}
       </div>
@@ -358,7 +358,7 @@ function FeedbackForm({ id, title, onSubmit }: { id: string; title: string; onSu
           value={improvements}
           onChange={(event) => setImprovements(event.target.value)}
           aria-describedby={`${ids}-usprawnienia-podpowiedz`}
-          className={cn(inputClass, "border-deep")}
+          className={cn(inputClass, "border-field")}
         />
       </div>
 
@@ -372,7 +372,7 @@ function FeedbackForm({ id, title, onSubmit }: { id: string; title: string; onSu
           value={costNote}
           onChange={(event) => setCostNote(event.target.value)}
           placeholder="np. 500 zł na materiały, 4 godziny pracy wolontariusza"
-          className={cn(inputClass, "min-h-12 border-deep")}
+          className={cn(inputClass, "min-h-12 border-field")}
         />
       </div>
 
@@ -410,7 +410,7 @@ function InnovationPicker({
   }, [search]);
 
   return (
-    <section aria-labelledby={`${ids}-tytul`} className="self-start border-(length:--bw) border-deep bg-surface p-6 shadow-paper">
+    <section aria-labelledby={`${ids}-tytul`} className="self-start border-(length:--bw) border-line bg-surface p-6 rounded-ui shadow-paper">
       <h2 id={`${ids}-tytul`} className="text-xl font-bold text-deep">
         Zgłoś się do testu
       </h2>
@@ -432,7 +432,7 @@ function InnovationPicker({
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="np. seniorzy, samotność"
-          className={cn(inputClass, "mt-0 min-h-12 border-deep")}
+          className={cn(inputClass, "mt-0 min-h-12 border-field")}
         />
         <Button type="submit" aria-label="Szukaj">
           <Search aria-hidden="true" />

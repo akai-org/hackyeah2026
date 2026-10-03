@@ -15,7 +15,7 @@ interface Props {
 }
 
 const fieldClass =
-  "mt-2 w-full rounded-ui border-(length:--bw) border-deep bg-surface px-4 py-3 text-base text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-deep focus:ring-offset-1";
+  "mt-2 w-full rounded-ui border-(length:--bw) border-field bg-surface px-4 py-3 text-base text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-deep focus:ring-offset-1";
 
 export function TesterApplyModal({ innovationId, innovationTitle, onClose, onSuccess }: Props) {
   const { user } = useAuth();
@@ -92,7 +92,7 @@ export function TesterApplyModal({ innovationId, innovationTitle, onClose, onSuc
     >
       <div
         ref={containerRef}
-        className="relative w-full max-w-md border-(length:--bw) border-deep bg-surface p-6 shadow-paper sm:p-8"
+        className="relative w-full max-w-md border-(length:--bw) border-line bg-surface p-6 rounded-ui shadow-paper sm:p-8"
       >
         <button
           ref={closeRef}
