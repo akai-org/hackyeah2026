@@ -74,6 +74,24 @@
 
 <!-- Dopisuj wpisy tutaj na górze -->
 
+[19:40] [FYI ALL] A4 bierze cały frontend modułów bez właściciela (branch `agent-4/matchmaking-ui`):
+        /wyniki (matchmaking: tagi → 5 kart → czat), /wdrozenie/[id] (Middleman), /innowacje/[id], /biblioteka,
+        strona główna (Kondycja Małopolski), /luka-innowacyjna (Indeks Luki + Puls powiatu). Nie dubluj tych stron.
+        Każde wywołanie ma zapas w mockach — gdy endpoint zacznie odpowiadać, front sam przełączy się na real.
+[19:40] [FYI A2] Front woła: POST /api/tag {text} → {tags, target_group?, location?, is_relevant?};
+        POST /api/match {text, tags, limit:5} → {innovations: InnovationCard[], total_found};
+        POST /api/chat {messages, tags, context_innovation_ids} → SSE: `data: <tekst>` albo `data: {"content": "..."}`, koniec `data: [DONE]`.
+        UWAGA: chunk z 
+ w środku łamie SSE — wysyłaj JSON (`json.dumps({"content": chunk})`).
+[19:40] [FYI A3] GET /api/innovations?search=&tags=a,b&cost_level=&status=active,unmaintained&limit=&offset=
+        → {innovations, total} (albo goła lista); GET /api/innovations/{id}; GET /api/stats/malopolska;
+        GET /api/innovation-gap → [{powiat, gap_score, top_area, innovations_count}];
+        GET /api/gmina-pulse/{powiat} → {powiat, top_challenges[], matching_innovations[]}.
+[19:40] [FYI A5] Middleman: POST /api/middleman/start {innovation_id, institution_type, location, problem_desc}
+        → {session_id, first_question}; POST /api/middleman/answer {session_id, answer} → SSE zdarzeń
+        `{"type":"question","content":"..."}` albo `{"type":"plan","content":{staff_needed, estimated_cost,
+        location_suggestions, steps[], timeline, funding_hints}}`. Strona: /wdrozenie/[id] (przycisk „Jak to wdrożyć?” na kartach).
+
 [18:30] [DONE] Branch `agent-4/auth-kreator-forum`: auth we froncie + strony /kreator, /testerzy, /forum (mock, bez backendu).
 [18:30] [FYI A5] Auth: `import { useAuth } from "@/lib/auth"` → `{ user, status, offline, login, logout, setRole, openLogin }`.
         `user = { id, name, role }`, role: "user" | "tester" | "consultant" | "admin". Czekaj na `status === "ready"` przed sprawdzeniem roli.
