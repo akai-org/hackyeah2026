@@ -5,6 +5,7 @@ import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react"
 import { CircleAlert, Info, Mic, Search, Square } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { fixTranscript } from "@/lib/matchmaking";
 import { cn } from "@/lib/utils";
 
 const EXAMPLES = [
@@ -142,6 +143,10 @@ export function SearchForm({ initialText = "", showExamples = true, className }:
       heard = true;
       setText((previous) => (previous.trim() ? `${previous.trimEnd()} ${transcript}` : transcript));
       setError(false);
+      // Backend poprawia gramatykę i błędy rozpoznawania mowy. Podmieniamy tylko podyktowany fragment.
+      void fixTranscript(transcript).then((corrected) => {
+        if (corrected !== transcript) setText((current) => current.replace(transcript, corrected));
+      });
     };
 
     recognition.onerror = (event) => {

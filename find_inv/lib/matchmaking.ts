@@ -1,4 +1,4 @@
-import { apiFetch } from "@/lib/api";
+import { API_URL, apiFetch } from "@/lib/api";
 import { chunkText, fakeStream, postSse } from "@/lib/sse";
 import { TAG_KEYWORDS, TAG_LABELS, TAXONOMY_TAGS, type Tag } from "@/data/mock";
 import { COST_LABELS, MOCK_INNOVATIONS, type InnovationCard } from "@/data/innovations";
@@ -133,4 +133,28 @@ export async function* streamChat(
   }
   const last = [...messages].reverse().find((message) => message.role === "user");
   yield* fakeStream(localChatAnswer(last?.content ?? "", innovations), signal);
+}
+
+/** Poprawia transkrypcję z dyktowania (POST /api/voice-fix). Przy błędzie zwraca tekst bez zmian. */
+export async function fixTranscript(transcript: string): Promise<string> {
+  try {
+    const result = await apiFetch<{ corrected: string; confidence: number }>("/api/voice-fix", {
+      method: "POST",
+      body: JSON.stringify({ transcript }),
+    });
+    return result.corrected || transcript;
+  } catch {
+    return transcript;
+  }
+}
+
+/** Zgłoszenie potrzeby do Zasobnika (POST /api/needs) — admin widzi je jako lukę w ofercie innowacji. */
+export async function reportNeed(description: string): Promise<void> {
+  // /api/needs zwraca sam obiekt (bez koperty { data, error }), więc zwykły fetch zamiast apiFetch.
+  const response = await fetch(`${API_URL}/api/needs`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ description: description.slice(0, 2000), reporter_type: "resident" }),
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
 }

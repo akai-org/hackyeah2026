@@ -7,6 +7,7 @@ import { CircleAlert, Clock, Plus, RefreshCw, Search, X } from "lucide-react";
 import { CrisisPanel, isCrisis } from "@/components/crisis-panel";
 import { MatchCard } from "@/components/match-card";
 import { MatchChat } from "@/components/match-chat";
+import { ReportNeed } from "@/components/report-need";
 import { useSimpleMode } from "@/components/simple-mode";
 import { Button, buttonVariants } from "@/components/ui/button";
 import type { InnovationCard } from "@/data/innovations";
@@ -272,6 +273,7 @@ export function MatchResults({ query }: { query: string }) {
                 Nie znalazłem pasującej innowacji. Wybierz najbliższy obszar albo opisz problem inaczej.
               </p>
               <p className="mt-2 text-muted">Takie zapytania pokazują ROPS, gdzie brakuje rozwiązań.</p>
+              <ReportNeed query={query} />
               <ul className="mt-4 flex flex-wrap gap-3">
                 {FALLBACK_AREAS.map((area) => (
                   <li key={area.label}>
