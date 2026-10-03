@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MessageSquareText, Puzzle, ScanSearch, type LucideIcon } from "lucide-react";
+import { MessageSquareText, Puzzle, ScanSearch, TrendingUp, AlertTriangle, type LucideIcon } from "lucide-react";
 
 import { CutoutText } from "@/components/cutout-text";
 import { InnovationCard } from "@/components/innovation-card";
@@ -7,6 +7,21 @@ import { Monstera } from "@/components/monstera";
 import { SearchForm } from "@/components/search-form";
 import { buttonVariants } from "@/components/ui/button";
 import { innovations } from "@/data/innovations.mock";
+
+const STATS = [
+  { value: "22,4%", label: "osób 65+ w Małopolsce", source: "GUS 2024" },
+  { value: "31%", label: "seniorów bez umiejętności cyfrowych", source: "GUS 2023" },
+  { value: "18%", label: "gospodarstw z samotnością", source: "NSP 2021" },
+  { value: "187 tys.", label: "osób z niepełnosprawnością", source: "ROPS 2024" },
+];
+
+const GAP_DATA = [
+  { powiat: "limanowski", gap: 5.9, area: "dostęp do usług" },
+  { powiat: "nowosądecki", gap: 4.7, area: "wykluczenie cyfrowe" },
+  { powiat: "tarnowski", gap: 3.1, area: "samotność" },
+  { powiat: "myślenicki", gap: 2.4, area: "zdrowie psychiczne" },
+  { powiat: "krakowski", gap: 1.2, area: "starzenie" },
+];
 
 const STEPS: Array<{ icon: LucideIcon; title: string; text: string }> = [
   {
@@ -129,6 +144,75 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Kondycja Małopolski */}
+      <section
+        id="kondycja"
+        aria-labelledby="kondycja-tytul"
+        className="scroll-mt-6 border-y-(length:--bw) border-deep bg-paper"
+      >
+        <div className="mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
+          <CutoutText id="kondycja-tytul" text="Kondycja Małopolski" />
+          <p className="mt-4 max-w-[60ch] text-lg">
+            Dane społeczne, które stoją za innowacjami w naszej Bibliotece.
+          </p>
+          <ul className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {STATS.map(({ value, label, source }) => (
+              <li key={label} className="border-(length:--bw) border-deep bg-surface p-6 shadow-paper">
+                <p className="text-3xl font-bold text-deep tabular-nums">{value}</p>
+                <p className="mt-2">{label}</p>
+                <p className="mt-1 text-sm text-muted">{source}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* Indeks Luki Innowacyjnej */}
+      <section
+        id="luka-innowacyjna"
+        aria-labelledby="luka-tytul"
+        className="scroll-mt-6"
+      >
+        <div className="mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
+          <div className="flex items-start gap-4">
+            <TrendingUp className="mt-1 size-8 shrink-0 text-leaf" aria-hidden="true" />
+            <div>
+              <CutoutText id="luka-tytul" text="Indeks Luki Innowacyjnej" />
+              <p className="mt-4 max-w-[60ch] text-lg">
+                Gdzie w Małopolsce jest problem, ale brakuje odpowiedzi? Wyższy wynik = więcej potrzeby, mniej rozwiązań.
+              </p>
+            </div>
+          </div>
+          <ul className="mt-10 space-y-3" aria-label="Indeks luki innowacyjnej per powiat">
+            {GAP_DATA.map(({ powiat, gap, area }) => (
+              <li key={powiat} className="flex items-center gap-4 border-(length:--bw) border-deep bg-surface px-5 py-4 shadow-paper">
+                <div className="w-32 shrink-0">
+                  <p className="font-bold text-deep capitalize">{powiat}</p>
+                  <p className="text-sm text-muted">{area}</p>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="h-4 rounded-ui bg-leaf"
+                      style={{ width: `${(gap / 6) * 100}%` }}
+                      role="presentation"
+                      aria-hidden="true"
+                    />
+                    <span className="text-sm font-bold tabular-nums text-deep">{gap.toFixed(1)}</span>
+                  </div>
+                </div>
+                {gap > 4 && (
+                  <AlertTriangle className="size-5 shrink-0 text-alert" aria-label="Wysoki priorytet" />
+                )}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-6 text-sm text-muted">
+            Dane: ROPS Kraków, OZPS 2023–2024. Wyższy wynik = większa luka między problemem a dostępnymi innowacjami.
+          </p>
+        </div>
+      </section>
+
       {/* Dla kogo */}
       <section
         id="dla-kogo"
@@ -145,6 +229,38 @@ export default function HomePage() {
               </li>
             ))}
           </ul>
+        </div>
+      </section>
+
+      {/* Kontakt */}
+      <section
+        id="kontakt"
+        aria-labelledby="kontakt-tytul"
+        className="scroll-mt-6 border-t-(length:--bw) border-deep bg-sage"
+      >
+        <div className="mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
+          <CutoutText id="kontakt-tytul" text="Kontakt" />
+          <div className="mt-6 grid gap-8 md:grid-cols-2">
+            <div>
+              <h3 className="text-xl font-bold text-deep">ROPS Kraków</h3>
+              <p className="mt-2 text-muted">Regionalny Ośrodek Polityki Społecznej w Krakowie</p>
+              <p className="mt-1">ul. Piastowska 32, 30-070 Kraków</p>
+              <p className="mt-1">
+                <a href="https://rops.krakow.pl" className="underline text-leaf font-bold">
+                  rops.krakow.pl
+                </a>
+              </p>
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-deep">HubMI.pl</h3>
+              <p className="mt-2 text-muted">
+                Platforma budowana w ramach projektu HackYeah 2026 dla Województwa Małopolskiego.
+              </p>
+              <Link href="/biblioteka" className={buttonVariants({ variant: "secondary", className: "mt-4" })}>
+                Przeglądaj Bibliotekę innowacji
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
     </>
