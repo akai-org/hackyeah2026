@@ -6,16 +6,17 @@ import { Menu, X } from "lucide-react";
 
 import { CutoutText } from "@/components/cutout-text";
 import { SimpleModeToggle } from "@/components/simple-mode";
+import { UserMenu } from "@/components/user-menu";
 
 const NAV_LINKS = [
-  { href: "/biblioteka", label: "Biblioteka innowacji" },
-  { href: "/#jak-to-dziala", label: "Jak to działa" },
-  { href: "/#dla-kogo", label: "Dla kogo" },
-  { href: "/#kontakt", label: "Kontakt" },
+  { href: "/biblioteka", label: "Biblioteka" },
+  { href: "/kreator", label: "Kreator pomysłów" },
+  { href: "/forum", label: "Forum" },
+  { href: "/testerzy", label: "Zostań testerem" },
 ];
 
 const linkClass =
-  "inline-flex min-h-12 items-center rounded-ui px-3 text-base font-bold text-deep underline-offset-4 hover:underline";
+  "inline-flex min-h-12 items-center rounded-ui px-2.5 text-base font-bold text-deep underline-offset-4 hover:underline";
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
@@ -48,7 +49,7 @@ export function SiteHeader() {
           <CutoutText text="HubMI" as="span" size="logo" labelled={false} />
         </Link>
 
-        <nav aria-label="Główna" className="hidden lg:block">
+        <nav aria-label="Główna" className="hidden xl:block">
           <ul className="flex items-center gap-1">
             {NAV_LINKS.map((link) => (
               <li key={link.href}>
@@ -60,22 +61,25 @@ export function SiteHeader() {
           </ul>
         </nav>
 
-        <SimpleModeToggle className="hidden lg:flex" />
+        <div className="flex items-center gap-4">
+          <SimpleModeToggle className="hidden xl:flex" />
+          <UserMenu compact className="hidden sm:flex" />
 
-        <button
-          ref={buttonRef}
-          type="button"
-          aria-expanded={open}
-          aria-controls="menu-mobilne"
-          onClick={() => setOpen((value) => !value)}
-          className="inline-flex min-h-12 min-w-12 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-ui border-(length:--bw) border-deep bg-surface px-4 font-bold text-deep hover:bg-sage lg:hidden"
-        >
-          {open ? <X aria-hidden="true" className="size-5" /> : <Menu aria-hidden="true" className="size-5" />}
-          {open ? "Zamknij" : "Menu"}
-        </button>
+          <button
+            ref={buttonRef}
+            type="button"
+            aria-expanded={open}
+            aria-controls="menu-mobilne"
+            onClick={() => setOpen((value) => !value)}
+            className="inline-flex min-h-12 min-w-12 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-ui border-(length:--bw) border-deep bg-surface px-4 font-bold text-deep hover:bg-sage xl:hidden"
+          >
+            {open ? <X aria-hidden="true" className="size-5" /> : <Menu aria-hidden="true" className="size-5" />}
+            {open ? "Zamknij" : "Menu"}
+          </button>
+        </div>
       </div>
 
-      <div id="menu-mobilne" hidden={!open} className="border-t-(length:--bw) border-deep bg-surface lg:hidden">
+      <div id="menu-mobilne" hidden={!open} className="border-t-(length:--bw) border-deep bg-surface xl:hidden">
         <nav aria-label="Główna, wersja mobilna" className="mx-auto max-w-content px-4 py-3 sm:px-6">
           <ul className="flex flex-col">
             {NAV_LINKS.map((link) => (
@@ -87,6 +91,7 @@ export function SiteHeader() {
             ))}
           </ul>
           <SimpleModeToggle className="mt-2 border-t-2 border-sage px-3 pt-2" />
+          <UserMenu className="mt-2 border-t-2 border-sage px-3 pt-3 sm:hidden" />
         </nav>
       </div>
     </header>
