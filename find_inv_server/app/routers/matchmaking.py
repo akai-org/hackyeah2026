@@ -20,7 +20,14 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app import knowledge_store
 from app.config import settings
-from app.local_matching import TAXONOMY_TAGS, local_chat_answer, local_tag_result, rank_locally
+from app.local_matching import (
+    TAXONOMY_TAGS,
+    condense_locally,
+    local_chat_answer,
+    local_tag_result,
+    rank_locally,
+    strip_fillers,
+)
 
 log = logging.getLogger(__name__)
 
@@ -78,6 +85,8 @@ class MatchRequest(BaseModel):
 
 class VoiceFixRequest(BaseModel):
     transcript: str
+    # Wyszukiwarka: wypowiedź „naokoło” skracamy do sedna (kto, co, gdzie). Kreator zostawia pełny tekst.
+    condense: bool = False
 
 
 class ChatMessage(BaseModel):
@@ -274,35 +283,87 @@ async def match(body: MatchRequest, background: BackgroundTasks):
 
 VOICE_FIX_PROMPT = (
     "Poprawiasz transkrypcję mowy po polsku. Popraw gramatykę, interpunkcję i oczywiste błędy "
-    "rozpoznawania mowy, NIE zmieniaj sensu ani nie dopisuj treści. "
+    "rozpoznawania mowy, NIE zmieniaj sensu ani nie dopisuj treści. Zdania mają być poprawne gramatycznie "
+    "i mieć sens — popraw szyk i odmianę, jeśli trzeba. "
+    "Usuń przymiotniki i przysłówki, które dodają tylko emocję albo nacisk (np. „straszny”, „okropny”, „bardzo”, "
+    "„naprawdę”), i rzeczowniki bez treści (np. „ta cała sprawa”, „kwestia tego, że”). Zostaw słowa, które "
+    "niosą informację o problemie — kogo dotyczy, gdzie, czego brakuje (np. „samotna”, „starsza”, „wieś”, „lekarz”). "
+    "Usuń wtrącenia mowy potocznej bez treści, np. „yyy”, „no”, „ten no”, „tak jakby”, „jakby”, „wiesz”, „w sumie”, "
+    "„generalnie”, „znaczy”, „po prostu”. Usuń przekleństwa i wulgaryzmy — wulgarny zwrot zastąp neutralnym "
+    "o tym samym sensie (np. „mają nas w dupie” → „ignorują nas”). "
     'Odpowiedz wyłącznie JSON: {"corrected": "...", "confidence": 0.0-1.0}'
 )
+
+
+def _tidy_transcript(text: str) -> str:
+    """Poprawka bez LLM: wielka litera na początku, kropka na końcu, bez spacji przed interpunkcją."""
+    text = re.sub(r"\s+", " ", text).strip()
+    text = re.sub(r"\s+([,.!?;:])", r"\1", text)
+    if not text:
+        return text
+    text = text[0].upper() + text[1:]
+    if text[-1] in ".!?…":
+        return text
+    # Pytanie po zdjęciu zapowiedzi („chciałam zapytać, czy …”) zostaje pytaniem.
+    first = text.split()[0].lower().strip(",")
+    return f"{text}?" if first in {"czy", "jak", "gdzie", "kto", "co", "kiedy", "dlaczego", "ile", "jaka", "jaki"} else f"{text}."
+
+
+VOICE_CONDENSE_PROMPT = (
+    "Dostajesz transkrypcję mowy po polsku: ktoś opisuje problem społeczny, często chaotycznie, z dygresjami, "
+    "powtórzeniami i wtrąceniami. Wyciągnij SEDNO: jedno jasne zdanie (najwyżej 25 słów) — kogo dotyczy problem, "
+    "na czym polega i gdzie, jeśli padło. Pomiń dygresje, historię, emocje mówiącego i szczegóły bez znaczenia "
+    "dla problemu. Zawsze usuń wtrącenia bez treści, np. „yyy”, „no”, „ten no”, „tak jakby”, „jakby”, „wiesz”, "
+    "„w sumie”. Usuń przekleństwa i wulgaryzmy — wulgarny zwrot zastąp neutralnym o tym samym sensie "
+    "(np. „mają nas w dupie” → „ignorują nas”). Popraw gramatykę i błędy rozpoznawania mowy. "
+    "Usuń przymiotniki i przysłówki, które dodają tylko emocję albo nacisk (np. „straszny”, „okropny”, „bardzo”, "
+    "„naprawdę”), i rzeczowniki bez treści (np. „ta cała sprawa”, „kwestia tego, że”). Zostaw słowa, które "
+    "niosą informację o problemie — kogo dotyczy, gdzie, czego brakuje (np. „samotna”, „starsza”, „wieś”, „lekarz”). "
+    "Pisz z perspektywy mówiącego, jego słowami. Każde zdanie ma być poprawne gramatycznie, z poprawną "
+    "interpunkcją i spójne logicznie — tak, żeby czytający od razu zrozumiał, o co chodzi. "
+    "NIE dodawaj informacji, których nie było, NIE oceniaj. Jeśli wypowiedź już jest krótka i rzeczowa, tylko ją popraw. "
+    'Odpowiedz wyłącznie JSON: {"corrected": "...", "condensed": true|false, "confidence": 0.0-1.0}'
+)
+
+
+def _local_fix(transcript: str, condense: bool) -> dict:
+    condensed = False
+    if condense:
+        transcript, condensed = condense_locally(transcript)
+    # Wtrącenia („ten no tak jakby”, „yyy”) wypadają zawsze, także z krótkich wypowiedzi.
+    transcript = strip_fillers(transcript) or transcript
+    return {"corrected": _tidy_transcript(transcript), "condensed": condensed, "confidence": 0.6, "source": "rules"}
 
 
 @router.post("/voice-fix")
 async def voice_fix(body: VoiceFixRequest):
     transcript = body.transcript.strip()[:MAX_TEXT]
     llm_chat = _llm_chat()
-    if llm_chat is None or not transcript:
-        return _ok({"corrected": transcript, "confidence": 1.0})
+    if not transcript:
+        return _ok({"corrected": transcript, "condensed": False, "confidence": 1.0, "source": "none"})
+    if llm_chat is None:
+        return _ok(_local_fix(transcript, body.condense))
 
     try:
         raw = await llm_chat(
             [
-                {"role": "system", "content": VOICE_FIX_PROMPT},
+                {"role": "system", "content": VOICE_CONDENSE_PROMPT if body.condense else VOICE_FIX_PROMPT},
                 {"role": "user", "content": transcript},
             ]
         )
         parsed = _parse_json_object(raw)
+        corrected = (parsed.get("corrected") or transcript).strip()
         return _ok(
             {
-                "corrected": parsed.get("corrected") or transcript,
+                "corrected": corrected,
+                "condensed": bool(parsed.get("condensed")) and len(corrected.split()) < len(transcript.split()),
                 "confidence": float(parsed.get("confidence", 0.8)),
+                "source": "llm",
             }
         )
     except Exception:
         log.exception("voice-fix failed")
-        return _ok({"corrected": transcript, "confidence": 0.5})
+        return _ok({**_local_fix(transcript, body.condense), "confidence": 0.5})
 
 
 CHAT_SYSTEM_PROMPT = (

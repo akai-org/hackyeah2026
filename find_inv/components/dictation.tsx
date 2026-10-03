@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { CircleAlert, Info, Mic, Square } from "lucide-react";
+import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
+import { Check, CircleAlert, Info, Loader2, Mic, Square, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { fixTranscript } from "@/lib/matchmaking";
+import { correctTranscript, fixTranscript } from "@/lib/matchmaking";
 import { cn } from "@/lib/utils";
 
 // Dyktowanie (Web Speech API) wspólne dla wyszukiwarki i Kreatora pomysłów.
@@ -58,7 +58,22 @@ const DICTATION_ERRORS: Record<string, string> = {
 
 const GENERIC_ERROR = "Dyktowanie nie zadziałało. Spróbuj jeszcze raz albo wpisz tekst.";
 
-export type DictationState = "idle" | "recording" | "done" | "error";
+export type DictationState = "idle" | "recording" | "checking" | "confirm" | "done" | "error";
+
+export type DictationOptions = {
+  /**
+   * Tryb na żywo: tekst pojawia się w polu w trakcie mówienia, a po zakończeniu poprawka z /api/voice-fix
+   * czeka na decyzję użytkownika („Czy o to chodziło?”). Bez tej opcji poprawka wchodzi od razu.
+   */
+  live?: boolean;
+  /** Razem z `live`: wypowiedź „naokoło” backend skraca do sedna (kto, co, gdzie). */
+  condense?: boolean;
+};
+
+export type Suggestion = { original: string; corrected: string; condensed: boolean };
+
+// W trybie na żywo nagrywanie kończy się samo po tej przerwie w mówieniu albo przyciskiem „Zatrzymaj”.
+const SILENCE_MS = 3000;
 
 /**
  * Dyktowanie do pola tekstowego. Podyktowany tekst jest dopisywany przez `setText`,
@@ -67,21 +82,54 @@ export type DictationState = "idle" | "recording" | "done" | "error";
 export function useDictation(
   setText: (update: (previous: string) => string) => void,
   onHeard?: () => void,
+  options: DictationOptions = {},
 ) {
   const supported = useDictationSupported();
   const [state, setState] = useState<DictationState>("idle");
   const [message, setMessage] = useState("");
+  const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
   const recognitionRef = useRef<Recognition | null>(null);
+  // Numer nagrania: poprawka, która spóźni się po rozpoczęciu nowego nagrania, nie nadpisze nowego tekstu.
+  const sessionRef = useRef(0);
+  const silenceRef = useRef<number | null>(null);
 
-  useEffect(() => () => recognitionRef.current?.abort(), []);
+  useEffect(
+    () => () => {
+      recognitionRef.current?.abort();
+      if (silenceRef.current) window.clearTimeout(silenceRef.current);
+    },
+    [],
+  );
 
   function abort() {
     recognitionRef.current?.abort();
   }
 
+  function accept() {
+    if (!suggestion) return;
+    const { original, corrected } = suggestion;
+    setText((current) => current.replace(original, corrected));
+    setSuggestion(null);
+    setState("done");
+    setMessage("Poprawiono tekst");
+  }
+
+  function reject() {
+    setSuggestion(null);
+    setState("done");
+    setMessage("Zostawiono Twój tekst");
+  }
+
   function toggle() {
     if (state === "recording") {
       recognitionRef.current?.stop();
+      return;
+    }
+    // Tryb na żywo: nowe nagranie zaczyna od czystej karty — znika poprzednie pytanie i tekst w polu.
+    if (options.live) {
+      setSuggestion(null);
+      setText(() => "");
+    } else if (state === "checking" || state === "confirm") {
       return;
     }
 
@@ -92,16 +140,41 @@ export function useDictation(
       return;
     }
 
+    const live = Boolean(options.live);
     const recognition = new RecognitionImpl();
     recognition.lang = "pl-PL";
-    recognition.interimResults = false;
-    recognition.continuous = false;
+    recognition.interimResults = live;
+    recognition.continuous = live;
     recognition.maxAlternatives = 1;
 
     let heard = false;
     let failed = false;
+    // Tryb na żywo: pole = tekst sprzed dyktowania + to, co rozpoznano do tej pory (także wstępnie).
+    let base: string | null = null;
+    let spoken = "";
+
+    const restartSilenceTimer = () => {
+      if (silenceRef.current) window.clearTimeout(silenceRef.current);
+      silenceRef.current = window.setTimeout(() => recognition.stop(), SILENCE_MS);
+    };
 
     recognition.onresult = (event) => {
+      if (live) {
+        let transcript = "";
+        for (let i = 0; i < event.results.length; i++) transcript += event.results[i][0].transcript;
+        transcript = transcript.replace(/\s+/g, " ").trim();
+        if (!transcript) return;
+        heard = true;
+        spoken = transcript;
+        setText((previous) => {
+          if (base === null) base = previous.trimEnd();
+          return base ? `${base} ${transcript}` : transcript;
+        });
+        onHeard?.();
+        restartSilenceTimer();
+        return;
+      }
+
       let transcript = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
         if (event.results[i].isFinal) transcript += event.results[i][0].transcript;
@@ -126,19 +199,41 @@ export function useDictation(
 
     recognition.onend = () => {
       recognitionRef.current = null;
+      if (silenceRef.current) window.clearTimeout(silenceRef.current);
       if (failed) return;
-      if (heard) {
-        setState("done");
-        setMessage("Gotowe, sprawdź tekst");
-      } else {
+      if (!heard) {
         setState("error");
         setMessage(DICTATION_ERRORS["no-speech"]);
+        return;
       }
+      if (!live) {
+        setState("done");
+        setMessage("Gotowe, sprawdź tekst");
+        return;
+      }
+      // Koniec mówienia: poprawka z LLM (albo prosta poprawka bez klucza) i pytanie do użytkownika.
+      const original = spoken;
+      const session = sessionRef.current;
+      setState("checking");
+      setMessage("Sprawdzam tekst…");
+      void correctTranscript(original, Boolean(options.condense)).then(({ corrected, condensed }) => {
+        if (session !== sessionRef.current) return; // w międzyczasie zaczęło się nowe nagranie
+        if (corrected && corrected !== original) {
+          setSuggestion({ original, corrected, condensed });
+          setState("confirm");
+          setMessage("");
+        } else {
+          setState("done");
+          setMessage("Gotowe, sprawdź tekst");
+        }
+      });
     };
 
     recognitionRef.current = recognition;
+    sessionRef.current += 1;
+    setSuggestion(null);
     setState("recording");
-    setMessage("Nagrywam…");
+    setMessage(live ? "Słucham… Tekst pojawia się w polu na bieżąco." : "Nagrywam…");
     try {
       recognition.start();
     } catch {
@@ -148,7 +243,7 @@ export function useDictation(
     }
   }
 
-  return { supported, state, message, toggle, abort };
+  return { supported, state, message, suggestion, toggle, abort, accept, reject };
 }
 
 type Dictation = ReturnType<typeof useDictation>;
@@ -156,8 +251,24 @@ type Dictation = ReturnType<typeof useDictation>;
 /** Przycisk „Podyktuj” / „Zatrzymaj”. Bez wsparcia przeglądarki kliknięcie pokazuje komunikat w DictationStatus. */
 export function DictationButton({ dictation, className }: { dictation: Dictation; className?: string }) {
   return (
-    <Button type="button" variant="secondary" onClick={dictation.toggle} className={className}>
-      {dictation.state === "recording" ? (
+    <Button
+      type="button"
+      variant="secondary"
+      onClick={dictation.toggle}
+      className={className}
+    >
+      {dictation.state === "checking" ? (
+        <>
+          <Loader2 aria-hidden="true" className="animate-spin" />
+          Sprawdzam…
+          <span className="sr-only"> — kliknij, żeby nagrać od nowa</span>
+        </>
+      ) : dictation.state === "confirm" ? (
+        <>
+          <Mic aria-hidden="true" />
+          Nagraj od nowa
+        </>
+      ) : dictation.state === "recording" ? (
         <>
           <Square aria-hidden="true" className="fill-current" />
           Zatrzymaj
@@ -199,5 +310,114 @@ export function DictationNotice({ dictation, id }: { dictation: Dictation; id?: 
       <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
       Dyktowanie może przetwarzać dźwięk w zewnętrznej usłudze przeglądarki. Nie podawaj danych osobowych.
     </p>
+  );
+}
+
+/**
+ * Różnica słowo po słowie (najdłuższy wspólny podciąg): słowa poprawionego tekstu z oznaczeniem zmian
+ * oraz słowa, które z oryginału wypadły (np. wtrącenia „ten no jakby”).
+ */
+function diffWords(original: string, corrected: string) {
+  const a = original.split(/\s+/).filter(Boolean);
+  const b = corrected.split(/\s+/).filter(Boolean);
+  const lcs: number[][] = Array.from({ length: a.length + 1 }, () => new Array<number>(b.length + 1).fill(0));
+  for (let i = a.length - 1; i >= 0; i--) {
+    for (let j = b.length - 1; j >= 0; j--) {
+      lcs[i][j] = a[i] === b[j] ? lcs[i + 1][j + 1] + 1 : Math.max(lcs[i + 1][j], lcs[i][j + 1]);
+    }
+  }
+  const words: Array<{ word: string; changed: boolean }> = [];
+  const removed: string[] = [];
+  let i = 0;
+  let j = 0;
+  while (i < a.length || j < b.length) {
+    if (i < a.length && j < b.length && a[i] === b[j]) {
+      words.push({ word: b[j], changed: false });
+      i++;
+      j++;
+    } else if (j >= b.length || (i < a.length && lcs[i + 1][j] >= lcs[i][j + 1])) {
+      removed.push(a[i]);
+      i++;
+    } else {
+      words.push({ word: b[j], changed: true });
+      j++;
+    }
+  }
+  // Słowo tylko poprawione (np. „niema” → „nie ma”) to zmiana, nie usunięcie — pokazujemy wyłącznie te,
+  // których w poprawionym tekście nie ma wcale.
+  const kept = new Set(b.map((word) => word.toLowerCase().replace(/[.,!?;:]/g, "")));
+  const dropped = removed
+    .map((word) => word.replace(/[.,!?;:]/g, ""))
+    .filter((word) => word && !kept.has(word.toLowerCase()));
+  return { words, removed: [...new Set(dropped.map((word) => word.toLowerCase()))] };
+}
+
+/** Pytanie po dyktowaniu w trybie na żywo: przyjąć poprawkę AI czy zostawić tekst użytkownika. */
+export function DictationSuggestion({ dictation }: { dictation: Dictation }) {
+  const ids = useId();
+  const headingRef = useRef<HTMLParagraphElement>(null);
+  const suggestion = dictation.suggestion;
+
+  // Focus na pytaniu — klawiatura i czytnik ekranu trafiają od razu do decyzji.
+  useEffect(() => {
+    if (suggestion) headingRef.current?.focus();
+  }, [suggestion]);
+
+  if (!suggestion) return null;
+  const { words, removed } = diffWords(suggestion.original, suggestion.corrected);
+  const count = (text: string) => text.split(/\s+/).filter(Boolean).length;
+
+  return (
+    <section
+      aria-labelledby={`${ids}-pytanie`}
+      className="appear mt-3 max-w-[65ch] rounded-ui border-(length:--bw) border-deep bg-mint p-4"
+    >
+      <p id={`${ids}-pytanie`} ref={headingRef} tabIndex={-1} className="font-bold text-deep focus:outline-none">
+        Czy o to chodziło?
+      </p>
+      {suggestion.condensed ? (
+        <>
+          {/* Przy streszczeniu prawie każde słowo jest „zmienione”, więc zamiast podświetleń — skrót i pełna wypowiedź. */}
+          <p className="mt-2 rounded-ui bg-surface px-3 py-2 text-lg">{suggestion.corrected}</p>
+          <p className="mt-1 text-sm text-muted">
+            Skróciliśmy wypowiedź do najważniejszych informacji (z {count(suggestion.original)} do{" "}
+            {count(suggestion.corrected)} słów).
+          </p>
+          <details className="mt-2 text-sm">
+            <summary className="cursor-pointer font-bold text-deep">Pokaż całą wypowiedź</summary>
+            <p className="mt-1 rounded-ui bg-surface px-3 py-2 text-muted">{suggestion.original}</p>
+          </details>
+        </>
+      ) : (
+        <>
+          <p className="mt-2 rounded-ui bg-surface px-3 py-2 text-lg">
+            {words.map(({ word, changed }, index) => (
+              <span key={index}>
+                {index > 0 && " "}
+                {changed ? <strong className="underline decoration-2 underline-offset-4">{word}</strong> : word}
+              </span>
+            ))}
+          </p>
+          {words.some((word) => word.changed) && (
+            <p className="mt-1 text-sm text-muted">Poprawione słowa są pogrubione i podkreślone.</p>
+          )}
+          {removed.length > 0 && (
+            <p className="mt-1 text-sm text-muted">
+              Usunięte zbędne słowa: {removed.map((word) => `„${word}”`).join(", ")}.
+            </p>
+          )}
+        </>
+      )}
+      <div className="mt-3 flex flex-wrap gap-3">
+        <Button type="button" onClick={dictation.accept}>
+          <Check aria-hidden="true" />
+          Tak, popraw
+        </Button>
+        <Button type="button" variant="secondary" onClick={dictation.reject}>
+          <X aria-hidden="true" />
+          Nie, zostaw mój tekst
+        </Button>
+      </div>
+    </section>
   );
 }

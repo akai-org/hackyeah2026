@@ -15,7 +15,7 @@ from app.utils import TAXONOMY_TAGS  # zamknięta taksonomia z rdzenia (A1)
 TAG_KEYWORDS: dict[str, list[str]] = {
     "seniorzy": ["senior", "starsz", "starsi", "osob starsz", "podeszl", "emeryt", "babci", "babcia", "dziadk", "staruszk", "65+"],
     "wykluczenie_cyfrowe": ["internet", "komputer", "smartfon", "cyfrow", "aplikacj", "online", "mail", "technolog"],
-    "samotność": ["samotn", "osamotn", "izolac", "mieszka sam", "zyje sam", "zostal sam", "zostala sam", "nie ma z kim", "nikogo nie ma", "sam w domu", "sama w domu"],
+    "samotność": ["samotn", "osamotn", "izolac", "mieszka sam", "zyje sam", "zostal sam", "zostala sam", "nie ma z kim", "nie maja z kim", "z kim porozmawiac", "nikogo nie ma", "sam w domu", "sama w domu"],
     "zdrowie_psychiczne": ["psychi", "psycholog", "depresj", "kryzys", "stres", "terapi", "zalaman", "samoboj", "lekow"],
     "niepełnosprawność": ["niepelnospraw", "wozek", "wozku", "niewidom", "nieslysz", "gluch", "autyz", "niesprawn"],
     "ubóstwo": ["ubost", "ubog", "bied", "zasilk", "nie stac", "dlug", "glod", "pieniedz"],
@@ -215,3 +215,277 @@ def local_chat_answer(question: str, innovations: list[dict]) -> str:
     if unmaintained:
         lines.append(f"Uwaga: {', '.join(unmaintained)} może już nie działać. Sprawdź to przed wdrożeniem.")
     return "\n".join(lines)
+
+
+# ---------- Streszczanie wypowiedzi (dyktowanie „naokoło”) ----------
+
+# Zawahania w środku zdania — znikają bez śladu („moja mama no mieszka” → „moja mama mieszka”).
+_HESITATIONS = re.compile(
+    r"\b(?:y+|e+|m+|hm+|yy+m+|no|wiesz|wie pan|wie pani|rozumie pan|rozumie pani|tak jakby|znaczy się|znaczy|"
+    r"po prostu|że tak powiem|kurczę|kurde|jakoś tak|właściwie|szczerze mówiąc|tak naprawdę|"
+    r"(?:ja\s+)?(?:dzwonię|piszę))\b,?",
+    re.IGNORECASE,
+)
+# Wtrącenia, którymi mówiący zmienia wątek albo zbiera myśli — w ich miejscu kończy się jedna myśl.
+_TOPIC_FILLERS = re.compile(
+    r"\b(?:dzień dobry|dobry wieczór|witam|cześć|no więc|no to|no i|w sumie|generalnie|w każdym razie|krótko mówiąc|"
+    r"i tak dalej|itd|itp|coś tam|chodzi o to,? że|chodzi o to|sprawa jest taka,? że|"
+    r"to jest tak,? że|jest tak,? że)\b,?",
+    re.IGNORECASE,
+)
+# Granice myśli w mowie bez interpunkcji: znaki końca zdania, przecinki i spójniki, którymi ludzie łączą wątki.
+_CLAUSE_SPLIT = re.compile(
+    r"[.!?;,]+\s*|\s+(?:a poza tym|a jeszcze|i jeszcze|ale wracając|a w ogóle|bo|ale|a)\s+"
+    # „… do lekarza i ona się czuje …” — nowa myśl zaczyna się od „i” + zaimek albo przeczenie
+    r"|\s+i\s+(?=(?:ona|on|ja|my|oni|one|ono|nie|to|tam|teraz)\b)",
+    re.IGNORECASE,
+)
+# „ten no”, „no ten”, „ten tego” — zaimek jako wypełniacz tylko obok innego wypełniacza („ten autobus” zostaje).
+_FILLER_PRONOUNS = re.compile(
+    r"\b(?:(?:ten|ta|to|tego|tam)\s+(?:no|tego|yy+|ee+|jakby)|(?:no|yy+|ee+)\s+(?:ten|ta|tego|tam))\b",
+    re.IGNORECASE,
+)
+# „jakby” jako wtrącenie („nie ma jakby jak”) — ale nie w warunku: „jakby ktoś zadzwonił”, „jakby się dało”.
+_FILLER_JAKBY = re.compile(
+    r"\bjakby\b(?!\s+(?:ktoś|coś|ktokolwiek|się|był|była|było|byli|były|mógł|mogła|mogli|miał|miała|mieli|"
+    r"chciał|chciała|chcieli|ja|ty|on|ona|ono|my|wy|oni|one|pan|pani|nie\s+(?:był|było|mógł|miał)))",
+    re.IGNORECASE,
+)
+
+
+# Łańcuch wtrąceń („tak jakby no ten tego”, „to jakby no”): 2+ słowa z tej puli pod rząd to szum, nie treść.
+_FILLER_WORD = r"(?:tak\s+jakby|jakby|ten|ta|tego|tam|to|no|yy+|ee+|mm+|wiesz|znaczy|ogólnie)"
+_FILLER_RUN = re.compile(rf"\b{_FILLER_WORD}(?:\s+{_FILLER_WORD})+\b", re.IGNORECASE)
+# Słowa, które w środku zdania nie powinny mieć wielkiej litery (rozpoznawanie mowy czasem ją wstawia).
+_LOWERCASE_WORDS = {
+    "jak", "nie", "ma", "to", "i", "a", "w", "we", "na", "do", "z", "ze", "że", "się", "jest", "są", "bo", "ale",
+    "co", "gdzie", "kiedy", "dla", "od", "po", "przez", "o", "u", "tak", "już", "jeszcze", "też", "tylko",
+}  # fmt: skip
+# „Przez to że A, B” → „A, więc B” — skutek po przyczynie czyta się jaśniej.
+_CAUSAL_LEAD = re.compile(
+    r"^(?:przez to,?\s+że|dlatego,?\s+że|z tego powodu,?\s+że|ponieważ|z powodu tego,?\s+że)\s+(.+?),\s*(?:to\s+)?(.+)$",
+    re.IGNORECASE,
+)
+
+
+# Zapowiedź zamiast treści na początku wypowiedzi („mamy taki problem, że …”, „chciałam zgłosić, że …”).
+# Sama nic nie mówi, a doklejona do sedna daje zdanie bez sensu („Kiedy mamy problem mama mieszka …”).
+_FRAMING = re.compile(
+    r"^(?:(?:kiedy|bo|więc|a|i|no|otóż)\s+)*(?!to\s)(?:"
+    r"(?:u\s+nas\s+|tutaj\s+|w\s+domu\s+)?(?:mamy|mam|jest|był|była|pojawił\s+się|pojawia\s+się|zrobił\s+się)"
+    r"\s+(?:taki\s+|taką\s+|duży\s+|wielki\s+|straszny\s+|poważny\s+|ogromny\s+|jeden\s+)?"
+    r"(?:problem|kłopot|sprawę|sprawa|pytanie|prośbę|prośba|sytuację|sytuacja)(?:\s+tak[ia])?"
+    r"|(?:mój|nasz|główny|największy)\s+(?:problem|kłopot)\s+(?:to|jest\s+taki)"
+    r"|(?:problem|kłopot|sytuacja|sprawa)\s+(?:jest\s+tak[ia]|polega\s+na\s+tym|wygląda\s+tak|dotyczy\s+tego)"
+    r"|(?:chciał(?:a|e)?(?:m|bym|abym)|chcę|chcemy|chcielibyśmy)\s+(?:zgłosić|powiedzieć|zapytać|opisać|napisać|poprosić)"
+    r"(?:\s+o\s+pomoc)?"
+    r"|(?:piszę|dzwonię|zgłaszam\s+się)(?:\s+w\s+sprawie\s+tego)?"
+    # „problem z dojazdem”, „kłopot w szkole” to treść — zapowiedź tylko, gdy dalej idzie nowe zdanie.
+    r")(?![\s,]+(?:z|ze|w|we|na|dla|do|o|od|przy|u|po|z\s+tym)\b)\s*(?:,\s*)?(?:że|bo|ponieważ|gdyż|mianowicie|to|:)?[\s,:]+",
+    re.IGNORECASE,
+)
+
+
+# Wulgarne idiomy → neutralny odpowiednik, żeby sens skargi został („mają nas w dupie” → „ignorują nas”).
+_PROFANE_IDIOMS = [
+    (re.compile(r"\bma(?:\s+(nas|to|go|ją|ich|mnie))?\s+w\s+dupie\b", re.IGNORECASE), "ignoruje"),
+    (re.compile(r"\bmają(?:\s+(nas|to|go|ją|ich|mnie))?\s+w\s+dupie\b", re.IGNORECASE), "ignorują"),
+    (re.compile(r"\bchuj\s+wie\b|\bhuj\s+wie\b|\bcholera\s+wie\b", re.IGNORECASE), "nie wiadomo"),
+    # opisowe wulgaryzmy nic nie dodają do sedna — znikają („autobus jeździ do dupy” → „autobus jeździ”)
+    (re.compile(r"\s*\b(?:do\s+dupy|do\s+bani|chujow[a-ząęółśżźćń]*|gównian[a-ząęółśżźćń]*)\b", re.IGNORECASE), ""),
+]
+# Przekleństwa i wulgaryzmy (rdzenie) — wypadają w całości, także jako przymiotnik („ta pieprzona gmina” → „ta gmina”).
+_PROFANITY = re.compile(
+    r"\b(?:kurw|skurw|wkurw|chuj|huj|pierdol|pierdziel|spierdal|wypierdal|zapierdal|jeb|zajeb|pojeb|wyjeb|odjeb|"
+    r"pizd|cholern|choler|pieprzon|zasran|gówn|sraj|srać|debil|idiot|kurde|kurczę|kurna|motyla\s+noga)"
+    r"[a-ząęółśżźćń]*(?:\s+mać)?\b"
+    # „dupa” tylko w tych formach — „Dupin”, „dupla” to nie przekleństwa
+    r"|\b(?:dupa|dupy|dupie|dupę|dupą|dupek|dupku|dupki)\b",
+    re.IGNORECASE,
+)
+
+
+_ADJ_ENDINGS = r"(?:y|a|e|i|ego|ej|emu|ą|ym|ych|ymi|ie)"
+# Przymiotniki i przysłówki, które dodają tylko emocję albo nacisk — sedno jest takie samo bez nich.
+# Nie ma tu słów opisujących problem („samotna”, „starsza”, „biedna” = ubóstwo, „niepełnosprawny”).
+_EMPTY_MODIFIERS = re.compile(
+    # zaimek wskazujący idzie razem z pustym przymiotnikiem („na tej strasznej wsi” → „na wsi”)
+    r"\b(?:(?:ten|ta|to|tej|tego|temu|tą|tym|tych|te|tę)\s+(?=(?:straszn|okropn|koszmarn|beznadziejn|fataln|tragiczn|"
+    r"potworn|makabryczn|nieszczęsn|zasran|pieprzon|cholern)))?(?:"
+    rf"(?:straszn|okropn|koszmarn|beznadziejn|fataln|tragiczn|potworn|makabryczn|kompletn|totaln|"
+    rf"absolutn|ogromn|olbrzymi|niesamowit|niewiarygodn|zwyczajn|nieszczęsn){_ADJ_ENDINGS}"
+    r"|strasznie|okropnie|koszmarnie|beznadziejnie|fatalnie|tragicznie|potwornie|kompletnie|totalnie|absolutnie"
+    r"|ogromnie|niesamowicie|naprawdę|bardzo|serio|dosłownie|wręcz|mega|super|zupełnie|całkiem|całkowicie"
+    r"|ciągle\s+i\s+ciągle"
+    r")\b",
+    re.IGNORECASE,
+)
+# Rzeczowniki bez treści — sama „sprawa”, „kwestia”, „rzecz” nic nie mówią o problemie.
+_EMPTY_NOUN_PHRASES = re.compile(
+    r"\b(?:(?:ta|cała|ta\s+cała)\s+(?:sprawa|sytuacja|historia)(?:\s+jest\s+taka)?,?\s*(?:że\s+)?"
+    r"|(?:kwestia|rzecz|sprawa)\s+(?:jest\s+)?(?:w\s+tym|tego),?\s*że\s+"
+    r"|cała\s+(?:ta\s+)?(?=sytuacja|sprawa|historia))",
+    re.IGNORECASE,
+)
+
+
+def strip_empty_words(text: str) -> str:
+    """Bez pustych przymiotników, przysłówków i rzeczowników — zostaje to, co mówi o problemie."""
+    text = _EMPTY_NOUN_PHRASES.sub(" ", text)
+    text = _EMPTY_MODIFIERS.sub(" ", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def strip_profanity(text: str) -> str:
+    for pattern, replacement in _PROFANE_IDIOMS:
+        text = pattern.sub(lambda m: replacement + (f" {m.group(1)}" if m.lastindex and m.group(1) else ""), text)
+    return re.sub(r"\s+", " ", _PROFANITY.sub(" ", text)).strip()
+
+
+def _drop_framing(text: str) -> str:
+    previous = None
+    while text != previous:
+        previous, text = text, _FRAMING.sub("", text, count=1)
+    return text
+
+
+def _drop_filler_runs(text: str) -> str:
+    def replace(match: re.Match) -> str:
+        # Łańcuch od „to” po treści („… na wsi to jakby no nie ma …”) zamyka jedną myśl i otwiera drugą.
+        starts_clause = match.group(0).split()[0].lower() == "to" and match.start() > 0
+        return ", " if starts_clause else " "
+
+    return _FILLER_RUN.sub(replace, text)
+
+
+# Przecinek przed spójnikami, przed którymi stawia się go po polsku („ignorują nas, a mama …”, „wiem, gdzie …”).
+_COMMA_BEFORE = re.compile(
+    r"(?<=[a-ząęółśżźćń])\s+(a|ale|bo|że|więc|który|która|które|którzy|którego|której|gdzie|żeby|aby|ponieważ|gdyż|"
+    r"jeśli|jeżeli|chociaż|choć|dlatego|lecz)\s+(?=\S)",
+    re.IGNORECASE,
+)
+# Wyjątki: „przez to że”, „tak że”, „mimo że”, „zanim”, „to że” — tam przecinek przed „że” jest błędem.
+_NO_COMMA_BEFORE_ZE = re.compile(r"\b(przez\s+to|tak|mimo|chyba|to|zwłaszcza|szczególnie|tylko|jedynie),\s+że\b", re.IGNORECASE)
+
+
+def _fix_punctuation(text: str) -> str:
+    text = _COMMA_BEFORE.sub(lambda m: f", {m.group(1)} ", text)
+    return _NO_COMMA_BEFORE_ZE.sub(lambda m: f"{m.group(1)} że", text)
+
+
+def _fix_casing(text: str) -> str:
+    words = text.split(" ")
+    for index in range(1, len(words)):
+        bare = words[index].strip(",.!?;:")
+        if bare[:1].isupper() and bare.lower() in _LOWERCASE_WORDS and not words[index - 1].endswith((".", "!", "?")):
+            words[index] = words[index].replace(bare, bare.lower(), 1)
+    return " ".join(words)
+
+
+def strip_fillers(text: str) -> str:
+    """Wyrzuca wtrącenia mowy („ten no tak jakby”, „yyy”, „wiesz”, „w sumie”) i przekleństwa, bez skracania treści."""
+    cleaned = _drop_filler_runs(strip_empty_words(strip_profanity(text)))
+    cleaned = _FILLER_PRONOUNS.sub(" ", cleaned)
+    cleaned = _TOPIC_FILLERS.sub(" ", cleaned)
+    cleaned = _HESITATIONS.sub(" ", cleaned)
+    cleaned = _FILLER_JAKBY.sub(" ", cleaned)
+    cleaned = re.sub(r"\b(\w+)(?:\s+\1\b)+", r"\1", cleaned, flags=re.IGNORECASE)  # „że że”, „i i”
+    cleaned = re.sub(r"\s+([,.!?;:])", r"\1", cleaned)
+    cleaned = re.sub(r"([,;:])(?:\s*[,;:])+", r"\1", cleaned)  # „, ,” po wycięciu wtrąceń
+    cleaned = re.sub(r",\s+(i|oraz|ani)\b", r" \1", cleaned)  # po polsku bez przecinka przed „i”
+    cleaned = re.sub(r"\s+", " ", cleaned).strip(" ,")
+    cleaned = _drop_framing(cleaned) or cleaned
+    cleaned = _fix_punctuation(_fix_casing(cleaned))
+    causal = _CAUSAL_LEAD.match(cleaned)
+    if causal:
+        cleaned = f"{causal.group(1)}, więc {causal.group(2)}"
+    return cleaned
+
+
+_EDGE_CONJUNCTIONS = re.compile(r"^(?:i|a|że|bo|ale|więc|to)\s+|\s+(?:i|a|że|bo|ale|więc|to|który|którzy|która)$", re.IGNORECASE)
+
+CONDENSE_MIN_WORDS = 12
+CONDENSE_MAX_WORDS = 25
+
+
+def _clauses(text: str) -> list[str]:
+    cleaned = _FILLER_PRONOUNS.sub(" ", _drop_filler_runs(strip_empty_words(strip_profanity(text))))
+    cleaned = _HESITATIONS.sub(" ", _TOPIC_FILLERS.sub(" ", cleaned)).strip(" ,")
+    cleaned = _drop_framing(cleaned) or cleaned
+    cleaned = _TOPIC_FILLERS.sub(",", cleaned)
+    cleaned = _HESITATIONS.sub(" ", cleaned)
+    cleaned = _FILLER_JAKBY.sub(" ", cleaned)
+    cleaned = re.sub(r"\b(\w+)(?:\s+\1\b)+", r"\1", cleaned, flags=re.IGNORECASE)  # „że że”, „i i”
+    clauses = []
+    for part in _CLAUSE_SPLIT.split(cleaned):
+        part = re.sub(r"\s+", " ", part).strip(" ,")
+        previous = None
+        while part != previous:  # „i …”, „… że” na brzegach po wycięciu wtrąceń
+            previous, part = part, _EDGE_CONJUNCTIONS.sub("", part).strip(" ,")
+        if len(part.split()) < 2:
+            continue
+        # Długi łańcuch „… i … i …” to kilka myśli — dzielimy, żeby sedno nie przepadło razem z dygresją.
+        pieces = re.split(r"\s+i\s+", part) if len(part.split()) > 12 else [part]
+        clauses.extend(piece.strip(" ,") for piece in pieces if len(piece.split()) >= 2)
+    return clauses
+
+
+# Myśl, która nazywa problem: przeczenie możliwości, brak, trudność, uczucie, kryzys.
+_PROBLEM_SIGNAL = re.compile(
+    r"\bnie\s+(?:ma|maja|mam|moze|mozna|moga|moge|umie|umieja|umiem|potrafi|wie|wiem|wiedza|stac|daje|dziala|"
+    r"wychodzi|wychodza|chce|dojedzie|slyszy|widzi|radzi)\b|\bbrak|\bbrakuje"
+    r"|\btrudn|\bproblem|\bnikt\b|\bsamotn|\bboi\b|\bboja\b|\bkryzys|\bdepresj|\bnie\s+radzi|\bza\s+daleko"
+    r"|\bnie\s+wiadomo|\bszuka\w*\s+pomocy|\bignoruj|\bnic\s+nie\s+robi",
+)
+
+
+def _is_problem(clause: str) -> bool:
+    return bool(_PROBLEM_SIGNAL.search(fold(clause)))
+
+
+def _clause_score(index: int, clause: str) -> float:
+    tags = len(local_tags(clause))
+    content = len(_stems(clause))
+    # Sedno to krótka myśl z problemem — dłuższa przegrywa z równie trafną krótszą.
+    return (3 if _is_problem(clause) else 0) + tags * 2 + content * 0.2 - len(clause.split()) * 0.15 - index * 0.1
+
+
+def condense_locally(text: str) -> tuple[str, bool]:
+    """Sedno wypowiedzi: kto i jaka sytuacja (pierwsza myśl) + myśli nazywające problem, do ~25 słów.
+
+    Dygresje bez problemu („ja pracuję w Krakowie”) i powtórzenia odpadają. Zwraca (tekst, czy_skrócono);
+    krótkich wypowiedzi i takich, z których nic nie trzeba wyrzucać, nie rusza — wtedy tylko się je porządkuje.
+    """
+    words = text.split()
+    if len(words) < CONDENSE_MIN_WORDS:
+        return text, False
+    clauses = _clauses(text)
+    if not clauses:
+        return text, False
+
+    # Bez powtórzeń tej samej myśli: zdanie, którego rdzenie już padły, odpada.
+    unique: list[tuple[int, str]] = []
+    seen: set[str] = set()
+    for index, clause in enumerate(clauses):
+        stems = set(_stems(clause))
+        if stems and stems <= seen:
+            continue
+        seen |= stems
+        unique.append((index, clause))
+
+    first, rest = unique[0], unique[1:]
+    chosen = [first]
+    budget = CONDENSE_MAX_WORDS - len(first[1].split())
+    # Najpierw myśli z problemem, potem pasujące do tematu; dygresje bez problemu i tagów nie wchodzą wcale.
+    for index, clause in sorted(rest, key=lambda item: _clause_score(*item), reverse=True):
+        relevant = _is_problem(clause) or local_tags(clause)
+        length = len(clause.split())
+        if relevant and length <= budget:
+            chosen.append((index, clause))
+            budget -= length
+    if len(chosen) == len(unique) and len(unique) == len(clauses):
+        return text, False  # nic do wyrzucenia — zostaje pełne zdanie (wtrącenia zdejmie strip_fillers)
+
+    ordered = [clause for _, clause in sorted(chosen)]
+    gist = " i ".join(ordered) if len(ordered) == 2 else ", ".join(ordered)
+    return gist, len(gist.split()) < len(words)

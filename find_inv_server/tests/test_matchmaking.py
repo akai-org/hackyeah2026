@@ -25,9 +25,13 @@ def test_match_returns_cards_with_flags():
     assert all({"id", "title", "match_score", "is_unmaintained"} <= i.keys() for i in innovations)
 
 
-def test_voice_fix_keeps_transcript_without_llm():
-    body = client.post("/api/voice-fix", json={"transcript": "mama mieszka sama"}).json()
-    assert body["data"]["corrected"] == "mama mieszka sama"
+def test_voice_fix_tidies_transcript_without_llm():
+    """Bez klucza OpenRouter: wielka litera, kropka i interpunkcja bez spacji — sens bez zmian."""
+    fix = lambda text: client.post("/api/voice-fix", json={"transcript": text}).json()["data"]  # noqa: E731
+    assert fix("mama mieszka sama")["corrected"] == "Mama mieszka sama."
+    assert fix("mama mieszka sama , na wsi")["corrected"] == "Mama mieszka sama, na wsi."
+    assert fix("Czy jest pomoc dla seniorów?")["corrected"] == "Czy jest pomoc dla seniorów?"
+    assert fix("mama mieszka sama")["source"] == "rules"
 
 
 def test_chat_streams_sse_until_done():
@@ -94,3 +98,126 @@ def test_chat_accepts_a4_field_names():
     )
     events = [e[6:] for e in response.text.split("\n\n") if e and e != "data: [DONE]"]
     assert innovation["title"] in "".join(json.loads(e)["content"] for e in events)
+
+
+RAMBLING = (
+    "no więc yyy chodzi o to że moja mama no mieszka sama na wsi wiesz od kiedy tata umarł i w sumie to jest tak że "
+    "ona nie ma jak dojechać do lekarza bo autobus jeździ raz dziennie a ja pracuję w krakowie i nie mogę jej wozić "
+    "no i generalnie ona się czuje samotna i tak dalej no i nie ma jak dojechać do lekarza"
+)
+
+
+def test_voice_fix_condenses_rambling_speech_on_request():
+    data = client.post("/api/voice-fix", json={"transcript": RAMBLING, "condense": True}).json()["data"]
+    assert data["condensed"] is True
+    assert len(data["corrected"].split()) <= 40 < len(RAMBLING.split())
+    text = data["corrected"].lower()
+    assert "mama mieszka sama na wsi" in text and "lekarza" in text  # sedno zostaje
+    for filler in ("yyy", "wiesz", "w sumie", "generalnie", "i tak dalej"):
+        assert filler not in text
+    assert text.count("dojechać do lekarza") == 1  # powtórzona myśl tylko raz
+
+
+def test_voice_fix_keeps_short_or_unflagged_text():
+    short = client.post("/api/voice-fix", json={"transcript": "mama mieszka sama na wsi", "condense": True}).json()
+    assert short["data"] == {**short["data"], "corrected": "Mama mieszka sama na wsi.", "condensed": False}
+    # bez condense (Kreator) nic nie jest streszczane — znikają tylko wtrącenia, treść zostaje cała
+    full = client.post("/api/voice-fix", json={"transcript": RAMBLING}).json()["data"]
+    assert full["condensed"] is False
+    for fact in ("tata umarł", "autobus jeździ raz dziennie", "nie mogę jej wozić", "czuje samotna"):
+        assert fact in full["corrected"]
+    for filler in ("yyy", "wiesz", "w sumie", "generalnie"):
+        assert filler not in full["corrected"]
+
+
+def test_voice_fix_drops_spoken_fillers_but_keeps_meaning():
+    fix = lambda text: client.post("/api/voice-fix", json={"transcript": text, "condense": True}).json()["data"]  # noqa: E731
+    assert fix("babcia mieszka sama na wsi i ten no jakby nie ma jak jechać do lekarza")["corrected"] == (
+        "Babcia mieszka sama na wsi i nie ma jak jechać do lekarza."
+    )
+    assert fix("no więc yyy mama no mieszka sama, wiesz, i w sumie nie ma jak dojechać")["corrected"] == (
+        "Mama mieszka sama i nie ma jak dojechać."
+    )
+    # „jakby” w warunku i „ten” przed rzeczownikiem to treść, nie wtrącenie
+    assert fix("jakby ktoś zadzwonił do OPS to by pomogli")["corrected"] == "Jakby ktoś zadzwonił do OPS to by pomogli."
+    assert fix("ten autobus jeździ raz dziennie")["corrected"] == "Ten autobus jeździ raz dziennie."
+
+
+def test_voice_fix_makes_rambling_sentence_clear():
+    """Zgłoszone przez właściciela: łańcuch wtrąceń i „przez to że …” → jasna informacja w jednym zdaniu."""
+    fix = lambda text: client.post("/api/voice-fix", json={"transcript": text, "condense": True}).json()["data"]  # noqa: E731
+    said = "przez to że mama mieszka tak jakby no ten tego sama na wsi to jakby no nie ma Jak dojść do lekarza"
+    assert fix(said)["corrected"] == "Mama mieszka sama na wsi, więc nie ma jak dojść do lekarza."
+    # treść z tych samych słów zostaje
+    assert fix("to jest problem bo nikt tego nie robi")["corrected"] == "To jest problem, bo nikt tego nie robi."
+    assert fix("syn ma piętnaście lat i no tego w ogóle nie wychodzi z pokoju")["corrected"] == (
+        "Syn ma piętnaście lat i w ogóle nie wychodzi z pokoju."
+    )
+
+
+def test_voice_fix_extracts_the_gist():
+    """Sedno: sytuacja + problem; dygresje bez problemu odpadają."""
+    fix = lambda text: client.post("/api/voice-fix", json={"transcript": text, "condense": True}).json()["data"]  # noqa: E731
+    gmina = fix(
+        "generalnie u nas w gminie jest dużo starszych ludzi którzy są sami i no nie mają z kim porozmawiać "
+        "a poza tym to wiesz mało kto ma internet więc nie wiedzą co się dzieje"
+    )
+    assert gmina["condensed"] and gmina["corrected"] == (
+        "U nas w gminie jest dużo starszych ludzi, którzy są sami i nie mają z kim porozmawiać."
+    )
+    mama = fix(RAMBLING)["corrected"]
+    assert len(mama.split()) <= 25
+    assert "nie ma jak dojechać do lekarza" in mama and "samotna" in mama
+    assert "pracuję w krakowie" not in mama  # dygresja mówiącego, nie problem
+
+
+def test_voice_fix_drops_framing_but_keeps_meaning():
+    """Zapowiedź („mamy problem, że”, „chciałam zgłosić”) to nie treść — sedno ma być zdaniem z sensem."""
+    fix = lambda text: client.post("/api/voice-fix", json={"transcript": text, "condense": True}).json()["data"]  # noqa: E731
+    gist = "Mama mieszka sama na wsi i nie ma jak dojść do lekarza."
+    for said in (
+        "kiedy mamy problem mama mieszka sama na wsi i nie ma jak dojść do lekarza",
+        "no mamy taki problem że mama mieszka sama na wsi i nie ma jak dojść do lekarza",
+        "problem jest taki że mama mieszka sama na wsi i nie ma jak dojść do lekarza",
+        "chciałam zgłosić że mama mieszka sama na wsi i nie ma jak dojść do lekarza",
+        "problem polega na tym że mama mieszka sama na wsi i nie ma jak dojść do lekarza",
+    ):
+        assert fix(said)["corrected"] == gist, said
+    # treść, nie zapowiedź: „problem z czymś”, „to jest problem” i pytania zostają
+    assert fix("jest problem z dojazdem do lekarza dla seniorów")["corrected"] == "Jest problem z dojazdem do lekarza dla seniorów."
+    assert fix("to jest problem bo nikt tego nie robi")["corrected"] == "To jest problem, bo nikt tego nie robi."
+    assert fix("chciałam zapytać czy jest pomoc dla samotnych seniorów")["corrected"] == "Czy jest pomoc dla samotnych seniorów?"
+
+
+def test_voice_fix_removes_profanity_and_fixes_punctuation():
+    fix = lambda text: client.post("/api/voice-fix", json={"transcript": text, "condense": True}).json()["data"]  # noqa: E731
+    assert fix("w gminie mają nas w dupie a mama nie ma jak dojechać do lekarza")["corrected"] == (
+        "W gminie ignorują nas, a mama nie ma jak dojechać do lekarza."
+    )
+    assert fix("ta cholerna gmina nic nie robi i chuj wie gdzie szukać pomocy")["corrected"] == (
+        "Ta gmina nic nie robi i nie wiadomo, gdzie szukać pomocy."
+    )
+    assert fix("autobus jeździ do dupy raz dziennie")["corrected"] == "Autobus jeździ raz dziennie."
+    assert fix("syn mówi że nikt go nie rozumie bo w szkole nie ma psychologa")["corrected"] == (
+        "Syn mówi, że nikt go nie rozumie, bo w szkole nie ma psychologa."
+    )
+    # nazwy własne i zwykłe słowa podobne do wulgaryzmów zostają
+    assert "Dupinie" in fix("mieszkamy w Dupinie koło Krakowa")["corrected"]
+
+
+def test_voice_fix_drops_empty_adjectives_and_nouns_but_keeps_information():
+    fix = lambda text: client.post("/api/voice-fix", json={"transcript": text, "condense": True}).json()["data"]  # noqa: E731
+    assert fix("mama mieszka całkiem sama na tej strasznej wsi i naprawdę nie ma jak dojść do lekarza")["corrected"] == (
+        "Mama mieszka sama na wsi i nie ma jak dojść do lekarza."
+    )
+    assert fix("ta cała sytuacja jest taka że babcia jest bardzo samotna i ma ogromny problem z dojazdem")["corrected"] == (
+        "Babcia jest samotna i ma problem z dojazdem."
+    )
+    # przymiotniki z informacją o problemie i rzeczowniki z treścią zostają
+    assert fix("biedna rodzina z trójką dzieci nie ma za co kupić jedzenia")["corrected"] == (
+        "Biedna rodzina z trójką dzieci nie ma za co kupić jedzenia."
+    )
+    assert fix("starsza niepełnosprawna sąsiadka mieszka sama na czwartym piętrze bez windy")["corrected"] == (
+        "Starsza niepełnosprawna sąsiadka mieszka sama na czwartym piętrze bez windy."
+    )
+    assert fix("na tej wsi nie ma lekarza")["corrected"] == "Na tej wsi nie ma lekarza."

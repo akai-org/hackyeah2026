@@ -4,7 +4,13 @@ import { useRouter } from "next/navigation";
 import { useId, useRef, useState } from "react";
 import { CircleAlert, Search } from "lucide-react";
 
-import { DictationButton, DictationNotice, DictationStatus, useDictation } from "@/components/dictation";
+import {
+  DictationButton,
+  DictationNotice,
+  DictationStatus,
+  DictationSuggestion,
+  useDictation,
+} from "@/components/dictation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -32,7 +38,9 @@ export function SearchForm({ initialText = "", showExamples = true, className }:
   const [error, setError] = useState(false);
   const [errorKey, setErrorKey] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const dictation = useDictation(setText, () => setError(false));
+  // Na żywo: tekst pojawia się w polu w trakcie mówienia, potem AI proponuje poprawkę do akceptacji —
+  // a długą wypowiedź „naokoło” skraca do sedna, bo krótki opis daje lepsze wyniki wyszukiwania.
+  const dictation = useDictation(setText, () => setError(false), { live: true, condense: true });
   const supported = dictation.supported;
 
   function updateText(value: string) {
@@ -112,6 +120,7 @@ export function SearchForm({ initialText = "", showExamples = true, className }:
       )}
 
       <DictationStatus dictation={dictation} />
+      <DictationSuggestion dictation={dictation} />
       <DictationNotice dictation={dictation} id={hintId} />
 
       {showExamples && (
