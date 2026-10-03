@@ -305,6 +305,37 @@ _PROFANITY = re.compile(
 )
 
 
+_ADJ_ENDINGS = r"(?:y|a|e|i|ego|ej|emu|ą|ym|ych|ymi|ie)"
+# Przymiotniki i przysłówki, które dodają tylko emocję albo nacisk — sedno jest takie samo bez nich.
+# Nie ma tu słów opisujących problem („samotna”, „starsza”, „biedna” = ubóstwo, „niepełnosprawny”).
+_EMPTY_MODIFIERS = re.compile(
+    # zaimek wskazujący idzie razem z pustym przymiotnikiem („na tej strasznej wsi” → „na wsi”)
+    r"\b(?:(?:ten|ta|to|tej|tego|temu|tą|tym|tych|te|tę)\s+(?=(?:straszn|okropn|koszmarn|beznadziejn|fataln|tragiczn|"
+    r"potworn|makabryczn|nieszczęsn|zasran|pieprzon|cholern)))?(?:"
+    rf"(?:straszn|okropn|koszmarn|beznadziejn|fataln|tragiczn|potworn|makabryczn|kompletn|totaln|"
+    rf"absolutn|ogromn|olbrzymi|niesamowit|niewiarygodn|zwyczajn|nieszczęsn){_ADJ_ENDINGS}"
+    r"|strasznie|okropnie|koszmarnie|beznadziejnie|fatalnie|tragicznie|potwornie|kompletnie|totalnie|absolutnie"
+    r"|ogromnie|niesamowicie|naprawdę|bardzo|serio|dosłownie|wręcz|mega|super|zupełnie|całkiem|całkowicie"
+    r"|ciągle\s+i\s+ciągle"
+    r")\b",
+    re.IGNORECASE,
+)
+# Rzeczowniki bez treści — sama „sprawa”, „kwestia”, „rzecz” nic nie mówią o problemie.
+_EMPTY_NOUN_PHRASES = re.compile(
+    r"\b(?:(?:ta|cała|ta\s+cała)\s+(?:sprawa|sytuacja|historia)(?:\s+jest\s+taka)?,?\s*(?:że\s+)?"
+    r"|(?:kwestia|rzecz|sprawa)\s+(?:jest\s+)?(?:w\s+tym|tego),?\s*że\s+"
+    r"|cała\s+(?:ta\s+)?(?=sytuacja|sprawa|historia))",
+    re.IGNORECASE,
+)
+
+
+def strip_empty_words(text: str) -> str:
+    """Bez pustych przymiotników, przysłówków i rzeczowników — zostaje to, co mówi o problemie."""
+    text = _EMPTY_NOUN_PHRASES.sub(" ", text)
+    text = _EMPTY_MODIFIERS.sub(" ", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
 def strip_profanity(text: str) -> str:
     for pattern, replacement in _PROFANE_IDIOMS:
         text = pattern.sub(lambda m: replacement + (f" {m.group(1)}" if m.lastindex and m.group(1) else ""), text)
@@ -353,7 +384,7 @@ def _fix_casing(text: str) -> str:
 
 def strip_fillers(text: str) -> str:
     """Wyrzuca wtrącenia mowy („ten no tak jakby”, „yyy”, „wiesz”, „w sumie”) i przekleństwa, bez skracania treści."""
-    cleaned = _drop_filler_runs(strip_profanity(text))
+    cleaned = _drop_filler_runs(strip_empty_words(strip_profanity(text)))
     cleaned = _FILLER_PRONOUNS.sub(" ", cleaned)
     cleaned = _TOPIC_FILLERS.sub(" ", cleaned)
     cleaned = _HESITATIONS.sub(" ", cleaned)
@@ -378,7 +409,7 @@ CONDENSE_MAX_WORDS = 25
 
 
 def _clauses(text: str) -> list[str]:
-    cleaned = _FILLER_PRONOUNS.sub(" ", _drop_filler_runs(strip_profanity(text)))
+    cleaned = _FILLER_PRONOUNS.sub(" ", _drop_filler_runs(strip_empty_words(strip_profanity(text))))
     cleaned = _HESITATIONS.sub(" ", _TOPIC_FILLERS.sub(" ", cleaned)).strip(" ,")
     cleaned = _drop_framing(cleaned) or cleaned
     cleaned = _TOPIC_FILLERS.sub(",", cleaned)

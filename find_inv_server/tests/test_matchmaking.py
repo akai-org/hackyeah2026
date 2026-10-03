@@ -203,3 +203,21 @@ def test_voice_fix_removes_profanity_and_fixes_punctuation():
     )
     # nazwy własne i zwykłe słowa podobne do wulgaryzmów zostają
     assert "Dupinie" in fix("mieszkamy w Dupinie koło Krakowa")["corrected"]
+
+
+def test_voice_fix_drops_empty_adjectives_and_nouns_but_keeps_information():
+    fix = lambda text: client.post("/api/voice-fix", json={"transcript": text, "condense": True}).json()["data"]  # noqa: E731
+    assert fix("mama mieszka całkiem sama na tej strasznej wsi i naprawdę nie ma jak dojść do lekarza")["corrected"] == (
+        "Mama mieszka sama na wsi i nie ma jak dojść do lekarza."
+    )
+    assert fix("ta cała sytuacja jest taka że babcia jest bardzo samotna i ma ogromny problem z dojazdem")["corrected"] == (
+        "Babcia jest samotna i ma problem z dojazdem."
+    )
+    # przymiotniki z informacją o problemie i rzeczowniki z treścią zostają
+    assert fix("biedna rodzina z trójką dzieci nie ma za co kupić jedzenia")["corrected"] == (
+        "Biedna rodzina z trójką dzieci nie ma za co kupić jedzenia."
+    )
+    assert fix("starsza niepełnosprawna sąsiadka mieszka sama na czwartym piętrze bez windy")["corrected"] == (
+        "Starsza niepełnosprawna sąsiadka mieszka sama na czwartym piętrze bez windy."
+    )
+    assert fix("na tej wsi nie ma lekarza")["corrected"] == "Na tej wsi nie ma lekarza."
