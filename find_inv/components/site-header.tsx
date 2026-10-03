@@ -34,15 +34,24 @@ export function SiteHeader() {
   const closeSearchRef = useRef<HTMLButtonElement>(null);
   const searchDialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const restoringFocusRef = useRef(false);
 
   function openSearch() {
+    if (restoringFocusRef.current) return;
     previousFocusRef.current = document.activeElement as HTMLElement;
     setSearchOpen(true);
   }
 
   function closeSearch() {
+    if (!searchOpen) return;
+    restoringFocusRef.current = true;
     setSearchOpen(false);
-    requestAnimationFrame(() => previousFocusRef.current?.focus());
+    requestAnimationFrame(() => {
+      previousFocusRef.current?.focus();
+      requestAnimationFrame(() => {
+        restoringFocusRef.current = false;
+      });
+    });
   }
 
   useEffect(() => {

@@ -222,6 +222,17 @@ html[data-contrast="high"] .bg-leaf.text-surface {
   color: #000 !important;
 }
 
+html[data-contrast="high"] svg {
+  color: #fff500 !important;
+  stroke: #fff500 !important;
+}
+
+html[data-contrast="high"] .bg-deep *,
+html[data-contrast="high"] .bg-leaf * {
+  color: #000 !important;
+  stroke: #000 !important;
+}
+
 html[data-contrast="high"] :where(.border-deep, .border-sage, .border-leaf) {
   border-color: #fff500 !important;
 }
