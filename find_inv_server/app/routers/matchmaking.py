@@ -210,6 +210,18 @@ def _catalog() -> list[dict]:
     return catalog
 
 
+def _log_search_admin(query: str, tags: list[str], results: int) -> None:
+    """Trendy panelu admina (A5, admin_store.log_search) — rosną na żywo podczas demo."""
+    try:
+        from app import admin_store
+    except ImportError:
+        return
+    try:
+        admin_store.log_search(query, tags, results)
+    except Exception:
+        log.exception("admin_store.log_search failed")
+
+
 def _local_match(text: str, tags: list[str], limit: int = TOP_N) -> dict:
     """Ranking bez embeddingów na katalogu ROPS, dopóki A1/A3 nie wystawią ChromaDB i bazy."""
     ranked = rank_locally(text, tags, _catalog())
@@ -250,6 +262,7 @@ async def match(body: MatchRequest, background: BackgroundTasks):
     if not innovations:  # brak ChromaDB albo seedu od A3 → ranking lokalny, żeby demo działało
         result = _local_match(text, body.tags, body.limit)
         background.add_task(_log_search_zasobnik, text, result["total_found"])
+        background.add_task(_log_search_admin, text, body.tags, result["total_found"])
         return _ok(result)
 
     query_tags = set(body.tags)
@@ -257,6 +270,7 @@ async def match(body: MatchRequest, background: BackgroundTasks):
         cosine = score_map.get(innov["embedding_id"], 0.0)
         innov["match_score"] = round(cosine + TAG_BOOST * len(set(innov["tags"]) & query_tags), 4)
     innovations.sort(key=lambda i: i["match_score"], reverse=True)
+    background.add_task(_log_search_admin, text, body.tags, len(innovations))
     return _ok({"innovations": innovations[: body.limit], "total_found": len(innovations)})
 
 
