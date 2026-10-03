@@ -8,6 +8,7 @@ import { MessageCircle, Send, Tag } from "lucide-react";
 import { CutoutText } from "@/components/cutout-text";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { BackendInnovationCard, type BackendInnovation } from "@/components/backend-innovation-card";
+import { AiDisclaimer } from "@/components/ai-disclaimer";
 import { MiddlemanModal } from "@/components/middleman-modal";
 import { apiPost, apiStream } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -225,6 +226,7 @@ function ResultsContent() {
             Zapytaj AI o innowacje
           </h2>
           <p className="mt-1 text-sm text-muted">AI zna kontekst pokazanych innowacji.</p>
+          <AiDisclaimer className="mt-3" />
 
           <div
             role="log"

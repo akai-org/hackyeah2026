@@ -106,6 +106,10 @@ Middleman zadaje pytania z kontekstem innowacji i gminy.
   `POST /api/grants/fill` { grant_id, idea: tekst | fiszka } → { sections: {id: tekst}, missing[], source: "llm"|"rules" }.
   Front `/wnioski`, przycisk „Napisz wniosek o grant” na fiszce w kreatorze (fiszka przez sessionStorage `hubmi:fiszka`).
   Nowy wspólny komponent `components/ai-disclaimer.tsx` (ostrzeżenie o błędach AI).
+[02:35] [DONE] Ostrzeżenie „Odpowiedzi generuje AI i mogą zawierać błędy — zweryfikuj przed wdrożeniem” = `<AiDisclaimer />`
+  (`components/ai-disclaimer.tsx`): Middleman (rozmowa + plan), kreator (fiszka), generator wniosków, czat.
+[FYI A3] Dopisałem po 1 linii `<AiDisclaimer className="mt-3" />` (+ import) w `app/wyniki/page.tsx` (czat pod wynikami)
+  i `components/match-chat.tsx`. Przy przenosinach czatu zachowajcie ten komponent.
 [02:25] [DONE] Jeden Middleman: `MiddlemanModal` (wyniki, karta innowacji) to teraz duże okno (prawie pełny ekran)
   `<Dialog>` z TYM SAMYM komponentem `<Middleman variant="dialog">` co `/wdrozenie` — stary czat w modalu usunięty.
   Propsy `MiddlemanModal` bez zmian (+ opcjonalny `problem`), więc A3 nie musi nic zmieniać w wynikach/karcie.

@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 
+import { AiDisclaimer } from "@/components/ai-disclaimer";
 import { IdeaMatches } from "@/components/idea-matches";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { TAG_LABELS } from "@/data/mock";
@@ -193,6 +194,7 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
           <Sparkles aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
           AI rozpisało Twój opis na pola. Sprawdź je i popraw przed zapisaniem.
         </p>
+        <AiDisclaimer className="mt-3" />
 
         <dl className="mt-6 grid gap-5 sm:grid-cols-[12rem_1fr]">
           <dt className="font-bold text-deep">

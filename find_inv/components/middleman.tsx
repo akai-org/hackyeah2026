@@ -23,6 +23,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { AiDisclaimer } from "@/components/ai-disclaimer";
 import { CutoutText } from "@/components/cutout-text";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { innovations as libraryInnovations } from "@/data/innovations.mock";
@@ -96,6 +97,7 @@ function PlanDocument({ plan, innovationTitle, onRestart }: { plan: MiddlemanPla
         <Info aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-deep" />
         To jest szkic. Sprawdź koszty i przepisy przed wdrożeniem.
       </p>
+      <AiDisclaimer className="mt-3" />
 
       <div className="mt-8 space-y-8">
         <PlanSection icon={Target} title="Cel">
@@ -448,7 +450,8 @@ export function Middleman({ innovationId, innovationTitle: knownTitle, problem =
                 Pytanie {questionIndex} z {session.max_questions}
               </p>
             </div>
-            <div aria-hidden="true" className="mt-2 h-2 rounded-full bg-sage">
+            <AiDisclaimer className="mt-3" />
+            <div aria-hidden="true" className="mt-4 h-2 rounded-full bg-sage">
               <div
                 className="h-2 rounded-full bg-leaf transition-[width] duration-300"
                 style={{ width: `${(questionIndex / session.max_questions) * 100}%` }}
