@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { BookOpen, RefreshCw, Search, Users, ClipboardCheck, Clock } from "lucide-react";
+import { BookOpen, RefreshCw, Search, Users, ClipboardCheck, Clock, Lightbulb } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 
@@ -11,6 +11,7 @@ interface Stats {
   testers: number;
   pending_testers: number;
   searches: number;
+  ideas: number;
 }
 
 const MOCK_STATS: Stats = {
@@ -19,6 +20,7 @@ const MOCK_STATS: Stats = {
   testers: 0,
   pending_testers: 0,
   searches: 0,
+  ideas: 0,
 };
 
 export default function StatystykiPage() {
@@ -51,6 +53,7 @@ export default function StatystykiPage() {
     { label: "Aktywni testerzy", value: stats.testers, icon: ClipboardCheck, bg: "bg-butter" },
     { label: "Oczekujące zgłoszenia", value: stats.pending_testers, icon: Clock, bg: "bg-paper" },
     { label: "Wyszukiwania łącznie", value: stats.searches, icon: Search, bg: "bg-sage" },
+    { label: "Pomysły z Kreatora", value: stats.ideas ?? 0, icon: Lightbulb, bg: "bg-butter" },
   ];
 
   return (

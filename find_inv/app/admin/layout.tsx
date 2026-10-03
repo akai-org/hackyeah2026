@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Users, BookOpen, TrendingUp, LayoutDashboard } from "lucide-react";
+import { Users, BookOpen, TrendingUp, LayoutDashboard, Lightbulb } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +11,7 @@ const NAV = [
   { href: "/admin/innowacje", label: "Innowacje", icon: BookOpen },
   { href: "/admin/uzytkownicy", label: "Użytkownicy", icon: Users },
   { href: "/admin/trendy", label: "Trendy", icon: TrendingUp },
+  { href: "/admin/pomysly", label: "Pomysły", icon: Lightbulb },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
