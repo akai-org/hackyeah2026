@@ -240,6 +240,17 @@ oraz modeli `Innovation`, `SearchLog` — jeśli nazwiecie inaczej, dajcie znać
 
 <!-- Dopisuj wpisy tutaj na górze -->
 
+[04.10] [DONE] runda 2 A4 — PR #20 (agent-4/admin-cms), gotowy do review. Poza zad. 1, 5, 6:
+  zad. 2 deploy: `docker-compose.yml` + Dockerfile (front/back), wolumen `/data`, seed przy pierwszym starcie, sekcja w README.
+     Publicznego linku nie ma — potrzebny VPS/domena i `.env` z kluczami (opis w README i w PR).
+  zad. 3 CMS: POST/PUT/DELETE /api/admin/innovations[/{id}] + GET /{id}; zapis przelicza wektor w ChromaDB, usunięcie kasuje
+     wektor i powiązane wiersze (tabele z FK do innovations — także przyszłe tabele A3); events zostają bez powiązania.
+  zad. 4 usuwanie: /api/admin/forum (GET, DELETE /{id}), DELETE /api/admin/users/{id} (bez adminów); okno potwierdzenia.
+  zad. 7 potrzeby: /api/admin/needs i /needs/trends = funkcje Zasobnika pod autoryzacją panelu (ADMIN_TOKEN nie idzie do przeglądarki);
+     zakładka /admin/potrzeby (wykres recharts + tabela).
+  zad. 8: docs/koszty-utrzymania.md, STATUS.md zaktualizowany.
+[FYI ALL] fix w `find_inv/lib/api.ts`: cookie frontendu nazywa się teraz `hubmi_session` (było `session`). Backend ustawia HttpOnly
+  `session`, a na tym samym hoście JS nie mógł go nadpisać → każdy reload wylogowywał. Token dalej idzie w `X-Session-Token`.
 [04.10] A4 start runda 2: branch agent-4/admin-cms (admin, CMS, deploy).
 [DONE] A4 zad. 1, 5, 6: panel admina (`routers/admin_panel.py`) czyta i zapisuje SQLite zamiast `admin_store` w pamięci —
   innowacje (archiwizacja/zatwierdzenie/nieaktualna → znika z Biblioteki i /api/match), użytkownicy i role, testerzy
