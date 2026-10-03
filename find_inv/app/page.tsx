@@ -1,13 +1,12 @@
 import Link from "next/link";
-import { connection } from "next/server";
 import { MessageSquareText, Puzzle, ScanSearch, type LucideIcon } from "lucide-react";
 
 import { CutoutText } from "@/components/cutout-text";
-import { RopsInnovationCard, type InnovationSummary } from "@/components/rops-innovation-card";
+import { InnovationCard } from "@/components/innovation-card";
 import { Monstera } from "@/components/monstera";
 import { SearchForm } from "@/components/search-form";
 import { buttonVariants } from "@/components/ui/button";
-import { fetchInnovations } from "@/lib/knowledge-api";
+import { innovations } from "@/data/innovations.mock";
 
 const STEPS: Array<{ icon: LucideIcon; title: string; text: string }> = [
   {
@@ -46,10 +45,7 @@ const AUDIENCES = [
   },
 ];
 
-export default async function HomePage() {
-  // Innowacje pobieramy przy każdym żądaniu, nie w czasie budowania (API może wtedy nie działać).
-  await connection();
-  const showcase = await loadShowcase();
+export default function HomePage() {
   return (
     <>
       {/* Hero */}
@@ -118,17 +114,15 @@ export default async function HomePage() {
         <div className="mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
           <CutoutText id="co-juz-dziala-tytul" text="Co już działa" />
           <p className="mt-4 max-w-[60ch] text-lg">
-            Kilka innowacji z Biblioteki ROPS. Każda ma opis, informację, dla kogo jest, i link do pełnej karty.
+            Kilka innowacji z Biblioteki. Każda ma opis, informację, dla kogo jest, i ocenę dowodów skuteczności.
           </p>
-          {showcase.length > 0 && (
-            <ul className="mt-10 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-              {showcase.map((innovation) => (
-                <li key={innovation.id} className="flex">
-                  <RopsInnovationCard innovation={innovation} />
-                </li>
-              ))}
-            </ul>
-          )}
+          <ul className="mt-10 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {innovations.slice(0, 3).map((innovation) => (
+              <li key={innovation.id} className="flex">
+                <InnovationCard innovation={innovation} />
+              </li>
+            ))}
+          </ul>
           <Link href="/biblioteka" className={buttonVariants({ variant: "secondary", className: "mt-10" })}>
             Zobacz całą bibliotekę
           </Link>
@@ -155,23 +149,4 @@ export default async function HomePage() {
       </section>
     </>
   );
-}
-
-// Innowacje pasujące do przykładów z wyszukiwarki (senior, transport, młodzież).
-const SHOWCASE_TITLES = [
-  "Mobilne centrum pomocy dla osób starszych",
-  "Zakupy bez barier",
-  "Bez presji z depresji",
-];
-
-async function loadShowcase(): Promise<InnovationSummary[]> {
-  try {
-    const { innovations } = await fetchInnovations({ limit: 100, offset: 0 });
-    const picked = SHOWCASE_TITLES.flatMap((title) => innovations.filter((i) => i.title === title));
-    return picked.length === SHOWCASE_TITLES.length ? picked : innovations.slice(0, 3);
-  } catch (error) {
-    // Bez API strona główna działa dalej, sekcja pokazuje tylko link do Biblioteki.
-    console.error(error);
-    return [];
-  }
 }
