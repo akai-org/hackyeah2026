@@ -148,6 +148,15 @@ export default function InnovationDetailPage() {
                   <ExternalLink className="size-4" aria-hidden="true" />
                 </Link>
               )}
+
+              <button
+                onClick={() => window.print()}
+                className={buttonVariants({ variant: "secondary", className: "gap-2 print:hidden" })}
+                aria-label="Drukuj fiszkę innowacji"
+              >
+                <ChevronRight className="size-4 rotate-90" aria-hidden="true" />
+                Drukuj
+              </button>
             </div>
           </article>
 

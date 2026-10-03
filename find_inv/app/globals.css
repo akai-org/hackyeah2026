@@ -161,3 +161,20 @@ html[data-simple="true"] *::after {
 html[data-simple="true"] .simple-hidden {
   display: none !important;
 }
+
+/* ---------- Print styles ---------- */
+
+@media print {
+  header, footer, nav, button, .print\\:hidden {
+    display: none !important;
+  }
+  body {
+    background: white;
+    color: black;
+    font-size: 12pt;
+  }
+  a {
+    color: black;
+    text-decoration: none;
+  }
+}
