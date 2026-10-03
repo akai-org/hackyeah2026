@@ -9,6 +9,7 @@ __pycache__/
 
 # sekrety
 .env
+rops_raw/
 
 # lokalne bazy danych
 *.db

@@ -7,7 +7,7 @@ from sqlmodel import Session
 
 from app.config import settings
 from app.db import engine, init_db
-from app.routers import admin, areas, health, matchmaking, needs, resources
+from app.routers import admin, areas, health, knowledge, matchmaking, needs, resources
 from app.seed import seed
 
 
@@ -31,6 +31,9 @@ app.add_middleware(
 )
 
 app.include_router(health.router, prefix="/api")
+
+# Knowledge: innowacje ROPS, wyzwania, indeks luki (router ma własny prefiks /api)
+app.include_router(knowledge.router)
 
 # Zasobnik wiedzy
 app.include_router(areas.router, prefix="/api")
