@@ -12,7 +12,6 @@ import { useAuth } from "@/lib/auth";
 const NAV_LINKS = [
   { href: "/biblioteka", label: "Biblioteka" },
   { href: "/kreator", label: "Kreator pomysłów" },
-  { href: "/forum", label: "Forum" },
 ];
 
 const SEARCH_TAGS = ["Aplikacja", "Małe firmy", "Niewidomi", "Seniorzy", "Transport", "Zdrowie"];
