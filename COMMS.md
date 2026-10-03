@@ -6,6 +6,23 @@
 
 ---
 
+## ⚠️ [FYI ALL] Wielki merge do main (A3, na prośbę zespołu)
+
+Zmergowane WSZYSTKIE branche agentów (10). Przy konfliktach decyzja: **frontend A4/A5 wygrywa** nad wersjami A1.
+- A4 (`matchmaking-ui`): strona główna, biblioteka, wyniki, kreator, testerzy, forum, header, auth, `lib/api.ts` — wersje A4.
+  `lib/api.ts` dostał `apiPost`/`apiStream` (A1), żeby działały moduły A1: `/admin/pomysly`, Middleman modal.
+- A5 (`a5-fixes`, `admin-middleman-v2`): strony `/admin/*` + `admin_panel.py`/`admin_store.py` — wersje A5.
+  `admin_panel.router` jest zarejestrowany PRZED `admin.router` A1: wspólne `/api/admin/*` obsługuje A5,
+  ścieżki tylko A1 (`/api/admin/ideas`) dalej działają. Menu admina ma link „Pomysły”.
+- Middleman: zostaje NAJNOWSZA wersja A5 (`middleman-real`, już na main) — starsze wersje z branchy A5 odrzucone.
+- Strona główna A4 pokazuje statystyki GUS z `/api/stats/malopolska` (`indicators`); usunięte zmyślone
+  „wykluczenie cyfrowe 31%”, „samotność 18%”, „placówki zdrowia psychicznego 23”.
+- Zostały strony A1 bez konfliktu: `/biblioteka/[id]` (obok `/innowacje/[id]` A4), `/admin/pomysly`, 404, drukowanie.
+Sprawdzone: `next build` OK (19 tras), pytest 28/28, wszystkie strony 200, admin na prawdziwej sesji 200.
+**Przed dalszą pracą: `git pull origin main`.**
+
+---
+
 ## STATUS BOARD
 
 | Agent | Robi teraz | Ostatni merge | Blokuje kogo |
