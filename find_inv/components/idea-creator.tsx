@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { CircleAlert, CircleHelp, Loader2, Pencil, Save, Search, Sparkles } from "lucide-react";
 
+import { DictationButton, DictationNotice, DictationStatus, useDictation } from "@/components/dictation";
 import { Toast, useToast } from "@/components/toast";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { TAG_GROUPS, TAG_KEYWORDS, TAG_LABELS, TARGET_GROUP_LABELS, type Tag } from "@/data/mock";
@@ -81,6 +82,7 @@ export function IdeaCreator() {
   const fieldId = `${ids}-pomysl`;
   const errorId = `${ids}-blad`;
   const hintId = `${ids}-podpowiedz`;
+  const dictationHintId = `${ids}-dyktowanie`;
 
   const [text, setText] = useState("");
   const [chosen, setChosen] = useState<Tag[]>([]);
@@ -90,6 +92,7 @@ export function IdeaCreator() {
   const [card, setCard] = useState<IdeaCard | null>(null);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const dictation = useDictation(setText, () => setError(false));
   const cardHeadingRef = useRef<HTMLHeadingElement>(null);
   const timers = useRef<number[]>([]);
   const toast = useToast();
@@ -115,6 +118,7 @@ export function IdeaCreator() {
     }
 
     setError(false);
+    dictation.abort();
     setCard(null);
     setAnalyzing(true);
     setStep(0);
@@ -153,13 +157,18 @@ export function IdeaCreator() {
             if (event.target.value.trim().length >= 10) setError(false);
           }}
           aria-invalid={error || undefined}
-          aria-describedby={error ? `${hintId} ${errorId}` : hintId}
+          aria-describedby={[hintId, dictation.supported ? dictationHintId : null, error ? errorId : null]
+            .filter(Boolean)
+            .join(" ")}
           placeholder="Na przykład: chcę zorganizować w świetlicy wiejskiej spotkania, na których młodzież uczy seniorów obsługi smartfona"
           className={cn(
             "mt-2 min-h-[160px] w-full resize-y rounded-ui border-(length:--bw) bg-surface p-4 text-base text-ink placeholder:text-muted",
             error ? "border-alert" : "border-deep",
           )}
         />
+        <DictationButton dictation={dictation} className="mt-3" />
+        <DictationStatus dictation={dictation} />
+        <DictationNotice dictation={dictation} id={dictationHintId} />
         {error && (
           <p
             id={errorId}
