@@ -388,7 +388,7 @@ export function DictationSuggestion({ dictation }: { dictation: Dictation }) {
           )}
           {removed.length > 0 && (
             <p className="mt-1 text-sm text-muted">
-              Usunięto wtrącenia: {removed.map((word) => `„${word}”`).join(", ")}.
+              Usunięte zbędne słowa: {removed.map((word) => `„${word}”`).join(", ")}.
             </p>
           )}
         </>

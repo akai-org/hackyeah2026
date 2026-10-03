@@ -253,9 +253,43 @@ _FILLER_JAKBY = re.compile(
 )
 
 
+# Łańcuch wtrąceń („tak jakby no ten tego”, „to jakby no”): 2+ słowa z tej puli pod rząd to szum, nie treść.
+_FILLER_WORD = r"(?:tak\s+jakby|jakby|ten|ta|tego|tam|to|no|yy+|ee+|mm+|wiesz|znaczy|ogólnie)"
+_FILLER_RUN = re.compile(rf"\b{_FILLER_WORD}(?:\s+{_FILLER_WORD})+\b", re.IGNORECASE)
+# Słowa, które w środku zdania nie powinny mieć wielkiej litery (rozpoznawanie mowy czasem ją wstawia).
+_LOWERCASE_WORDS = {
+    "jak", "nie", "ma", "to", "i", "a", "w", "we", "na", "do", "z", "ze", "że", "się", "jest", "są", "bo", "ale",
+    "co", "gdzie", "kiedy", "dla", "od", "po", "przez", "o", "u", "tak", "już", "jeszcze", "też", "tylko",
+}  # fmt: skip
+# „Przez to że A, B” → „A, więc B” — skutek po przyczynie czyta się jaśniej.
+_CAUSAL_LEAD = re.compile(
+    r"^(?:przez to,?\s+że|dlatego,?\s+że|z tego powodu,?\s+że|ponieważ|z powodu tego,?\s+że)\s+(.+?),\s*(?:to\s+)?(.+)$",
+    re.IGNORECASE,
+)
+
+
+def _drop_filler_runs(text: str) -> str:
+    def replace(match: re.Match) -> str:
+        # Łańcuch od „to” po treści („… na wsi to jakby no nie ma …”) zamyka jedną myśl i otwiera drugą.
+        starts_clause = match.group(0).split()[0].lower() == "to" and match.start() > 0
+        return ", " if starts_clause else " "
+
+    return _FILLER_RUN.sub(replace, text)
+
+
+def _fix_casing(text: str) -> str:
+    words = text.split(" ")
+    for index in range(1, len(words)):
+        bare = words[index].strip(",.!?;:")
+        if bare[:1].isupper() and bare.lower() in _LOWERCASE_WORDS and not words[index - 1].endswith((".", "!", "?")):
+            words[index] = words[index].replace(bare, bare.lower(), 1)
+    return " ".join(words)
+
+
 def strip_fillers(text: str) -> str:
     """Wyrzuca wtrącenia mowy („ten no tak jakby”, „yyy”, „wiesz”, „w sumie”) bez skracania treści."""
-    cleaned = _FILLER_PRONOUNS.sub(" ", text)
+    cleaned = _drop_filler_runs(text)
+    cleaned = _FILLER_PRONOUNS.sub(" ", cleaned)
     cleaned = _TOPIC_FILLERS.sub(" ", cleaned)
     cleaned = _HESITATIONS.sub(" ", cleaned)
     cleaned = _FILLER_JAKBY.sub(" ", cleaned)
@@ -263,7 +297,12 @@ def strip_fillers(text: str) -> str:
     cleaned = re.sub(r"\s+([,.!?;:])", r"\1", cleaned)
     cleaned = re.sub(r"([,;:])(?:\s*[,;:])+", r"\1", cleaned)  # „, ,” po wycięciu wtrąceń
     cleaned = re.sub(r",\s+(i|oraz|ani)\b", r" \1", cleaned)  # po polsku bez przecinka przed „i”
-    return re.sub(r"\s+", " ", cleaned).strip(" ,")
+    cleaned = re.sub(r"\s+", " ", cleaned).strip(" ,")
+    cleaned = _fix_casing(cleaned)
+    causal = _CAUSAL_LEAD.match(cleaned)
+    if causal:
+        cleaned = f"{causal.group(1)}, więc {causal.group(2)}"
+    return cleaned
 
 
 _EDGE_CONJUNCTIONS = re.compile(r"^(?:i|a|że|bo|ale|więc|to)\s+|\s+(?:i|a|że|bo|ale|więc|to|który|którzy|która)$", re.IGNORECASE)
@@ -273,7 +312,7 @@ CONDENSE_MAX_WORDS = 40
 
 
 def _clauses(text: str) -> list[str]:
-    cleaned = _FILLER_PRONOUNS.sub(" ", text)
+    cleaned = _FILLER_PRONOUNS.sub(" ", _drop_filler_runs(text))
     cleaned = _TOPIC_FILLERS.sub(",", cleaned)
     cleaned = _HESITATIONS.sub(" ", cleaned)
     cleaned = _FILLER_JAKBY.sub(" ", cleaned)

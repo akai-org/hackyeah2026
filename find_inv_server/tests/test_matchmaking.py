@@ -141,3 +141,15 @@ def test_voice_fix_drops_spoken_fillers_but_keeps_meaning():
     # „jakby” w warunku i „ten” przed rzeczownikiem to treść, nie wtrącenie
     assert fix("jakby ktoś zadzwonił do OPS to by pomogli")["corrected"] == "Jakby ktoś zadzwonił do OPS to by pomogli."
     assert fix("ten autobus jeździ raz dziennie")["corrected"] == "Ten autobus jeździ raz dziennie."
+
+
+def test_voice_fix_makes_rambling_sentence_clear():
+    """Zgłoszone przez właściciela: łańcuch wtrąceń i „przez to że …” → jasna informacja w jednym zdaniu."""
+    fix = lambda text: client.post("/api/voice-fix", json={"transcript": text, "condense": True}).json()["data"]  # noqa: E731
+    said = "przez to że mama mieszka tak jakby no ten tego sama na wsi to jakby no nie ma Jak dojść do lekarza"
+    assert fix(said)["corrected"] == "Mama mieszka sama na wsi, więc nie ma jak dojść do lekarza."
+    # treść z tych samych słów zostaje
+    assert fix("to jest problem bo nikt tego nie robi")["corrected"] == "To jest problem bo nikt tego nie robi."
+    assert fix("syn ma piętnaście lat i no tego w ogóle nie wychodzi z pokoju")["corrected"] == (
+        "Syn ma piętnaście lat i w ogóle nie wychodzi z pokoju."
+    )
