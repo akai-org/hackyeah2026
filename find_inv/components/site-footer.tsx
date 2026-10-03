@@ -5,7 +5,7 @@ const linkClass = "inline-flex min-h-12 items-center font-bold text-leaf underli
 
 export function SiteFooter() {
   return (
-    <footer className="relative overflow-hidden border-t-(length:--bw) border-deep bg-sage">
+    <footer className="relative overflow-hidden border-t-(length:--bw) border-deep">
       <Smile aria-hidden="true" className="simple-hidden absolute -bottom-10 -left-10 size-32 text-leaf opacity-60" />
 
       <div className="relative mx-auto grid max-w-content gap-10 px-4 py-12 sm:px-6 md:grid-cols-3">
