@@ -55,6 +55,8 @@ def test_accepts_frontend_contract_fields():
         "/api/middleman/start",
         json={"innovation_id": 8, "institution_type": "Gmina wiejska", "location": "Racławice", "problem_desc": "rodziny"},
     ).json()["data"]
-    assert start["innovation"]["title"] == "Klub Rodzica w świetlicy"
+    from app import admin_store
+
+    assert start["innovation"]["title"] == admin_store.get_innovation(8)["title"]
     plan = _events(client.post("/api/middleman/answer", json={"session_id": start["session_id"], "finish": True}))[-1]
     assert "Racławice" in plan["content"]["goal"] and "Racławice" in plan["content"]["location_suggestions"]
