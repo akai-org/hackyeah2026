@@ -40,7 +40,7 @@ function shortDate(iso: string) {
   return new Date(iso).toLocaleDateString("pl-PL", { day: "numeric", month: "short" });
 }
 
-function DataTable({ caption, head, rows }: { caption: string; head: [string, string]; rows: Array<[string, number]> }) {
+export function DataTable({ caption, head, rows }: { caption: string; head: [string, string]; rows: Array<[string, number]> }) {
   return (
     <details className="mt-4">
       <summary className="inline-flex min-h-12 cursor-pointer items-center rounded-ui font-bold text-leaf underline underline-offset-4">

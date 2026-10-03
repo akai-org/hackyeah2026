@@ -8,6 +8,7 @@ import { formatNumber } from "@/components/malopolska-stats";
 import { MOCK_GAP_INDEX, type GapEntry } from "@/data/innovations";
 import { MAP_VIEWBOX, POWIAT_SHAPES, type PowiatShape } from "@/data/malopolska-map";
 import { getGapIndex, getPulse, type GminaPulse } from "@/lib/knowledge";
+import { track } from "@/lib/track";
 import { cn, plural } from "@/lib/utils";
 
 // Interaktywna mapa powiatów: kolor = Indeks Luki Innowacyjnej (jedna skala sekwencyjna zieleni),
@@ -301,6 +302,7 @@ function PowiatPanel({ shape, entry, scaleMax }: { shape: PowiatShape; entry?: G
           <li key={innovation.id} className="appear" style={{ animationDelay: `${210 + index * 70}ms` }}>
             <Link
               href={`/innowacje/${innovation.id}`}
+              onClick={() => track({ type: "card_click", innovationId: innovation.id, meta: { source: "mapa", position: index + 1 } })}
               className="group block rounded-ui border-2 border-deep bg-surface p-3 transition-colors hover:bg-sage"
             >
               <span className="flex items-center justify-between gap-2 font-bold text-deep">

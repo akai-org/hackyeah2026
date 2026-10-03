@@ -6,7 +6,7 @@ from sqlmodel import Session
 
 from app.config import settings
 from app.database import init_db
-from app.routers import admin, admin_panel, health, ideas, knowledge, matchmaking, middleman, tester
+from app.routers import admin, admin_panel, events, health, ideas, knowledge, matchmaking, middleman, tester
 from app.routers import auth as auth_router
 from app.zasobnik.db import engine as zasobnik_engine
 from app.zasobnik.db import init_db as init_zasobnik_db
@@ -47,6 +47,7 @@ app.include_router(admin_panel.router)
 app.include_router(admin.router)
 app.include_router(middleman.router)
 app.include_router(tester.router)
+app.include_router(events.router)
 
 # Zasobnik wiedzy: /api/areas, /api/resources, /api/needs, /api/zasobnik/admin/*
 app.include_router(areas.router, prefix="/api")

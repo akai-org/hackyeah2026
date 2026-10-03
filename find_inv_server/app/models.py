@@ -141,6 +141,8 @@ class ForumPost(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     parent_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("forum_posts.id"), nullable=True)
+    # Komentarz pod kartą innowacji; None = wątek ogólnego forum.
+    innovation_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("innovations.id"), nullable=True, index=True)
     content: Mapped[str] = mapped_column(Text)
     author_name: Mapped[str] = mapped_column(String(128), default="Gość")
     badge: Mapped[str] = mapped_column(String(32), default="user")  # user|tester|admin|consultant
@@ -167,3 +169,17 @@ class TestReport(Base):
 
     innovation: Mapped["Innovation"] = relationship("Innovation")
     user: Mapped["User"] = relationship("User")
+
+
+class Event(Base):
+    """Zdarzenie analityczne (wyświetlenie karty, klik, start Middlemana…). Z nich liczy /api/admin/analytics/*."""
+
+    __tablename__ = "events"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    type: Mapped[str] = mapped_column(String(32), index=True)  # patrz app.analytics.EVENT_TYPES
+    innovation_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("innovations.id"), nullable=True, index=True)
+    user_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"), nullable=True)
+    anon_id: Mapped[str | None] = mapped_column(String(64), nullable=True)  # UUID przeglądarki, do liczenia unikalnych osób
+    meta: Mapped[str] = mapped_column(Text, default="{}")  # JSON
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), index=True)

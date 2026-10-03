@@ -1,9 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import { Archive, Coins, MapPin, Puzzle, Users } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
 import { COST_LABELS, type InnovationCard } from "@/data/innovations";
 import { TAG_LABELS, type Tag } from "@/data/mock";
+import { track, type CardSource } from "@/lib/track";
 import { cn, plural } from "@/lib/utils";
 
 // Karta innowacji w wynikach matchmakingu (DESIGN.md 8): stoi prosto, taśma tylko dekoracją,
@@ -29,6 +32,8 @@ type MatchCardProps = {
   /** Miejsce w wynikach; bez niego karta nie pokazuje numeru ani dopasowania (np. w Bibliotece). */
   rank?: number;
   headingLevel?: "h2" | "h3" | "h4" | "h5";
+  /** Skąd klik — do statystyk. Domyślnie „wyniki”, gdy karta ma miejsce w rankingu, inaczej „biblioteka”. */
+  source?: CardSource;
 };
 
 export function MatchCard({
@@ -37,6 +42,7 @@ export function MatchCard({
   query = "",
   rank,
   headingLevel: Heading = "h3",
+  source = rank ? "wyniki" : "biblioteka",
 }: MatchCardProps) {
   const titleId = `innowacja-${innovation.id}`;
   const unmaintained = innovation.is_unmaintained ?? innovation.status === "unmaintained";
@@ -132,10 +138,18 @@ export function MatchCard({
       </dl>
 
       <div className="mt-auto flex flex-wrap gap-3 pt-6">
-        <Link href={deployHref} className={buttonVariants({ variant: "primary" })}>
+        <Link
+          href={deployHref}
+          onClick={() => track({ type: "cta_click", innovationId: innovation.id, meta: { button: "wdrozenie" } })}
+          className={buttonVariants({ variant: "primary" })}
+        >
           Jak to wdrożyć?<span className="sr-only"> {innovation.title}</span>
         </Link>
-        <Link href={`/innowacje/${innovation.id}`} className={buttonVariants({ variant: "secondary" })}>
+        <Link
+          href={`/innowacje/${innovation.id}`}
+          onClick={() => track({ type: "card_click", innovationId: innovation.id, meta: { source, position: rank } })}
+          className={buttonVariants({ variant: "secondary" })}
+        >
           Zobacz kartę<span className="sr-only">: {innovation.title}</span>
         </Link>
       </div>

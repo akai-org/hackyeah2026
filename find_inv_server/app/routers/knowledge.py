@@ -246,20 +246,24 @@ async def submit_idea(body: dict):
 
 
 @router.get("/forum")
-async def list_forum_posts():
+async def list_forum_posts(innovation_id: int | None = None):
+    """Bez innovation_id: ogólne forum. Z innovation_id: komentarze pod kartą innowacji."""
     try:
         from app.database import get_db
         from app.models import ForumPost
         from sqlalchemy import select
 
         async with get_db() as db:
-            rows = await db.execute(select(ForumPost).order_by(ForumPost.created_at.asc()))
+            q = select(ForumPost).order_by(ForumPost.created_at.asc())
+            q = q.where(ForumPost.innovation_id == innovation_id) if innovation_id else q.where(ForumPost.innovation_id.is_(None))
+            rows = await db.execute(q)
             posts = rows.scalars().all()
 
         return {"data": [
             {
                 "id": p.id,
                 "parentId": p.parent_id,
+                "innovationId": p.innovation_id,
                 "content": p.content,
                 "authorName": p.author_name,
                 "badge": p.badge,
@@ -283,6 +287,9 @@ async def create_forum_post(body: dict):
     if badge not in {"user", "tester", "admin", "consultant"}:
         badge = "user"
     parent_id = body.get("parentId") or None
+    innovation_id = body.get("innovationId") or None
+    if innovation_id is not None and not isinstance(innovation_id, int):
+        raise HTTPException(status_code=400, detail="Nieprawidłowe innovationId")
 
     try:
         from app.database import get_db
@@ -291,6 +298,7 @@ async def create_forum_post(body: dict):
         async with get_db() as db:
             post = ForumPost(
                 parent_id=parent_id,
+                innovation_id=innovation_id,
                 content=content,
                 author_name=author_name,
                 badge=badge,
@@ -302,6 +310,7 @@ async def create_forum_post(body: dict):
         return {"data": {
             "id": post.id,
             "parentId": post.parent_id,
+            "innovationId": post.innovation_id,
             "content": post.content,
             "authorName": post.author_name,
             "badge": post.badge,
@@ -314,6 +323,7 @@ async def create_forum_post(body: dict):
         return {"data": {
             "id": int(time.time() * 1000),
             "parentId": parent_id,
+            "innovationId": innovation_id,
             "content": content,
             "authorName": author_name,
             "badge": badge,

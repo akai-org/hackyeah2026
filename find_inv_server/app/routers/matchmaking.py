@@ -227,6 +227,18 @@ def _log_search_admin(query: str, tags: list[str], results: int) -> None:
         log.exception("admin_store.log_search failed")
 
 
+async def _log_impressions(shown: list[dict]) -> None:
+    """Które karty zobaczył użytkownik — mianownik CTR w /api/admin/analytics/innovations."""
+    from app.analytics import as_int, log_events
+
+    await log_events(
+        [
+            {"type": "card_impression", "innovation_id": as_int(innov.get("id")), "meta": {"position": pos}}
+            for pos, innov in enumerate(shown, 1)
+        ]
+    )
+
+
 def _schedule_logs(background: BackgroundTasks, text: str, tags: list[str], results: int) -> None:
     background.add_task(_log_search, text, tags, results)
     background.add_task(_log_search_zasobnik, text, results)
@@ -277,8 +289,10 @@ async def match(body: MatchRequest, background: BackgroundTasks):
     if not ranked:  # brak klucza, pusta ChromaDB albo błąd → ranking lokalny na tym samym katalogu
         ranked = rank_locally(text, body.tags, catalog)
 
+    shown = ranked[: body.limit]
     _schedule_logs(background, text, body.tags, len(ranked))
-    return _ok({"innovations": ranked[: body.limit], "total_found": len(ranked)})
+    background.add_task(_log_impressions, shown)
+    return _ok({"innovations": shown, "total_found": len(ranked)})
 
 
 VOICE_FIX_PROMPT = (
