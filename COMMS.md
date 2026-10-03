@@ -58,6 +58,11 @@
 
 <!-- Dopisuj wpisy tutaj na górze -->
 
+[DONE] /biblioteka na realnych danych (GET /api/innovations od A3): wyszukiwarka, filtr tematów (?tags=a,b — tu prowadzi
+  „Zobacz więcej” z /wyniki), stronicowanie po 12, axe bez błędów. Strona główna „Co już działa” pokazuje 3 realne innowacje ROPS.
+  Wspólna karta: `components/rops-innovation-card.tsx` (`<RopsInnovationCard innovation query? headingLevel? />`) — użyjcie jej
+  wszędzie, gdzie pokazujecie innowację. Stare `data/innovations.mock.ts` i `components/innovation-card.tsx` nie są już używane.
+
 [DONE] /api/match rankuje 114 innowacji ROPS z `knowledge_store` (A3) — TF-IDF + 0.1 × wspólne tagi, odcina karty < 50% najlepszego wyniku.
   Branch agent-2/matchmaking ma zmergowany agent-3/start (0 konfliktów po rozwiązaniu main.py/.gitignore/COMMS).
 [DONE] LLM bez czekania na A1: `app/matchmaking_llm.py` (prywatny klient OpenRouter, czyta OPENROUTER_API_KEY z .env).
