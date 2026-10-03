@@ -6,14 +6,13 @@
 export type Role = "user" | "tester" | "consultant" | "admin";
 
 export const ROLES: Array<{ value: Role; label: string; description: string }> = [
-  { value: "user", label: "Mieszkaniec", description: "Szukasz rozwiązania problemu albo zgłaszasz pomysł." },
   { value: "tester", label: "Tester", description: "Sprawdzasz innowacje w praktyce i dajesz informację zwrotną." },
   { value: "consultant", label: "Konsultant", description: "Doradzasz na forum jako ekspert." },
   { value: "admin", label: "Admin", description: "Pracujesz w ROPS i zarządzasz Biblioteką." },
 ];
 
 export const ROLE_LABELS: Record<Role, string> = {
-  user: "Mieszkaniec",
+  user: "Użytkownik",
   tester: "Tester",
   consultant: "Konsultant",
   admin: "Admin",
@@ -137,7 +136,7 @@ export const TESTER_SPECIALIZATIONS = [
 export type ForumBadge = Role | "creator" | "user_of";
 
 export const FORUM_BADGE_LABELS: Record<ForumBadge, string> = {
-  user: "Mieszkaniec",
+  user: "Użytkownik",
   tester: "Tester",
   consultant: "Konsultant",
   admin: "Admin",

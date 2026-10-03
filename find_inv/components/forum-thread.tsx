@@ -52,6 +52,8 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
 
   const [innovation, setInnovation] = useState<Innovation | null>(innovationProp ?? null);
   const [posts, setPosts] = useState<ForumPost[]>(() => getInnovationThread(innovationId));
+  const [nickname, setNickname] = useState(user?.name ?? "");
+  const [usedInnovation, setUsedInnovation] = useState(false);
   const [comment, setComment] = useState("");
   const [commentError, setCommentError] = useState(false);
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
@@ -90,8 +92,8 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
     return Math.max(0, ...posts.map((p) => p.id)) + 1;
   }
 
-  const authorName = user?.name ?? "Gość";
-  const authorBadge = user?.role ?? ("user" as const);
+  const authorName = nickname.trim() || user?.name || "Gość";
+  const authorBadge = usedInnovation ? ("user_of" as const) : (user?.role ?? ("user" as const));
 
   function addComment(e: React.FormEvent) {
     e.preventDefault();
@@ -199,6 +201,30 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
               <span className="font-bold text-deep">{authorName}</span>
               <RoleBadge role={authorBadge} />
             </p>
+
+            <label htmlFor={`${ids}-nick`} className="mt-5 block font-bold text-deep">
+              Twój nick
+            </label>
+            <input
+              id={`${ids}-nick`}
+              type="text"
+              autoComplete="nickname"
+              value={nickname}
+              onChange={(event) => setNickname(event.target.value)}
+              placeholder="Np. Zosia"
+              className={fieldClass}
+            />
+
+            <label htmlFor={`${ids}-uzywalem`} className="mt-4 flex min-h-12 cursor-pointer items-center gap-3 font-medium text-deep">
+              <input
+                id={`${ids}-uzywalem`}
+                type="checkbox"
+                checked={usedInnovation}
+                onChange={(event) => setUsedInnovation(event.target.checked)}
+                className="size-5 accent-leaf"
+              />
+              Używałem tej inicjatywy
+            </label>
 
             <label htmlFor={`${ids}-komentarz`} className="mt-5 block font-bold text-deep">
               Twój komentarz
