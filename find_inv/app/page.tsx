@@ -22,19 +22,21 @@ async function apiFetch<T>(path: string): Promise<T | null> {
   }
 }
 
+// Dane GUS BDL dla Małopolski (te same co z /api/stats/malopolska) – gdy backend nie odpowiada.
 const STATS_FALLBACK = [
-  { value: "22,4%", label: "osób 65+ w Małopolsce", source: "GUS 2024" },
-  { value: "31%", label: "seniorów bez umiejętności cyfrowych", source: "GUS 2023" },
-  { value: "18%", label: "gospodarstw z samotnością", source: "NSP 2021" },
-  { value: "187 tys.", label: "osób z niepełnosprawnością", source: "ROPS 2024" },
+  { value: "19,2%", label: "mieszkańców ma 65 lat lub więcej", source: "GUS 2025" },
+  { value: "273", label: "na 10 tys. osób korzysta z pomocy społecznej", source: "GUS 2024" },
+  { value: "4,7%", label: "stopa bezrobocia rejestrowanego", source: "GUS 2025" },
+  { value: "394 tys.", label: "osób z niepełnosprawnością", source: "GUS, spis 2011" },
 ];
 
+// Wynik /api/innovation-gap (GUS BDL + Biblioteka ROPS) – gdy backend nie odpowiada.
 const GAP_FALLBACK = [
-  { powiat: "limanowski", gap_score: 5.9, top_area: "dostęp do usług" },
-  { powiat: "nowosądecki", gap_score: 4.7, top_area: "wykluczenie cyfrowe" },
-  { powiat: "tarnowski", gap_score: 3.1, top_area: "samotność" },
-  { powiat: "myślenicki", gap_score: 2.4, top_area: "zdrowie psychiczne" },
-  { powiat: "krakowski", gap_score: 1.2, top_area: "starzenie" },
+  { powiat: "nowosądecki", gap_score: 5.2, top_area: "ubóstwo" },
+  { powiat: "tarnowski", gap_score: 4.5, top_area: "ubóstwo" },
+  { powiat: "limanowski", gap_score: 4.4, top_area: "ubóstwo" },
+  { powiat: "dąbrowski", gap_score: 4.0, top_area: "ubóstwo" },
+  { powiat: "gorlicki", gap_score: 3.7, top_area: "ubóstwo" },
 ];
 
 const STEPS: Array<{ icon: LucideIcon; title: string; text: string }> = [
@@ -75,13 +77,7 @@ const AUDIENCES = [
 ];
 
 interface MalopolskaStats {
-  aging_pct: number;
-  loneliness_pct: number;
-  digital_exclusion_pct: number;
-  poverty_per_10k: number;
-  disability_count: number;
-  source_year: number;
-  source: string;
+  indicators?: { value: string; label: string; source: string }[];
 }
 
 interface GapEntry {
@@ -98,12 +94,7 @@ export default async function HomePage() {
     apiFetch<GapEntry[]>("/api/innovation-gap"),
   ]);
 
-  const liveStats = statsData ? [
-    { value: `${statsData.aging_pct}%`, label: "osób 65+ w Małopolsce", source: `GUS ${statsData.source_year}` },
-    { value: `${statsData.digital_exclusion_pct}%`, label: "seniorów bez umiejętności cyfrowych", source: "GUS 2023" },
-    { value: `${statsData.loneliness_pct}%`, label: "gospodarstw z samotnością", source: "NSP 2021" },
-    { value: `${(statsData.disability_count / 1000).toFixed(0)} tys.`, label: "osób z niepełnosprawnością", source: "ROPS 2024" },
-  ] : STATS_FALLBACK;
+  const liveStats = statsData?.indicators?.length ? statsData.indicators : STATS_FALLBACK;
 
   const liveGap = gapData
     ? [...gapData].sort((a, b) => b.gap_score - a.gap_score).slice(0, 5)
@@ -235,6 +226,9 @@ export default async function HomePage() {
               <p className="mt-4 max-w-[60ch] text-lg">
                 Gdzie w Małopolsce jest problem, ale brakuje odpowiedzi? Wyższy wynik = więcej potrzeby, mniej rozwiązań.
               </p>
+              <p className="mt-2 text-sm text-muted">
+                Wskaźniki: GUS, Bank Danych Lokalnych. Rozwiązania: Biblioteka Innowacji Społecznych ROPS.
+              </p>
             </div>
           </div>
           <ul className="mt-10 space-y-3" aria-label="Indeks luki innowacyjnej per powiat">
@@ -253,7 +247,7 @@ export default async function HomePage() {
                     <div className="flex items-center gap-3">
                       <div
                         className="h-4 rounded-ui bg-leaf"
-                        style={{ width: `${(gap_score / 6) * 100}%` }}
+                        style={{ width: `${Math.min(100, (gap_score / 6) * 100)}%` }}
                         role="presentation"
                         aria-hidden="true"
                       />

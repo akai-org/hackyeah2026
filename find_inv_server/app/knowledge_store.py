@@ -79,13 +79,13 @@ def innovations_for_area(tag_hints: list[str], limit: int | None = None) -> list
 
 def all_challenges() -> list[dict]:
     out: list[dict] = []
-    for powiat, (_, entries) in ch.POWIATY.items():
-        for area, value, weight in entries:
-            title, desc, unit, _ = ch.AREAS[area]
+    for powiat, entries in ch.POWIATY.items():
+        for e in entries:
+            a = ch.AREAS[e["area"]]
             out.append({
-                "id": len(out) + 1, "title": title, "area": area, "description": desc,
-                "indicator_value": value, "indicator_unit": unit, "source": ch.SOURCE,
-                "data_year": ch.DATA_YEAR, "powiat": powiat, "severity": weight,
+                "id": len(out) + 1, "title": a["title"], "area": e["area"], "description": a["description"],
+                "indicator_value": e["value"], "indicator_unit": a["unit"], "source": ch.SOURCE,
+                "data_year": e["year"], "powiat": powiat, "severity": e["weight"],
             })
     return out
 
@@ -93,16 +93,15 @@ def all_challenges() -> list[dict]:
 def powiat_gap(powiat: str) -> dict:
     """Indeks luki: wyzwania o dużej wadze, na które w Bibliotece ROPS jest mało pasujących innowacji.
 
-    Dla każdego wyzwania: waga / (1 + liczba_pasujących_innowacji / 10); gap_score = średnia * 2.
-    innovations_count = liczba różnych innowacji pasujących do wyzwań powiatu (po tagach).
+    Dla każdego z top 3 wyzwań: waga / (1 + liczba_pasujących_innowacji / 10); gap_score = średnia * 2.
+    innovations_count = liczba różnych innowacji z głównym tagiem któregoś z wyzwań powiatu.
     """
-    entries = ch.POWIATY[powiat][1]
     parts = []
     matched_ids: set[int] = set()
-    for area, _, weight in entries:
-        matching = innovations_for_area(ch.AREAS[area][3])
+    for e in ch.POWIATY[powiat]:
+        matching = innovations_for_area([ch.AREAS[e["area"]]["primary_tag"]])
         matched_ids.update(i["id"] for i in matching)
-        parts.append((area, weight / (1 + len(matching) / 10)))
+        parts.append((e["area"], e["weight"] / (1 + len(matching) / 10)))
     top = max(parts, key=lambda p: p[1])
     return {
         "powiat": powiat,

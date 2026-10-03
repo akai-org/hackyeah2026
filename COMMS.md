@@ -173,6 +173,13 @@ oraz modeli `Innovation`, `SearchLog` — jeśli nazwiecie inaczej, dajcie znać
 <!-- Dopisuj wpisy tutaj na górze -->
 
 ```
+[DONE] Wyzwania, indeks luki i statystyki regionu na REALNYCH danych GUS BDL (22 powiaty Małopolski, lata 2024–2025;
+       niepełnosprawność: spis 2011, bo nowszych danych powiatowych brak). Odśwież: python -m data.fetch_gus.
+       Poprawka: wcześniejsza lista miała "żywiecki" (to śląskie) – teraz 22 powiaty z GUS.
+       Indeks luki: najwięcej białych plam na płd.-wsch. (nowosądecki, tarnowski, limanowski) – wysokie ubóstwo, w Bibliotece ROPS
+       tylko 2 innowacje na ubóstwo. Dobry punkt na pitch.
+[FYI] A1: strona główna – kafelki statystyk z /api/stats/malopolska (pole `indicators`), usunięte zmyślone "31% seniorów bez
+      umiejętności cyfrowych" / "18% samotność". Fallbacki w page.tsx też na danych GUS.
 [FYI] A1/A4: zmieniłem find_inv/app/biblioteka/[id]/page.tsx — opis w sekcjach z nagłówkami (h2) + przyciski "Zobacz film" / "Materiały (PDF)"
       + Autorzy i Projekt ROPS w sidebarze. Pola opcjonalne, działa też dla starych danych. Typy/strony 200 sprawdzone.
 [DONE] Seed 114 innowacji ROPS (Biblioteka Innowacji Społecznych, rops.krakow.pl) → SQLite (+ ChromaDB, gdy jest OPENROUTER_API_KEY).
@@ -182,7 +189,7 @@ oraz modeli `Innovation`, `SearchLog` — jeśli nazwiecie inaczej, dajcie znać
        materials_url, who_can_use, authors), /api/challenges, /api/challenges/map, /api/innovation-gap, /api/gmina-pulse/{powiat}
        (top_challenges + matching_innovations), /api/stats/malopolska. Bez bazy → fallback na parsed_innovations.json, nie na mocki.
        Poprawka: filtr ?tags= działa teraz w SQL (wcześniej był po LIMIT, więc gubił wyniki).
-       UWAGA: wskaźniki wyzwań per powiat (data/challenges.py, 23 powiaty) są POGLĄDOWE, nie z GUS.
+       (nieaktualne – patrz wpis o GUS BDL wyżej)
 [FYI]  Ponowne uruchomienie seed_innovations czyści tabelę innovations (statusy zmienione w adminie przepadają).
 [DONE] Dla stosu A2 (SQLModel): python -m data.export_to_zasobnik --post http://localhost:8000 --token <ADMIN_TOKEN>
 ```

@@ -8,7 +8,6 @@ from app import knowledge_store as store
 from app.database import get_db
 from app.models import Innovation
 from data import challenges as ch
-from data.mock_data import MOCK_STATS_MALOPOLSKA
 
 router = APIRouter(prefix="/api", tags=["knowledge"])
 
@@ -126,9 +125,30 @@ async def challenges_map():
     ]}
 
 
+def _pl(num: float, digits: int = 1) -> str:
+    return f"{num:.{digits}f}".replace(".", ",")
+
+
 @router.get("/stats/malopolska")
 async def stats_malopolska():
-    return {"data": {**MOCK_STATS_MALOPOLSKA, "innovations_total": len(store.load_innovations())}}
+    reg = ch.GUS["region"]
+    aging, aid, unemp, disabled = (reg[k] for k in ("pct_65_plus", "social_aid_per_10k", "unemployment_rate", "disabled_2011"))
+    return {"data": {
+        "aging_pct": aging["value"],
+        "poverty_per_10k": aid["value"],
+        "unemployment_pct": unemp["value"],
+        "disability_count": disabled["value"],
+        "source_year": aging["year"],
+        "source": ch.SOURCE,
+        "innovations_total": len(store.load_innovations()),
+        # gotowe kafelki dla strony głównej – każdy z własnym rokiem danych
+        "indicators": [
+            {"value": f"{_pl(aging['value'])}%", "label": "mieszkańców ma 65 lat lub więcej", "source": f"GUS {aging['year']}"},
+            {"value": str(aid["value"]), "label": "na 10 tys. osób korzysta z pomocy społecznej", "source": f"GUS {aid['year']}"},
+            {"value": f"{_pl(unemp['value'])}%", "label": "stopa bezrobocia rejestrowanego", "source": f"GUS {unemp['year']}"},
+            {"value": f"{disabled['value'] / 1000:.0f} tys.", "label": "osób z niepełnosprawnością", "source": f"GUS, spis {disabled['year']}"},
+        ],
+    }}
 
 
 @router.get("/gmina-pulse/{powiat}")
@@ -137,7 +157,7 @@ async def gmina_pulse(powiat: str):
     if not name:
         raise HTTPException(status_code=404, detail="Nieznany powiat")
     top = sorted((c for c in store.all_challenges() if c["powiat"] == name), key=lambda c: -c["severity"])[:3]
-    hints = list(dict.fromkeys(t for c in top for t in ch.AREAS[c["area"]][3]))
+    hints = list(dict.fromkeys(t for c in top for t in ch.AREAS[c["area"]]["tags"]))
     matching = store.innovations_for_area(hints, limit=3)
     return {"data": {
         "powiat": name,
