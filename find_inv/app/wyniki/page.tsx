@@ -196,8 +196,22 @@ function ResultsContent() {
           <>
             <CutoutText as="h1" size="section" text="Brak wyników" />
             <p className="mt-4 max-w-[60ch] text-lg">
-              Nie znaleziono pasujących innowacji. Spróbuj opisać problem inaczej lub{" "}
-              <Link href="/biblioteka" className="underline">przeglądaj Bibliotekę</Link>.
+              Nie znaleziono gotowych innowacji dla tego problemu w naszej Bibliotece.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-4">
+              <Link href="/biblioteka" className={buttonVariants({ variant: "secondary" })}>
+                Przeglądaj Bibliotekę
+              </Link>
+              <Link
+                href={`/kreator?prefill=${encodeURIComponent(query)}`}
+                className={buttonVariants({ variant: "primary", className: "gap-2" })}
+              >
+                <Send className="size-4" aria-hidden="true" />
+                Opisz to jako pomysł w Kreatorze
+              </Link>
+            </div>
+            <p className="mt-3 text-sm text-muted">
+              Kreator pomoże Ci ustrukturyzować pomysł i zgłosić go do ROPS — może stanie się nową innowacją w Bibliotece.
             </p>
           </>
         )}
