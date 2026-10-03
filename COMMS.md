@@ -106,6 +106,8 @@ Middleman zadaje pytania z kontekstem innowacji i gminy.
   `POST /api/grants/fill` { grant_id, idea: tekst | fiszka } → { sections: {id: tekst}, missing[], source: "llm"|"rules" }.
   Front `/wnioski`, przycisk „Napisz wniosek o grant” na fiszce w kreatorze (fiszka przez sessionStorage `hubmi:fiszka`).
   Nowy wspólny komponent `components/ai-disclaimer.tsx` (ostrzeżenie o błędach AI).
+[02:45] [DONE] Eksport planu Middlemana: „Pobierz plan (PDF)” (window.print, nagłówek wydruku z datą, bez ramek/cieni,
+  w oknie drukuje się tylko plan) + „Kopiuj jako tekst” (schowek). Plan pokazuje też wybraną instytucję.
 [02:35] [DONE] Ostrzeżenie „Odpowiedzi generuje AI i mogą zawierać błędy — zweryfikuj przed wdrożeniem” = `<AiDisclaimer />`
   (`components/ai-disclaimer.tsx`): Middleman (rozmowa + plan), kreator (fiszka), generator wniosków, czat.
 [FYI A3] Dopisałem po 1 linii `<AiDisclaimer className="mt-3" />` (+ import) w `app/wyniki/page.tsx` (czat pod wynikami)
