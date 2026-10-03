@@ -47,7 +47,14 @@ const fieldClass =
 type Message = { role: "ai" | "user"; text: string };
 type Phase = "intro" | "chat" | "plan";
 
-type MiddlemanProps = { innovationId?: string; problem?: string };
+type MiddlemanProps = {
+  innovationId?: string;
+  /** Tytuł znany z karty, z której otwarto okno (wyniki, karta innowacji) — zanim odpowie backend. */
+  innovationTitle?: string;
+  problem?: string;
+  /** „dialog”: w oknie „Jak to wdrożyć?” — bez nagłówka strony i marginesów (tytuł daje Dialog). */
+  variant?: "page" | "dialog";
+};
 
 function Missing() {
   return (
@@ -201,7 +208,7 @@ function PlanDocument({ plan, innovationTitle, onRestart }: { plan: MiddlemanPla
   );
 }
 
-export function Middleman({ innovationId, problem = "" }: MiddlemanProps) {
+export function Middleman({ innovationId, innovationTitle: knownTitle, problem = "", variant = "page" }: MiddlemanProps) {
   const ids = useId();
   const libraryMatch = libraryInnovations.find((item) => item.id === innovationId);
 
@@ -244,7 +251,7 @@ export function Middleman({ innovationId, problem = "" }: MiddlemanProps) {
     try {
       const result = await startMiddleman({
         innovation_id: innovationId ?? picked ?? null,
-        innovation_title: local?.title,
+        innovation_title: local?.title ?? knownTitle,
         innovation_desc: local?.summary,
         problem_desc: need.trim(),
         institution,
@@ -317,13 +324,15 @@ export function Middleman({ innovationId, problem = "" }: MiddlemanProps) {
     setError(null);
   }
 
-  const innovationTitle = session?.innovation.title ?? libraryMatch?.title ?? pickedLibrary?.title ?? "Innowacja";
+  const innovationTitle =
+    session?.innovation.title ?? libraryMatch?.title ?? pickedLibrary?.title ?? knownTitle ?? "Innowacja";
+  const inDialog = variant === "dialog";
 
   return (
-    <div className="mx-auto max-w-content px-4 py-12 sm:px-6">
+    <div className={inDialog ? "mt-4" : "mx-auto max-w-content px-4 py-12 sm:px-6"}>
       <div className="print-hidden">
-        <CutoutText as="h1" size="section" text="Dostosuj do siebie" />
-        <p className="mt-4 max-w-[62ch] text-lg">
+        {!inDialog && <CutoutText as="h1" size="section" text="Dostosuj do siebie" />}
+        <p className={cn("max-w-[62ch] text-lg", !inDialog && "mt-4")}>
           Asystent zada Ci najwyżej 3 krótkie pytania i przygotuje szkic planu: kogo potrzebujesz, ile to kosztuje, gdzie to
           zorganizować i skąd wziąć pieniądze.
         </p>
@@ -385,7 +394,9 @@ export function Middleman({ innovationId, problem = "" }: MiddlemanProps) {
             ) : (
               <p className="text-lg">
                 Wybrana innowacja:{" "}
-                <strong className="text-deep">{libraryMatch?.title ?? `nr ${innovationId} z wyników wyszukiwania`}</strong>
+                <strong className="text-deep">
+                  {libraryMatch?.title ?? knownTitle ?? `nr ${innovationId} z wyników wyszukiwania`}
+                </strong>
               </p>
             )}
 

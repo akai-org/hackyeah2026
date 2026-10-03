@@ -106,6 +106,11 @@ Middleman zadaje pytania z kontekstem innowacji i gminy.
   `POST /api/grants/fill` { grant_id, idea: tekst | fiszka } → { sections: {id: tekst}, missing[], source: "llm"|"rules" }.
   Front `/wnioski`, przycisk „Napisz wniosek o grant” na fiszce w kreatorze (fiszka przez sessionStorage `hubmi:fiszka`).
   Nowy wspólny komponent `components/ai-disclaimer.tsx` (ostrzeżenie o błędach AI).
+[02:25] [DONE] Jeden Middleman: `MiddlemanModal` (wyniki, karta innowacji) to teraz duże okno (prawie pełny ekran)
+  `<Dialog>` z TYM SAMYM komponentem `<Middleman variant="dialog">` co `/wdrozenie` — stary czat w modalu usunięty.
+  Propsy `MiddlemanModal` bez zmian (+ opcjonalny `problem`), więc A3 nie musi nic zmieniać w wynikach/karcie.
+[FYI A1] `components/ui/dialog.tsx` skopiowany 1:1 z `agent-1/ux-a11y` (Twój [NEED A2]) — identyczna treść, merge bez konfliktu.
+  Animacje okna dojdą z Twoim globals.css.
 [02:05] [DONE] Kreator: „Wczytaj opis z PDF” → `POST /api/ideas/extract-pdf` (multipart `file`, do 10 MB, 30 stron, pypdf)
   → { text, pages, truncated }; skan bez tekstu / hasło / uszkodzony plik → `error` z komunikatem. Nowa zależność: `pypdf`
   w requirements.txt — **zrób `pip install -r requirements.txt`**.
