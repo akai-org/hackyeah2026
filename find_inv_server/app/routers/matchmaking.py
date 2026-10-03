@@ -20,7 +20,14 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app import knowledge_store
 from app.config import settings
-from app.local_matching import TAXONOMY_TAGS, condense_locally, local_chat_answer, local_tag_result, rank_locally
+from app.local_matching import (
+    TAXONOMY_TAGS,
+    condense_locally,
+    local_chat_answer,
+    local_tag_result,
+    rank_locally,
+    strip_fillers,
+)
 
 log = logging.getLogger(__name__)
 
@@ -277,6 +284,8 @@ async def match(body: MatchRequest, background: BackgroundTasks):
 VOICE_FIX_PROMPT = (
     "Poprawiasz transkrypcję mowy po polsku. Popraw gramatykę, interpunkcję i oczywiste błędy "
     "rozpoznawania mowy, NIE zmieniaj sensu ani nie dopisuj treści. "
+    "Usuń wtrącenia mowy potocznej bez treści, np. „yyy”, „no”, „ten no”, „tak jakby”, „jakby”, „wiesz”, „w sumie”, "
+    "„generalnie”, „znaczy”, „po prostu”. "
     'Odpowiedz wyłącznie JSON: {"corrected": "...", "confidence": 0.0-1.0}'
 )
 
@@ -295,6 +304,7 @@ VOICE_CONDENSE_PROMPT = (
     "Dostajesz transkrypcję mowy po polsku: ktoś opisuje problem społeczny, często chaotycznie, z dygresjami, "
     "powtórzeniami i wtrąceniami. Popraw gramatykę i błędy rozpoznawania mowy, a jeśli wypowiedź krąży wokół tematu, "
     "streść ją do sedna: kogo dotyczy problem, co się dzieje, gdzie — 1–2 krótkie zdania, najwyżej 40 słów. "
+    "Zawsze usuń wtrącenia bez treści, np. „yyy”, „no”, „ten no”, „tak jakby”, „jakby”, „wiesz”, „w sumie”. "
     "Pisz z perspektywy mówiącego, jego słowami. NIE dodawaj informacji, których nie było, NIE oceniaj. "
     "Krótkiej i rzeczowej wypowiedzi nie skracaj, tylko popraw. "
     'Odpowiedz wyłącznie JSON: {"corrected": "...", "condensed": true|false, "confidence": 0.0-1.0}'
@@ -305,6 +315,8 @@ def _local_fix(transcript: str, condense: bool) -> dict:
     condensed = False
     if condense:
         transcript, condensed = condense_locally(transcript)
+    # Wtrącenia („ten no tak jakby”, „yyy”) wypadają zawsze, także z krótkich wypowiedzi.
+    transcript = strip_fillers(transcript) or transcript
     return {"corrected": _tidy_transcript(transcript), "condensed": condensed, "confidence": 0.6, "source": "rules"}
 
 

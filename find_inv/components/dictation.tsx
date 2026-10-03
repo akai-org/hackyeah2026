@@ -63,7 +63,7 @@ export type DictationState = "idle" | "recording" | "checking" | "confirm" | "do
 export type DictationOptions = {
   /**
    * Tryb na żywo: tekst pojawia się w polu w trakcie mówienia, a po zakończeniu poprawka z /api/voice-fix
-   * czeka na decyzję użytkownika („Czy to miałeś na myśli?”). Bez tej opcji poprawka wchodzi od razu.
+   * czeka na decyzję użytkownika („Czy o to chodziło?”). Bez tej opcji poprawka wchodzi od razu.
    */
   live?: boolean;
   /** Razem z `live`: wypowiedź „naokoło” backend skraca do sedna (kto, co, gdzie). */
@@ -244,7 +244,7 @@ export function DictationButton({ dictation, className }: { dictation: Dictation
       type="button"
       variant="secondary"
       onClick={dictation.toggle}
-      // Najpierw odpowiedź na „Czy to miałeś na myśli?”, potem kolejne dyktowanie.
+      // Najpierw odpowiedź na „Czy o to chodziło?”, potem kolejne dyktowanie.
       disabled={dictation.state === "checking" || dictation.state === "confirm"}
       className={className}
     >
@@ -298,8 +298,11 @@ export function DictationNotice({ dictation, id }: { dictation: Dictation; id?: 
   );
 }
 
-/** Słowa poprawionego tekstu oznaczone, jeśli różnią się od oryginału (najdłuższy wspólny podciąg słów). */
-function markChanges(original: string, corrected: string): Array<{ word: string; changed: boolean }> {
+/**
+ * Różnica słowo po słowie (najdłuższy wspólny podciąg): słowa poprawionego tekstu z oznaczeniem zmian
+ * oraz słowa, które z oryginału wypadły (np. wtrącenia „ten no jakby”).
+ */
+function diffWords(original: string, corrected: string) {
   const a = original.split(/\s+/).filter(Boolean);
   const b = corrected.split(/\s+/).filter(Boolean);
   const lcs: number[][] = Array.from({ length: a.length + 1 }, () => new Array<number>(b.length + 1).fill(0));
@@ -308,22 +311,30 @@ function markChanges(original: string, corrected: string): Array<{ word: string;
       lcs[i][j] = a[i] === b[j] ? lcs[i + 1][j + 1] + 1 : Math.max(lcs[i + 1][j], lcs[i][j + 1]);
     }
   }
-  const out: Array<{ word: string; changed: boolean }> = [];
+  const words: Array<{ word: string; changed: boolean }> = [];
+  const removed: string[] = [];
   let i = 0;
   let j = 0;
-  while (j < b.length) {
-    if (i < a.length && a[i] === b[j]) {
-      out.push({ word: b[j], changed: false });
+  while (i < a.length || j < b.length) {
+    if (i < a.length && j < b.length && a[i] === b[j]) {
+      words.push({ word: b[j], changed: false });
       i++;
       j++;
-    } else if (i < a.length && lcs[i + 1][j] >= lcs[i][j + 1]) {
+    } else if (j >= b.length || (i < a.length && lcs[i + 1][j] >= lcs[i][j + 1])) {
+      removed.push(a[i]);
       i++;
     } else {
-      out.push({ word: b[j], changed: true });
+      words.push({ word: b[j], changed: true });
       j++;
     }
   }
-  return out;
+  // Słowo tylko poprawione (np. „niema” → „nie ma”) to zmiana, nie usunięcie — pokazujemy wyłącznie te,
+  // których w poprawionym tekście nie ma wcale.
+  const kept = new Set(b.map((word) => word.toLowerCase().replace(/[.,!?;:]/g, "")));
+  const dropped = removed
+    .map((word) => word.replace(/[.,!?;:]/g, ""))
+    .filter((word) => word && !kept.has(word.toLowerCase()));
+  return { words, removed: [...new Set(dropped.map((word) => word.toLowerCase()))] };
 }
 
 /** Pytanie po dyktowaniu w trybie na żywo: przyjąć poprawkę AI czy zostawić tekst użytkownika. */
@@ -338,7 +349,7 @@ export function DictationSuggestion({ dictation }: { dictation: Dictation }) {
   }, [suggestion]);
 
   if (!suggestion) return null;
-  const words = markChanges(suggestion.original, suggestion.corrected);
+  const { words, removed } = diffWords(suggestion.original, suggestion.corrected);
   const count = (text: string) => text.split(/\s+/).filter(Boolean).length;
 
   return (
@@ -347,7 +358,7 @@ export function DictationSuggestion({ dictation }: { dictation: Dictation }) {
       className="appear mt-3 max-w-[65ch] rounded-ui border-(length:--bw) border-deep bg-mint p-4"
     >
       <p id={`${ids}-pytanie`} ref={headingRef} tabIndex={-1} className="font-bold text-deep focus:outline-none">
-        Czy to miałeś na myśli?
+        Czy o to chodziło?
       </p>
       {suggestion.condensed ? (
         <>
@@ -372,7 +383,14 @@ export function DictationSuggestion({ dictation }: { dictation: Dictation }) {
               </span>
             ))}
           </p>
-          <p className="mt-1 text-sm text-muted">Poprawione słowa są pogrubione i podkreślone.</p>
+          {words.some((word) => word.changed) && (
+            <p className="mt-1 text-sm text-muted">Poprawione słowa są pogrubione i podkreślone.</p>
+          )}
+          {removed.length > 0 && (
+            <p className="mt-1 text-sm text-muted">
+              Usunięto wtrącenia: {removed.map((word) => `„${word}”`).join(", ")}.
+            </p>
+          )}
         </>
       )}
       <div className="mt-3 flex flex-wrap gap-3">

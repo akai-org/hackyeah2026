@@ -240,6 +240,32 @@ _CLAUSE_SPLIT = re.compile(
     r"|\s+i\s+(?=(?:ona|on|ja|my|oni|one|ono|nie|to|tam|teraz)\b)",
     re.IGNORECASE,
 )
+# „ten no”, „no ten”, „ten tego” — zaimek jako wypełniacz tylko obok innego wypełniacza („ten autobus” zostaje).
+_FILLER_PRONOUNS = re.compile(
+    r"\b(?:(?:ten|ta|to|tego|tam)\s+(?:no|tego|yy+|ee+|jakby)|(?:no|yy+|ee+)\s+(?:ten|ta|tego|tam))\b",
+    re.IGNORECASE,
+)
+# „jakby” jako wtrącenie („nie ma jakby jak”) — ale nie w warunku: „jakby ktoś zadzwonił”, „jakby się dało”.
+_FILLER_JAKBY = re.compile(
+    r"\bjakby\b(?!\s+(?:ktoś|coś|ktokolwiek|się|był|była|było|byli|były|mógł|mogła|mogli|miał|miała|mieli|"
+    r"chciał|chciała|chcieli|ja|ty|on|ona|ono|my|wy|oni|one|pan|pani|nie\s+(?:był|było|mógł|miał)))",
+    re.IGNORECASE,
+)
+
+
+def strip_fillers(text: str) -> str:
+    """Wyrzuca wtrącenia mowy („ten no tak jakby”, „yyy”, „wiesz”, „w sumie”) bez skracania treści."""
+    cleaned = _FILLER_PRONOUNS.sub(" ", text)
+    cleaned = _TOPIC_FILLERS.sub(" ", cleaned)
+    cleaned = _HESITATIONS.sub(" ", cleaned)
+    cleaned = _FILLER_JAKBY.sub(" ", cleaned)
+    cleaned = re.sub(r"\b(\w+)(?:\s+\1\b)+", r"\1", cleaned, flags=re.IGNORECASE)  # „że że”, „i i”
+    cleaned = re.sub(r"\s+([,.!?;:])", r"\1", cleaned)
+    cleaned = re.sub(r"([,;:])(?:\s*[,;:])+", r"\1", cleaned)  # „, ,” po wycięciu wtrąceń
+    cleaned = re.sub(r",\s+(i|oraz|ani)\b", r" \1", cleaned)  # po polsku bez przecinka przed „i”
+    return re.sub(r"\s+", " ", cleaned).strip(" ,")
+
+
 _EDGE_CONJUNCTIONS = re.compile(r"^(?:i|a|że|bo|ale|więc|to)\s+|\s+(?:i|a|że|bo|ale|więc|to|który|którzy|która)$", re.IGNORECASE)
 
 CONDENSE_MIN_WORDS = 25
@@ -247,8 +273,10 @@ CONDENSE_MAX_WORDS = 40
 
 
 def _clauses(text: str) -> list[str]:
-    cleaned = _TOPIC_FILLERS.sub(",", text)
+    cleaned = _FILLER_PRONOUNS.sub(" ", text)
+    cleaned = _TOPIC_FILLERS.sub(",", cleaned)
     cleaned = _HESITATIONS.sub(" ", cleaned)
+    cleaned = _FILLER_JAKBY.sub(" ", cleaned)
     cleaned = re.sub(r"\b(\w+)(?:\s+\1\b)+", r"\1", cleaned, flags=re.IGNORECASE)  # „że że”, „i i”
     clauses = []
     for part in _CLAUSE_SPLIT.split(cleaned):

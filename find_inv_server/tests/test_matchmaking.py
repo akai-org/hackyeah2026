@@ -121,6 +121,23 @@ def test_voice_fix_condenses_rambling_speech_on_request():
 def test_voice_fix_keeps_short_or_unflagged_text():
     short = client.post("/api/voice-fix", json={"transcript": "mama mieszka sama na wsi", "condense": True}).json()
     assert short["data"] == {**short["data"], "corrected": "Mama mieszka sama na wsi.", "condensed": False}
-    # bez condense (Kreator) długi tekst zostaje w całości
+    # bez condense (Kreator) nic nie jest streszczane — znikają tylko wtrącenia, treść zostaje cała
     full = client.post("/api/voice-fix", json={"transcript": RAMBLING}).json()["data"]
-    assert full["condensed"] is False and len(full["corrected"].split()) == len(RAMBLING.split())
+    assert full["condensed"] is False
+    for fact in ("tata umarł", "autobus jeździ raz dziennie", "nie mogę jej wozić", "czuje samotna"):
+        assert fact in full["corrected"]
+    for filler in ("yyy", "wiesz", "w sumie", "generalnie"):
+        assert filler not in full["corrected"]
+
+
+def test_voice_fix_drops_spoken_fillers_but_keeps_meaning():
+    fix = lambda text: client.post("/api/voice-fix", json={"transcript": text, "condense": True}).json()["data"]  # noqa: E731
+    assert fix("babcia mieszka sama na wsi i ten no jakby nie ma jak jechać do lekarza")["corrected"] == (
+        "Babcia mieszka sama na wsi i nie ma jak jechać do lekarza."
+    )
+    assert fix("no więc yyy mama no mieszka sama, wiesz, i w sumie nie ma jak dojechać")["corrected"] == (
+        "Mama mieszka sama i nie ma jak dojechać."
+    )
+    # „jakby” w warunku i „ten” przed rzeczownikiem to treść, nie wtrącenie
+    assert fix("jakby ktoś zadzwonił do OPS to by pomogli")["corrected"] == "Jakby ktoś zadzwonił do OPS to by pomogli."
+    assert fix("ten autobus jeździ raz dziennie")["corrected"] == "Ten autobus jeździ raz dziennie."
