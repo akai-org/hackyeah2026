@@ -13,7 +13,9 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from app.auth import require_role
+from fastapi import Request
+
+from app.auth import get_current_user, require_role
 from app.database import get_db
 from app.models import Innovation, Tester, TestReport, User
 
@@ -171,3 +173,24 @@ async def assign_tester(report_id: int, _: User = AdminDep):
 @router.post("/api/admin/test-requests/{report_id}/reject")
 async def reject_tester(report_id: int, _: User = AdminDep):
     return await _decide(report_id, "rejected")
+
+
+@router.get("/api/innovations/{innovation_id}/tester-status")
+async def tester_status(innovation_id: int, request: Request):
+    """Sprawdź, czy zalogowany użytkownik jest przypisanym testerem tej innowacji."""
+    user = await get_current_user(request)
+    if user is None or user.role not in ("tester", "admin"):
+        return {"data": {"assigned": False}}
+
+    try:
+        async with get_db() as db:
+            report = (await db.execute(
+                select(TestReport).where(
+                    TestReport.user_id == user.id,
+                    TestReport.innovation_id == innovation_id,
+                    TestReport.status == "assigned",
+                )
+            )).scalar_one_or_none()
+        return {"data": {"assigned": report is not None}}
+    except Exception:
+        return {"data": {"assigned": False}}

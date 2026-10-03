@@ -78,6 +78,7 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
   const [nickname, setNickname] = useState(user?.name ?? "");
   const [usedInnovation, setUsedInnovation] = useState(false);
   const [usedCount, setUsedCount] = useState(0);
+  const [isAssignedTester, setIsAssignedTester] = useState(false);
   const [comment, setComment] = useState("");
   const [commentError, setCommentError] = useState(false);
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
@@ -110,6 +111,13 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
   }, [innovationId]);
 
   useEffect(() => {
+    if (!user || (user.role !== "tester" && user.role !== "admin")) return;
+    apiFetch<{ assigned: boolean }>(`/api/innovations/${innovationId}/tester-status`)
+      .then((data) => setIsAssignedTester(data.assigned))
+      .catch(() => {});
+  }, [innovationId, user]);
+
+  useEffect(() => {
     if (focusPost === null) return;
     document.getElementById(`${ids}-post-${focusPost}`)?.focus();
   }, [focusPost, ids]);
@@ -123,7 +131,9 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
   }
 
   const authorName = nickname.trim() || user?.name || "Gość";
-  const authorBadge = user?.role ?? ("user" as const);
+  // Badge "tester" pokazuje się tylko, gdy tester jest przypisany do tej innowacji.
+  const effectiveRole = user?.role === "tester" && !isAssignedTester ? "user" : user?.role;
+  const authorBadge = effectiveRole ?? ("user" as const);
 
   /** Zapis w bazie; bez backendu post zostaje tylko lokalnie. */
   async function savePost(content: string, parentId: number | null): Promise<ForumPost> {
@@ -187,7 +197,7 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
       {/* Back link — tylko w widoku pełnoekranowym */}
       {!embedded && (
         <Link
-          href={`/biblioteka/${innovationId}`}
+          href={`/innowacje/${innovationId}`}
           className="inline-flex items-center gap-2 text-sm font-bold text-leaf underline underline-offset-4 hover:text-deep"
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
@@ -222,7 +232,7 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
             </ul>
           )}
           <Link
-            href={`/biblioteka/${innovationId}`}
+            href={`/innowacje/${innovationId}`}
             className="ml-auto inline-flex items-center gap-1.5 rounded-ui border-2 border-deep bg-surface px-4 py-2 text-sm font-bold text-deep shadow-paper hover:bg-sage"
           >
             Szczegóły innowacji
