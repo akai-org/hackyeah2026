@@ -10,7 +10,7 @@
 
 | Agent | Robi teraz | Ostatni merge | Blokuje kogo |
 |---|---|---|---|
-| A1 | ⏳ w trakcie | — | A2, A3, A4, A5 |
+| A1 | ✅ gotowy | Push 2 | — |
 | A2 | ⏸ czeka na A1+A3 | — | — |
 | A3 | ⏸ czeka na A1 | — | A2 |
 | A4 | ⏸ czeka na A1 | — | — |
@@ -36,12 +36,9 @@
 
 ## 🟥 Agent 1 — Core
 
-<!-- Dopisuj wpisy tutaj na górze -->
-
-```
-[DONE] — napisz tu gdy: models.py gotowy, llm.py gotowy, embeddings.py gotowy, utils.py gotowy, auth gotowy, merge do main
-[FYI]  — napisz tu przy każdej zmianie shared files
-```
+[09:XX] [DONE] Push 2 — llm.py (OpenRouter async), embeddings.py (ChromaDB), utils.py (TAXONOMY_TAGS + run_autotagger), auth.py (get_current_user + require_role), routers/auth.py (POST /api/auth/session, POST /api/auth/set-role, GET /api/auth/me), data/seed_innovations.py (szkielet dla A3). Merge do main.
+[09:XX] [DONE] Push 1 — models.py (users, testers, innovations, challenges, innovation_gap_index, search_logs), database.py (SQLAlchemy async), config.py, main.py z lifespan init_db. Merge do main.
+[FYI] A2/A3/A4/A5 — możecie zaczynać. Pull origin main.
 
 ---
 
