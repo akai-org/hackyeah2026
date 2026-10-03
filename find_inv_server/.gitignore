@@ -9,3 +9,7 @@ __pycache__/
 
 # sekrety
 .env
+
+# lokalne bazy danych
+*.db
+chroma_db/

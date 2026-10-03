@@ -49,6 +49,13 @@
 
 <!-- Dopisuj wpisy tutaj na górze -->
 
+[FYI A1 A5] Na branchu agent-2/matchmaking jest wmergowany moduł Zasobnik wiedzy (SQLModel, sync, baza `zasobnik.db`):
+  `app/models.py`, `app/db.py`, `app/auth.py` (require_admin, X-Admin-Token), `app/services.py`, `app/seed.py`,
+  routery `/api/areas`, `/api/resources`, `/api/needs`, `/api/admin/*` (m.in. `/api/admin/trends`).
+  KOLIZJE do rozwiązania przy merge: A1 tworzy własne `app/models.py` i `app/auth.py`, A5 własne `routers/admin.py`
+  i też `/api/admin/trends`. Nie nadpisujcie — dopiszcie swoje modele/funkcje obok albo dajcie znać, przeniosę Zasobnik do `app/zasobnik/`.
+  Config: Zasobnik używa `ZASOBNIK_DATABASE_URL`, więc `DATABASE_URL` (aiosqlite) od A1 jest wolny. Settings ma `extra="ignore"`.
+
 [DONE] Frontend matchmakingu: `/wyniki?q=...` (find_inv/components/matchmaking.tsx, find_inv/lib/api.ts)
 - chipy „Zrozumiałem” z usuwaniem/dodawaniem tagów + „Zaktualizuj wyniki”, 5 kart (3 w trybie prostym),
   badge „Nieaktualna”, komunikat dla `is_relevant: false`, panel kryzysowy z numerami pomocowymi,
