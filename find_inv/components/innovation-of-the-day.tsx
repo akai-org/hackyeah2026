@@ -55,13 +55,13 @@ export function InnovationOfTheDay({ headingId }: { headingId: string }) {
   if (state === "empty") {
     return (
       <>
-        <h2 id={headingId} className="mt-2 text-2xl font-bold text-deep">
+        <h2 id={headingId} className="mt-2 text-2xl font-bold text-foreground">
           Biblioteka innowacji ROPS
         </h2>
         <p className="mt-3 max-w-[65ch] text-lg">Dziś nie udało się wczytać artykułu. Zajrzyj do Biblioteki.</p>
         <Link
           href="/biblioteka"
-          className="mt-5 inline-flex min-h-12 items-center gap-2 font-medium text-leaf underline underline-offset-4 hover:text-deep"
+          className="mt-5 inline-flex min-h-12 items-center gap-2 font-medium text-primary underline underline-offset-4 hover:text-primary-hover"
         >
           Przejdź do Biblioteki
           <ArrowRight aria-hidden="true" className="size-5" />
@@ -76,20 +76,20 @@ export function InnovationOfTheDay({ headingId }: { headingId: string }) {
         <h2 id={headingId} className="sr-only">
           Wczytuję artykuł dnia
         </h2>
-        <div aria-hidden="true" className="mt-2 h-8 w-3/4 animate-pulse rounded-ui bg-sage" />
-        <div aria-hidden="true" className="mt-4 h-5 w-full animate-pulse rounded-ui bg-sage" />
-        <div aria-hidden="true" className="mt-2 h-5 w-5/6 animate-pulse rounded-ui bg-sage" />
+        <div aria-hidden="true" className="mt-2 h-8 w-3/4 animate-pulse rounded-ui bg-secondary" />
+        <div aria-hidden="true" className="mt-4 h-5 w-full animate-pulse rounded-ui bg-secondary" />
+        <div aria-hidden="true" className="mt-2 h-5 w-5/6 animate-pulse rounded-ui bg-secondary" />
       </div>
     );
   }
 
   return (
     <>
-      <h2 id={headingId} className="mt-2 text-2xl font-bold text-deep">
+      <h2 id={headingId} className="mt-2 text-2xl font-bold text-foreground">
         {innovation.title}
       </h2>
       {innovation.category && (
-        <p className="mt-2 inline-flex rounded-ui border-2 border-deep bg-mint px-3 py-0.5 text-sm font-medium text-ink">
+        <p className="mt-2 inline-flex rounded-ui border-2 border-border bg-secondary/60 px-3 py-0.5 text-sm font-medium text-foreground">
           {innovation.category}
         </p>
       )}
@@ -98,7 +98,7 @@ export function InnovationOfTheDay({ headingId }: { headingId: string }) {
         {innovation.target_group && (
           <div className="flex items-start gap-2">
             <dt>
-              <Users aria-hidden="true" className="mt-1 size-5 text-leaf" />
+              <Users aria-hidden="true" className="mt-1 size-5 text-primary" />
               <span className="sr-only">Dla kogo</span>
             </dt>
             <dd>{shorten(innovation.target_group, 140)}</dd>
@@ -107,7 +107,7 @@ export function InnovationOfTheDay({ headingId }: { headingId: string }) {
         {innovation.where_implemented && (
           <div className="flex items-start gap-2">
             <dt>
-              <MapPin aria-hidden="true" className="mt-1 size-5 text-leaf" />
+              <MapPin aria-hidden="true" className="mt-1 size-5 text-primary" />
               <span className="sr-only">Gdzie działa</span>
             </dt>
             <dd>{shorten(innovation.where_implemented, 140)}</dd>
@@ -116,7 +116,7 @@ export function InnovationOfTheDay({ headingId }: { headingId: string }) {
       </dl>
       <Link
         href={`/innowacje/${innovation.id}`}
-        className="mt-5 inline-flex min-h-12 items-center gap-2 font-medium text-leaf underline underline-offset-4 hover:text-deep"
+        className="mt-5 inline-flex min-h-12 items-center gap-2 font-medium text-primary underline underline-offset-4 hover:text-primary-hover"
       >
         Czytaj całą kartę
         <span className="sr-only">: {innovation.title}</span>

@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Indeks Luki Innowacyjnej" };
 
 export default function GapPage() {
   return (
-    <PageBackdrop layout="corner-left" leafColor="leaf">
+    <PageBackdrop layout="corner-left">
       <div className="mx-auto max-w-content px-4 py-16 sm:px-6">
         <CutoutText as="h1" size="section" text="Gdzie brakuje rozwiązań" />
         <p className="mt-4 max-w-[62ch] text-lg">

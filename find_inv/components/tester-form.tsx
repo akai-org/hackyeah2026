@@ -29,7 +29,7 @@ function validate(values: Values): Errors {
 }
 
 const inputClass =
-  "mt-2 min-h-12 w-full rounded-ui border-(length:--bw) bg-surface px-4 text-base text-ink placeholder:text-muted";
+  "mt-2 min-h-12 w-full rounded-ui border-(length:--bw) bg-surface px-4 text-base text-foreground placeholder:text-muted";
 
 export function TesterForm() {
   const { user } = useAuth();
@@ -82,16 +82,16 @@ export function TesterForm() {
 
   const errorText = (field: Field) =>
     errors[field] && (
-      <p id={`${id(field)}-blad`} className="mt-2 flex items-start gap-2 font-bold text-alert">
+      <p id={`${id(field)}-blad`} className="mt-2 flex items-start gap-2 font-bold text-destructive">
         <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
         {errors[field]}
       </p>
     );
 
   const content = sentAs ? (
-    <div className="appear border-(length:--bw) border-deep bg-surface p-6 shadow-paper sm:p-8">
-      <h2 ref={successRef} tabIndex={-1} className="flex items-center gap-3 text-xl font-bold text-deep">
-        <CircleCheck aria-hidden="true" className="size-7 shrink-0 text-leaf" />
+    <div className="appear border-(length:--bw) border-border bg-surface p-6 shadow-raised sm:p-8">
+      <h2 ref={successRef} tabIndex={-1} className="flex items-center gap-3 text-xl font-bold text-foreground">
+        <CircleCheck aria-hidden="true" className="size-7 shrink-0 text-primary" />
         Dziękujemy, {sentAs}
       </h2>
       <p className="mt-3 max-w-[55ch]">
@@ -107,15 +107,15 @@ export function TesterForm() {
       onSubmit={submit}
       noValidate
       aria-labelledby={`${ids}-tytul`}
-      className="border-(length:--bw) border-deep bg-surface p-6 shadow-paper sm:p-8"
+      className="border-(length:--bw) border-border bg-surface p-6 shadow-raised sm:p-8"
     >
-      <h2 id={`${ids}-tytul`} className="text-xl font-bold text-deep">
+      <h2 id={`${ids}-tytul`} className="text-xl font-bold text-foreground">
         Formularz zgłoszeniowy
       </h2>
       <p className="mt-2 text-muted">Pola oznaczone jako „wymagane” trzeba wypełnić.</p>
 
       <div className="mt-6">
-        <label htmlFor={id("name")} className="block font-bold text-deep">
+        <label htmlFor={id("name")} className="block font-bold text-foreground">
           Imię i nazwisko <span className="font-normal text-muted">(wymagane)</span>
         </label>
         <input
@@ -129,13 +129,13 @@ export function TesterForm() {
           onChange={(event) => update("name", event.target.value)}
           aria-invalid={!!errors.name || undefined}
           aria-describedby={describedBy("name")}
-          className={cn(inputClass, errors.name ? "border-alert" : "border-deep")}
+          className={cn(inputClass, errors.name ? "border-destructive" : "border-border")}
         />
         {errorText("name")}
       </div>
 
       <div className="mt-6">
-        <label htmlFor={id("email")} className="block font-bold text-deep">
+        <label htmlFor={id("email")} className="block font-bold text-foreground">
           E-mail <span className="font-normal text-muted">(wymagane)</span>
         </label>
         <input
@@ -150,13 +150,13 @@ export function TesterForm() {
           onChange={(event) => update("email", event.target.value)}
           aria-invalid={!!errors.email || undefined}
           aria-describedby={describedBy("email")}
-          className={cn(inputClass, errors.email ? "border-alert" : "border-deep")}
+          className={cn(inputClass, errors.email ? "border-destructive" : "border-border")}
         />
         {errorText("email")}
       </div>
 
       <div className="mt-6">
-        <label htmlFor={id("organization")} className="block font-bold text-deep">
+        <label htmlFor={id("organization")} className="block font-bold text-foreground">
           Organizacja lub instytucja <span className="font-normal text-muted">(nieobowiązkowe)</span>
         </label>
         <p id={`${id("organization")}-podpowiedz`} className="mt-1 text-muted">
@@ -172,12 +172,12 @@ export function TesterForm() {
           value={values.organization}
           onChange={(event) => update("organization", event.target.value)}
           aria-describedby={describedBy("organization", `${id("organization")}-podpowiedz`)}
-          className={cn(inputClass, "border-deep")}
+          className={cn(inputClass, "border-border")}
         />
       </div>
 
       <div className="mt-6">
-        <label htmlFor={id("expertise")} className="block font-bold text-deep">
+        <label htmlFor={id("expertise")} className="block font-bold text-foreground">
           Specjalizacja <span className="font-normal text-muted">(wymagane)</span>
         </label>
         <select
@@ -189,7 +189,7 @@ export function TesterForm() {
           onChange={(event) => update("expertise", event.target.value)}
           aria-invalid={!!errors.expertise || undefined}
           aria-describedby={describedBy("expertise")}
-          className={cn(inputClass, "cursor-pointer", errors.expertise ? "border-alert" : "border-deep")}
+          className={cn(inputClass, "cursor-pointer", errors.expertise ? "border-destructive" : "border-border")}
         >
           <option value="">Wybierz z listy</option>
           {TESTER_SPECIALIZATIONS.map((item) => (

@@ -28,8 +28,8 @@ export function MalopolskaStatsTiles() {
     <div>
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {tiles.map((tile) => (
-          <li key={tile.label} className="border-(length:--bw) border-deep bg-surface p-5 shadow-paper">
-            <p className="text-2xl font-bold text-deep tabular-nums">{tile.value}</p>
+          <li key={tile.label} className="border-(length:--bw) border-border bg-surface p-5 shadow-raised">
+            <p className="text-2xl font-bold text-foreground tabular-nums">{tile.value}</p>
             <p className="mt-1">{tile.label}</p>
             <p className="mt-2 text-sm text-muted">{tile.source}</p>
           </li>

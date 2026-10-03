@@ -15,7 +15,7 @@ interface Props {
 }
 
 const fieldClass =
-  "mt-2 w-full rounded-ui border-(length:--bw) border-deep bg-surface px-4 py-3 text-base text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-deep focus:ring-offset-1";
+  "mt-2 w-full rounded-ui border-(length:--bw) border-border bg-surface px-4 py-3 text-base text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-focus focus:ring-offset-1";
 
 export function TesterApplyModal({ innovationId, innovationTitle, onClose, onSuccess }: Props) {
   const { user } = useAuth();
@@ -88,39 +88,39 @@ export function TesterApplyModal({ innovationId, innovationTitle, onClose, onSuc
       role="dialog"
       aria-modal="true"
       aria-labelledby="tester-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/50 p-4"
     >
       <div
         ref={containerRef}
-        className="relative w-full max-w-md border-(length:--bw) border-deep bg-surface p-6 shadow-paper sm:p-8"
+        className="relative w-full max-w-md border-(length:--bw) border-border bg-surface p-6 shadow-raised sm:p-8"
       >
         <button
           ref={closeRef}
           type="button"
           onClick={onClose}
           aria-label="Zamknij"
-          className="absolute right-4 top-4 rounded-ui p-1 text-muted hover:text-deep focus-visible:outline-2 focus-visible:outline-deep"
+          className="absolute right-4 top-4 rounded-ui p-1 text-muted hover:text-primary-hover focus-visible:outline-2 focus-visible:outline-focus"
         >
           <X className="size-5" aria-hidden="true" />
         </button>
 
         <div className="flex items-center gap-3">
-          <FlaskConical className="size-7 shrink-0 text-leaf" aria-hidden="true" />
+          <FlaskConical className="size-7 shrink-0 text-primary" aria-hidden="true" />
           <div>
-            <h2 id="tester-modal-title" className="text-xl font-bold text-deep">
+            <h2 id="tester-modal-title" className="text-xl font-bold text-foreground">
               Zgłoś się jako tester
             </h2>
             <p className="mt-0.5 text-sm text-muted">{innovationTitle}</p>
           </div>
         </div>
 
-        <p className="mt-4 text-base text-ink">
+        <p className="mt-4 text-base text-foreground">
           Twoje zgłoszenie trafi do twórcy innowacji. Po akceptacji zostaniesz testerem tej innowacji.
         </p>
 
         <form onSubmit={handleSubmit} noValidate className="mt-6 grid gap-5">
           <div>
-            <label htmlFor="tester-name" className="block font-bold text-deep">
+            <label htmlFor="tester-name" className="block font-bold text-foreground">
               Imię i nazwisko
             </label>
             <input
@@ -131,10 +131,10 @@ export function TesterApplyModal({ innovationId, innovationTitle, onClose, onSuc
               onChange={(e) => { setName(e.target.value); if (errors.name) setErrors((prev) => ({ ...prev, name: false })); }}
               aria-invalid={errors.name || undefined}
               placeholder="Anna Nowak"
-              className={cn(fieldClass, errors.name ? "border-alert" : "")}
+              className={cn(fieldClass, errors.name ? "border-destructive" : "")}
             />
             {errors.name && (
-              <p className="mt-1.5 flex items-center gap-1.5 text-sm font-bold text-alert">
+              <p className="mt-1.5 flex items-center gap-1.5 text-sm font-bold text-destructive">
                 <CircleAlert className="size-4" aria-hidden="true" />
                 Wpisz imię i nazwisko.
               </p>
@@ -142,7 +142,7 @@ export function TesterApplyModal({ innovationId, innovationTitle, onClose, onSuc
           </div>
 
           <div>
-            <label htmlFor="tester-email" className="block font-bold text-deep">
+            <label htmlFor="tester-email" className="block font-bold text-foreground">
               Adres e-mail
             </label>
             <input
@@ -152,10 +152,10 @@ export function TesterApplyModal({ innovationId, innovationTitle, onClose, onSuc
               onChange={(e) => { setEmail(e.target.value); if (errors.email) setErrors((prev) => ({ ...prev, email: false })); }}
               aria-invalid={errors.email || undefined}
               placeholder="anna@gmina.pl"
-              className={cn(fieldClass, errors.email ? "border-alert" : "")}
+              className={cn(fieldClass, errors.email ? "border-destructive" : "")}
             />
             {errors.email && (
-              <p className="mt-1.5 flex items-center gap-1.5 text-sm font-bold text-alert">
+              <p className="mt-1.5 flex items-center gap-1.5 text-sm font-bold text-destructive">
                 <CircleAlert className="size-4" aria-hidden="true" />
                 Wpisz poprawny adres e-mail.
               </p>

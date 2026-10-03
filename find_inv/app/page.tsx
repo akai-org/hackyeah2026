@@ -45,8 +45,8 @@ export default function HomePage() {
 
   return (
     <>
-      {/* Hero */}
-      <section aria-labelledby="hero-tytul" className="relative overflow-hidden">
+      {/* Hero: miękka poświata i groszek w prawym górnym rogu, z dala od tekstu (globals.css, .bg-glow / .bg-dots). */}
+      <section aria-labelledby="hero-tytul" className="bg-glow bg-dots relative overflow-hidden">
         <div className="relative mx-auto max-w-content px-4 pt-20 pb-16 sm:px-6 lg:pt-20 lg:pb-24">
           <div>
             <CutoutText id="hero-tytul" as="h1" size="hero" text="Z czym masz kłopot?" animate />
@@ -55,19 +55,19 @@ export default function HomePage() {
             </p>
             <SearchForm />
             <nav aria-label="Szybki dostęp" className="mt-6 flex flex-wrap gap-x-6 gap-y-1">
-              <a href="#artykul-dnia" className="inline-flex min-h-12 items-center gap-2 font-medium text-leaf underline underline-offset-4 hover:text-deep">
+              <a href="#artykul-dnia" className="inline-flex min-h-12 items-center gap-2 font-medium text-primary underline underline-offset-4 hover:text-primary-hover">
                 Sprawdź artykuł dnia
                 <ArrowRight aria-hidden="true" className="size-5" />
               </a>
-              <a href="#co-juz-dziala" className="inline-flex min-h-12 items-center gap-2 font-medium text-leaf underline underline-offset-4 hover:text-deep">
+              <a href="#co-juz-dziala" className="inline-flex min-h-12 items-center gap-2 font-medium text-primary underline underline-offset-4 hover:text-primary-hover">
                 Popularne innowacje
                 <ArrowRight aria-hidden="true" className="size-5" />
               </a>
-              <a href="#kondycja-malopolski" className="inline-flex min-h-12 items-center gap-2 font-medium text-leaf underline underline-offset-4 hover:text-deep">
+              <a href="#kondycja-malopolski" className="inline-flex min-h-12 items-center gap-2 font-medium text-primary underline underline-offset-4 hover:text-primary-hover">
                 Kondycja Małopolski
                 <ArrowRight aria-hidden="true" className="size-5" />
               </a>
-              <a href="#jak-to-dziala" className="inline-flex min-h-12 items-center gap-2 font-medium text-leaf underline underline-offset-4 hover:text-deep">
+              <a href="#jak-to-dziala" className="inline-flex min-h-12 items-center gap-2 font-medium text-primary underline underline-offset-4 hover:text-primary-hover">
                 Jak to działa
                 <ArrowRight aria-hidden="true" className="size-5" />
               </a>
@@ -81,7 +81,7 @@ export default function HomePage() {
       <section
         id="jak-to-dziala"
         aria-labelledby="jak-to-dziala-tytul"
-        className="scroll-mt-6 border-y-(length:--bw) border-deep bg-sage"
+        className="bg-section-fade scroll-mt-6"
       >
         <div className="relative mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
           <PaperCloud shape="tall" className="absolute top-8 right-10 hidden w-44 rotate-2 lg:block" />
@@ -90,12 +90,12 @@ export default function HomePage() {
             {STEPS.map((step, index) => {
               const Icon = step.icon;
               return (
-                <li key={step.title} className="border-(length:--bw) border-deep bg-surface p-6 shadow-paper">
+                <li key={step.title} className="border-(length:--bw) border-border bg-surface p-6 shadow-raised">
                   <div className="flex items-center justify-between gap-4">
                     <p className="font-medium text-muted">Krok {index + 1}</p>
-                    <Icon aria-hidden="true" className="size-8 text-leaf" strokeWidth={1.75} />
+                    <Icon aria-hidden="true" className="size-8 text-primary" strokeWidth={1.75} />
                   </div>
-                  <h3 className="mt-3 text-xl font-medium text-deep">{step.title}</h3>
+                  <h3 className="mt-3 text-xl font-medium text-foreground">{step.title}</h3>
                   <p className="mt-2">{step.text}</p>
                 </li>
               );
@@ -111,13 +111,13 @@ export default function HomePage() {
           <p className="mt-4 max-w-[60ch] text-lg">
             Z czym mierzą się mieszkańcy regionu. Te liczby pomagają zdecydować, od czego zacząć.
           </p>
-          <div className="mt-8 grid items-center gap-4 rounded-ui border-(length:--bw) border-deep bg-surface p-5 md:grid-cols-[auto_1fr_auto]">
-            <ConditionIcon aria-hidden="true" strokeWidth={1.5} className="size-16 text-leaf" />
+          <div className="mt-8 grid items-center gap-4 rounded-ui border-(length:--bw) border-border bg-surface p-5 md:grid-cols-[auto_1fr_auto]">
+            <ConditionIcon aria-hidden="true" strokeWidth={1.5} className="size-16 text-primary" />
             <span>
-              <span className="block text-xl font-bold text-deep">{condition.status}</span>
+              <span className="block text-xl font-bold text-foreground">{condition.status}</span>
               <span className="mt-1 block">{condition.detail}</span>
             </span>
-            <Link href="/wyzwania" className="inline-flex min-h-12 items-center gap-2 font-semibold text-leaf underline underline-offset-4 hover:text-deep">
+            <Link href="/wyzwania" className="inline-flex min-h-12 items-center gap-2 font-semibold text-primary underline underline-offset-4 hover:text-primary-hover">
               Zobacz badania i wyzwania
               <ArrowRight aria-hidden="true" className="size-5" />
             </Link>
@@ -126,7 +126,7 @@ export default function HomePage() {
             <MalopolskaStatsTiles />
           </div>
 
-          <h3 className="mt-14 text-xl font-bold text-deep">Mapa powiatów</h3>
+          <h3 className="mt-14 text-xl font-bold text-foreground">Mapa powiatów</h3>
           <p className="mt-2 max-w-[60ch]">
             Kliknij powiat, żeby zobaczyć jego najważniejsze wyzwania i innowacje, które mogą pomóc.
           </p>
@@ -134,7 +134,7 @@ export default function HomePage() {
             <PowiatMap />
           </div>
 
-          <h3 className="mt-14 text-xl font-bold text-deep">Gdzie najbardziej brakuje rozwiązań</h3>
+          <h3 className="mt-14 text-xl font-bold text-foreground">Gdzie najbardziej brakuje rozwiązań</h3>
           <div className="mt-4">
             <GapIndex limit={3} />
           </div>
@@ -157,9 +157,9 @@ export default function HomePage() {
       </section>
 
       {/* Artykuł dnia */}
-      <section id="artykul-dnia" aria-labelledby="artykul-dnia-tytul" className="scroll-mt-6 border-y-(length:--bw) border-deep bg-sage">
+      <section id="artykul-dnia" aria-labelledby="artykul-dnia-tytul" className="scroll-mt-6 bg-secondary">
         <div className="mx-auto max-w-content px-4 py-10 sm:px-6 lg:py-12">
-          <article className="mx-auto max-w-3xl border-(length:--bw) border-deep bg-surface p-6 shadow-paper md:p-8">
+          <article className="mx-auto max-w-3xl border-(length:--bw) border-border bg-surface p-6 shadow-raised md:p-8">
             <p className="text-sm font-medium text-muted">Artykuł dnia z Biblioteki Innowacji ROPS</p>
             {/* Każdego dnia inna innowacja z katalogu, ta sama dla wszystkich przez cały dzień. */}
             <InnovationOfTheDay headingId="artykul-dnia-tytul" />

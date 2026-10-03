@@ -126,8 +126,8 @@ export default function InnovationDetailPage() {
   if (loading) {
     return (
       <div className="mx-auto max-w-content px-4 py-16 sm:px-6">
-        <div className="h-8 w-48 animate-pulse rounded-ui bg-sage" />
-        <div className="mt-8 h-96 animate-pulse rounded-ui bg-sage" />
+        <div className="h-8 w-48 animate-pulse rounded-ui bg-secondary" />
+        <div className="mt-8 h-96 animate-pulse rounded-ui bg-secondary" />
       </div>
     );
   }
@@ -135,7 +135,7 @@ export default function InnovationDetailPage() {
   if (error || !item) {
     return (
       <div className="mx-auto max-w-content px-4 py-16 sm:px-6">
-        <p className="text-lg text-alert">Nie znaleziono innowacji.</p>
+        <p className="text-lg text-destructive">Nie znaleziono innowacji.</p>
         <Link href="/biblioteka" className={buttonVariants({ variant: "secondary", className: "mt-6" })}>
           <ArrowLeft className="mr-2 size-4" aria-hidden="true" />
           Wróć do biblioteki
@@ -149,7 +149,7 @@ export default function InnovationDetailPage() {
       <div className="mx-auto max-w-content px-4 py-12 sm:px-6">
         <Link
           href="/biblioteka"
-          className="inline-flex items-center gap-2 text-sm font-bold text-leaf underline underline-offset-4 hover:text-deep"
+          className="inline-flex items-center gap-2 text-sm font-bold text-primary underline underline-offset-4 hover:text-primary-hover"
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
           Biblioteka innowacji
@@ -159,13 +159,13 @@ export default function InnovationDetailPage() {
           {/* Main */}
           <article>
             {item.is_unmaintained && (
-              <div className="mb-4 inline-flex items-center gap-2 rounded-ui border-2 border-muted bg-paper px-3 py-1.5 text-sm text-muted">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-ui border-2 border-border bg-background px-3 py-1.5 text-sm text-muted">
                 <CircleHelp className="size-4" aria-hidden="true" />
                 Nieaktualna innowacja — może wymagać aktualizacji
               </div>
             )}
 
-            <h1 className="text-3xl font-bold text-deep">{item.title}</h1>
+            <h1 className="text-3xl font-bold text-foreground">{item.title}</h1>
 
             {item.short_desc && (
               <p className="mt-4 text-lg">{item.short_desc}</p>
@@ -176,7 +176,7 @@ export default function InnovationDetailPage() {
                 {parseDescription(item.full_desc).map((section, i) => (
                   <section key={i}>
                     {section.heading && (
-                      <h2 className="text-xl font-bold text-deep">{section.heading}</h2>
+                      <h2 className="text-xl font-bold text-foreground">{section.heading}</h2>
                     )}
                     {section.paragraphs.map((para, j) => (
                       <p key={j} className="mt-2 max-w-[70ch] text-base leading-relaxed">
@@ -193,7 +193,7 @@ export default function InnovationDetailPage() {
                 {item.tags.map((tag) => (
                   <li
                     key={tag}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-leaf bg-paper px-3 py-1 text-sm text-leaf"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-primary bg-background px-3 py-1 text-sm text-primary"
                   >
                     <Tag className="size-3" aria-hidden="true" />
                     {tag}
@@ -279,23 +279,23 @@ export default function InnovationDetailPage() {
 
           {/* Sidebar */}
           <aside aria-label="Szczegóły innowacji">
-            <dl className="divide-y divide-sage rounded-ui border-(length:--bw) border-deep bg-surface shadow-paper">
+            <dl className="divide-y divide-border/40 rounded-ui border-(length:--bw) border-border bg-surface shadow-raised">
               {item.category && (
                 <div className="px-5 py-4">
                   <dt className="text-sm text-muted">Kategoria</dt>
-                  <dd className="mt-0.5 font-bold text-deep capitalize">{item.category}</dd>
+                  <dd className="mt-0.5 font-bold text-foreground capitalize">{item.category}</dd>
                 </div>
               )}
               {item.area && (
                 <div className="px-5 py-4">
                   <dt className="text-sm text-muted">Obszar</dt>
-                  <dd className="mt-0.5 font-bold text-deep">{item.area}</dd>
+                  <dd className="mt-0.5 font-bold text-foreground">{item.area}</dd>
                 </div>
               )}
               {item.target_group && (
                 <div className="px-5 py-4">
                   <dt className="text-sm text-muted">Dla kogo</dt>
-                  <dd className="mt-0.5 font-bold text-deep">{item.target_group}</dd>
+                  <dd className="mt-0.5 font-bold text-foreground">{item.target_group}</dd>
                 </div>
               )}
               {item.where_implemented && (
@@ -304,13 +304,13 @@ export default function InnovationDetailPage() {
                     <MapPin className="size-3.5" aria-hidden="true" />
                     Gdzie wdrożono
                   </dt>
-                  <dd className="mt-0.5 text-deep">{item.where_implemented}</dd>
+                  <dd className="mt-0.5 text-foreground">{item.where_implemented}</dd>
                 </div>
               )}
               {item.cost_level && (
                 <div className="px-5 py-4">
                   <dt className="text-sm text-muted">Koszt wdrożenia</dt>
-                  <dd className="mt-0.5 font-bold text-deep">{COST_LABEL[item.cost_level] ?? item.cost_level}</dd>
+                  <dd className="mt-0.5 font-bold text-foreground">{COST_LABEL[item.cost_level] ?? item.cost_level}</dd>
                 </div>
               )}
               {item.implementation_time_months && (
@@ -319,7 +319,7 @@ export default function InnovationDetailPage() {
                     <Clock className="size-3.5" aria-hidden="true" />
                     Czas wdrożenia
                   </dt>
-                  <dd className="mt-0.5 font-bold text-deep">{item.implementation_time_months} mies.</dd>
+                  <dd className="mt-0.5 font-bold text-foreground">{item.implementation_time_months} mies.</dd>
                 </div>
               )}
               {item.testers_count !== undefined && item.testers_count > 0 && (
@@ -328,25 +328,25 @@ export default function InnovationDetailPage() {
                     <Users className="size-3.5" aria-hidden="true" />
                     Testerów
                   </dt>
-                  <dd className="mt-0.5 font-bold text-deep">{item.testers_count}</dd>
+                  <dd className="mt-0.5 font-bold text-foreground">{item.testers_count}</dd>
                 </div>
               )}
               {item.authors && (
                 <div className="px-5 py-4">
                   <dt className="text-sm text-muted">Autorzy</dt>
-                  <dd className="mt-0.5 text-deep whitespace-pre-line">{item.authors.replace(/^-\s*/gm, "")}</dd>
+                  <dd className="mt-0.5 text-foreground whitespace-pre-line">{item.authors.replace(/^-\s*/gm, "")}</dd>
                 </div>
               )}
               {item.project && (
                 <div className="px-5 py-4">
                   <dt className="text-sm text-muted">Projekt ROPS</dt>
-                  <dd className="mt-0.5 text-deep">{item.project}</dd>
+                  <dd className="mt-0.5 text-foreground">{item.project}</dd>
                 </div>
               )}
               {item.status && (
                 <div className="px-5 py-4">
                   <dt className="text-sm text-muted">Status</dt>
-                  <dd className="mt-0.5 font-bold text-deep capitalize">
+                  <dd className="mt-0.5 font-bold text-foreground capitalize">
                     {item.status === "active" ? "Aktywna" : item.status === "archived" ? "Archiwum" : "Nieaktualna"}
                   </dd>
                 </div>
@@ -357,20 +357,20 @@ export default function InnovationDetailPage() {
       </div>
 
       {/* Community action cards */}
-      <div className="mx-auto max-w-content border-t-2 border-sage px-4 pt-10 pb-4 sm:px-6">
+      <div className="mx-auto max-w-content border-t-2 border-border/40 px-4 pt-10 pb-4 sm:px-6">
         <div className="grid gap-6 sm:grid-cols-2">
 
           {/* Testowanie */}
-          <div className="border-(length:--bw) border-deep bg-surface p-6 shadow-paper">
+          <div className="border-(length:--bw) border-border bg-surface p-6 shadow-raised">
             <div className="flex items-center gap-3">
-              <FlaskConical className="size-6 shrink-0 text-leaf" aria-hidden="true" />
-              <h2 className="text-lg font-bold text-deep">Testowanie</h2>
+              <FlaskConical className="size-6 shrink-0 text-primary" aria-hidden="true" />
+              <h2 className="text-lg font-bold text-foreground">Testowanie</h2>
             </div>
-            <p className="mt-3 text-base text-ink">
+            <p className="mt-3 text-base text-foreground">
               Przetestuj innowację i podziel się opinią z twórcami.
             </p>
             {testerStatus === "pending" ? (
-              <div className="mt-5 flex items-center gap-2 rounded-ui border-2 border-leaf bg-paper px-4 py-3 text-base font-bold text-leaf">
+              <div className="mt-5 flex items-center gap-2 rounded-ui border-2 border-primary bg-background px-4 py-3 text-base font-bold text-primary">
                 <CircleCheck className="size-5 shrink-0" aria-hidden="true" />
                 Zgłoszenie wysłane — oczekuje na akceptację
               </div>
@@ -387,17 +387,17 @@ export default function InnovationDetailPage() {
           </div>
 
           {/* Zainteresowanie */}
-          <div className="border-(length:--bw) border-deep bg-surface p-6 shadow-paper">
+          <div className="border-(length:--bw) border-border bg-surface p-6 shadow-raised">
             <div className="flex items-center gap-3">
-              <Bell className="size-6 shrink-0 text-leaf" aria-hidden="true" />
-              <h2 className="text-lg font-bold text-deep">Podobne innowacje</h2>
+              <Bell className="size-6 shrink-0 text-primary" aria-hidden="true" />
+              <h2 className="text-lg font-bold text-foreground">Podobne innowacje</h2>
             </div>
-            <p className="mt-3 text-base text-ink">
+            <p className="mt-3 text-base text-foreground">
               Interesuje Cię ta tematyka? Dowiaduj się o nowych innowacjach.
             </p>
 
             {interestSaved ? (
-              <div className="mt-5 flex items-center gap-2 rounded-ui border-2 border-leaf bg-paper px-4 py-3 text-base font-bold text-leaf">
+              <div className="mt-5 flex items-center gap-2 rounded-ui border-2 border-primary bg-background px-4 py-3 text-base font-bold text-primary">
                 <CircleCheck className="size-5 shrink-0" aria-hidden="true" />
                 Zainteresowanie zapisane
               </div>
@@ -408,7 +408,7 @@ export default function InnovationDetailPage() {
                     {item.tags.map((tag) => (
                       <li
                         key={tag}
-                        className="inline-flex items-center gap-1 rounded-full border border-leaf bg-paper px-2.5 py-1 text-sm text-leaf"
+                        className="inline-flex items-center gap-1 rounded-full border border-primary bg-background px-2.5 py-1 text-sm text-primary"
                       >
                         <Tag className="size-3" aria-hidden="true" />
                         {(TAG_LABELS as Record<string, string>)[tag] ?? tag}
@@ -457,9 +457,9 @@ export default function InnovationDetailPage() {
       {/* Embedded forum thread */}
       <section
         aria-labelledby="dyskusja-tytul"
-        className="mx-auto max-w-content border-t-2 border-sage px-4 py-12 sm:px-6"
+        className="mx-auto max-w-content border-t-2 border-border/40 px-4 py-12 sm:px-6"
       >
-        <h2 id="dyskusja-tytul" className="text-xl font-bold text-deep">
+        <h2 id="dyskusja-tytul" className="text-xl font-bold text-foreground">
           Dyskusja społeczności
         </h2>
         <p className="mt-1 text-muted">
@@ -475,8 +475,8 @@ export default function InnovationDetailPage() {
       </section>
 
       {similar.length > 0 && (
-        <section aria-labelledby="podobne-tytul" className="mx-auto max-w-content border-t-2 border-sage px-4 py-12 sm:px-6">
-          <h2 id="podobne-tytul" className="text-xl font-bold text-deep">Podobne innowacje</h2>
+        <section aria-labelledby="podobne-tytul" className="mx-auto max-w-content border-t-2 border-border/40 px-4 py-12 sm:px-6">
+          <h2 id="podobne-tytul" className="text-xl font-bold text-foreground">Podobne innowacje</h2>
           <ul className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {similar.map((inn) => (
               <li key={inn.id} className="flex">

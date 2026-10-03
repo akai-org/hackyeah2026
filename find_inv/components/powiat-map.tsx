@@ -11,19 +11,21 @@ import { getGapIndex, getPulse, type GminaPulse } from "@/lib/knowledge";
 import { track } from "@/lib/track";
 import { cn, plural } from "@/lib/utils";
 
-// Interaktywna mapa powiatów: kolor = Indeks Luki Innowacyjnej (jedna skala sekwencyjna zieleni),
+// Interaktywna mapa powiatów: kolor = Indeks Luki Innowacyjnej (jedna skala sekwencyjna od tła do `primary`),
 // kliknięcie pokazuje najważniejsze wyzwania i pasujące innowacje. Dane z tych samych endpointów co lista
 // „Gdzie najbardziej brakuje rozwiązań” (/api/innovation-gap, /api/gmina-pulse/{powiat}), więc wartości się zgadzają.
 // Kolor nigdy nie jest jedyną informacją: wartość indeksu widać w panelu, a powiat można też wybrać z listy.
 
+// Kroki skali to tokeny --map-1…5 z globals.css (liczone z `primary`), więc tryb kontrastu podmienia je sam.
+// Tekst na kroku dobrany tak, żeby miał ≥ 4,5:1 w obu trybach.
 const BIN_COLORS = [
-  { fill: "#D3E3D0", text: "#14251C" },
-  { fill: "#A9CDB4", text: "#14251C" },
-  { fill: "#6FA88A", text: "#14251C" },
-  { fill: "#2D6A4F", text: "#FAFCF7" },
-  { fill: "#1B4332", text: "#FAFCF7" },
+  { fill: "var(--map-1)", text: "var(--color-foreground)" },
+  { fill: "var(--map-2)", text: "var(--color-foreground)" },
+  { fill: "var(--map-3)", text: "var(--color-foreground)" },
+  { fill: "var(--map-4)", text: "var(--color-primary-foreground)" },
+  { fill: "var(--map-5)", text: "var(--color-primary-foreground)" },
 ];
-const NO_DATA = { fill: "#EEF3EA", text: "#3D5A4A" };
+const NO_DATA = { fill: "var(--map-0)", text: "var(--color-muted)" };
 
 /** Etykiety, które nachodzą na sąsiednie miasto, przesuwamy ręcznie. */
 const LABEL_OFFSET: Record<string, [number, number]> = {
@@ -115,14 +117,14 @@ export function PowiatMap() {
   return (
     <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
       {/* Mapa */}
-      <div className="relative border-(length:--bw) border-deep bg-surface p-4 shadow-paper sm:p-6 lg:sticky lg:top-6">
+      <div className="relative border-(length:--bw) border-border bg-surface p-4 shadow-raised sm:p-6 lg:sticky lg:top-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <label className="grid gap-1 text-sm font-bold text-muted">
             Wybierz powiat
             <select
               value={selectedId}
               onChange={(event) => setSelected(event.target.value)}
-              className="min-h-12 rounded-ui border-2 border-deep bg-surface px-3 text-base font-normal text-ink"
+              className="min-h-12 rounded-ui border-2 border-border bg-surface px-3 text-base font-normal text-foreground"
             >
               {sortedByName.map((item) => (
                 <option key={item.id} value={item.id}>
@@ -140,7 +142,7 @@ export function PowiatMap() {
               hoverShape ? "opacity-100" : "opacity-0",
             )}
           >
-            <span className="max-w-full truncate rounded-ui bg-deep px-3 py-1 text-sm font-bold text-surface">
+            <span className="max-w-full truncate rounded-ui bg-primary px-3 py-1 text-sm font-bold text-primary-foreground">
               {hoverShape &&
                 `${fullName(hoverShape)} · ${hoverEntry ? `indeks ${formatNumber(hoverEntry.gap_score)}` : "brak danych"}`}
             </span>
@@ -161,7 +163,7 @@ export function PowiatMap() {
             return (
               <g key={item.id}>
                 {/* Twardy „papierowy” cień pod wybranym powiatem. */}
-                {isSelected && <path d={item.d} fill="#1B4332" transform="translate(6 6)" />}
+                {isSelected && <path d={item.d} style={{ fill: "var(--color-foreground)" }} transform="translate(6 6)" />}
                 <path
                   d={item.d}
                   role="button"
@@ -170,8 +172,7 @@ export function PowiatMap() {
                   aria-label={`${fullName(item)}, ${
                     entry ? `indeks luki ${formatNumber(entry.gap_score)} z ${scaleMax}` : "brak danych"
                   }`}
-                  fill={colorFor(entry).fill}
-                  stroke="#1B4332"
+                  style={{ fill: colorFor(entry).fill, stroke: "var(--color-foreground)" }}
                   strokeWidth={isSelected ? 5 : isHovered ? 3.5 : 1.5}
                   strokeLinejoin="round"
                   transform={isSelected ? "translate(-3 -3)" : undefined}
@@ -180,7 +181,7 @@ export function PowiatMap() {
                   onMouseEnter={() => setHovered(item.id)}
                   onFocus={() => setHovered(item.id)}
                   onBlur={() => setHovered(null)}
-                  className="cursor-pointer outline-none transition-[stroke-width,fill] duration-150 focus-visible:stroke-[#F2E2A0] focus-visible:stroke-[6]"
+                  className="cursor-pointer outline-none transition-[stroke-width,fill] duration-150 focus-visible:stroke-focus focus-visible:stroke-[6]"
                 />
               </g>
             );
@@ -198,11 +199,13 @@ export function PowiatMap() {
                   y={item.cy + dy + lift}
                   textAnchor="middle"
                   dominantBaseline="middle"
-                  fill={item.city ? "#14251C" : colorFor(byShape.get(item.id)).text}
+                  style={{
+                    fill: item.city ? "var(--color-foreground)" : colorFor(byShape.get(item.id)).text,
+                    stroke: item.city ? "var(--color-surface)" : "none",
+                  }}
                   fontSize={item.city ? 20 : item.id === "proszowicki" ? 16 : SMALL_LABEL.has(item.id) ? 20 : 25}
                   fontWeight={item.city || item.id === selectedId ? 700 : 400}
                   paintOrder="stroke"
-                  stroke={item.city ? "#FAFCF7" : "none"}
                   strokeWidth={item.city ? 5 : 0}
                 >
                   {item.name}
@@ -221,7 +224,7 @@ export function PowiatMap() {
             {BIN_COLORS.map((bin) => (
               <span
                 key={bin.fill}
-                className="block h-4 w-10 border-y-2 border-deep first:border-l-2 last:border-r-2"
+                className="block h-4 w-10 border-y-2 border-border first:border-l-2 last:border-r-2"
                 style={{ background: bin.fill }}
               />
             ))}
@@ -236,13 +239,13 @@ export function PowiatMap() {
         aria-live="polite"
         aria-busy={pending}
         className={cn(
-          "border-(length:--bw) border-deep bg-surface p-5 shadow-paper transition-opacity duration-150 sm:p-6",
+          "border-(length:--bw) border-border bg-surface p-5 shadow-raised transition-opacity duration-150 sm:p-6",
           pending && panel && "opacity-60",
         )}
       >
         {!entry ? (
           <div key={shape.id} className="appear">
-            <h3 className="text-2xl font-bold text-deep">{fullName(shape)}</h3>
+            <h3 className="text-2xl font-bold text-foreground">{fullName(shape)}</h3>
             <p className="mt-3 text-muted">Brak danych o tym powiecie.</p>
           </div>
         ) : panel ? (
@@ -274,17 +277,17 @@ function PowiatPanel({
         <MapPin aria-hidden="true" className="size-4" />
         {shape.city ? "Miasto na prawach powiatu" : "Powiat"}
       </p>
-      <h3 className="mt-1 text-2xl font-bold text-deep">{fullName(shape)}</h3>
+      <h3 className="mt-1 text-2xl font-bold text-foreground">{fullName(shape)}</h3>
 
       <div className="mt-4 flex items-center gap-3">
-        <div className="relative h-5 flex-1 border-l border-muted" aria-hidden="true">
+        <div className="relative h-5 flex-1 border-l border-border" aria-hidden="true">
           <div
-            className="h-full rounded-r-[4px] bg-leaf"
+            className="h-full rounded-r-[4px] bg-primary"
             style={{ width: `${Math.max(2, (entry.gap_score / scaleMax) * 100)}%` }}
           />
         </div>
         <p className="shrink-0 tabular-nums">
-          Indeks luki <span className="text-xl font-bold text-deep">{formatNumber(entry.gap_score)}</span>
+          Indeks luki <span className="text-xl font-bold text-foreground">{formatNumber(entry.gap_score)}</span>
           <span className="text-muted"> / {scaleMax}</span>
         </p>
       </div>
@@ -293,18 +296,18 @@ function PowiatPanel({
         {plural(entry.innovations_count, "innowacja", "innowacje", "innowacji")} w Bibliotece
       </p>
 
-      <h4 className="mt-6 font-bold text-deep">Najważniejsze wyzwania</h4>
+      <h4 className="mt-6 font-bold text-foreground">Najważniejsze wyzwania</h4>
       {pulse.top_challenges.length ? (
         <ol className="mt-2 grid gap-2">
           {pulse.top_challenges.map((challenge, index) => (
             <li
               key={challenge.id}
-              className="appear border-l-4 border-leaf bg-paper py-2 pr-3 pl-4"
+              className="appear border-l-4 border-secondary bg-background py-2 pr-3 pl-4"
               style={{ animationDelay: `${index * 70}ms` }}
             >
-              <p className="font-bold text-deep">{challenge.title}</p>
+              <p className="font-bold text-foreground">{challenge.title}</p>
               <p>
-                <span className="text-lg font-bold text-deep tabular-nums">
+                <span className="text-lg font-bold text-foreground tabular-nums">
                   {formatNumber(challenge.indicator_value)}
                 </span>{" "}
                 <span className="text-muted">{challenge.indicator_unit}</span>
@@ -319,25 +322,25 @@ function PowiatPanel({
         <p className="mt-2 text-muted">Brak szczegółowych wskaźników dla tego powiatu.</p>
       )}
 
-      <h4 className="mt-6 font-bold text-deep">Co może pomóc</h4>
+      <h4 className="mt-6 font-bold text-foreground">Co może pomóc</h4>
       <ul className="mt-2 grid gap-2">
         {pulse.matching_innovations.map((innovation, index) => (
           <li key={innovation.id} className="appear" style={{ animationDelay: `${210 + index * 70}ms` }}>
             <Link
               href={`/innowacje/${innovation.id}`}
               onClick={() => track({ type: "card_click", innovationId: innovation.id, meta: { source: "mapa", position: index + 1 } })}
-              className="group block rounded-ui border-2 border-deep bg-surface p-3 transition-colors hover:bg-sage"
+              className="group block rounded-ui border-2 border-border bg-surface p-3 transition-colors hover:bg-primary/10"
             >
-              <span className="flex items-center justify-between gap-2 font-bold text-deep">
+              <span className="flex items-center justify-between gap-2 font-bold text-primary">
                 {innovation.title}
                 <ArrowRight
                   aria-hidden="true"
-                  className="size-5 shrink-0 text-leaf transition-transform group-hover:translate-x-1"
+                  className="size-5 shrink-0 text-primary transition-transform group-hover:translate-x-1"
                 />
               </span>
               <span className="mt-1 line-clamp-2 block text-sm">{innovation.short_desc}</span>
               {innovation.category && (
-                <span className="mt-2 inline-block rounded-ui bg-mint px-2 py-0.5 text-xs font-bold text-ink">
+                <span className="mt-2 inline-block rounded-ui bg-secondary/60 px-2 py-0.5 text-xs font-bold text-foreground">
                   {innovation.category}
                 </span>
               )}
@@ -348,7 +351,7 @@ function PowiatPanel({
 
       <Link
         href={`/wyniki?q=${encodeURIComponent(query)}`}
-        className="mt-5 inline-flex min-h-12 items-center gap-2 font-bold text-leaf underline underline-offset-4 hover:text-deep"
+        className="mt-5 inline-flex min-h-12 items-center gap-2 font-bold text-primary underline underline-offset-4 hover:text-primary-hover"
       >
         <Search aria-hidden="true" className="size-5" />
         Szukaj rozwiązań dla tego powiatu
@@ -360,16 +363,16 @@ function PowiatPanel({
 function PanelSkeleton() {
   return (
     <div role="status" aria-label="Wczytuję dane powiatu" className="animate-pulse">
-      <div className="h-4 w-40 rounded bg-sage" />
-      <div className="mt-3 h-7 w-56 rounded bg-sage" />
-      <div className="mt-5 h-5 w-full rounded bg-sage" />
-      <div className="mt-7 h-4 w-44 rounded bg-sage" />
+      <div className="h-4 w-40 rounded bg-secondary" />
+      <div className="mt-3 h-7 w-56 rounded bg-secondary" />
+      <div className="mt-5 h-5 w-full rounded bg-secondary" />
+      <div className="mt-7 h-4 w-44 rounded bg-secondary" />
       {[0, 1, 2].map((index) => (
-        <div key={index} className="mt-2 h-16 w-full border-l-4 border-mint bg-paper" />
+        <div key={index} className="mt-2 h-16 w-full border-l-4 border-secondary bg-background" />
       ))}
-      <div className="mt-7 h-4 w-32 rounded bg-sage" />
+      <div className="mt-7 h-4 w-32 rounded bg-secondary" />
       {[0, 1].map((index) => (
-        <div key={index} className="mt-2 h-20 w-full rounded-ui bg-sage/60" />
+        <div key={index} className="mt-2 h-20 w-full rounded-ui bg-secondary/60" />
       ))}
     </div>
   );

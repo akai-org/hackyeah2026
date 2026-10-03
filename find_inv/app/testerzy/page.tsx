@@ -43,19 +43,19 @@ export default function TestersPage() {
 
         <div className="mt-12 grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,32rem)]">
           <div>
-            <h2 className="text-xl font-bold text-deep">Na czym to polega</h2>
+            <h2 className="text-xl font-bold text-foreground">Na czym to polega</h2>
             <ol className="mt-4 grid gap-4">
               {STEPS.map((step, index) => {
                 const Icon = step.icon;
                 return (
                   <li
                     key={step.title}
-                    className="flex gap-4 border-(length:--bw) border-deep bg-surface p-5 shadow-paper"
+                    className="flex gap-4 border-(length:--bw) border-border bg-surface p-5 shadow-raised"
                   >
-                    <Icon aria-hidden="true" className="mt-1 size-8 shrink-0 text-leaf" strokeWidth={1.75} />
+                    <Icon aria-hidden="true" className="mt-1 size-8 shrink-0 text-primary" strokeWidth={1.75} />
                     <div>
                       <p className="text-sm font-bold text-muted">Krok {index + 1}</p>
-                      <h3 className="text-lg font-bold text-deep">{step.title}</h3>
+                      <h3 className="text-lg font-bold text-foreground">{step.title}</h3>
                       <p className="mt-1">{step.text}</p>
                     </div>
                   </li>
@@ -63,10 +63,10 @@ export default function TestersPage() {
               })}
             </ol>
 
-            <h2 className="mt-10 text-xl font-bold text-deep">Co zyskujesz</h2>
+            <h2 className="mt-10 text-xl font-bold text-foreground">Co zyskujesz</h2>
             <ul className="mt-4 grid gap-3">
               {BENEFITS.map((benefit) => (
-                <li key={benefit} className="border-l-4 border-leaf pl-4">
+                <li key={benefit} className="border-l-4 border-secondary pl-4">
                   {benefit}
                 </li>
               ))}

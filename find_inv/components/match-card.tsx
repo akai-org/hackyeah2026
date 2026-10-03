@@ -54,13 +54,13 @@ export function MatchCard({
     <article
       aria-labelledby={titleId}
       className={cn(
-        "relative flex h-full flex-col border-(length:--bw) border-deep p-6 shadow-paper",
-        unmaintained ? "bg-paper" : "bg-surface",
+        "relative flex h-full flex-col border-(length:--bw) border-border p-6 shadow-raised",
+        unmaintained ? "bg-background" : "bg-surface",
       )}
     >
       <span
         aria-hidden="true"
-        className="simple-hidden absolute -top-3 right-6 h-6 w-20 rotate-[4deg] bg-butter [clip-path:polygon(0_8%,6%_0,100%_4%,95%_50%,100%_96%,4%_100%,0_55%)]"
+        className="simple-hidden absolute -top-3 right-6 h-6 w-20 rotate-[4deg] bg-accent [clip-path:polygon(0_8%,6%_0,100%_4%,95%_50%,100%_96%,4%_100%,0_55%)]"
       />
 
       {rank !== undefined && (
@@ -70,12 +70,12 @@ export function MatchCard({
         </p>
       )}
 
-      <Heading id={titleId} className="pr-16 text-xl font-bold text-deep">
+      <Heading id={titleId} className="pr-16 text-xl font-bold text-foreground">
         {innovation.title}
       </Heading>
 
       {unmaintained && (
-        <p className="mt-3 inline-flex items-start gap-2 self-start rounded-ui border-2 border-muted bg-sage px-3 py-1 font-bold text-ink">
+        <p className="mt-3 inline-flex items-start gap-2 self-start rounded-ui border-2 border-border bg-secondary/60 px-3 py-1 font-bold text-foreground">
           <Archive aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
           Nieaktualna: nikt już jej nie prowadzi
         </p>
@@ -84,7 +84,7 @@ export function MatchCard({
       <p className="mt-3 text-lg">{innovation.short_desc}</p>
 
       {shared.length > 0 && (
-        <blockquote className="mt-4 border-l-4 border-leaf pl-4">
+        <blockquote className="mt-4 border-l-4 border-secondary pl-4">
           <p className="text-sm font-bold text-muted">Dlaczego pasuje</p>
           <p>Wspólne tematy: {shared.map(tagLabel).join(", ").toLowerCase()}.</p>
         </blockquote>
@@ -95,7 +95,7 @@ export function MatchCard({
           <div>
             <dt className="sr-only">Dla kogo</dt>
             <dd className="flex items-start gap-2">
-              <Users aria-hidden="true" className="mt-1 size-5 shrink-0 text-leaf" />
+              <Users aria-hidden="true" className="mt-1 size-5 shrink-0 text-primary" />
               <span>{short(innovation.target_group)}</span>
             </dd>
           </div>
@@ -104,7 +104,7 @@ export function MatchCard({
           <div>
             <dt className="sr-only">Gdzie działa</dt>
             <dd className="flex items-start gap-2">
-              <MapPin aria-hidden="true" className="mt-1 size-5 shrink-0 text-leaf" />
+              <MapPin aria-hidden="true" className="mt-1 size-5 shrink-0 text-primary" />
               <span>{short(innovation.where_implemented)}</span>
             </dd>
           </div>
@@ -113,7 +113,7 @@ export function MatchCard({
           <div>
             <dt className="sr-only">Koszt</dt>
             <dd className="flex items-start gap-2">
-              <Coins aria-hidden="true" className="mt-1 size-5 shrink-0 text-leaf" />
+              <Coins aria-hidden="true" className="mt-1 size-5 shrink-0 text-primary" />
               <span>
                 {COST_LABELS[innovation.cost_level]}
                 {innovation.implementation_time_months
@@ -127,7 +127,7 @@ export function MatchCard({
           <div>
             <dt className="sr-only">Testy</dt>
             <dd className="flex items-start gap-2">
-              <Puzzle aria-hidden="true" className="mt-1 size-5 shrink-0 text-leaf" />
+              <Puzzle aria-hidden="true" className="mt-1 size-5 shrink-0 text-primary" />
               <span>
                 Sprawdzona przez {innovation.testers_count}{" "}
                 {plural(innovation.testers_count, "testera", "testerów", "testerów")}

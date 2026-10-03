@@ -29,7 +29,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   if (status === "loading") {
     return (
       <div className="mx-auto flex max-w-content items-center gap-3 px-4 py-16 sm:px-6" role="status">
-        <Loader2 aria-hidden="true" className="size-6 animate-spin text-leaf" />
+        <Loader2 aria-hidden="true" className="size-6 animate-spin text-primary" />
         Sprawdzam uprawnienia…
       </div>
     );
@@ -48,9 +48,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     return (
       <div className="mx-auto max-w-content px-4 py-16 sm:px-6">
         <CutoutText as="h1" size="section" text="Panel ROPS" />
-        <div className="mt-8 max-w-xl border-(length:--bw) border-deep bg-surface p-6 shadow-paper sm:p-8">
-          <h2 className="flex items-center gap-3 text-xl font-bold text-deep">
-            <ShieldCheck aria-hidden="true" className="size-7 shrink-0 text-leaf" />
+        <div className="mt-8 max-w-xl border-(length:--bw) border-border bg-surface p-6 shadow-raised sm:p-8">
+          <h2 className="flex items-center gap-3 text-xl font-bold text-foreground">
+            <ShieldCheck aria-hidden="true" className="size-7 shrink-0 text-primary" />
             Ta część jest dla pracowników ROPS
           </h2>
           <p className="mt-3">
@@ -76,7 +76,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </div>
       </div>
 
-      <nav aria-label="Panel admina" className="mt-4 border-b-(length:--bw) border-deep">
+      <nav aria-label="Panel admina" className="mt-4 border-b-(length:--bw) border-border">
         <ul className="-mb-(--bw) flex flex-wrap gap-1">
           {ADMIN_LINKS.map(({ href, label, icon: Icon }) => {
             const active = pathname === href;
@@ -88,8 +88,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                   className={cn(
                     "inline-flex min-h-12 items-center gap-2 rounded-t-ui border-(length:--bw) px-4 font-bold",
                     active
-                      ? "border-deep border-b-surface bg-surface text-deep"
-                      : "border-transparent text-leaf underline-offset-4 hover:underline",
+                      ? "border-border border-b-surface bg-surface text-foreground"
+                      : "border-transparent text-primary underline-offset-4 hover:underline",
                   )}
                 >
                   <Icon aria-hidden="true" className="size-5 shrink-0" />

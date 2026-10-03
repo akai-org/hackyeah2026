@@ -33,7 +33,7 @@ function Description({ text }: { text: string }) {
           <p key={index} className="whitespace-pre-line">
             {label ? (
               <>
-                <strong className="text-deep">{label[1]}:</strong> {paragraph.slice(label[0].length)}
+                <strong className="text-foreground">{label[1]}:</strong> {paragraph.slice(label[0].length)}
               </>
             ) : (
               paragraph
@@ -82,7 +82,7 @@ export function InnovationDetail({ id }: { id: number }) {
   if (innovation === null) {
     return (
       <div className="max-w-3xl">
-        <h1 className="text-2xl font-bold text-deep">Nie znalazłem tej innowacji</h1>
+        <h1 className="text-2xl font-bold text-foreground">Nie znalazłem tej innowacji</h1>
         <p className="mt-3 text-lg">Mogła zostać usunięta z Biblioteki albo link jest niepełny.</p>
         <Link href="/biblioteka" className={buttonVariants({ variant: "secondary", className: "mt-6" })}>
           Przejdź do Biblioteki
@@ -117,12 +117,12 @@ export function InnovationDetail({ id }: { id: number }) {
       <p className="font-bold text-muted">
         {innovation.category ? `Karta innowacji · ${innovation.category}` : "Karta innowacji"}
       </p>
-      <h1 id="karta-tytul" className="mt-1 text-2xl font-bold text-deep">
+      <h1 id="karta-tytul" className="mt-1 text-2xl font-bold text-foreground">
         {innovation.title}
       </h1>
 
       {(innovation.is_unmaintained || innovation.status === "unmaintained") && (
-        <p className="mt-4 inline-flex items-start gap-2 rounded-ui border-2 border-muted bg-sage px-3 py-1.5 font-bold text-ink">
+        <p className="mt-4 inline-flex items-start gap-2 rounded-ui border-2 border-border bg-secondary/60 px-3 py-1.5 font-bold text-foreground">
           <Archive aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
           Nieaktualna: nikt już jej nie prowadzi. Pomysł nadal może się przydać.
         </p>
@@ -130,25 +130,25 @@ export function InnovationDetail({ id }: { id: number }) {
 
       <p className="mt-4 max-w-[60ch] text-lg">{innovation.short_desc}</p>
 
-      <div className="relative mt-8 border-(length:--bw) border-deep bg-surface p-6 shadow-paper sm:p-8">
+      <div className="relative mt-8 border-(length:--bw) border-border bg-surface p-6 shadow-raised sm:p-8">
         <span
           aria-hidden="true"
-          className="simple-hidden absolute -top-3 right-10 h-6 w-24 rotate-[4deg] bg-butter [clip-path:polygon(0_8%,6%_0,100%_4%,95%_50%,100%_96%,4%_100%,0_55%)]"
+          className="simple-hidden absolute -top-3 right-10 h-6 w-24 rotate-[4deg] bg-accent [clip-path:polygon(0_8%,6%_0,100%_4%,95%_50%,100%_96%,4%_100%,0_55%)]"
         />
         {innovation.full_desc && (
           <>
-            <h2 className="text-xl font-bold text-deep">Na czym polega</h2>
+            <h2 className="text-xl font-bold text-foreground">Na czym polega</h2>
             <Description text={innovation.full_desc} />
           </>
         )}
 
-        <h2 className="mt-8 text-xl font-bold text-deep">W skrócie</h2>
+        <h2 className="mt-8 text-xl font-bold text-foreground">W skrócie</h2>
         <dl className="mt-3 grid gap-x-6 gap-y-3 sm:grid-cols-[12rem_1fr]">
           {facts
             .filter(([, value]) => value)
             .map(([label, value]) => (
               <div key={label} className="contents">
-                <dt className="font-bold text-deep">{label}</dt>
+                <dt className="font-bold text-foreground">{label}</dt>
                 <dd>{value}</dd>
               </div>
             ))}
@@ -156,13 +156,13 @@ export function InnovationDetail({ id }: { id: number }) {
 
         {innovation.tags.length > 0 && (
           <>
-            <h2 className="mt-8 text-xl font-bold text-deep">Tematy</h2>
+            <h2 className="mt-8 text-xl font-bold text-foreground">Tematy</h2>
             <ul className="mt-3 flex flex-wrap gap-2">
               {innovation.tags.map((tag) => (
                 <li key={tag}>
                   <Link
                     href={`/biblioteka?tags=${encodeURIComponent(tag)}`}
-                    className="inline-flex min-h-12 items-center rounded-ui border-(length:--bw) border-deep bg-mint px-4 text-base text-ink hover:bg-sage"
+                    className="inline-flex min-h-12 items-center rounded-ui border-(length:--bw) border-border bg-surface px-4 text-base text-primary hover:bg-primary/10"
                   >
                     {TAG_LABELS[tag as Tag] ?? tag}
                   </Link>
@@ -219,11 +219,11 @@ export function InnovationDetail({ id }: { id: number }) {
       <TestRequestBox innovation={innovation} />
 
       {/* Zgłoś się jako tester */}
-      <div className="mt-8 rounded-ui border-(length:--bw) border-deep bg-sage p-5 sm:p-6">
-        <h2 className="text-xl font-bold text-deep">Testowanie</h2>
+      <div className="mt-8 rounded-ui border-(length:--bw) border-border bg-secondary/60 p-5 sm:p-6">
+        <h2 className="text-xl font-bold text-foreground">Testowanie</h2>
         <p className="mt-2 text-base">Masz doświadczenie z tym tematem? Zgłoś się jako tester i pomóż ocenić tę innowację w praktyce.</p>
         {testerStatus === "pending" ? (
-          <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-mint px-4 py-2 text-sm font-bold text-deep">
+          <p className="mt-4 inline-flex items-center gap-2 rounded-full border-2 border-success bg-success/10 px-4 py-2 text-sm font-bold text-success">
             Zgłoszenie wysłane — czekamy na odpowiedź
           </p>
         ) : (
@@ -233,7 +233,7 @@ export function InnovationDetail({ id }: { id: number }) {
               cta("zostan_testerem")();
               setTesterModalOpen(true);
             }}
-            className="mt-4 inline-flex min-h-12 items-center gap-2 rounded-ui border-(length:--bw) border-deep bg-deep px-5 font-bold text-surface hover:bg-leaf"
+            className="mt-4 inline-flex min-h-12 items-center gap-2 rounded-ui border-(length:--bw) border-primary bg-primary px-5 font-bold text-primary-foreground hover:bg-primary-hover"
           >
             Zgłoś się jako tester
           </button>
@@ -241,8 +241,8 @@ export function InnovationDetail({ id }: { id: number }) {
       </div>
 
       {/* Forum dyskusji */}
-      <section aria-labelledby="dyskusja-tytul" className="mt-12 border-t-2 border-sage pt-10">
-        <h2 id="dyskusja-tytul" className="text-2xl font-bold text-deep">Dyskusja społeczności</h2>
+      <section aria-labelledby="dyskusja-tytul" className="mt-12 border-t-2 border-border/40 pt-10">
+        <h2 id="dyskusja-tytul" className="text-2xl font-bold text-foreground">Dyskusja społeczności</h2>
         <p className="mt-1 text-base text-muted">Komentarze mieszkańców, testerów i konsultantów dotyczące tej innowacji.</p>
         <div className="mt-6">
           <ForumThread

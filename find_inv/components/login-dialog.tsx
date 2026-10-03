@@ -47,18 +47,18 @@ export function LoginDialog() {
       onClick={(event) => {
         if (event.target === event.currentTarget) closeLogin();
       }}
-      className="m-auto w-[calc(100%-2rem)] max-w-xl rounded-ui border-(length:--bw) border-deep bg-surface p-0 text-ink shadow-paper backdrop:bg-ink/60"
+      className="m-auto w-[calc(100%-2rem)] max-w-xl rounded-ui border-(length:--bw) border-border bg-surface p-0 text-foreground shadow-raised backdrop:bg-overlay/60"
     >
       <div className="p-6 sm:p-8">
         <div className="flex items-start justify-between gap-4">
-          <h2 id={titleId} className="text-2xl font-bold text-deep">
+          <h2 id={titleId} className="text-2xl font-bold text-foreground">
             Zaloguj się
           </h2>
           <button
             type="button"
             onClick={closeLogin}
             aria-label="Zamknij okno logowania"
-            className="-mt-2 -mr-2 inline-flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-ui hover:bg-sage"
+            className="-mt-2 -mr-2 inline-flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-ui hover:bg-secondary/60"
           >
             <X aria-hidden="true" className="size-6" />
           </button>
@@ -70,7 +70,7 @@ export function LoginDialog() {
         </p>
 
         <fieldset className="mt-6">
-          <legend className="font-bold text-deep">Wybierz rolę</legend>
+          <legend className="font-bold text-foreground">Wybierz rolę</legend>
           <ul className="mt-2 grid gap-3">
             {ROLES.map((role) => (
               <li key={role.value}>
@@ -78,12 +78,12 @@ export function LoginDialog() {
                   type="button"
                   onClick={() => choose(role.value)}
                   disabled={pending !== null}
-                  className="flex min-h-12 w-full cursor-pointer items-center gap-4 rounded-ui border-(length:--bw) border-deep bg-surface px-4 py-3 text-left hover:bg-mint disabled:cursor-wait disabled:opacity-70"
+                  className="flex min-h-12 w-full cursor-pointer items-center gap-4 rounded-ui border-(length:--bw) border-border bg-surface px-4 py-3 text-left hover:bg-primary/10 disabled:cursor-wait disabled:opacity-70"
                 >
                   <RoleBadge role={role.value} className="w-36 shrink-0 justify-center" />
                   <span className="flex-1 text-base">{role.description}</span>
                   {pending === role.value && (
-                    <Loader2 aria-label="Loguję" className="size-5 shrink-0 animate-spin text-deep" />
+                    <Loader2 aria-label="Loguję" className="size-5 shrink-0 animate-spin text-foreground" />
                   )}
                 </button>
               </li>

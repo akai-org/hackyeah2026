@@ -16,14 +16,14 @@ const FONTS = [
 export default function FontTestPage() {
   return (
     <div className="mx-auto max-w-content px-4 py-16 sm:px-6">
-      <h1 className="text-2xl font-bold text-deep">Test krojów i polskich znaków</h1>
+      <h1 className="text-2xl font-bold text-foreground">Test krojów i polskich znaków</h1>
       <ul className="mt-8 space-y-6">
         {FONTS.map((font) => (
-          <li key={font.name} className="border-(length:--bw) border-deep bg-surface p-5">
+          <li key={font.name} className="border-(length:--bw) border-border bg-surface p-5">
             <h2 className="text-sm text-muted">{font.name}</h2>
-            <p className={`${font.className} mt-2 text-2xl text-ink`}>{SAMPLE_LOWER}</p>
-            <p className={`${font.className} text-2xl text-ink`}>{SAMPLE_UPPER}</p>
-            <p className={`${font.className} mt-2 text-lg text-ink`}>{PANGRAM}</p>
+            <p className={`${font.className} mt-2 text-2xl text-foreground`}>{SAMPLE_LOWER}</p>
+            <p className={`${font.className} text-2xl text-foreground`}>{SAMPLE_UPPER}</p>
+            <p className={`${font.className} mt-2 text-lg text-foreground`}>{PANGRAM}</p>
           </li>
         ))}
       </ul>

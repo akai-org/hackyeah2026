@@ -47,9 +47,9 @@ export function CrisisPanel({ children }: { children?: React.ReactNode }) {
   return (
     <section
       aria-labelledby="pomoc-kryzysowa"
-      className="max-w-3xl rounded-ui border-(length:--bw) border-deep bg-surface p-6 sm:p-8"
+      className="max-w-3xl rounded-ui border-(length:--bw) border-border bg-surface p-6 sm:p-8"
     >
-      <h2 id="pomoc-kryzysowa" className="text-2xl font-bold text-deep">
+      <h2 id="pomoc-kryzysowa" className="text-2xl font-bold text-foreground">
         Pomoc jest blisko
       </h2>
       <p className="mt-3 max-w-[60ch] text-lg">
@@ -60,11 +60,11 @@ export function CrisisPanel({ children }: { children?: React.ReactNode }) {
           <li key={line.tel}>
             <a
               href={`tel:${line.tel}`}
-              className="flex min-h-12 items-center gap-4 rounded-ui border-(length:--bw) border-deep bg-paper px-4 py-3 hover:bg-sage"
+              className="flex min-h-12 items-center gap-4 rounded-ui border-(length:--bw) border-border bg-background px-4 py-3 hover:bg-secondary/60"
             >
-              <Phone aria-hidden="true" className="size-6 shrink-0 text-deep" />
+              <Phone aria-hidden="true" className="size-6 shrink-0 text-foreground" />
               <span>
-                <span className="block text-xl font-bold text-deep">{line.number}</span>
+                <span className="block text-xl font-bold text-foreground">{line.number}</span>
                 <span className="block font-bold">{line.name}</span>
                 <span className="block text-muted">{line.note}</span>
               </span>

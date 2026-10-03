@@ -41,7 +41,7 @@ function Missing() {
 }
 
 const FIELD_CLASS =
-  "w-full rounded-ui border-(length:--bw) border-deep px-4 text-base text-ink placeholder:text-muted read-only:bg-paper";
+  "w-full rounded-ui border-(length:--bw) border-border px-4 text-base text-foreground placeholder:text-muted read-only:bg-background";
 
 type FieldProps = {
   id: string;
@@ -68,7 +68,7 @@ function Field({ id, label, value, placeholder, readOnly, multiline, invalid, on
   };
   return (
     <>
-      <dt className="font-bold text-deep">
+      <dt className="font-bold text-foreground">
         <label htmlFor={id}>{label}</label>
       </dt>
       <dd>
@@ -178,12 +178,12 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
 
   return (
     <section aria-labelledby={`${ids}-fiszka`} className="appear mt-12 max-w-3xl">
-      <article className="relative border-(length:--bw) border-deep bg-surface p-6 shadow-paper sm:p-8">
+      <article className="relative border-(length:--bw) border-border bg-surface p-6 shadow-raised sm:p-8">
         {/* Kawałek taśmy przyklejający fiszkę do tablicy (DESIGN.md 8, karta innowacji). */}
-        <span aria-hidden="true" className="simple-hidden absolute -top-3 right-10 h-6 w-24 rotate-[4deg] bg-butter/90" />
+        <span aria-hidden="true" className="simple-hidden absolute -top-3 right-10 h-6 w-24 rotate-[4deg] bg-accent/90" />
 
         <p className="font-bold text-muted">Fiszka pomysłu</p>
-        <h2 id={`${ids}-fiszka`} ref={headingRef} tabIndex={-1} className="mt-1 text-xl font-bold text-deep">
+        <h2 id={`${ids}-fiszka`} ref={headingRef} tabIndex={-1} className="mt-1 text-xl font-bold text-foreground">
           {draft.title.trim() || "Bez tytułu"}
         </h2>
         <p className="mt-2 flex items-start gap-1.5 text-sm text-muted">
@@ -192,7 +192,7 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
         </p>
 
         <dl className="mt-6 grid gap-5 sm:grid-cols-[12rem_1fr]">
-          <dt className="font-bold text-deep">
+          <dt className="font-bold text-foreground">
             <label htmlFor={`${ids}-tytul`}>Tytuł</label>
           </dt>
           <dd>
@@ -204,7 +204,7 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
               readOnly={locked}
               aria-invalid={(invalid && !draft.title.trim()) || undefined}
               onChange={(event) => set("title")(event.target.value)}
-              className={cn(FIELD_CLASS, "min-h-12 bg-surface font-bold", invalid && !draft.title.trim() && "border-alert")}
+              className={cn(FIELD_CLASS, "min-h-12 bg-surface font-bold", invalid && !draft.title.trim() && "border-destructive")}
             />
           </dd>
 
@@ -255,7 +255,7 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
             onChange={set("place")}
           />
 
-          <dt className="font-bold text-deep">
+          <dt className="font-bold text-foreground">
             <label htmlFor={`${ids}-etap`}>Etap realizacji</label>
           </dt>
           <dd>
@@ -264,7 +264,7 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
               value={draft.stage}
               disabled={locked}
               onChange={(event) => set("stage")(event.target.value)}
-              className="min-h-12 w-full rounded-ui border-(length:--bw) border-deep bg-surface px-3 text-base text-ink disabled:bg-paper"
+              className="min-h-12 w-full rounded-ui border-(length:--bw) border-border bg-surface px-3 text-base text-foreground disabled:bg-background"
             >
               {STAGES.map((stage) => (
                 <option key={stage} value={stage}>
@@ -291,16 +291,16 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
             onChange={set("partners")}
           />
 
-          <dt className="font-bold text-deep">Tagi</dt>
+          <dt className="font-bold text-foreground">Tagi</dt>
           <dd>
             {draft.tags.length ? (
               <ul className="flex flex-wrap gap-2">
                 {draft.tags.map((tag) => (
                   <li
                     key={tag}
-                    className="inline-flex min-h-10 items-center gap-1.5 rounded-ui border-2 border-deep bg-mint px-3 text-base"
+                    className="inline-flex min-h-10 items-center gap-1.5 rounded-ui border-2 border-border bg-secondary/60 px-3 text-base"
                   >
-                    {draft.suggestedTags.includes(tag) && <Sparkles aria-hidden="true" className="size-4 text-deep" />}
+                    {draft.suggestedTags.includes(tag) && <Sparkles aria-hidden="true" className="size-4 text-foreground" />}
                     {TAG_LABELS[tag]}
                     {draft.suggestedTags.includes(tag) && <span className="sr-only">(propozycja AI)</span>}
                   </li>
@@ -317,7 +317,7 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
             )}
           </dd>
 
-          <dt className="font-bold text-deep">
+          <dt className="font-bold text-foreground">
             <label htmlFor={`${ids}-pliki`}>Załączniki</label>
           </dt>
           <dd>
@@ -335,11 +335,11 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
                 disabled={locked || files.length >= MAX_FILES}
                 aria-describedby={`${ids}-pliki-opis`}
                 onChange={(event) => addFiles(event.target.files)}
-                className="mt-2 block w-full text-base text-ink file:mr-4 file:min-h-12 file:cursor-pointer file:rounded-ui file:border-(length:--bw) file:border-deep file:bg-surface file:px-4 file:font-bold file:text-deep hover:file:bg-sage disabled:opacity-60"
+                className="mt-2 block w-full text-base text-foreground file:mr-4 file:min-h-12 file:cursor-pointer file:rounded-ui file:border-(length:--bw) file:border-border file:bg-surface file:px-4 file:font-bold file:text-primary hover:file:bg-primary/10 disabled:opacity-60"
               />
             )}
             {fileErrors.length > 0 && (
-              <div role="alert" className="mt-2 rounded-ui border-2 border-alert bg-surface px-4 py-2 text-alert">
+              <div role="alert" className="mt-2 rounded-ui border-2 border-destructive bg-surface px-4 py-2 text-destructive">
                 <p className="flex items-center gap-2 font-bold">
                   <CircleAlert aria-hidden="true" className="size-5 shrink-0" />
                   Nie dodano części plików
@@ -354,8 +354,8 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
             {files.length > 0 && (
               <ul aria-label="Wybrane pliki" className="mt-3 space-y-2">
                 {files.map((file, index) => (
-                  <li key={`${file.name}-${file.size}`} className="flex items-center gap-2 rounded-ui bg-paper py-1 pr-1 pl-3">
-                    <FileText aria-hidden="true" className="size-5 shrink-0 text-leaf" />
+                  <li key={`${file.name}-${file.size}`} className="flex items-center gap-2 rounded-ui bg-background py-1 pr-1 pl-3">
+                    <FileText aria-hidden="true" className="size-5 shrink-0 text-primary" />
                     <span className="min-w-0 flex-1 truncate">{file.name}</span>
                     <span className="text-sm text-muted tabular-nums">{formatSize(file.size)}</span>
                     {!saved && (
@@ -364,7 +364,7 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
                         onClick={() => setFiles((current) => current.filter((_, i) => i !== index))}
                         disabled={locked}
                         aria-label={`Usuń plik ${file.name}`}
-                        className="inline-flex size-10 cursor-pointer items-center justify-center rounded-ui hover:bg-sage"
+                        className="inline-flex size-10 cursor-pointer items-center justify-center rounded-ui hover:bg-secondary/60"
                       >
                         <X aria-hidden="true" className="size-5" />
                       </button>
@@ -379,7 +379,7 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
         {invalid && (
           <p
             role="alert"
-            className="mt-6 flex items-start gap-2 rounded-ui border-2 border-alert bg-surface px-4 py-3 font-bold text-alert"
+            className="mt-6 flex items-start gap-2 rounded-ui border-2 border-destructive bg-surface px-4 py-3 font-bold text-destructive"
           >
             <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
             Uzupełnij tytuł i istotę pomysłu, żeby zapisać fiszkę.
@@ -411,9 +411,9 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
         {/* Potwierdzenie na fiszce, przy przycisku — komunikat na dole ekranu łatwo przeoczyć. */}
         <div role="status" aria-live="polite">
           {saved && !saving && (
-            <div className="mt-4 rounded-ui border-2 border-leaf bg-mint px-4 py-3 text-ink">
-              <p className="flex items-start gap-2 font-bold">
-                <CircleCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-deep" />
+            <div className="mt-4 rounded-ui border-2 border-success bg-success/10 px-4 py-3 text-foreground">
+              <p className="flex items-start gap-2 font-bold text-success">
+                <CircleCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
                 {saved.id ? `Fiszka zapisana (nr ${saved.id}).` : "Fiszka zapisana."} Ekspert ROPS przejrzy ją w ciągu
                 kilku dni.
               </p>
@@ -427,7 +427,7 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
           )}
         </div>
         {failed.length > 0 && !saving && (
-          <div role="alert" className="mt-3 rounded-ui border-2 border-alert bg-surface px-4 py-3 text-alert">
+          <div role="alert" className="mt-3 rounded-ui border-2 border-destructive bg-surface px-4 py-3 text-destructive">
             <p className="flex items-center gap-2 font-bold">
               <CircleAlert aria-hidden="true" className="size-5 shrink-0" />
               Nie udało się wysłać części plików
@@ -444,7 +444,7 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
         {saveError && (
           <p
             role="alert"
-            className="mt-4 flex items-start gap-2 rounded-ui border-2 border-alert bg-surface px-4 py-3 font-bold text-alert"
+            className="mt-4 flex items-start gap-2 rounded-ui border-2 border-destructive bg-surface px-4 py-3 font-bold text-destructive"
           >
             <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
             Nie udało się zapisać fiszki. Sprawdź połączenie i spróbuj jeszcze raz.

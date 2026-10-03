@@ -19,19 +19,20 @@ import { CutoutText } from "@/components/cutout-text";
 import { ErrorNote, LoadingRows, OfflineNote, tagLabel, useAdminData } from "@/components/admin/shared";
 import { getTrends } from "@/lib/admin-api";
 
-// Jedna seria na wykres → jeden kolor marki (leaf, kontrast 6,19:1 na surface), bez legendy.
+// Jedna seria na wykres → jeden kolor marki (primary, kontrast 6,98:1 na surface), bez legendy.
 // Każdy wykres ma tabelę z tymi samymi danymi dla czytników ekranu i bez myszy.
-const LEAF = "#2D6A4F";
-const INK = "#14251C";
-const MUTED = "#3D5A4A";
-const GRID = "#D3E3D0";
-const SURFACE = "#FAFCF7";
+// Kolory wykresów to tokeny CSS (recharts przekazuje je do atrybutów SVG), więc tryb kontrastu działa i tu.
+const PRIMARY = "var(--color-primary)";
+const FOREGROUND = "var(--color-foreground)";
+const MUTED = "var(--color-muted)";
+const GRID = "var(--color-secondary)";
+const SURFACE = "var(--color-surface)";
 
 const tooltipStyle = {
   background: SURFACE,
-  border: `2px solid #1B4332`,
+  border: "var(--bw) solid var(--color-border)",
   borderRadius: 12,
-  color: INK,
+  color: FOREGROUND,
   fontSize: 16,
   padding: "8px 12px",
 };
@@ -43,20 +44,20 @@ function shortDate(iso: string) {
 export function DataTable({ caption, head, rows }: { caption: string; head: [string, string]; rows: Array<[string, number]> }) {
   return (
     <details className="mt-4">
-      <summary className="inline-flex min-h-12 cursor-pointer items-center rounded-ui font-bold text-leaf underline underline-offset-4">
+      <summary className="inline-flex min-h-12 cursor-pointer items-center rounded-ui font-bold text-primary underline underline-offset-4">
         Pokaż dane w tabeli
       </summary>
       <table className="mt-2 w-full border-collapse text-left">
         <caption className="sr-only">{caption}</caption>
         <thead>
-          <tr className="border-b-2 border-deep">
-            <th scope="col" className="py-2 pr-4 font-bold text-deep">{head[0]}</th>
-            <th scope="col" className="py-2 text-right font-bold text-deep">{head[1]}</th>
+          <tr className="border-b-2 border-border">
+            <th scope="col" className="py-2 pr-4 font-bold text-foreground">{head[0]}</th>
+            <th scope="col" className="py-2 text-right font-bold text-foreground">{head[1]}</th>
           </tr>
         </thead>
         <tbody>
           {rows.map(([label, value]) => (
-            <tr key={label} className="border-b border-sage">
+            <tr key={label} className="border-b border-border/40">
               <th scope="row" className="py-1.5 pr-4 text-left font-normal">{label}</th>
               <td className="py-1.5 text-right tabular-nums">{value}</td>
             </tr>
@@ -89,15 +90,15 @@ export function AdminTrendsView() {
         <LoadingRows label="Wczytuję trendy" />
       ) : data ? (
         <div className="grid gap-6 lg:grid-cols-2">
-          <section aria-labelledby={`${ids}-dni`} className="border-(length:--bw) border-deep bg-surface p-6 lg:col-span-2">
+          <section aria-labelledby={`${ids}-dni`} className="border-(length:--bw) border-border bg-surface p-6 lg:col-span-2">
             <div className="flex flex-wrap items-baseline justify-between gap-3">
-              <h2 id={`${ids}-dni`} className="text-xl font-bold text-deep">
+              <h2 id={`${ids}-dni`} className="text-xl font-bold text-foreground">
                 Wyszukiwania dzień po dniu
               </h2>
-              <p className="flex items-center gap-2 font-bold text-deep">
+              <p className="flex items-center gap-2 font-bold text-foreground">
                 <span className="tabular-nums">{data.total}</span> w ostatnich 14 dniach
                 {change !== null && change !== undefined && (
-                  <span className="inline-flex items-center gap-1 rounded-full border-2 border-deep bg-mint px-2.5 text-sm">
+                  <span className="inline-flex items-center gap-1 rounded-full border-2 border-border bg-secondary/60 px-2.5 text-sm">
                     {change >= 0 ? <TrendingUp aria-hidden="true" className="size-4" /> : <TrendingDown aria-hidden="true" className="size-4" />}
                     {change >= 0 ? "+" : ""}
                     {change.toLocaleString("pl-PL")}% tydzień do tygodnia
@@ -119,11 +120,11 @@ export function AdminTrendsView() {
                   <Area
                     type="monotone"
                     dataKey="count"
-                    stroke={LEAF}
+                    stroke={PRIMARY}
                     strokeWidth={2}
-                    fill={LEAF}
+                    fill={PRIMARY}
                     fillOpacity={0.14}
-                    activeDot={{ r: 5, stroke: SURFACE, strokeWidth: 2, fill: LEAF }}
+                    activeDot={{ r: 5, stroke: SURFACE, strokeWidth: 2, fill: PRIMARY }}
                     isAnimationActive={false}
                   />
                 </AreaChart>
@@ -132,8 +133,8 @@ export function AdminTrendsView() {
             <DataTable caption="Liczba wyszukiwań każdego dnia" head={["Dzień", "Wyszukiwania"]} rows={days.map((d) => [d.date, d.count])} />
           </section>
 
-          <section aria-labelledby={`${ids}-tagi`} className="border-(length:--bw) border-deep bg-surface p-6">
-            <h2 id={`${ids}-tagi`} className="text-xl font-bold text-deep">
+          <section aria-labelledby={`${ids}-tagi`} className="border-(length:--bw) border-border bg-surface p-6">
+            <h2 id={`${ids}-tagi`} className="text-xl font-bold text-foreground">
               Najczęstsze tematy
             </h2>
             <p className="mt-1 text-muted">Tagi nadane przez autotagger, top 10</p>
@@ -145,13 +146,13 @@ export function AdminTrendsView() {
                     type="category"
                     dataKey="name"
                     width={150}
-                    tick={{ fill: INK, fontSize: 15 }}
+                    tick={{ fill: FOREGROUND, fontSize: 15 }}
                     tickLine={false}
                     axisLine={false}
                   />
                   <Tooltip contentStyle={tooltipStyle} cursor={{ fill: GRID, opacity: 0.6 }} formatter={(value) => [`${value}`, "Wyszukiwania"]} />
-                  <Bar dataKey="count" fill={LEAF} radius={[0, 4, 4, 0]} isAnimationActive={false}>
-                    <LabelList dataKey="count" position="right" fill={INK} fontSize={15} />
+                  <Bar dataKey="count" fill={PRIMARY} radius={[0, 4, 4, 0]} isAnimationActive={false}>
+                    <LabelList dataKey="count" position="right" fill={FOREGROUND} fontSize={15} />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -160,8 +161,8 @@ export function AdminTrendsView() {
           </section>
 
           <div className="flex flex-col gap-6">
-            <section aria-labelledby={`${ids}-zapytania`} className="border-(length:--bw) border-deep bg-surface p-6">
-              <h2 id={`${ids}-zapytania`} className="text-xl font-bold text-deep">
+            <section aria-labelledby={`${ids}-zapytania`} className="border-(length:--bw) border-border bg-surface p-6">
+              <h2 id={`${ids}-zapytania`} className="text-xl font-bold text-foreground">
                 Najczęstsze zapytania
               </h2>
               <ol className="mt-4 space-y-3">
@@ -180,8 +181,8 @@ export function AdminTrendsView() {
               </ol>
             </section>
 
-            <section aria-labelledby={`${ids}-luki`} className="border-(length:--bw) border-alert bg-surface p-6">
-              <h2 id={`${ids}-luki`} className="flex items-center gap-2 text-xl font-bold text-alert">
+            <section aria-labelledby={`${ids}-luki`} className="border-(length:--bw) border-destructive bg-surface p-6">
+              <h2 id={`${ids}-luki`} className="flex items-center gap-2 text-xl font-bold text-destructive">
                 <SearchX aria-hidden="true" className="size-6 shrink-0" />
                 Luki: szukano, nie znaleziono
               </h2>

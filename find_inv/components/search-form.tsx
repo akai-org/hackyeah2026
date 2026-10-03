@@ -77,7 +77,7 @@ export function SearchForm({ initialText = "", showExamples = true, className }:
       onSubmit={handleSubmit}
       className={cn("mt-8", className)}
     >
-      <label htmlFor={fieldId} className="block text-lg font-semibold text-deep">
+      <label htmlFor={fieldId} className="block text-lg font-semibold text-foreground">
         Opisz swój problem
       </label>
 
@@ -93,8 +93,8 @@ export function SearchForm({ initialText = "", showExamples = true, className }:
           aria-describedby={describedBy}
           placeholder="Na przykład: mama mieszka sama na wsi i nie ma jak dojechać do lekarza"
           className={cn(
-            "min-h-[120px] w-full resize-y rounded-ui border-(length:--bw) bg-surface p-4 text-base text-ink placeholder:text-muted md:flex-1",
-            error ? "border-alert" : "border-deep",
+            "min-h-[120px] w-full resize-y rounded-ui border-(length:--bw) bg-surface p-4 text-base text-foreground placeholder:text-muted md:flex-1",
+            error ? "border-destructive" : "border-border",
           )}
         />
 
@@ -112,7 +112,7 @@ export function SearchForm({ initialText = "", showExamples = true, className }:
           key={errorKey}
           id={errorId}
           role="alert"
-          className="mt-3 flex items-start gap-2 rounded-ui border-2 border-alert bg-surface px-4 py-3 font-semibold text-alert"
+          className="mt-3 flex items-start gap-2 rounded-ui border-2 border-destructive bg-surface px-4 py-3 font-semibold text-destructive"
         >
           <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
           Wpisz kilka słów o problemie, żeby zacząć szukać.
@@ -125,7 +125,7 @@ export function SearchForm({ initialText = "", showExamples = true, className }:
 
       {showExamples && (
         <div role="group" aria-labelledby={examplesId} className="mt-6">
-          <p id={examplesId} className="font-semibold text-deep">
+          <p id={examplesId} className="font-semibold text-foreground">
             Przykłady
           </p>
           <ul className="mt-2 flex flex-wrap gap-3">
@@ -134,7 +134,7 @@ export function SearchForm({ initialText = "", showExamples = true, className }:
                 <button
                   type="button"
                   onClick={() => applyExample(example)}
-                  className="min-h-12 cursor-pointer rounded-ui border-(length:--bw) border-deep bg-surface px-4 py-2 text-left text-base text-ink hover:bg-mint"
+                  className="min-h-12 cursor-pointer rounded-ui border-(length:--bw) border-border bg-surface px-4 py-2 text-left text-base text-foreground hover:bg-primary/10"
                 >
                   {example}
                 </button>

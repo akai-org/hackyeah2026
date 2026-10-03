@@ -53,7 +53,7 @@ function fromApi(post: ApiForumPost): ForumPost {
 }
 
 const fieldClass =
-  "mt-2 w-full rounded-ui border-(length:--bw) bg-surface px-4 text-base text-ink placeholder:text-muted";
+  "mt-2 w-full rounded-ui border-(length:--bw) bg-surface px-4 text-base text-foreground placeholder:text-muted";
 
 interface Innovation {
   title: string;
@@ -192,7 +192,7 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
       {!embedded && (
         <Link
           href={`/biblioteka/${innovationId}`}
-          className="inline-flex items-center gap-2 text-sm font-bold text-leaf underline underline-offset-4 hover:text-deep"
+          className="inline-flex items-center gap-2 text-sm font-bold text-primary underline underline-offset-4 hover:text-primary-hover"
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
           {innovation ? `Wróć do: ${innovation.title}` : "Wróć do innowacji"}
@@ -203,7 +203,7 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
       {!embedded && (
         <div className="mt-8">
           <p className="text-sm font-bold uppercase tracking-widest text-muted">Dyskusja społeczności</p>
-          <h1 className="mt-1 text-3xl font-bold text-deep">
+          <h1 className="mt-1 text-3xl font-bold text-foreground">
             {innovation?.title ?? "Wczytywanie…"}
           </h1>
         </div>
@@ -217,7 +217,7 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
               {innovation.tags.map((tag) => (
                 <li
                   key={tag}
-                  className="inline-flex items-center gap-1 rounded-full border border-leaf bg-paper px-3 py-1 text-sm text-leaf"
+                  className="inline-flex items-center gap-1 rounded-full border border-primary bg-background px-3 py-1 text-sm text-primary"
                 >
                   <Tag className="size-3" aria-hidden="true" />
                   {(TAG_LABELS as Record<string, string>)[tag] ?? tag}
@@ -227,7 +227,7 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
           )}
           <Link
             href={`/biblioteka/${innovationId}`}
-            className="ml-auto inline-flex items-center gap-1.5 rounded-ui border-2 border-deep bg-surface px-4 py-2 text-sm font-bold text-deep shadow-paper hover:bg-sage"
+            className="ml-auto inline-flex items-center gap-1.5 rounded-ui border-2 border-border bg-surface px-4 py-2 text-sm font-bold text-primary shadow-raised hover:bg-primary/10"
           >
             Szczegóły innowacji
             <ChevronRight className="size-4" aria-hidden="true" />
@@ -238,17 +238,17 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
       <div className="mt-10 grid gap-12 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
         {/* Comment form (sidebar) */}
         <aside aria-labelledby={`${ids}-nowy`} className="lg:sticky lg:top-6 lg:col-start-2 lg:row-start-1">
-          <form onSubmit={addComment} noValidate className="border-(length:--bw) border-deep bg-sage p-5 sm:p-6">
-            <h2 id={`${ids}-nowy`} className="text-xl font-bold text-deep">
+          <form onSubmit={addComment} noValidate className="border-(length:--bw) border-border bg-secondary/60 p-5 sm:p-6">
+            <h2 id={`${ids}-nowy`} className="text-xl font-bold text-foreground">
               Dołącz do dyskusji
             </h2>
             <p className="mt-3 flex flex-wrap items-center gap-2 text-base">
               <span>Piszesz jako</span>
-              <span className="font-bold text-deep">{authorName}</span>
+              <span className="font-bold text-foreground">{authorName}</span>
               <RoleBadge role={authorBadge} />
             </p>
 
-            <label htmlFor={`${ids}-nick`} className="mt-5 block font-bold text-deep">
+            <label htmlFor={`${ids}-nick`} className="mt-5 block font-bold text-foreground">
               Twój nick
             </label>
             <input
@@ -261,18 +261,18 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
               className={fieldClass}
             />
 
-            <label htmlFor={`${ids}-uzywalem`} className="mt-4 flex min-h-12 cursor-pointer items-center gap-3 font-medium text-deep">
+            <label htmlFor={`${ids}-uzywalem`} className="mt-4 flex min-h-12 cursor-pointer items-center gap-3 font-medium text-foreground">
               <input
                 id={`${ids}-uzywalem`}
                 type="checkbox"
                 checked={usedInnovation}
                 onChange={(event) => setUsedInnovation(event.target.checked)}
-                className="size-5 accent-leaf"
+                className="size-5 accent-primary"
               />
               Używałem tej inicjatywy
             </label>
 
-            <label htmlFor={`${ids}-komentarz`} className="mt-5 block font-bold text-deep">
+            <label htmlFor={`${ids}-komentarz`} className="mt-5 block font-bold text-foreground">
               Twój komentarz
             </label>
             <textarea
@@ -287,10 +287,10 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
               aria-invalid={commentError || undefined}
               aria-describedby={commentError ? `${ids}-blad` : undefined}
               placeholder="Napisz o swoich doświadczeniach z tą innowacją…"
-              className={cn(fieldClass, "min-h-28 py-3", commentError ? "border-alert" : "border-deep")}
+              className={cn(fieldClass, "min-h-28 py-3", commentError ? "border-destructive" : "border-border")}
             />
             {commentError && (
-              <p id={`${ids}-blad`} className="mt-3 flex items-start gap-2 font-bold text-alert">
+              <p id={`${ids}-blad`} className="mt-3 flex items-start gap-2 font-bold text-destructive">
                 <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
                 Wpisz treść komentarza.
               </p>
@@ -324,12 +324,12 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
                     tabIndex={-1}
                     aria-label={`Komentarz od ${post.author_name}`}
                     className={cn(
-                      "border-(length:--bw) border-deep bg-surface p-5 shadow-paper sm:p-6",
+                      "border-(length:--bw) border-border bg-surface p-5 shadow-raised sm:p-6",
                       focusPost === post.id && "appear",
                     )}
                   >
                     <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                      <span className="font-bold text-deep">{post.author_name}</span>
+                      <span className="font-bold text-foreground">{post.author_name}</span>
                       {post.badge !== "user" && <RoleBadge role={post.badge} />}
                       <time dateTime={post.created_at} className="text-sm text-muted">
                         {formatDate(post.created_at)}
@@ -345,12 +345,12 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
                             id={`${ids}-post-${r.id}`}
                             tabIndex={-1}
                             className={cn(
-                              "border-l-4 border-leaf bg-paper py-3 pr-3 pl-4",
+                              "border-l-4 border-secondary bg-background py-3 pr-3 pl-4",
                               focusPost === r.id && "appear",
                             )}
                           >
                             <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                              <span className="font-bold text-deep">{r.author_name}</span>
+                              <span className="font-bold text-foreground">{r.author_name}</span>
                               {r.badge !== "user" && <RoleBadge role={r.badge} />}
                               <time dateTime={r.created_at} className="text-sm text-muted">
                                 {formatDate(r.created_at)}
@@ -364,7 +364,7 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
 
                     {replyingTo === post.id ? (
                       <form onSubmit={(e) => addReply(e, post.id)} noValidate className="mt-5">
-                        <label htmlFor={replyFieldId} className="block font-bold text-deep">
+                        <label htmlFor={replyFieldId} className="block font-bold text-foreground">
                           Twoja odpowiedź
                         </label>
                         <textarea
@@ -377,7 +377,7 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
                             if (e.target.value.trim()) setReplyError(false);
                           }}
                           aria-invalid={replyError || undefined}
-                          className={cn(fieldClass, "min-h-24 py-3", replyError ? "border-alert" : "border-deep")}
+                          className={cn(fieldClass, "min-h-24 py-3", replyError ? "border-destructive" : "border-border")}
                         />
                         <div className="mt-3 flex flex-wrap gap-3">
                           <Button type="submit">

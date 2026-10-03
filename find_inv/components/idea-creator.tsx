@@ -91,12 +91,12 @@ export function IdeaCreator() {
     <>
       <div ref={startRef} tabIndex={-1} className="mt-8 max-w-3xl focus:outline-none">
         <fieldset>
-          <legend className="text-lg font-bold text-deep">Jak chcesz zacząć?</legend>
+          <legend className="text-lg font-bold text-foreground">Jak chcesz zacząć?</legend>
           <div className="mt-2 grid gap-3 sm:grid-cols-2">
             {MODES.map(({ value, label, text: description, icon: Icon }) => (
               <label
                 key={value}
-                className="flex cursor-pointer items-start gap-3 rounded-ui border-(length:--bw) border-deep bg-surface p-4 has-checked:bg-mint"
+                className="flex cursor-pointer items-start gap-3 rounded-ui border-(length:--bw) border-border bg-surface p-4 has-checked:border-primary has-checked:bg-primary/10"
               >
                 <input
                   type="radio"
@@ -108,10 +108,10 @@ export function IdeaCreator() {
                     setCard(null);
                   }}
                   disabled={analyzing}
-                  className="mt-1 size-5 shrink-0 accent-deep"
+                  className="mt-1 size-5 shrink-0 accent-primary"
                 />
                 <span>
-                  <span className="flex items-center gap-2 font-bold text-deep">
+                  <span className="flex items-center gap-2 font-bold text-foreground">
                     <Icon aria-hidden="true" className="size-5" />
                     {label}
                   </span>
@@ -130,7 +130,7 @@ export function IdeaCreator() {
         </div>
       ) : (
         <form onSubmit={analyzeText} noValidate className="mt-8 max-w-3xl">
-          <label htmlFor={fieldId} className="block text-lg font-bold text-deep">
+          <label htmlFor={fieldId} className="block text-lg font-bold text-foreground">
             Opisz swój pomysł społeczny
           </label>
           <p id={hintId} className="mt-1 text-muted">
@@ -152,8 +152,8 @@ export function IdeaCreator() {
               .join(" ")}
             placeholder="Na przykład: chcę zorganizować w świetlicy wiejskiej spotkania, na których młodzież uczy seniorów obsługi smartfona"
             className={cn(
-              "mt-2 min-h-[160px] w-full resize-y rounded-ui border-(length:--bw) bg-surface p-4 text-base text-ink placeholder:text-muted",
-              error ? "border-alert" : "border-deep",
+              "mt-2 min-h-[160px] w-full resize-y rounded-ui border-(length:--bw) bg-surface p-4 text-base text-foreground placeholder:text-muted",
+              error ? "border-destructive" : "border-border",
             )}
           />
           <DictationButton dictation={dictation} className="mt-3" />
@@ -163,7 +163,7 @@ export function IdeaCreator() {
             <p
               id={errorId}
               role="alert"
-              className="mt-3 flex items-start gap-2 rounded-ui border-2 border-alert bg-surface px-4 py-3 font-bold text-alert"
+              className="mt-3 flex items-start gap-2 rounded-ui border-2 border-destructive bg-surface px-4 py-3 font-bold text-destructive"
             >
               <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
               Opisz pomysł w co najmniej jednym zdaniu, żeby AI mogło go przeanalizować.
@@ -171,7 +171,7 @@ export function IdeaCreator() {
           )}
 
           <fieldset className="mt-8">
-            <legend className="text-lg font-bold text-deep">Czego dotyczy pomysł?</legend>
+            <legend className="text-lg font-bold text-foreground">Czego dotyczy pomysł?</legend>
             <p className="mt-1 text-muted">Nieobowiązkowe. Resztę tagów zaproponuje AI.</p>
             {TAG_GROUPS.map((group, groupIndex) => (
               <div key={group.title} role="group" aria-labelledby={`${ids}-grupa-${groupIndex}`} className="mt-4">
@@ -188,8 +188,8 @@ export function IdeaCreator() {
                           aria-pressed={active}
                           onClick={() => toggleTag(tag)}
                           className={cn(
-                            "inline-flex min-h-12 cursor-pointer items-center gap-1.5 rounded-ui border-(length:--bw) border-deep px-4 py-2 text-base",
-                            active ? "bg-mint font-bold text-ink" : "bg-surface text-ink hover:bg-sage",
+                            "inline-flex min-h-12 cursor-pointer items-center gap-1.5 rounded-ui border-(length:--bw) border-border px-4 py-2 text-base",
+                            active ? "bg-primary font-bold text-primary-foreground" : "bg-surface text-foreground hover:bg-secondary/60",
                           )}
                         >
                           {active && <span aria-hidden="true">✓</span>}
@@ -210,10 +210,10 @@ export function IdeaCreator() {
         </form>
       )}
 
-      <p role="status" aria-live="polite" className={cn("flex items-center gap-2 font-bold text-deep", analyzing && "mt-4")}>
+      <p role="status" aria-live="polite" className={cn("flex items-center gap-2 font-bold text-foreground", analyzing && "mt-4")}>
         {analyzing && (
           <>
-            <span className="rounded-ui border-2 border-deep bg-butter px-3 py-1">AI analizuje pomysł</span>
+            <span className="rounded-ui border-2 border-accent bg-accent px-3 py-1 text-accent-foreground">AI analizuje pomysł</span>
             Rozpisuję opis na pola fiszki…
           </>
         )}
