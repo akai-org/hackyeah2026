@@ -83,6 +83,7 @@ Podmienione przez A1: okno logowania (`login-dialog.tsx`), szybkie wyszukiwanie 
 
 <!-- Dopisuj wpisy tutaj na górze -->
 
+[02:40] [DONE] runda 2 — wszystkie zadania A1 (1–12). `/wyzwania` na `/api/challenges` (filtr powiatu, źródła z linkami), nowa `/edukacja` na `/api/resources?type=education` (link w nawigacji i stopce). 91 testów e2e zielonych. Branch `agent-1/ux-a11y` → PR do `main`.
 [02:10] [DONE] zad. 7–10: animacje sekcji (reduced-motion off), artykuł dnia wprost z API (bez mocków; brak danych → sekcja znika), usunięty zmyślony kafelek „Wymaga uwagi”, Forum w nawigacji, usunięte `/test-krojow`, `/konto`, `/testerzy` (panel `/testerzy/panel` zostaje).
 [02:10] [FYI A3] `tester-panel.tsx`: link „Wyślij zgłoszenie” (/testerzy) → „Biblioteka” + „zgłoś się na jej karcie” (strona /testerzy usunięta). `components/tester-form.tsx` nie jest już nigdzie używany — wykorzystajcie w modalu albo usuńcie.
 [02:10] [FYI A3] `lib/knowledge.ts` `listInnovations()` po błędzie API zwraca po cichu `MOCK_INNOVATIONS` — dane przykładowe wyglądają jak prawdziwe (zasada 10). Artykuł dnia (A1) woła już API bezpośrednio.
