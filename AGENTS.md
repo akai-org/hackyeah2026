@@ -319,13 +319,14 @@ GET /api/innovation-gap       # [{ powiat, gap_score, top_area }]
 
 ---
 
-## 🟩 Agent 4 — Frontend: Kreator + Tester + Forum
+## 🟩 Agent 4 — Frontend: Kreator + Tester + Forum + Admin
 
 **Pracujesz w:** `find_inv/` (Next.js)
 
-> Nie piszesz żadnego backendu. Wszystko hardkodowane lub mockowane w Next.js.
+> Kreator, Tester, Forum — mock w Next.js.
+> Admin panel — **jury się zaloguje i będzie klikać**, musi działać i wyglądać.
 
-### Strony do zbudowania
+### Strony mock (hardkodowane dane)
 
 ```
 /kreator        Formularz fiszki pomysłu
@@ -341,19 +342,40 @@ GET /api/innovation-gap       # [{ powiat, gap_score, top_area }]
                 - dane nigdzie nie idą
 
 /forum          Lista wątków z mock_data.ts
-                - import MOCK_FORUM_POSTS z pliku lokalnego
                 - badge'e: user / tester / admin / konsultant
                 - textarea do "dodawania" posta (fake, state lokalny)
+```
 
-/admin          Strona chroniona hasłem "admin123"
-                - wykresy z hardkodowanymi danymi (recharts lub podobne)
-                - lista innowacji do "zatwierdzenia" (mock)
-                - trendy wyszukiwań (mock tagi)
+### /admin — MUSI DZIAŁAĆ (jury tu wejdzie)
+
+Logowanie: przycisk "Zaloguj jako admin" na stronie głównej → ustawia cookie/state → redirect `/admin`
+
+Panel admina musi mieć działające widoki (dane hardkodowane ale klikalne):
+
+```
+/admin/innowacje
+  - tabela innowacji z filtrami (status, tagi, szukaj)
+  - przyciski: Zatwierdź / Archiwizuj / Oznacz jako nieaktywna
+  - zmiana statusu działa lokalnie w state (nie woła backendu)
+
+/admin/uzytkownicy
+  - lista użytkowników z rolami
+  - dropdown zmiany roli (user / tester / konsultant)
+  - przycisk "Zatwierdź testera" przy oczekujących
+
+/admin/trendy
+  - wykres słupkowy top 10 tagów (recharts, dane z MOCK_STATS)
+  - wykres liniowy zgłoszeń per dzień
+  - sekcja "Najczęstsze zapytania"
+
+/admin/statystyki
+  - liczniki: innowacje, zgłoszenia, aktywni testerzy, posty forum
+  - duże cyfry, czytelne, widoczne na demo
 ```
 
 ### Mock data dla Next.js
 Utwórz `find_inv/data/mock.ts` z danymi dla tych stron.
-Możesz skopiować dane z `find_inv_server/data/mock_data.py` i przepisać na TypeScript.
+Możesz przepisać z `find_inv_server/data/mock_data.py` na TypeScript.
 
 ---
 
