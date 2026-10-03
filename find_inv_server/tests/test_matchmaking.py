@@ -49,8 +49,9 @@ def test_off_topic_text_is_not_relevant():
 
 
 def test_match_ranks_by_description():
-    body = client.post("/api/match", json={"text": "osoba na wózku potrzebuje asystenta", "tags": []}).json()
-    assert body["data"]["innovations"][0]["title"] == "Asystent Osoby z Niepełnosprawnością"
+    text = "Niewidomy senior nie może samodzielnie zrobić zakupów"
+    body = client.post("/api/match", json={"text": text, "tags": ["niepełnosprawność", "seniorzy"]}).json()
+    assert body["data"]["innovations"][0]["title"] == "Zakupy bez barier"
 
 
 def test_removing_a_tag_changes_ranking():
@@ -62,10 +63,15 @@ def test_removing_a_tag_changes_ranking():
 
 
 def test_local_chat_answers_cost_question():
+    from app.knowledge_store import load_innovations
+
+    catalog = load_innovations()
+    cheapest = next(i["title"] for i in catalog if i["cost_level"] == "low")
+    ids = [next(i["id"] for i in catalog if i["cost_level"] == "high"), next(i["id"] for i in catalog if i["title"] == cheapest)]
     response = client.post(
         "/api/chat",
-        json={"messages": [{"role": "user", "content": "Która jest najtańsza?"}], "innovation_ids": [1, 4]},
+        json={"messages": [{"role": "user", "content": "Która jest najtańsza?"}], "innovation_ids": ids},
     )
     events = response.text.split("\n\n")
     text = "".join("\n".join(line[6:] for line in e.split("\n")) for e in events if e and e != "data: [DONE]")
-    assert "Najtańsza" in text and "Cyfrowy Senior" in text
+    assert "Najtańsza" in text and cheapest in text

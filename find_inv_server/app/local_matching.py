@@ -7,6 +7,7 @@ zależą od tego, co wpisał użytkownik, a nie są stałym mockiem.
 
 import math
 import re
+from collections import Counter
 
 # Musi zgadzać się z TAXONOMY_TAGS w app/utils.py (A1).
 TAXONOMY_TAGS = [
@@ -19,7 +20,7 @@ TAXONOMY_TAGS = [
 
 # Rdzenie słów po zdjęciu polskich znaków. Rdzeń ze spacją dopasowujemy jako frazę.
 TAG_KEYWORDS: dict[str, list[str]] = {
-    "seniorzy": ["senior", "starsz", "emeryt", "babci", "babcia", "dziadk", "staruszk", "65+"],
+    "seniorzy": ["senior", "starsz", "starsi", "osob starsz", "podeszl", "emeryt", "babci", "babcia", "dziadk", "staruszk", "65+"],
     "wykluczenie_cyfrowe": ["internet", "komputer", "smartfon", "cyfrow", "aplikacj", "online", "mail", "technolog"],
     "samotność": ["samotn", "osamotn", "izolac", "mieszka sam", "zyje sam", "zostal sam", "zostala sam", "nie ma z kim", "nikogo nie ma", "sam w domu", "sama w domu"],
     "zdrowie_psychiczne": ["psychi", "psycholog", "depresj", "kryzys", "stres", "terapi", "zalaman", "samoboj", "lekow"],
@@ -27,7 +28,8 @@ TAG_KEYWORDS: dict[str, list[str]] = {
     "ubóstwo": ["ubost", "ubog", "bied", "zasilk", "nie stac", "dlug", "glod", "pieniedz"],
     "dzieci": ["dzieck", "dzieci", "przedszkol", "niemowl", "maluch"],
     "młodzież": ["mlodziez", "nastolat", "uczni", "uczen", "licea", "liceum", "student"],
-    "rodzina": ["rodzin", "rodzic", "matk", "ojciec", "ojca", "mama", "mamy", "tata", "taty"],
+    # Bez „mama/tata”: w opisach problemów to zwykle starszy rodzic, nie wsparcie rodziny.
+    "rodzina": ["rodzin", "rodzic", "wielodziet", "piecz"],
     "bezdomność": ["bezdom", "na ulicy", "eksmis", "noclegown"],
     "uzależnienia": ["uzalezn", "alkohol", "narkot", "hazard", "pije", "picie"],
     "migranci": ["migran", "imigran", "uchodz", "ukrain", "cudzoziem"],
@@ -61,10 +63,11 @@ STOPWORDS = {
     "jest", "nie", "jak", "ale", "oraz", "albo", "czy", "dla", "przez", "przy", "który", "ktory",
     "ktora", "ktore", "mamy", "nasz", "nasza", "nasze", "nasi", "moja", "moje", "mojej", "mieszka",
     "bardzo", "tylko", "jego", "jej", "ich", "tego", "taki", "takie", "sobie", "jestem", "potrzeb",
-    "problem", "problemu", "gminie", "gminy",
+    "problem", "problemu", "gminie", "gminy", "sama", "samo", "sami", "same", "samego", "samej",
 }  # fmt: skip
 
 MAX_TAGS = 5
+MIN_RELATIVE_SCORE = 0.5
 _FOLD = str.maketrans("ąćęłńóśźżĄĆĘŁŃÓŚŹŻ", "acelnoszzACELNOSZZ")
 
 
@@ -111,16 +114,41 @@ def local_tag_result(text: str) -> dict:
     }
 
 
-def _stems(text: str) -> set[str]:
-    return {tok[:5] for tok in _tokens(fold(text)) if len(tok) >= 4 and tok not in STOPWORDS}
+def _stems(text: str) -> list[str]:
+    return [tok[:5] for tok in _tokens(fold(text)) if len(tok) >= 4 and tok not in STOPWORDS]
 
 
-def lexical_similarity(query: str, document: str) -> float:
-    """Kosinus na zbiorach rdzeni (5 pierwszych liter) — tani zamiennik embeddingu."""
-    q, d = _stems(query), _stems(document)
-    if not q or not d:
-        return 0.0
-    return len(q & d) / math.sqrt(len(q) * len(d))
+# Wagi pól: tytuł i krótki opis mówią o innowacji więcej niż długi opis.
+FIELD_WEIGHTS = {"title": 3, "short_desc": 2, "target_group": 2, "category": 1, "area": 1, "full_desc": 1}
+
+
+def _document_tf(innov: dict) -> Counter:
+    tf: Counter = Counter()
+    for field, weight in FIELD_WEIGHTS.items():
+        for stem in _stems(str(innov.get(field) or "")):
+            tf[stem] += weight
+    for tag in innov.get("tags", []):
+        for stem in _stems(tag.replace("_", " ")):
+            tf[stem] += 2
+    return tf
+
+
+def _cosine(a: dict[str, float], b: dict[str, float]) -> float:
+    dot = sum(v * b.get(k, 0.0) for k, v in a.items())
+    norm = math.sqrt(sum(v * v for v in a.values())) * math.sqrt(sum(v * v for v in b.values()))
+    return dot / norm if norm else 0.0
+
+
+def lexical_scores(query: str, innovations: list[dict]) -> list[float]:
+    """TF-IDF na rdzeniach (5 liter) — tani zamiennik embeddingu. Rzadkie słowa ważą więcej niż pospolite."""
+    docs = [_document_tf(i) for i in innovations]
+    df = Counter(stem for doc in docs for stem in doc)
+    n = len(docs)
+    idf = {stem: math.log((n + 1) / (count + 1)) + 1 for stem, count in df.items()}
+    query_vec = {stem: tf * idf.get(stem, math.log(n + 1) + 1) for stem, tf in Counter(_stems(query)).items()}
+    return [
+        _cosine(query_vec, {stem: (1 + math.log(tf)) * idf[stem] for stem, tf in doc.items()}) for doc in docs
+    ]
 
 
 def rank_locally(query: str, tags: list[str], innovations: list[dict]) -> list[dict]:
@@ -128,15 +156,16 @@ def rank_locally(query: str, tags: list[str], innovations: list[dict]) -> list[d
     # Tylko tagi od klienta: użytkownik mógł usunąć chip i to ma zmienić wyniki.
     query_tags = set(tags)
     ranked = []
-    for innov in innovations:
-        document = " ".join(
-            str(innov.get(k) or "") for k in ("title", "short_desc", "full_desc", "target_group", "category", "area")
-        ) + " " + " ".join(t.replace("_", " ") for t in innov.get("tags", []))
-        score = lexical_similarity(query, document) + 0.1 * len(set(innov.get("tags", [])) & query_tags)
+    for innov, similarity in zip(innovations, lexical_scores(query, innovations)):
+        score = similarity + 0.1 * len(set(innov.get("tags", [])) & query_tags)
         ranked.append({**innov, "match_score": round(score, 4)})
     ranked.sort(key=lambda i: i["match_score"], reverse=True)
-    # Karta bez żadnego wspólnego słowa ani tagu tylko myli — lepiej pokazać „nie znalazłem”.
-    return [i for i in ranked if i["match_score"] > 0]
+    if not ranked or ranked[0]["match_score"] <= 0:
+        return []
+    # Karta dużo słabsza od najlepszej (np. jeden wspólny tag, zero wspólnych słów) tylko myli.
+    # Lepiej pokazać 2 trafne karty niż 5, z czego 3 przypadkowe.
+    threshold = MIN_RELATIVE_SCORE * ranked[0]["match_score"]
+    return [i for i in ranked if i["match_score"] >= threshold]
 
 
 COST_ORDER = {"low": 0, "medium": 1, "high": 2}

@@ -18,9 +18,8 @@ from fastapi import APIRouter, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from app import matchmaking_llm
+from app import knowledge_store, matchmaking_llm
 from app.local_matching import TAXONOMY_TAGS, local_chat_answer, local_tag_result, rank_locally
-from data.mock_data import MOCK_INNOVATIONS
 
 log = logging.getLogger(__name__)
 
@@ -179,9 +178,14 @@ def _log_search_zasobnik(query: str, results: int) -> None:
         log.exception("zasobnik search log failed")
 
 
+def _catalog() -> list[dict]:
+    """Innowacje ROPS z data/parsed_innovations.json (A3); bez pliku knowledge_store zwraca mocki."""
+    return [knowledge_store.public(i, full=True) for i in knowledge_store.load_innovations() if i.get("status") != "archived"]
+
+
 def _local_match(text: str, tags: list[str]) -> dict:
-    """Ranking bez embeddingów: na mockach, dopóki A3 nie zaseeduje bazy."""
-    ranked = rank_locally(text, tags, MOCK_INNOVATIONS)
+    """Ranking bez embeddingów na katalogu ROPS, dopóki A1/A3 nie wystawią ChromaDB i bazy."""
+    ranked = rank_locally(text, tags, _catalog())
     return {"innovations": ranked[:TOP_N], "total_found": len(ranked)}
 
 
@@ -293,7 +297,7 @@ async def chat(body: ChatRequest):
         ids = body.innovation_ids
         innovations = await _fetch_innovations(lambda I: I.id.in_(ids)) if ids else []
         if not innovations and ids:
-            innovations = [i for i in MOCK_INNOVATIONS if i["id"] in ids]
+            innovations = [i for i in _catalog() if i["id"] in ids]
 
         async def local_answer() -> AsyncIterator[str]:
             question = next((m.content for m in reversed(body.messages) if m.role == "user"), "")
