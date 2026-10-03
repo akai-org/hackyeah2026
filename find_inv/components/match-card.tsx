@@ -15,13 +15,24 @@ function tagLabel(tag: string): string {
 
 type MatchCardProps = {
   innovation: InnovationCard;
-  queryTags: string[];
-  query: string;
-  rank: number;
+  /** Tagi zapytania: wspólne trafiają do „Dlaczego pasuje”. */
+  queryTags?: string[];
+  /** Opis problemu przekazywany do Middlemana. */
+  query?: string;
+  /** Miejsce w wynikach; bez niego karta nie pokazuje numeru ani dopasowania (np. w Bibliotece). */
+  rank?: number;
+  headingLevel?: "h2" | "h3";
 };
 
-export function MatchCard({ innovation, queryTags, query, rank }: MatchCardProps) {
-  const titleId = `wynik-${innovation.id}`;
+export function MatchCard({
+  innovation,
+  queryTags = [],
+  query = "",
+  rank,
+  headingLevel: Heading = "h3",
+}: MatchCardProps) {
+  const titleId = `innowacja-${innovation.id}`;
+  const unmaintained = innovation.is_unmaintained ?? innovation.status === "unmaintained";
   const shared = innovation.tags.filter((tag) => queryTags.includes(tag));
   const score = innovation.match_score ? Math.round(innovation.match_score * 100) : null;
   const deployHref = `/wdrozenie/${innovation.id}${query ? `?q=${encodeURIComponent(query)}` : ""}`;
@@ -31,7 +42,7 @@ export function MatchCard({ innovation, queryTags, query, rank }: MatchCardProps
       aria-labelledby={titleId}
       className={cn(
         "relative flex h-full flex-col border-(length:--bw) border-deep p-6 shadow-paper",
-        innovation.is_unmaintained ? "bg-paper" : "bg-surface",
+        unmaintained ? "bg-paper" : "bg-surface",
       )}
     >
       <span
@@ -39,16 +50,18 @@ export function MatchCard({ innovation, queryTags, query, rank }: MatchCardProps
         className="simple-hidden absolute -top-3 right-6 h-6 w-20 rotate-[4deg] bg-butter [clip-path:polygon(0_8%,6%_0,100%_4%,95%_50%,100%_96%,4%_100%,0_55%)]"
       />
 
-      <p className="flex flex-wrap items-center gap-2 text-sm font-bold text-muted">
-        <span>Wynik {rank}</span>
-        {score !== null && <span>· dopasowanie {score}%</span>}
-      </p>
+      {rank !== undefined && (
+        <p className="mb-1 flex flex-wrap items-center gap-2 text-sm font-bold text-muted">
+          <span>Wynik {rank}</span>
+          {score !== null && <span>· dopasowanie {score}%</span>}
+        </p>
+      )}
 
-      <h3 id={titleId} className="mt-1 pr-16 text-xl font-bold text-deep">
+      <Heading id={titleId} className="pr-16 text-xl font-bold text-deep">
         {innovation.title}
-      </h3>
+      </Heading>
 
-      {innovation.is_unmaintained && (
+      {unmaintained && (
         <p className="mt-3 inline-flex items-start gap-2 self-start rounded-ui border-2 border-muted bg-sage px-3 py-1 font-bold text-ink">
           <Archive aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
           Nieaktualna: nikt już jej nie prowadzi

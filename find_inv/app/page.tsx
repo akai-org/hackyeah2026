@@ -2,11 +2,10 @@ import Link from "next/link";
 import { MessageSquareText, Puzzle, ScanSearch, type LucideIcon } from "lucide-react";
 
 import { CutoutText } from "@/components/cutout-text";
-import { InnovationCard } from "@/components/innovation-card";
+import { FeaturedInnovations } from "@/components/featured-innovations";
 import { Monstera } from "@/components/monstera";
 import { SearchForm } from "@/components/search-form";
 import { buttonVariants } from "@/components/ui/button";
-import { innovations } from "@/data/innovations.mock";
 
 const STEPS: Array<{ icon: LucideIcon; title: string; text: string }> = [
   {
@@ -73,12 +72,7 @@ export default function HomePage() {
               color="mint"
               className="simple-hidden absolute top-72 left-48 w-72 rotate-[150deg]"
             />
-            <Monstera
-              size="hero"
-              color="leaf"
-              outlined
-              className="absolute -top-6 left-10 rotate-[-28deg]"
-            />
+            <Monstera size="hero" color="leaf" outlined className="absolute -top-6 left-10 rotate-[-28deg]" />
           </div>
         </div>
       </section>
@@ -114,15 +108,9 @@ export default function HomePage() {
         <div className="mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
           <CutoutText id="co-juz-dziala-tytul" text="Co już działa" />
           <p className="mt-4 max-w-[60ch] text-lg">
-            Kilka innowacji z Biblioteki. Każda ma opis, informację, dla kogo jest, i ocenę dowodów skuteczności.
+            Kilka innowacji z Biblioteki. Każda ma opis, informację, dla kogo jest, ile kosztuje i gdzie już działa.
           </p>
-          <ul className="mt-10 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {innovations.slice(0, 3).map((innovation) => (
-              <li key={innovation.id} className="flex">
-                <InnovationCard innovation={innovation} />
-              </li>
-            ))}
-          </ul>
+          <FeaturedInnovations />
           <Link href="/biblioteka" className={buttonVariants({ variant: "secondary", className: "mt-10" })}>
             Zobacz całą bibliotekę
           </Link>
