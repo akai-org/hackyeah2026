@@ -8,6 +8,8 @@ import { DictationButton, DictationNotice, DictationStatus, useDictation } from 
 import { Toast, useToast } from "@/components/toast";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { TAG_GROUPS, TAG_KEYWORDS, TAG_LABELS, TARGET_GROUP_LABELS, type Tag } from "@/data/mock";
+import { apiPost } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 // Kreator pomysłów (mock): „AI” to słowa kluczowe i szablon, bez wywołania backendu.
@@ -77,6 +79,62 @@ function Missing() {
   );
 }
 
+// Pola fiszki, które AI nie zawsze rozpozna — użytkownik uzupełnia je wprost na fiszce.
+type Details = { audience: string; place: string; budget: string; partners: string };
+
+function DetailField({
+  id,
+  label,
+  value,
+  placeholder,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  placeholder: string;
+  onChange: (value: string) => void;
+}) {
+  const missingId = `${id}-brak`;
+  return (
+    <>
+      <dt className="font-bold text-deep">
+        <label htmlFor={id}>{label}</label>
+      </dt>
+      <dd>
+        <input
+          id={id}
+          type="text"
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder={placeholder}
+          aria-describedby={value.trim() ? undefined : missingId}
+          className="min-h-12 w-full rounded-ui border-(length:--bw) border-deep bg-surface px-4 text-base text-ink placeholder:text-muted"
+        />
+        {/* Brak oznaczony tekstem i ikoną, nie samym kolorem (DESIGN.md 8). */}
+        {!value.trim() && (
+          <p id={missingId} className="mt-1 text-sm">
+            <Missing />
+          </p>
+        )}
+      </dd>
+    </>
+  );
+}
+
+/** Opis wysyłany do ROPS: istota pomysłu + pola, dla których tabela ideas nie ma osobnych kolumn. */
+function ideaEssence(card: IdeaCard, details: Details) {
+  const extra = [
+    ["Gdzie", details.place],
+    ["Etap realizacji", card.stage],
+    ["Budżet", details.budget],
+    ["Partnerzy", details.partners],
+  ]
+    .filter(([, value]) => value.trim())
+    .map(([label, value]) => `${label}: ${value.trim()}`);
+  return [card.essence, ...extra].join("\n");
+}
+
 export function IdeaCreator() {
   const ids = useId();
   const fieldId = `${ids}-pomysl`;
@@ -90,6 +148,10 @@ export function IdeaCreator() {
   const [analyzing, setAnalyzing] = useState(false);
   const [step, setStep] = useState(0);
   const [card, setCard] = useState<IdeaCard | null>(null);
+  const [details, setDetails] = useState<Details>({ audience: "", place: "", budget: "", partners: "" });
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(false);
+  const { user } = useAuth();
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const dictation = useDictation(setText, () => setError(false));
@@ -128,9 +190,33 @@ export function IdeaCreator() {
       window.setTimeout(() => setStep(2), stepMs * 2),
       window.setTimeout(() => {
         setAnalyzing(false);
-        setCard(buildCard(idea, chosen));
+        const built = buildCard(idea, chosen);
+        setCard(built);
+        setDetails({ audience: built.audience, place: built.place, budget: "", partners: "" });
+        setSaveError(false);
       }, ANALYSIS_MS),
     ];
+  }
+
+  async function saveCard() {
+    if (!card) return;
+    setSaving(true);
+    setSaveError(false);
+    try {
+      await apiPost("/api/ideas", {
+        title: card.title,
+        essence: ideaEssence(card, details),
+        for_whom: details.audience.trim() || null,
+        tags: card.tags,
+        author_name: user?.name ?? null,
+      });
+      toast.show("Fiszka zapisana. Ekspert ROPS przejrzy ją w ciągu kilku dni.");
+    } catch (error) {
+      console.error(error);
+      setSaveError(true);
+    } finally {
+      setSaving(false);
+    }
   }
 
   function editIdea() {
@@ -252,19 +338,40 @@ export function IdeaCreator() {
                 <blockquote className="border-l-4 border-leaf pl-4">{card.essence}</blockquote>
               </dd>
 
-              <dt className="font-bold text-deep">Dla kogo</dt>
-              <dd>{card.audience || <Missing />}</dd>
+              <DetailField
+                id={`${ids}-dla-kogo`}
+                label="Dla kogo"
+                value={details.audience}
+                placeholder="np. seniorzy mieszkający samotnie"
+                onChange={(audience) => setDetails((current) => ({ ...current, audience }))}
+              />
 
-              <dt className="font-bold text-deep">Gdzie</dt>
-              <dd>{card.place || <Missing />}</dd>
+              <DetailField
+                id={`${ids}-gdzie`}
+                label="Gdzie"
+                value={details.place}
+                placeholder="np. świetlica wiejska w gminie Racławice"
+                onChange={(place) => setDetails((current) => ({ ...current, place }))}
+              />
 
               <dt className="font-bold text-deep">Etap realizacji</dt>
               <dd>{card.stage}</dd>
 
-              <dt className="font-bold text-deep">Budżet i partnerzy</dt>
-              <dd>
-                <Missing />
-              </dd>
+              <DetailField
+                id={`${ids}-budzet`}
+                label="Budżet"
+                value={details.budget}
+                placeholder="np. ok. 5 tys. zł rocznie"
+                onChange={(budget) => setDetails((current) => ({ ...current, budget }))}
+              />
+
+              <DetailField
+                id={`${ids}-partnerzy`}
+                label="Partnerzy"
+                value={details.partners}
+                placeholder="np. GOPS, szkoła, koło gospodyń wiejskich"
+                onChange={(partners) => setDetails((current) => ({ ...current, partners }))}
+              />
 
               <dt className="font-bold text-deep">Tagi</dt>
               <dd>
@@ -296,12 +403,9 @@ export function IdeaCreator() {
             </dl>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button
-                type="button"
-                onClick={() => toast.show("Fiszka zapisana. Ekspert ROPS przejrzy ją w ciągu kilku dni.")}
-              >
-                <Save aria-hidden="true" />
-                Zapisz fiszkę
+              <Button type="button" onClick={saveCard} disabled={saving}>
+                {saving ? <Loader2 aria-hidden="true" className="animate-spin" /> : <Save aria-hidden="true" />}
+                {saving ? "Zapisuję…" : "Zapisz fiszkę"}
               </Button>
               <Link
                 href={`/wyniki?q=${encodeURIComponent(text.trim())}`}
@@ -315,6 +419,15 @@ export function IdeaCreator() {
                 Popraw opis
               </Button>
             </div>
+            {saveError && (
+              <p
+                role="alert"
+                className="mt-4 flex items-start gap-2 rounded-ui border-2 border-alert bg-surface px-4 py-3 font-bold text-alert"
+              >
+                <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
+                Nie udało się zapisać fiszki. Sprawdź połączenie i spróbuj jeszcze raz.
+              </p>
+            )}
           </article>
         </section>
       )}
