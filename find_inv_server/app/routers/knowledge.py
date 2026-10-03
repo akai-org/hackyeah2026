@@ -1,8 +1,9 @@
 import json
 import uuid
+from typing import Literal
 
-from fastapi import APIRouter, HTTPException
-from sqlalchemy import func, or_, select
+from fastapi import APIRouter, HTTPException, Query
+from sqlalchemy import and_, func, or_, select
 
 from app import knowledge_store as store
 from app.database import get_db
@@ -48,6 +49,9 @@ async def list_innovations(
     category: str = "",
     area: str = "",
     status: str = "",
+    cost_level: str = "",
+    tags_mode: Literal["any", "all"] = Query("any", description="any: dowolny z tagów, all: wszystkie tagi"),
+    include_archived: bool = True,
     limit: int = 20,
     offset: int = 0,
 ):
@@ -64,13 +68,18 @@ async def list_innovations(
                 ))
             if status:
                 q = q.where(Innovation.status == status)
+            if not include_archived:
+                q = q.where(Innovation.status != "archived")
+            if cost_level:
+                q = q.where(Innovation.cost_level == cost_level)
             if category:
                 q = q.where(Innovation.category.ilike(f"%{category}%"))
             if area:
                 q = q.where(Innovation.area.ilike(f"%{area}%"))
             if tag_filter:
                 # tagi trzymane jako JSON string – dopasowanie z cudzysłowami, żeby "OPS" nie trafiał w "DOPS"
-                q = q.where(or_(*[Innovation.tags.ilike(f'%"{t}"%') for t in tag_filter]))
+                conditions = [Innovation.tags.ilike(f'%"{t}"%') for t in tag_filter]
+                q = q.where(and_(*conditions) if tags_mode == "all" else or_(*conditions))
             items = (await db.execute(q.offset(offset).limit(limit))).scalars().all()
             # total z tymi samymi filtrami, bez limit/offset — frontend potrzebuje go do „Pokaż więcej”.
             total = (await db.execute(select(func.count()).select_from(q.order_by(None).subquery()))).scalar_one()
@@ -81,7 +90,13 @@ async def list_innovations(
         pass
 
     # Fallback bez bazy: te same 114 innowacji ROPS z parsed_innovations.json
-    found = store.search_innovations(search or None, tag_filter or None, category or None, area or None, status or None)
+    found = store.search_innovations(
+        search or None, tag_filter or None, category or None, area or None, status or None, cost_level or None
+    )
+    if tag_filter and tags_mode == "all":
+        found = [i for i in found if set(tag_filter) <= set(i.get("tags", []))]
+    if not include_archived:
+        found = [i for i in found if i.get("status") != "archived"]
     return {"data": _page([store.public(i) for i in found[offset : offset + limit]], len(found), limit, offset)}
 
 

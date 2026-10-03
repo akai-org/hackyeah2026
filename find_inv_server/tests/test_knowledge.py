@@ -71,3 +71,26 @@ def test_innovations_total_allows_paging():
         assert first["total"] > 12 and len(first["innovations"]) == 12
         assert second["total"] == first["total"]
         assert {i["id"] for i in first["innovations"]}.isdisjoint(i["id"] for i in second["innovations"])
+
+
+def test_library_filters_narrow_results():
+    """Regresja: koszt był ignorowany, a dwa tagi dawały więcej wyników niż jeden (OR zamiast AND)."""
+    with TestClient(app) as c:
+        def page(**params):
+            return c.get("/api/innovations", params={"limit": 200, **params}).json()["data"]
+
+        everything = page()["total"]
+        cheap = page(cost_level="low")
+        assert 0 < cheap["total"] < everything
+        assert all(i["cost_level"] == "low" for i in cheap["innovations"])
+
+        one = page(tags="seniorzy", tags_mode="all")["total"]
+        both = page(tags="seniorzy,wykluczenie_cyfrowe", tags_mode="all")
+        assert both["total"] <= one
+        assert all({"seniorzy", "wykluczenie_cyfrowe"} <= set(i["tags"]) for i in both["innovations"])
+        # domyślnie (bez tags_mode) zostaje „dowolny tag” — podobne innowacje na karcie z tego korzystają
+        assert page(tags="seniorzy,wykluczenie_cyfrowe")["total"] >= one
+
+        visible = page(include_archived="false")
+        assert all(i["status"] != "archived" for i in visible["innovations"])
+        assert visible["total"] == len(visible["innovations"])
