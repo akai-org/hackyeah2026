@@ -34,6 +34,18 @@ Middleman zadaje pytania z kontekstem innowacji i gminy.
 
 ---
 
+## [FYI ALL] Wspólny dialog `components/ui/dialog.tsx` (A1, runda 2)
+Używajcie `<Dialog open onClose title ...>` zamiast własnych `role="dialog"`. Natywny `<dialog>` + `showModal()`:
+Esc i klik w rozmyte tło wołają `onClose`, focus trap (Tab/Shift+Tab, łącznie z przyciskiem `aria-label="Zamknij"`),
+focus wraca na element, który otworzył okno. Propsy: `title`, `description?`, `icon?`, `size="sm|md|lg|xl"`,
+`initialFocusRef?`, `closeLabel?`. Treść (`children`) bez własnego nagłówka i przycisku X — daje je Dialog.
+Przykład: `<Dialog open={open} onClose={() => setOpen(false)} title="Zgłoś się jako tester" size="sm">…</Dialog>`.
+Podmienione przez A1: okno logowania (`login-dialog.tsx`), szybkie wyszukiwanie w nagłówku (Ctrl+K).
+**[NEED A2]** `middleman-modal.tsx` → przepnijcie na `<Dialog>` (usuńcie własny trap/Escape).
+**[NEED A3]** `tester-apply-modal.tsx` → to samo; `onClose` przekazujcie stabilnie, tytuł do propsa `title`.
+
+---
+
 ## STATUS BOARD
 
 | Agent | Robi teraz | Ostatni merge | Blokuje kogo |
@@ -70,6 +82,9 @@ Middleman zadaje pytania z kontekstem innowacji i gminy.
 ## 🟥 Agent 1 — Core
 
 <!-- Dopisuj wpisy tutaj na górze -->
+
+[00:35] [DONE] runda 2 / zad. 1: wspólny `<Dialog>` w `components/ui/dialog.tsx` (patrz [FYI ALL] wyżej).
+[00:20] A1 start: agent-1/ux-a11y
 
 [10:XX] [DONE] Sesja 3: admin panel polish (refresh stats, dates, counts), MiddlemanModal focus trap + WCAG 2.4.2 dynamic titles, voice-fix integration, live tester counts, setup.sh auto-seed.
 [16:45] [DONE] Finalne poprawki: middleman mock 2-turnowy (pyta follow-up → plan), fix nested <main> admin, fix search_log missing imports, +4 innowacje (21 total), wyszukiwanie w full_desc+tags.

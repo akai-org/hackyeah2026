@@ -213,6 +213,18 @@ html[data-contrast="high"] ::selection {
     animation: appear 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
 
+  /* Wspólne okno <Dialog>: krótkie pojawienie się bez wjazdu z daleka. */
+  @keyframes dialog-in {
+    from {
+      opacity: 0;
+      translate: 0 8px;
+    }
+    to {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+
   @keyframes appear {
     from {
       opacity: 0;
