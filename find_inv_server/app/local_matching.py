@@ -268,6 +268,31 @@ _CAUSAL_LEAD = re.compile(
 )
 
 
+# Zapowiedź zamiast treści na początku wypowiedzi („mamy taki problem, że …”, „chciałam zgłosić, że …”).
+# Sama nic nie mówi, a doklejona do sedna daje zdanie bez sensu („Kiedy mamy problem mama mieszka …”).
+_FRAMING = re.compile(
+    r"^(?:(?:kiedy|bo|więc|a|i|no|otóż)\s+)*(?!to\s)(?:"
+    r"(?:u\s+nas\s+|tutaj\s+|w\s+domu\s+)?(?:mamy|mam|jest|był|była|pojawił\s+się|pojawia\s+się|zrobił\s+się)"
+    r"\s+(?:taki\s+|taką\s+|duży\s+|wielki\s+|straszny\s+|poważny\s+|ogromny\s+|jeden\s+)?"
+    r"(?:problem|kłopot|sprawę|sprawa|pytanie|prośbę|prośba|sytuację|sytuacja)(?:\s+tak[ia])?"
+    r"|(?:mój|nasz|główny|największy)\s+(?:problem|kłopot)\s+(?:to|jest\s+taki)"
+    r"|(?:problem|kłopot|sytuacja|sprawa)\s+(?:jest\s+tak[ia]|polega\s+na\s+tym|wygląda\s+tak|dotyczy\s+tego)"
+    r"|(?:chciał(?:a|e)?(?:m|bym|abym)|chcę|chcemy|chcielibyśmy)\s+(?:zgłosić|powiedzieć|zapytać|opisać|napisać|poprosić)"
+    r"(?:\s+o\s+pomoc)?"
+    r"|(?:piszę|dzwonię|zgłaszam\s+się)(?:\s+w\s+sprawie\s+tego)?"
+    # „problem z dojazdem”, „kłopot w szkole” to treść — zapowiedź tylko, gdy dalej idzie nowe zdanie.
+    r")(?![\s,]+(?:z|ze|w|we|na|dla|do|o|od|przy|u|po|z\s+tym)\b)\s*(?:,\s*)?(?:że|bo|ponieważ|gdyż|mianowicie|to|:)?[\s,:]+",
+    re.IGNORECASE,
+)
+
+
+def _drop_framing(text: str) -> str:
+    previous = None
+    while text != previous:
+        previous, text = text, _FRAMING.sub("", text, count=1)
+    return text
+
+
 def _drop_filler_runs(text: str) -> str:
     def replace(match: re.Match) -> str:
         # Łańcuch od „to” po treści („… na wsi to jakby no nie ma …”) zamyka jedną myśl i otwiera drugą.
@@ -298,6 +323,7 @@ def strip_fillers(text: str) -> str:
     cleaned = re.sub(r"([,;:])(?:\s*[,;:])+", r"\1", cleaned)  # „, ,” po wycięciu wtrąceń
     cleaned = re.sub(r",\s+(i|oraz|ani)\b", r" \1", cleaned)  # po polsku bez przecinka przed „i”
     cleaned = re.sub(r"\s+", " ", cleaned).strip(" ,")
+    cleaned = _drop_framing(cleaned) or cleaned
     cleaned = _fix_casing(cleaned)
     causal = _CAUSAL_LEAD.match(cleaned)
     if causal:
@@ -313,6 +339,8 @@ CONDENSE_MAX_WORDS = 25
 
 def _clauses(text: str) -> list[str]:
     cleaned = _FILLER_PRONOUNS.sub(" ", _drop_filler_runs(text))
+    cleaned = _HESITATIONS.sub(" ", _TOPIC_FILLERS.sub(" ", cleaned)).strip(" ,")
+    cleaned = _drop_framing(cleaned) or cleaned
     cleaned = _TOPIC_FILLERS.sub(",", cleaned)
     cleaned = _HESITATIONS.sub(" ", cleaned)
     cleaned = _FILLER_JAKBY.sub(" ", cleaned)

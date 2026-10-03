@@ -169,3 +169,21 @@ def test_voice_fix_extracts_the_gist():
     assert len(mama.split()) <= 25
     assert "nie ma jak dojechać do lekarza" in mama and "samotna" in mama
     assert "pracuję w krakowie" not in mama  # dygresja mówiącego, nie problem
+
+
+def test_voice_fix_drops_framing_but_keeps_meaning():
+    """Zapowiedź („mamy problem, że”, „chciałam zgłosić”) to nie treść — sedno ma być zdaniem z sensem."""
+    fix = lambda text: client.post("/api/voice-fix", json={"transcript": text, "condense": True}).json()["data"]  # noqa: E731
+    gist = "Mama mieszka sama na wsi i nie ma jak dojść do lekarza."
+    for said in (
+        "kiedy mamy problem mama mieszka sama na wsi i nie ma jak dojść do lekarza",
+        "no mamy taki problem że mama mieszka sama na wsi i nie ma jak dojść do lekarza",
+        "problem jest taki że mama mieszka sama na wsi i nie ma jak dojść do lekarza",
+        "chciałam zgłosić że mama mieszka sama na wsi i nie ma jak dojść do lekarza",
+        "problem polega na tym że mama mieszka sama na wsi i nie ma jak dojść do lekarza",
+    ):
+        assert fix(said)["corrected"] == gist, said
+    # treść, nie zapowiedź: „problem z czymś”, „to jest problem” i pytania zostają
+    assert fix("jest problem z dojazdem do lekarza dla seniorów")["corrected"] == "Jest problem z dojazdem do lekarza dla seniorów."
+    assert fix("to jest problem bo nikt tego nie robi")["corrected"] == "To jest problem bo nikt tego nie robi."
+    assert fix("chciałam zapytać czy jest pomoc dla samotnych seniorów")["corrected"] == "Czy jest pomoc dla samotnych seniorów?"

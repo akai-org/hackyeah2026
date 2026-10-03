@@ -297,7 +297,11 @@ def _tidy_transcript(text: str) -> str:
     if not text:
         return text
     text = text[0].upper() + text[1:]
-    return text if text[-1] in ".!?…" else f"{text}."
+    if text[-1] in ".!?…":
+        return text
+    # Pytanie po zdjęciu zapowiedzi („chciałam zapytać, czy …”) zostaje pytaniem.
+    first = text.split()[0].lower().strip(",")
+    return f"{text}?" if first in {"czy", "jak", "gdzie", "kto", "co", "kiedy", "dlaczego", "ile", "jaka", "jaki"} else f"{text}."
 
 
 VOICE_CONDENSE_PROMPT = (
