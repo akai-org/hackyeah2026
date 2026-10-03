@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { CutoutText } from "@/components/cutout-text";
+import { Matchmaking } from "@/components/matchmaking";
 import { Monstera } from "@/components/monstera";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -13,24 +14,29 @@ export default async function ResultsPage({ searchParams }: PageProps<"/wyniki">
 
   return (
     <div className="mx-auto max-w-content px-4 py-16 sm:px-6">
-      <CutoutText as="h1" size="section" text="Tu pojawią się wyniki" />
+      <CutoutText as="h1" size="section" text="Co już działa" />
       <Monstera size="small" color="sage" className="simple-hidden mt-4 w-24 rotate-[160deg]" />
 
       {query ? (
-        <div className="mt-6 max-w-[65ch]">
-          <p className="font-bold text-deep">Twój opis problemu</p>
-          <blockquote className="mt-2 border-l-4 border-leaf bg-surface px-5 py-4 text-lg">{query}</blockquote>
-        </div>
+        <>
+          <div className="mt-6 max-w-[65ch]">
+            <p className="font-bold text-deep">Twój opis problemu</p>
+            <blockquote className="mt-2 border-l-4 border-leaf bg-surface px-5 py-4 text-lg">{query}</blockquote>
+            <Link href="/" className={buttonVariants({ variant: "secondary", className: "mt-4" })}>
+              Zmień opis problemu
+            </Link>
+          </div>
+          {/* key: nowe zapytanie zaczyna wyszukiwanie od zera. */}
+          <Matchmaking key={query} query={query} />
+        </>
       ) : (
-        <p className="mt-6 max-w-[65ch] text-lg">Nie podano opisu problemu.</p>
+        <>
+          <p className="mt-6 max-w-[65ch] text-lg">Nie podano opisu problemu.</p>
+          <Link href="/" className={buttonVariants({ variant: "secondary", className: "mt-8" })}>
+            Opisz problem
+          </Link>
+        </>
       )}
-
-      <p className="mt-6 max-w-[65ch]">
-        To prototyp. Wyszukiwanie w Bibliotece innowacji podłączymy w kolejnym kroku.
-      </p>
-      <Link href="/" className={buttonVariants({ variant: "secondary", className: "mt-8" })}>
-        Zmień opis problemu
-      </Link>
     </div>
   );
 }

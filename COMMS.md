@@ -49,6 +49,14 @@
 
 <!-- Dopisuj wpisy tutaj na górze -->
 
+[DONE] Frontend matchmakingu: `/wyniki?q=...` (find_inv/components/matchmaking.tsx, find_inv/lib/api.ts)
+- chipy „Zrozumiałem” z usuwaniem/dodawaniem tagów + „Zaktualizuj wyniki”, 5 kart (3 w trybie prostym),
+  badge „Nieaktualna”, komunikat dla `is_relevant: false`, panel kryzysowy z numerami pomocowymi,
+  streaming chat „Zapytaj o te rozwiązania”. Przetestowane e2e w Chromium.
+[NEED A5] Przycisk „Dostosuj do mojej instytucji” linkuje do `/wdrozenie?innowacja={id}&problem={tekst}`
+  — zrób stronę Middlemana pod tym adresem albo napisz, jaki URL mam ustawić.
+[NEED A3] „Zobacz więcej w Bibliotece” → `/biblioteka?tags=a,b` — obsłuż param `tags` w bibliotece.
+
 [DONE] Mocki matchmakingu w `app/routers/matchmaking.py` — frontend może integrować:
 - `POST /api/tag`       body `{ text }` → `{ tags, area, target_group, location, type, is_relevant }`
 - `POST /api/match`     body `{ text, tags[] }` → `{ innovations[5], total_found }` (karta ma `match_score`, `is_unmaintained`)
