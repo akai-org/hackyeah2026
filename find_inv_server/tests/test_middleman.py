@@ -45,3 +45,13 @@ def test_finish_early_and_unknown_innovation():
 def test_expired_session():
     events = _events(client.post("/api/middleman/answer", json={"session_id": "nope", "answer": "x"}))
     assert events[0]["type"] == "error"
+
+
+def test_accepts_frontend_contract_fields():
+    start = client.post(
+        "/api/middleman/start",
+        json={"innovation_id": 8, "institution_type": "Gmina wiejska", "location": "Racławice", "problem_desc": "rodziny"},
+    ).json()["data"]
+    assert start["innovation"]["title"] == "Klub Rodzica w świetlicy"
+    plan = _events(client.post("/api/middleman/answer", json={"session_id": start["session_id"], "finish": True}))[-1]
+    assert "Racławice" in plan["content"]["goal"] and "Racławice" in plan["content"]["location_suggestions"]

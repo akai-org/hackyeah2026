@@ -83,6 +83,8 @@ class StartRequest(BaseModel):
     innovation_id: int | str | None = None
     problem_desc: str = ""
     institution: str | None = None  # np. "GOPS w gminie wiejskiej"
+    institution_type: str | None = None  # front A4: "Gmina wiejska", "Ośrodek pomocy społecznej"…
+    location: str | None = None  # miejscowość / gmina
     # Front może dosłać opis, gdy innowacja nie pochodzi z bazy (np. mock frontendu).
     innovation_title: str | None = None
     innovation_desc: str | None = None
@@ -207,7 +209,9 @@ def _funding(tags: set[str]) -> str:
 def _local_plan(session: dict) -> dict:
     innov = session["innovation"]
     answers = [a for a in session["answers"] if a.strip()]
-    joined = " ".join(answers).lower()
+    institution = (session.get("institution") or "").lower()
+    place = session.get("location") or ""
+    joined = " ".join(answers + [institution]).lower()
     tags = set(innov.get("tags") or [])
     cost_range, cost_items = _COST.get(innov.get("cost_level") or "medium", _COST["medium"])
     months = innov.get("implementation_time_months") or 3
@@ -228,6 +232,8 @@ def _local_plan(session: dict) -> dict:
         if rural
         else "Dom kultury, biblioteka albo klub seniora — parter, dostęp dla wózków, dobra komunikacja"
     )
+    if place:
+        location = f"{place}: " + location[0].lower() + location[1:]
     if has_room:
         location = "Wskazane przez Was miejsce — sprawdźcie dostępność (próg, toaleta, dojazd) przed startem. " + location
 
@@ -243,7 +249,8 @@ def _local_plan(session: dict) -> dict:
     return {
         "goal": f"Uruchomić „{title}” dla grupy: {target}"
         + (f" — na start ok. {people} osób" if people else "")
-        + f", w ciągu {months} mies.",
+        + (f" ({place})" if place else "")
+        + f", z pierwszymi zajęciami w ciągu {months} mies.",
         "staff_needed": staff,
         "estimated_cost": f"{cost_range} ({cost_items})",
         "location_suggestions": location,
@@ -260,7 +267,7 @@ def _local_plan(session: dict) -> dict:
             {"label": "Dni 31–60", "items": ["Szkolenie zespołu", "Rekrutacja uczestników", "Pierwsze spotkania pilotażowe"]},
             {"label": "Dni 61–90", "items": ["Pilotaż w pełnym zakresie", "Ankieta wśród uczestników", "Raport dla wójta i ROPS"]},
         ],
-        "timeline": f"{months} mies. do pełnego działania, pierwsze efekty po ok. 6 tygodniach",
+        "timeline": f"start po {months} mies., ocena pilotażu po 90 dniach",
         "funding_hints": _funding(tags),
         "risks": [
             "Wypalenie wolontariuszy — grafik dyżurów i spotkanie raz w miesiącu",
@@ -293,7 +300,8 @@ def _llm_messages(session: dict, force_plan: bool) -> list[dict]:
     context = (
         f"Innowacja z Biblioteki ROPS:\n{_innovation_brief(innov)}\n\n"
         f"Problem / potrzeba instytucji: {session['problem'] or 'nie podano'}\n"
-        f"Instytucja: {session['institution'] or 'nie podano'}"
+        f"Instytucja: {session['institution'] or 'nie podano'}\n"
+        f"Miejscowość: {session.get('location') or 'nie podano'}"
     )
     messages = [{"role": "system", "content": SYSTEM_PROMPT + "\n\n" + FORMAT_PROMPT}, {"role": "user", "content": context}]
     for question, answer in zip(session["questions"], session["answers"]):
@@ -328,7 +336,8 @@ async def start(body: StartRequest):
         "id": str(uuid.uuid4()),
         "innovation": innov,
         "problem": body.problem_desc.strip()[:MAX_ANSWER],
-        "institution": (body.institution or "").strip()[:200],
+        "institution": (body.institution or body.institution_type or "").strip()[:200],
+        "location": (body.location or "").strip()[:120],
         "questions": [],
         "answers": [],
         "plan": None,
