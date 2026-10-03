@@ -9,7 +9,7 @@ Gdy get_current_user jest dostępny, wystarczy też sesja z rolą "admin" (cooki
 
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from pydantic import BaseModel
 
 from app import admin_store
@@ -20,18 +20,29 @@ except ImportError:
     get_current_user = None
 
 
-async def require_panel_admin(
-    request: Request, x_dev_admin: Annotated[str | None, Header()] = None
-) -> None:
-    if x_dev_admin and x_dev_admin.lower() == "true":
-        return
-    if get_current_user is not None:
-        user = get_current_user(request)
-        if hasattr(user, "__await__"):
-            user = await user
-        if user is not None and getattr(user, "role", None) == "admin":
+def _forbidden() -> HTTPException:
+    return HTTPException(status.HTTP_403_FORBIDDEN, "Panel dostępny tylko dla roli admin")
+
+
+def _dev_admin(x_dev_admin: str | None) -> bool:
+    return bool(x_dev_admin) and x_dev_admin.lower() == "true"
+
+
+if get_current_user is not None:
+    # FastAPI sam rozwiąże zależności get_current_user (Request, sesja DB…) — niezależnie od jego sygnatury.
+    async def require_panel_admin(
+        x_dev_admin: Annotated[str | None, Header()] = None,
+        user=Depends(get_current_user),
+    ) -> None:
+        if _dev_admin(x_dev_admin) or getattr(user, "role", None) == "admin":
             return
-    raise HTTPException(status.HTTP_403_FORBIDDEN, "Panel dostępny tylko dla roli admin")
+        raise _forbidden()
+
+else:
+
+    async def require_panel_admin(x_dev_admin: Annotated[str | None, Header()] = None) -> None:
+        if not _dev_admin(x_dev_admin):
+            raise _forbidden()
 
 
 router = APIRouter(prefix="/api/admin", tags=["admin-panel"], dependencies=[Depends(require_panel_admin)])
