@@ -1,77 +1,96 @@
-"""Seed innowacji ROPS (data/parsed_innovations.json od A3) do SQLite (A1) i — z kluczem OpenRouter — do ChromaDB.
-
+"""
+Seed innowacji ROPS do SQLite + ChromaDB.
 Uruchom z katalogu find_inv_server/:
-    python -m data.seed_innovations              # dopisuje, gdy tabela innovations jest pusta
-    python -m data.seed_innovations --replace    # podmienia dane demo (np. z data.seed_demo) na katalog ROPS
-    python -m data.seed_innovations --llm        # tagi z run_autotagger zamiast tagów z parse_rops.py
+    python -m data.seed_innovations            # tagi z parse_rops.py
+    python -m data.seed_innovations --llm      # tagi z run_autotagger() (wymaga OPENROUTER_API_KEY)
 
-Id w bazie = id z JSON-a, więc /api/match, /api/innovations/{id} i Middleman wskazują tę samą innowację.
-Bez OPENROUTER_API_KEY embeddingi są pomijane — matchmaking działa wtedy na rankingu lokalnym (TF-IDF + tagi).
+Dane: data/parsed_innovations.json (python -m data.fetch_rops && python -m data.parse_rops).
+Zastępuje innowacje z seed_demo.py realnymi danymi z Biblioteki Innowacji ROPS.
+Bez OPENROUTER_API_KEY wgrywa tylko SQLite (matchmaking używa wtedy rankingu bez wektorów).
 """
 
 import asyncio
 import json
+import os
 import sys
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from sqlalchemy import delete, func, select  # noqa: E402
+from sqlalchemy import delete
 
-from app.config import settings  # noqa: E402
-from app.database import get_db, init_db  # noqa: E402
-from app.models import Innovation  # noqa: E402
+from app.config import settings
+from app.database import get_db, init_db
+from app.embeddings import embed_and_store, get_collection
+from app.models import Innovation
 
-DATA_FILE = Path(__file__).parent / "parsed_innovations.json"
+DATA_FILE = os.path.join(os.path.dirname(__file__), "parsed_innovations.json")
 
-# Tylko kolumny tabeli innovations — JSON A3 ma też categories, authors, video_url itd.
+# Kolumny tabeli innovations – pozostałe pola JSON-a (video_url, authors, …) zostają w pliku.
 FIELDS = [
-    "id", "title", "short_desc", "full_desc", "category", "area", "target_group", "location",
+    "title", "short_desc", "full_desc", "category", "area", "target_group", "location",
     "status", "cost_level", "implementation_time_months", "testers_count",
     "where_implemented", "source_url",
-]  # fmt: skip
+]
 
 
-async def seed(replace: bool = False, use_llm: bool = False) -> None:
+def _reset_chroma() -> None:
+    col = get_collection()
+    ids = col.get(include=[])["ids"]
+    if ids:
+        col.delete(ids=ids)
+
+
+async def seed(use_llm: bool = False) -> None:
     await init_db()
-    if not DATA_FILE.exists():
-        print(f"BŁĄD: brak pliku {DATA_FILE} — uruchom data/parse_rops.py (A3).")
-        return
-    data = json.loads(DATA_FILE.read_text(encoding="utf-8"))
-    with_embeddings = bool(settings.openrouter_api_key)
 
+    if not os.path.exists(DATA_FILE):
+        print(f"BŁĄD: Brak pliku {DATA_FILE}")
+        print("Uruchom: python -m data.fetch_rops && python -m data.parse_rops")
+        return
+
+    with open(DATA_FILE, encoding="utf-8") as f:
+        data = json.load(f)
+
+    with_vectors = bool(settings.openrouter_api_key)
+    if not with_vectors:
+        print("UWAGA: brak OPENROUTER_API_KEY – wgrywam tylko SQLite, bez embeddingów w ChromaDB.")
+    if use_llm and not with_vectors:
+        print("UWAGA: --llm wymaga OPENROUTER_API_KEY – używam tagów z parse_rops.py.")
+        use_llm = False
+
+    if with_vectors:
+        _reset_chroma()
+
+    print(f"Seedowanie {len(data)} innowacji ROPS...")
     async with get_db() as db:
-        existing = (await db.execute(select(func.count()).select_from(Innovation))).scalar_one()
-        if existing and not replace:
-            print(f"Tabela innovations ma już {existing} wierszy. Użyj --replace, żeby podmienić je na katalog ROPS.")
-            return
-        if existing:
-            await db.execute(delete(Innovation))
+        await db.execute(delete(Innovation))  # usuwa też demo z seed_demo.py
 
         for i, item in enumerate(data, 1):
             tags = item.get("tags") or []
-            if use_llm and with_embeddings:
+            if use_llm:
                 from app.utils import run_autotagger
 
-                tags = (await run_autotagger(f"{item['title']} {item['short_desc']}")).get("tags", tags)
-            innov = Innovation(**{k: item.get(k) for k in FIELDS if item.get(k) is not None})
-            innov.tags = json.dumps(tags, ensure_ascii=False)
-            innov.embedding_id = str(innov.id)
+                tagged = await run_autotagger(f"{item['title']} {item.get('short_desc', '')}")
+                tags = tagged.get("tags") or tags
+
+            innov = Innovation(**{k: item.get(k) for k in FIELDS}, tags=json.dumps(tags, ensure_ascii=False))
+            innov.testers_count = innov.testers_count or 0
             db.add(innov)
+            await db.flush()
+            innov.embedding_id = str(innov.id)
+
+            if with_vectors:
+                embed_text = f"{innov.title} {innov.short_desc or ''} {innov.full_desc or ''}"
+                await embed_and_store(innov.embedding_id, embed_text, {"innovation_id": innov.id})
+
             if i % 20 == 0:
                 print(f"  {i}/{len(data)}...")
+
         await db.commit()
 
-    if with_embeddings:
-        from app.embeddings import embed_and_store
-
-        for item in data:
-            text = f"{item['title']} {item['short_desc']} {item.get('full_desc') or ''}"
-            await embed_and_store(str(item["id"]), text, {"innovation_id": item["id"]})
-        print(f"[DONE] {len(data)} innowacji ROPS w SQLite + ChromaDB")
-    else:
-        print(f"[DONE] {len(data)} innowacji ROPS w SQLite (bez ChromaDB — brak OPENROUTER_API_KEY)")
+    target = "SQLite + ChromaDB" if with_vectors else "SQLite"
+    print(f"[DONE] Seeded {len(data)} innowacji do {target}")
 
 
 if __name__ == "__main__":
-    asyncio.run(seed(replace="--replace" in sys.argv, use_llm="--llm" in sys.argv))
+    asyncio.run(seed("--llm" in sys.argv))
