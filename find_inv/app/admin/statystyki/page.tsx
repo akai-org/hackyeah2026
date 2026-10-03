@@ -12,6 +12,7 @@ interface Stats {
   pending_testers: number;
   searches: number;
   ideas: number;
+  pending_ideas: number;
 }
 
 const MOCK_STATS: Stats = {
@@ -21,6 +22,7 @@ const MOCK_STATS: Stats = {
   pending_testers: 0,
   searches: 0,
   ideas: 0,
+  pending_ideas: 0,
 };
 
 export default function StatystykiPage() {
@@ -53,7 +55,7 @@ export default function StatystykiPage() {
     { label: "Aktywni testerzy", value: stats.testers, icon: ClipboardCheck, bg: "bg-butter" },
     { label: "Oczekujące zgłoszenia", value: stats.pending_testers, icon: Clock, bg: "bg-paper" },
     { label: "Wyszukiwania łącznie", value: stats.searches, icon: Search, bg: "bg-sage" },
-    { label: "Pomysły z Kreatora", value: stats.ideas ?? 0, icon: Lightbulb, bg: "bg-butter" },
+    { label: "Pomysły z Kreatora", value: stats.ideas ?? 0, icon: Lightbulb, bg: "bg-butter", sub: (stats.pending_ideas ?? 0) > 0 ? `${stats.pending_ideas} nowych` : undefined },
   ];
 
   return (
@@ -73,13 +75,17 @@ export default function StatystykiPage() {
         </div>
       </div>
       <ul className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-        {cards.map(({ label, value, icon: Icon, bg }) => (
-          <li key={label} className={`border-(length:--bw) border-deep ${bg} p-6 shadow-paper`}>
-            <Icon className="size-8 text-leaf" aria-hidden="true" />
-            <p className="mt-4 text-4xl font-bold text-deep tabular-nums">{value.toLocaleString("pl-PL")}</p>
-            <p className="mt-1 text-muted">{label}</p>
-          </li>
-        ))}
+        {cards.map(({ label, value, icon: Icon, bg, ...rest }) => {
+          const sub = (rest as { sub?: string }).sub;
+          return (
+            <li key={label} className={`border-(length:--bw) border-deep ${bg} p-6 shadow-paper`}>
+              <Icon className="size-8 text-leaf" aria-hidden="true" />
+              <p className="mt-4 text-4xl font-bold text-deep tabular-nums">{value.toLocaleString("pl-PL")}</p>
+              <p className="mt-1 text-muted">{label}</p>
+              {sub && <p className="mt-1 text-sm font-bold text-alert">{sub}</p>}
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
