@@ -243,7 +243,7 @@ def _local_plan(session: dict) -> dict:
     return {
         "goal": f"Uruchomić „{title}” dla grupy: {target}"
         + (f" — na start ok. {people} osób" if people else "")
-        + f", w ciągu {months} mies.",
+        + f", z pierwszymi zajęciami w ciągu {months} mies.",
         "staff_needed": staff,
         "estimated_cost": f"{cost_range} ({cost_items})",
         "location_suggestions": location,
@@ -260,7 +260,7 @@ def _local_plan(session: dict) -> dict:
             {"label": "Dni 31–60", "items": ["Szkolenie zespołu", "Rekrutacja uczestników", "Pierwsze spotkania pilotażowe"]},
             {"label": "Dni 61–90", "items": ["Pilotaż w pełnym zakresie", "Ankieta wśród uczestników", "Raport dla wójta i ROPS"]},
         ],
-        "timeline": f"{months} mies. do pełnego działania, pierwsze efekty po ok. 6 tygodniach",
+        "timeline": f"start po {months} mies., ocena pilotażu po 90 dniach",
         "funding_hints": _funding(tags),
         "risks": [
             "Wypalenie wolontariuszy — grafik dyżurów i spotkanie raz w miesiącu",

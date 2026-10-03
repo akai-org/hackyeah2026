@@ -182,3 +182,22 @@ html[data-simple="true"] .simple-hidden {
     }
   }
 }
+
+/* ---------- Druk: „Pobierz plan (PDF)” (window.print) ---------- */
+
+@media print {
+  body {
+    background: #fff;
+  }
+
+  header,
+  footer,
+  .print-hidden,
+  .simple-hidden {
+    display: none !important;
+  }
+
+  .shadow-paper {
+    box-shadow: none !important;
+  }
+}
