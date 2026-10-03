@@ -275,7 +275,7 @@ async def admin_trends(_: bool = AdminDep):
 async def admin_stats(_: bool = AdminDep):
     try:
         from app.database import get_db
-        from app.models import Innovation, User, Tester, SearchLog
+        from app.models import Innovation, User, Tester, SearchLog, Idea
         from sqlalchemy import select, func
 
         async with get_db() as db:
@@ -284,6 +284,7 @@ async def admin_stats(_: bool = AdminDep):
             tester_count = (await db.execute(select(func.count()).select_from(Tester).where(Tester.approved == True))).scalar() or 0  # noqa: E712
             pending_count = (await db.execute(select(func.count()).select_from(Tester).where(Tester.approved == False))).scalar() or 0  # noqa: E712
             search_count = (await db.execute(select(func.count()).select_from(SearchLog))).scalar() or 0
+            idea_count = (await db.execute(select(func.count()).select_from(Idea))).scalar() or 0
 
         return {"data": {
             "innovations": inn_count,
@@ -291,6 +292,7 @@ async def admin_stats(_: bool = AdminDep):
             "testers": tester_count,
             "pending_testers": pending_count,
             "searches": search_count,
+            "ideas": idea_count,
         }}
     except Exception:
         return {"data": {
@@ -299,4 +301,62 @@ async def admin_stats(_: bool = AdminDep):
             "testers": 12,
             "pending_testers": 3,
             "searches": 156,
+            "ideas": 0,
         }}
+
+
+@router.get("/ideas")
+async def admin_ideas(status: str = "", _: bool = AdminDep):
+    try:
+        from app.database import get_db
+        from app.models import Idea
+        from sqlalchemy import select
+        import json as _json
+
+        async with get_db() as db:
+            q = select(Idea).order_by(Idea.created_at.desc())
+            if status:
+                q = q.where(Idea.status == status)
+            rows = await db.execute(q)
+            ideas = rows.scalars().all()
+
+        return {"data": [
+            {
+                "id": i.id,
+                "title": i.title,
+                "essence": i.essence,
+                "for_whom": i.for_whom,
+                "tags": _json.loads(i.tags) if i.tags else [],
+                "author_name": i.author_name,
+                "author_email": i.author_email,
+                "status": i.status,
+                "created_at": i.created_at.isoformat() if i.created_at else None,
+            }
+            for i in ideas
+        ]}
+    except Exception:
+        return {"data": []}
+
+
+@router.post("/ideas/{idea_id}/status")
+async def set_idea_status(idea_id: int, body: dict, _: bool = AdminDep):
+    new_status = (body.get("status") or "").strip()
+    if new_status not in {"pending", "reviewed", "rejected"}:
+        raise HTTPException(status_code=400, detail="Nieprawidłowy status")
+    try:
+        from app.database import get_db
+        from app.models import Idea
+        from sqlalchemy import select
+
+        async with get_db() as db:
+            row = await db.execute(select(Idea).where(Idea.id == idea_id))
+            idea = row.scalar_one_or_none()
+            if idea is None:
+                raise HTTPException(status_code=404, detail="Nie znaleziono")
+            idea.status = new_status
+            await db.commit()
+        return {"data": {"id": idea_id, "status": new_status}}
+    except HTTPException:
+        raise
+    except Exception:
+        return {"data": {"id": idea_id, "status": new_status}}
