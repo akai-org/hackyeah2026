@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import {
   CircleAlert,
+  CircleCheck,
   Clock,
   Coins,
   Info,
   MapPin,
+  Megaphone,
   MessageCircle,
   Phone,
   Plus,
@@ -17,11 +19,13 @@ import {
   X,
 } from "lucide-react";
 
+import { CutoutText } from "@/components/cutout-text";
 import { useSimpleMode } from "@/components/simple-mode";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   TAXONOMY_TAGS,
   matchInnovations,
+  reportNeed,
   streamChat,
   tagLabel,
   tagProblem,
@@ -162,13 +166,7 @@ function MatchmakingFlow({ query, limit }: { query: string; limit: number }) {
         </div>
       )}
 
-      {phase === "ready" && shown.length === 0 && (
-        <div className="mt-6 max-w-[65ch]">
-          <p className="text-lg">
-            Nie znalazłem pasującej innowacji. Wybierz inne tagi powyżej albo opisz problem inaczej.
-          </p>
-        </div>
-      )}
+      {phase === "ready" && shown.length === 0 && <NoResults query={query} />}
 
       {shown.length > 0 && (
         <section aria-labelledby="wyniki-naglowek" className="mt-8" aria-busy={busy}>
@@ -192,6 +190,54 @@ function MatchmakingFlow({ query, limit }: { query: string; limit: number }) {
       )}
 
       {phase === "ready" && shown.length > 0 && <ProblemChat query={query} innovations={shown} />}
+    </div>
+  );
+}
+
+function NoResults({ query }: { query: string }) {
+  const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+
+  async function send() {
+    setState("sending");
+    try {
+      await reportNeed(query);
+      setState("sent");
+    } catch (error) {
+      console.error(error);
+      setState("error");
+    }
+  }
+
+  return (
+    <div className="mt-6 max-w-[65ch]">
+      <CutoutText as="h2" size="section" text="Nic tu jeszcze nie ma" />
+      <p className="mt-4 text-lg">
+        Nie znalazłem pasującej innowacji. Usuń część tagów powyżej albo opisz problem inaczej.
+      </p>
+      <p className="mt-4">
+        Możesz też zgłosić tę potrzebę do Regionalnego Ośrodka Polityki Społecznej. Dzięki temu będzie wiadomo, gdzie
+        w Małopolsce brakuje rozwiązań.
+      </p>
+      {state === "sent" ? (
+        <p role="status" className="mt-4 flex items-start gap-2 font-bold text-deep">
+          <CircleCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
+          Zgłoszenie wysłane. Dziękujemy.
+        </p>
+      ) : (
+        <Button type="button" onClick={send} disabled={state === "sending"} className="mt-4">
+          <Megaphone aria-hidden="true" />
+          {state === "sending" ? "Wysyłam…" : "Zgłoś tę potrzebę do ROPS"}
+        </Button>
+      )}
+      {state === "error" && (
+        <p
+          role="alert"
+          className="mt-4 flex items-start gap-2 rounded-ui border-2 border-alert bg-surface px-4 py-3 font-bold text-alert"
+        >
+          <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
+          Nie udało się wysłać zgłoszenia. Spróbuj jeszcze raz za chwilę.
+        </p>
+      )}
     </div>
   );
 }

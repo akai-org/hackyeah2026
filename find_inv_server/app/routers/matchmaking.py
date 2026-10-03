@@ -14,7 +14,8 @@ from fastapi import APIRouter, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from data.mock_data import MOCK_INNOVATIONS, MOCK_TAG_RESPONSE
+from app.local_matching import local_tag_result, rank_locally
+from data.mock_data import MOCK_INNOVATIONS
 
 log = logging.getLogger(__name__)
 
@@ -125,10 +126,13 @@ async def _fetch_innovations(where) -> list[dict]:
 
 
 async def _log_search(query: str, tags: list[str]) -> None:
+    """Log do search_logs rdzenia (A1). Bez rdzenia loguje _log_search_zasobnik z /api/match."""
     try:
         from app.database import SessionLocal
         from app.models import SearchLog
-
+    except ImportError:
+        return
+    try:
         async with SessionLocal() as db:
             db.add(SearchLog(query=query, tags=json.dumps(tags, ensure_ascii=False)))
             await db.commit()
@@ -136,14 +140,25 @@ async def _log_search(query: str, tags: list[str]) -> None:
         log.exception("search_logs insert failed")
 
 
-def _mock_match(tags: list[str]) -> list[dict]:
-    query_tags = set(tags)
-    ranked = sorted(
-        MOCK_INNOVATIONS,
-        key=lambda i: i["match_score"] + TAG_BOOST * len(set(i["tags"]) & query_tags),
-        reverse=True,
-    )
-    return ranked[:TOP_N]
+def _log_search_zasobnik(query: str, results: int) -> None:
+    """Zapis do SearchLog Zasobnika — trafia do /api/admin/trends (top_queries, zero_result_queries)."""
+    try:
+        from sqlmodel import Session
+
+        from app.db import engine
+        from app.models import SearchLog
+
+        with Session(engine) as session:
+            session.add(SearchLog(query=query.lower()[:200], results=results))
+            session.commit()
+    except Exception:
+        log.exception("zasobnik search log failed")
+
+
+def _local_match(text: str, tags: list[str]) -> dict:
+    """Ranking bez embeddingów: na mockach, dopóki A3 nie zaseeduje bazy."""
+    ranked = rank_locally(text, tags, MOCK_INNOVATIONS)
+    return {"innovations": ranked[:TOP_N], "total_found": len(ranked)}
 
 
 # ── Endpointy ────────────────────────────────────────────
@@ -155,38 +170,38 @@ async def tag(body: TagRequest, background: BackgroundTasks):
     if not text:
         return _err("Pusty opis problemu")
     if not REAL_BACKEND:
-        return _ok(MOCK_TAG_RESPONSE)
+        return _ok(local_tag_result(text))
 
     try:
         result = await run_autotagger(text)
+        result["tags"] = [t for t in result.get("tags", []) if t in TAXONOMY_TAGS]
     except Exception:
-        log.exception("autotagger failed")
-        return _err("Nie udało się przeanalizować opisu")
-    result["tags"] = [t for t in result.get("tags", []) if t in TAXONOMY_TAGS]
+        log.exception("autotagger failed, using local tagger")
+        result = local_tag_result(text)
     background.add_task(_log_search, text, result["tags"])
     return _ok(result)
 
 
 @router.post("/match")
-async def match(body: MatchRequest):
+async def match(body: MatchRequest, background: BackgroundTasks):
     text = body.text.strip()[:MAX_TEXT]
     if not text:
         return _err("Pusty opis problemu")
     if not REAL_BACKEND:
-        innovations = _mock_match(body.tags)
-        return _ok({"innovations": innovations, "total_found": len(innovations)})
+        result = _local_match(text, body.tags)
+        background.add_task(_log_search_zasobnik, text, result["total_found"])
+        return _ok(result)
 
     try:
         results = await similarity_search(text, n_results=50)
     except Exception:
-        log.exception("similarity_search failed")
-        return _err("Wyszukiwanie chwilowo niedostępne")
+        log.exception("similarity_search failed, using local ranking")
+        return _ok(_local_match(text, body.tags))
 
     score_map = {r["id"]: r["score"] for r in results}
     innovations = await _fetch_innovations(lambda I: I.embedding_id.in_(list(score_map)))
     if not innovations:  # brak seedu od A3 → mocki, żeby demo działało
-        innovations = _mock_match(body.tags)
-        return _ok({"innovations": innovations, "total_found": len(innovations)})
+        return _ok(_local_match(text, body.tags))
 
     query_tags = set(body.tags)
     for innov in innovations:

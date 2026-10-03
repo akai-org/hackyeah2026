@@ -16,10 +16,10 @@ def test_tag_rejects_empty_text():
     assert body == {"data": None, "error": "Pusty opis problemu"}
 
 
-def test_match_returns_five_cards_with_flags():
+def test_match_returns_cards_with_flags():
     body = client.post("/api/match", json={"text": "samotni seniorzy", "tags": ["samotność"]}).json()
     innovations = body["data"]["innovations"]
-    assert len(innovations) == 5
+    assert 0 < len(innovations) <= 5
     assert all({"id", "title", "match_score", "is_unmaintained"} <= i.keys() for i in innovations)
 
 
@@ -36,3 +36,26 @@ def test_chat_streams_sse_until_done():
     assert response.headers["content-type"].startswith("text/event-stream")
     assert response.text.startswith("data: ")
     assert response.text.endswith("data: [DONE]\n\n")
+
+
+def test_tags_follow_the_description():
+    body = client.post("/api/tag", json={"text": "Seniorzy nie radzą sobie z internetem"}).json()
+    assert body["data"]["tags"][:2] == ["seniorzy", "wykluczenie_cyfrowe"]
+
+
+def test_off_topic_text_is_not_relevant():
+    body = client.post("/api/tag", json={"text": "jaka będzie pogoda"}).json()
+    assert body["data"]["is_relevant"] is False
+
+
+def test_match_ranks_by_description():
+    body = client.post("/api/match", json={"text": "osoba na wózku potrzebuje asystenta", "tags": []}).json()
+    assert body["data"]["innovations"][0]["title"] == "Asystent Osoby z Niepełnosprawnością"
+
+
+def test_removing_a_tag_changes_ranking():
+    text = "samotny senior na wsi"
+    with_tags = client.post("/api/match", json={"text": text, "tags": ["seniorzy", "gmina_wiejska"]}).json()
+    without = client.post("/api/match", json={"text": text, "tags": []}).json()
+    scores = lambda body: [i["match_score"] for i in body["data"]["innovations"]]  # noqa: E731
+    assert scores(with_tags) != scores(without)

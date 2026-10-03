@@ -93,6 +93,16 @@ export function matchInnovations(text: string, tags: string[], signal?: AbortSig
   return post<{ innovations: MatchedInnovation[]; total_found: number }>("/api/match", { text, tags }, signal);
 }
 
+/** Zgłoszenie potrzeby do Zasobnika (POST /api/needs) — trafia do trendów admina jako luka. */
+export async function reportNeed(description: string) {
+  const response = await fetch(`${API_URL}/api/needs`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ description: description.slice(0, 2000), reporter_type: "resident" }),
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+}
+
 /** Strumieniuje odpowiedź czatu. `onChunk` dostaje kolejne kawałki tekstu. */
 export async function streamChat(
   messages: ChatMessage[],

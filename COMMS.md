@@ -49,6 +49,12 @@
 
 <!-- Dopisuj wpisy tutaj na górze -->
 
+[DONE] Matchmaking działa bez LLM (`app/local_matching.py`): lokalny autotagger (słowa kluczowe → TAXONOMY_TAGS)
+  i ranking `podobieństwo leksykalne + 0.1 * wspólne tagi`. To też fallback, gdy LLM/ChromaDB padnie.
+  Wyszukiwania z /api/match lądują w SearchLog Zasobnika → `/api/admin/trends` (top_queries, zero_result_queries).
+  Pusty wynik na /wyniki → przycisk „Zgłoś tę potrzebę do ROPS” → `POST /api/needs`.
+[FYI A1] `local_matching.TAXONOMY_TAGS` to kopia listy z AGENTS.md — po Push 2 przełączę import na `app.utils`.
+
 [FYI A1 A5] Na branchu agent-2/matchmaking jest wmergowany moduł Zasobnik wiedzy (SQLModel, sync, baza `zasobnik.db`):
   `app/models.py`, `app/db.py`, `app/auth.py` (require_admin, X-Admin-Token), `app/services.py`, `app/seed.py`,
   routery `/api/areas`, `/api/resources`, `/api/needs`, `/api/admin/*` (m.in. `/api/admin/trends`).
