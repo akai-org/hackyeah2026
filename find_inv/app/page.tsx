@@ -239,25 +239,31 @@ export default async function HomePage() {
           </div>
           <ul className="mt-10 space-y-3" aria-label="Indeks luki innowacyjnej per powiat">
             {liveGap.map(({ powiat, gap_score, top_area }) => (
-              <li key={powiat} className="flex items-center gap-4 border-(length:--bw) border-deep bg-surface px-5 py-4 shadow-paper">
-                <div className="w-32 shrink-0">
-                  <p className="font-bold text-deep capitalize">{powiat}</p>
-                  <p className="text-sm text-muted">{top_area}</p>
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="h-4 rounded-ui bg-leaf"
-                      style={{ width: `${(gap_score / 6) * 100}%` }}
-                      role="presentation"
-                      aria-hidden="true"
-                    />
-                    <span className="text-sm font-bold tabular-nums text-deep">{gap_score.toFixed(1)}</span>
+              <li key={powiat}>
+                <Link
+                  href={`/wyniki?q=${encodeURIComponent(`innowacje dla obszaru: ${top_area} w powiecie ${powiat}`)}`}
+                  className="flex items-center gap-4 border-(length:--bw) border-deep bg-surface px-5 py-4 shadow-paper hover:bg-paper transition-colors"
+                  title={`Znajdź innowacje dla powiatu ${powiat} — ${top_area}`}
+                >
+                  <div className="w-32 shrink-0">
+                    <p className="font-bold text-deep capitalize">{powiat}</p>
+                    <p className="text-sm text-muted">{top_area}</p>
                   </div>
-                </div>
-                {gap_score > 4 && (
-                  <AlertTriangle className="size-5 shrink-0 text-alert" aria-label="Wysoki priorytet" />
-                )}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="h-4 rounded-ui bg-leaf"
+                        style={{ width: `${(gap_score / 6) * 100}%` }}
+                        role="presentation"
+                        aria-hidden="true"
+                      />
+                      <span className="text-sm font-bold tabular-nums text-deep">{gap_score.toFixed(1)}</span>
+                    </div>
+                  </div>
+                  {gap_score > 4 && (
+                    <AlertTriangle className="size-5 shrink-0 text-alert" aria-label="Wysoki priorytet" />
+                  )}
+                </Link>
               </li>
             ))}
           </ul>
