@@ -228,18 +228,6 @@ html[data-contrast="high"] ::selection {
     animation: appear 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
 
-  /* Wspólne okno <Dialog>: krótkie pojawienie się bez wjazdu z daleka. */
-  @keyframes dialog-in {
-    from {
-      opacity: 0;
-      translate: 0 8px;
-    }
-    to {
-      opacity: 1;
-      translate: 0 0;
-    }
-  }
-
   @keyframes appear {
     from {
       opacity: 0;
@@ -249,6 +237,84 @@ html[data-contrast="high"] ::selection {
       opacity: 1;
       translate: 0 0;
     }
+  }
+}
+
+/* ---------- Wspólne okno <Dialog>: wejście i wyjście okna oraz rozmytego tła ---------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  dialog.hub-dialog[open] {
+    animation: dialog-in 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  dialog.hub-dialog[open]::backdrop {
+    animation: dialog-backdrop-in 200ms ease-out;
+  }
+
+  /* Czas = CLOSE_MS w components/ui/dialog.tsx. */
+  dialog.hub-dialog[data-closing] {
+    animation: dialog-out 160ms cubic-bezier(0.4, 0, 1, 1) forwards;
+  }
+
+  dialog.hub-dialog[data-closing]::backdrop {
+    animation: dialog-backdrop-out 160ms ease-in forwards;
+  }
+}
+
+/* Panel dostępności i inne dymki (lib/use-presence.ts): wyrastają z przycisku w prawym dolnym rogu. */
+@media (prefers-reduced-motion: no-preference) {
+  .popover-panel {
+    transform-origin: bottom right;
+    animation: popover-in 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .popover-panel[data-closing] {
+    animation: popover-out 160ms cubic-bezier(0.4, 0, 1, 1) forwards;
+    pointer-events: none;
+  }
+}
+
+@keyframes popover-in {
+  from {
+    opacity: 0;
+    scale: 0.92;
+    translate: 0 8px;
+  }
+}
+
+@keyframes popover-out {
+  to {
+    opacity: 0;
+    scale: 0.92;
+    translate: 0 8px;
+  }
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    translate: 0 12px;
+    scale: 0.97;
+  }
+}
+
+@keyframes dialog-out {
+  to {
+    opacity: 0;
+    translate: 0 8px;
+    scale: 0.97;
+  }
+}
+
+@keyframes dialog-backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes dialog-backdrop-out {
+  to {
+    opacity: 0;
   }
 }
 

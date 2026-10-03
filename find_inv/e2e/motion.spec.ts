@@ -29,3 +29,38 @@ test("prefers-reduced-motion: brak ukrytych sekcji i animacji hover", async ({ p
     .evaluate((el) => getComputedStyle(el).transitionDuration);
   expect(transition).toBe("0s");
 });
+
+test("zamykanie okna: najpierw animacja wyjścia, potem znika", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("body").press("Control+k");
+  const dialog = page.getByRole("dialog", { name: "Czego szukasz?" });
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press("Escape");
+  // Zaraz po Esc okno jest jeszcze w DOM i gra animację dialog-out.
+  expect(await page.locator("dialog[data-closing]").evaluate((el) => getComputedStyle(el).animationName)).toBe(
+    "dialog-out",
+  );
+  await expect(dialog).toBeHidden();
+  await expect(page.locator("dialog[data-closing]")).toHaveCount(0);
+});
+
+test("zamykanie panelu dostępności z animacją", async ({ page }) => {
+  await page.goto("/");
+  const button = page.getByRole("button", { name: "Dostępność" });
+  await button.click();
+  const panel = page.getByRole("dialog", { name: "Ustawienia dostępności" });
+  await expect(panel).toBeVisible();
+  await button.click();
+  expect(await panel.evaluate((el) => getComputedStyle(el).animationName)).toBe("popover-out");
+  await expect(panel).toHaveCount(0);
+});
+
+test("prefers-reduced-motion: okno zamyka się od razu, bez animacji", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await page.locator("body").press("Control+k");
+  await expect(page.getByRole("dialog", { name: "Czego szukasz?" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.locator("dialog[data-closing]")).toHaveCount(0);
+  await expect(page.getByRole("dialog", { name: "Czego szukasz?" })).toBeHidden();
+});

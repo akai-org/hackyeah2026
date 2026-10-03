@@ -14,6 +14,9 @@ import { cn } from "@/lib/utils";
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
 
+/** Czas animacji zamykania — zgodny z `dialog-out` w globals.css. */
+const CLOSE_MS = 160;
+
 const SIZES = {
   sm: "max-w-md",
   md: "max-w-xl",
@@ -56,6 +59,7 @@ export function Dialog({
   const closeRef = useRef<HTMLButtonElement>(null);
   const openerRef = useRef<HTMLElement | null>(null);
   const pressedOnBackdrop = useRef(false);
+  const closingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onCloseRef = useRef(onClose);
   const ids = useId();
   const titleId = `${ids}-tytul`;
@@ -69,14 +73,31 @@ export function Dialog({
     const dialog = dialogRef.current;
     if (!dialog) return;
 
-    if (open && !dialog.open) {
+    if (open) {
+      // Ponowne otwarcie w trakcie animacji zamykania — przerywamy ją i zostawiamy okno otwarte.
+      if (closingTimer.current) {
+        clearTimeout(closingTimer.current);
+        closingTimer.current = null;
+        dialog.removeAttribute("data-closing");
+      }
+      if (dialog.open) return;
       openerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       dialog.showModal();
       const target =
         initialFocusRef?.current ?? bodyRef.current?.querySelector<HTMLElement>(FOCUSABLE) ?? closeRef.current;
       target?.focus();
-    } else if (!open && dialog.open) {
-      dialog.close();
+    } else if (dialog.open && !closingTimer.current) {
+      // Wyjście: krótka animacja (okno i tło gasną), dopiero potem close(). Bez animacji przy reduced motion.
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        dialog.close();
+        return;
+      }
+      dialog.setAttribute("data-closing", "");
+      closingTimer.current = setTimeout(() => {
+        closingTimer.current = null;
+        dialog.removeAttribute("data-closing");
+        dialog.close();
+      }, CLOSE_MS);
     }
   }, [open, initialFocusRef]);
 
@@ -84,6 +105,7 @@ export function Dialog({
   useEffect(() => {
     const dialog = dialogRef.current;
     return () => {
+      if (closingTimer.current) clearTimeout(closingTimer.current);
       if (!dialog?.open) return;
       dialog.close();
       const opener = openerRef.current;
@@ -146,8 +168,7 @@ export function Dialog({
       }}
       className={cn(
         "m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] overflow-y-auto overscroll-contain rounded-ui border-(length:--bw) border-deep bg-surface p-0 text-ink shadow-paper",
-        "backdrop:bg-ink/55 backdrop:backdrop-blur-sm",
-        "open:animate-[dialog-in_180ms_cubic-bezier(0.2,0.8,0.2,1)]",
+        "hub-dialog backdrop:bg-ink/55 backdrop:backdrop-blur-sm",
         SIZES[size],
         className,
       )}
