@@ -88,8 +88,41 @@ async def match(body: dict):
         return {"data": {"innovations": ranked[:5], "total_found": len(ranked)}}
 
     except Exception:
-        mock = [dict(i, is_unmaintained=i.get("status") == "unmaintained") for i in MOCK_INNOVATIONS]
-        return {"data": {"innovations": mock[:5], "total_found": len(mock)}}
+        # ChromaDB empty or error — tag-based fallback from SQLite
+        try:
+            from app.database import get_db
+            from app.models import Innovation
+            from sqlalchemy import select
+
+            query_tags = set(body.get("tags", []))
+            async with get_db() as db:
+                rows = await db.execute(select(Innovation).limit(100))
+                all_items = rows.scalars().all()
+
+            if not all_items:
+                raise ValueError("empty DB")
+
+            ranked = []
+            for innov in all_items:
+                innov_tags = set(innov.tags_list())
+                tag_score = len(innov_tags & query_tags) * 0.1
+                ranked.append({
+                    "id": innov.id, "title": innov.title, "short_desc": innov.short_desc,
+                    "full_desc": innov.full_desc, "category": innov.category, "area": innov.area,
+                    "target_group": innov.target_group, "location": innov.location, "status": innov.status,
+                    "cost_level": innov.cost_level, "implementation_time_months": innov.implementation_time_months,
+                    "testers_count": innov.testers_count, "where_implemented": innov.where_implemented,
+                    "source_url": innov.source_url, "tags": innov.tags_list(),
+                    "match_score": round(0.5 + tag_score, 4),
+                    "is_unmaintained": innov.status == "unmaintained",
+                })
+
+            ranked.sort(key=lambda x: (-x["match_score"], x["title"]))
+            return {"data": {"innovations": ranked[:5], "total_found": len(ranked)}}
+
+        except Exception:
+            mock = [dict(i, is_unmaintained=i.get("status") == "unmaintained") for i in MOCK_INNOVATIONS]
+            return {"data": {"innovations": mock[:5], "total_found": len(mock)}}
 
 
 @router.post("/voice-fix")
