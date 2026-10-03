@@ -59,3 +59,13 @@ def test_removing_a_tag_changes_ranking():
     without = client.post("/api/match", json={"text": text, "tags": []}).json()
     scores = lambda body: [i["match_score"] for i in body["data"]["innovations"]]  # noqa: E731
     assert scores(with_tags) != scores(without)
+
+
+def test_local_chat_answers_cost_question():
+    response = client.post(
+        "/api/chat",
+        json={"messages": [{"role": "user", "content": "Która jest najtańsza?"}], "innovation_ids": [1, 4]},
+    )
+    events = response.text.split("\n\n")
+    text = "".join("\n".join(line[6:] for line in e.split("\n")) for e in events if e and e != "data: [DONE]")
+    assert "Najtańsza" in text and "Cyfrowy Senior" in text

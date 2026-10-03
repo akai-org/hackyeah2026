@@ -137,3 +137,41 @@ def rank_locally(query: str, tags: list[str], innovations: list[dict]) -> list[d
     ranked.sort(key=lambda i: i["match_score"], reverse=True)
     # Karta bez żadnego wspólnego słowa ani tagu tylko myli — lepiej pokazać „nie znalazłem”.
     return [i for i in ranked if i["match_score"] > 0]
+
+
+COST_ORDER = {"low": 0, "medium": 1, "high": 2}
+COST_LABEL = {"low": "niski", "medium": "średni", "high": "wysoki"}
+
+
+def _months(n: int | None) -> str:
+    if not n:
+        return "czas nieznany"
+    if n == 1:
+        return "1 miesiąc"
+    few = 2 <= n % 10 <= 4 and not 12 <= n % 100 <= 14
+    return f"{n} {'miesiące' if few else 'miesięcy'}"
+
+
+def local_chat_answer(question: str, innovations: list[dict]) -> str:
+    """Odpowiedź bez LLM, złożona z pól innowacji. Obsługuje pytania o koszt i czas wdrożenia."""
+    if not innovations:
+        return "Nie mam jeszcze dopasowanych innowacji. Opisz problem w wyszukiwarce, a podpowiem, co już działa."
+    q = fold(question)
+    if any(w in q for w in ("tan", "koszt", "budzet", "pieniad", "drog", "ile kosztuje")):
+        ordered = sorted(innovations, key=lambda i: COST_ORDER.get(i.get("cost_level"), 3))
+        best = ordered[0]
+        lines = [f"Najtańsza w tym zestawieniu jest „{best['title']}” (koszt {COST_LABEL.get(best.get('cost_level'), 'nieznany')})."]
+        lines += [f"- {i['title']}: koszt {COST_LABEL.get(i.get('cost_level'), 'nieznany')}" for i in ordered[1:]]
+    elif any(w in q for w in ("szybk", "czas", "dlugo", "kiedy", "ile trwa", "miesi")):
+        ordered = sorted(innovations, key=lambda i: i.get("implementation_time_months") or 99)
+        best = ordered[0]
+        lines = [f"Najszybciej wdrożysz „{best['title']}” ({_months(best.get('implementation_time_months'))})."]
+        lines += [f"- {i['title']}: {_months(i.get('implementation_time_months'))}" for i in ordered[1:]]
+    else:
+        lines = ["Oto krótko, co może pomóc:"]
+        lines += [f"- {i['title']}: {i['short_desc']}" for i in innovations]
+        lines.append("Zapytaj na przykład, która jest najtańsza albo którą najszybciej wdrożyć.")
+    unmaintained = [i["title"] for i in innovations if i.get("is_unmaintained")]
+    if unmaintained:
+        lines.append(f"Uwaga: {', '.join(unmaintained)} może już nie działać. Sprawdź to przed wdrożeniem.")
+    return "\n".join(lines)

@@ -5,16 +5,18 @@ zwracają mocki z data/mock_data.py. Gdy moduły pojawią się na main, router s
 przełącza się na realne wywołania — interfejs odpowiedzi zostaje ten sam.
 """
 
+import asyncio
 import inspect
 import json
 import logging
+import re
 from typing import AsyncIterator
 
 from fastapi import APIRouter, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from app.local_matching import local_tag_result, rank_locally
+from app.local_matching import local_chat_answer, local_tag_result, rank_locally
 from data.mock_data import MOCK_INNOVATIONS
 
 log = logging.getLogger(__name__)
@@ -272,7 +274,14 @@ def _rag_context(innovations: list[dict]) -> str:
 async def chat(body: ChatRequest):
     async def gen() -> AsyncIterator[str]:
         if not REAL_BACKEND:
-            yield _sse("Oto przykładowa odpowiedź o innowacjach społecznych.")
+            question = next((m.content for m in reversed(body.messages) if m.role == "user"), "")
+            question = question.split("Pytanie:")[-1]  # pierwsza wiadomość niesie też opis problemu
+            innovations = [i for i in MOCK_INNOVATIONS if i["id"] in body.innovation_ids]
+            answer = local_chat_answer(question, innovations)
+            # Słowo po słowie, żeby frontend dostał ten sam efekt pisania co z LLM.
+            for word in re.split(r"(?<=\s)", answer):
+                yield _sse(word)
+                await asyncio.sleep(0.02)
             yield "data: [DONE]\n\n"
             return
 
