@@ -56,17 +56,22 @@ export default function UzytkownicyPage() {
       <section>
         <h1 className="text-2xl font-bold text-deep">Użytkownicy</h1>
         <div className="mt-6 overflow-x-auto">
+          <p className="mb-3 text-sm text-muted">{users.length} użytkowników</p>
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="border-b-2 border-deep text-left">
                 <th className="py-3 pr-4 font-bold text-muted">Użytkownik</th>
                 <th className="py-3 pr-4 font-bold text-muted">Rola</th>
+                <th className="py-3 pr-4 font-bold text-muted hidden sm:table-cell">Zarejestrowany</th>
                 <th className="py-3 font-bold text-muted">Zmień rolę</th>
               </tr>
             </thead>
             <tbody>
               {users.map((user) => {
                 const badge = ROLE_BADGE[user.role as Role] ?? { label: user.role, className: "bg-paper text-ink" };
+                const date = user.created_at
+                  ? new Date(user.created_at).toLocaleDateString("pl-PL", { day: "numeric", month: "short", year: "numeric" })
+                  : "—";
                 return (
                   <tr key={user.id} className="border-b border-sage hover:bg-paper">
                     <td className="py-3 pr-4 font-bold text-deep">{user.name}</td>
@@ -75,6 +80,7 @@ export default function UzytkownicyPage() {
                         {badge.label}
                       </span>
                     </td>
+                    <td className="py-3 pr-4 text-muted hidden sm:table-cell">{date}</td>
                     <td className="py-3">
                       <select
                         value={user.role}
@@ -93,7 +99,7 @@ export default function UzytkownicyPage() {
               })}
               {users.length === 0 && (
                 <tr>
-                  <td colSpan={3} className="py-8 text-center text-muted">Brak użytkowników</td>
+                  <td colSpan={4} className="py-8 text-center text-muted">Brak użytkowników</td>
                 </tr>
               )}
             </tbody>

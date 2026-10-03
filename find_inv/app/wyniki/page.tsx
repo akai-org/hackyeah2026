@@ -110,6 +110,9 @@ function ResultsContent() {
         <blockquote className="mt-2 border-l-4 border-leaf bg-surface px-5 py-4 text-lg">
           {query}
         </blockquote>
+        <Link href="/" className="mt-3 inline-flex text-sm text-muted underline underline-offset-4 hover:text-deep">
+          Opisz inny problem
+        </Link>
       </div>
 
       {/* Tagi */}

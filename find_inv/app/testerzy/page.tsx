@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CheckCircle, ClipboardList, Users } from "lucide-react";
 
 import { CutoutText } from "@/components/cutout-text";
 import { Button } from "@/components/ui/button";
-import { apiPost } from "@/lib/api";
+import { apiFetch, apiPost } from "@/lib/api";
 
 const BENEFITS = [
   "Wczesny dostęp do nowych innowacji społecznych z Małopolski",
@@ -19,6 +19,19 @@ export default function TesterzyPage() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Partial<typeof form>>({});
+  const [activeTesterCount, setActiveTesterCount] = useState(47);
+  const [innovationCount, setInnovationCount] = useState(23);
+
+  useEffect(() => {
+    apiFetch<{ testers: number; innovations: number }>("/api/admin/stats", {
+      headers: { "X-Dev-Admin": "true" },
+    })
+      .then((d) => {
+        if (d?.testers) setActiveTesterCount(d.testers);
+        if (d?.innovations) setInnovationCount(d.innovations);
+      })
+      .catch(() => {});
+  }, []);
 
   function validate() {
     const e: Partial<typeof form> = {};
@@ -68,13 +81,13 @@ export default function TesterzyPage() {
           <div className="mt-10 grid gap-6 sm:grid-cols-2">
             <div className="border-(length:--bw) border-deep bg-surface p-6 shadow-paper">
               <Users className="size-8 text-leaf" aria-hidden="true" />
-              <p className="mt-3 text-2xl font-bold text-deep">47</p>
+              <p className="mt-3 text-2xl font-bold text-deep tabular-nums">{activeTesterCount}</p>
               <p className="text-muted">aktywnych testerów w Małopolsce</p>
             </div>
             <div className="border-(length:--bw) border-deep bg-surface p-6 shadow-paper">
               <ClipboardList className="size-8 text-leaf" aria-hidden="true" />
-              <p className="mt-3 text-2xl font-bold text-deep">23</p>
-              <p className="text-muted">przetestowanych innowacji w 2026</p>
+              <p className="mt-3 text-2xl font-bold text-deep tabular-nums">{innovationCount}</p>
+              <p className="text-muted">innowacji w Bibliotece ROPS</p>
             </div>
           </div>
         </div>

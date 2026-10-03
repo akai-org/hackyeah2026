@@ -23,6 +23,9 @@ export function MiddlemanModal({ innovationId, innovationTitle, onClose }: Props
   const [loading, setLoading] = useState(true);
   const [plan, setPlan] = useState<Record<string, unknown> | null>(null);
   const stopRef = useRef<(() => void) | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     apiPost<{ session_id: string; first_question: string }>("/api/middleman/start", {
@@ -31,8 +34,36 @@ export function MiddlemanModal({ innovationId, innovationTitle, onClose }: Props
     })
       .then((data) => setMessages([{ role: "assistant", content: data.first_question }]))
       .catch(() => setMessages([{ role: "assistant", content: "Ile osób zatrudnia Wasza instytucja?" }]))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        setTimeout(() => inputRef.current?.focus(), 50);
+      });
   }, [innovationId]);
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+      if (e.key !== "Tab" || !containerRef.current) return;
+      const focusable = Array.from(
+        containerRef.current.querySelectorAll<HTMLElement>(
+          'button, input, [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((el) => !el.hasAttribute("disabled"));
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+    document.addEventListener("keydown", onKeyDown);
+    closeRef.current?.focus();
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
 
   function sendAnswer() {
     const text = input.trim();
@@ -76,8 +107,9 @@ export function MiddlemanModal({ innovationId, innovationTitle, onClose }: Props
       aria-labelledby="middleman-tytul"
       className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 px-4"
     >
-      <div className="relative flex w-full max-w-lg flex-col rounded-ui border-(length:--bw) border-deep bg-surface p-6 shadow-paper max-h-[90vh] overflow-y-auto">
+      <div ref={containerRef} className="relative flex w-full max-w-lg flex-col rounded-ui border-(length:--bw) border-deep bg-surface p-6 shadow-paper max-h-[90vh] overflow-y-auto">
         <button
+          ref={closeRef}
           onClick={onClose}
           aria-label="Zamknij"
           className="absolute right-4 top-4 inline-flex size-10 items-center justify-center rounded-ui hover:bg-sage"
@@ -132,6 +164,7 @@ export function MiddlemanModal({ innovationId, innovationTitle, onClose }: Props
             </div>
             <div className="mt-4 flex gap-2">
               <input
+                ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && sendAnswer()}

@@ -81,6 +81,7 @@ export default function InnowacjePage() {
       </div>
 
       <div className="mt-6 overflow-x-auto">
+        <p className="mb-3 text-sm text-muted">{items.length} innowacji</p>
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="border-b-2 border-deep text-left">
