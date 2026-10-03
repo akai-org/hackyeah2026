@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CutoutText } from "@/components/cutout-text";
 import { FeaturedInnovations } from "@/components/featured-innovations";
 import { GapIndex } from "@/components/gap-index";
+import { InnovationOfTheDay } from "@/components/innovation-of-the-day";
 import { MalopolskaStatsTiles } from "@/components/malopolska-stats";
 import { PaperCloud } from "@/components/paper-cloud";
 import { PowiatMap } from "@/components/powiat-map";
@@ -159,17 +160,9 @@ export default function HomePage() {
       <section id="artykul-dnia" aria-labelledby="artykul-dnia-tytul" className="scroll-mt-6 border-y-(length:--bw) border-deep bg-sage">
         <div className="mx-auto max-w-content px-4 py-10 sm:px-6 lg:py-12">
           <article className="mx-auto max-w-3xl border-(length:--bw) border-deep bg-surface p-6 shadow-paper md:p-8">
-            <p className="text-sm font-medium text-muted">Artykuł dnia</p>
-            <h2 id="artykul-dnia-tytul" className="mt-2 text-2xl font-bold text-deep">
-              Jak wspierać seniora, który mieszka sam?
-            </h2>
-            <p className="mt-3 max-w-[65ch] text-lg">
-              Kilka prostych działań może pomóc budować codzienny kontakt i szybciej zauważyć, że potrzebna jest pomoc.
-            </p>
-            <Link href="/biblioteka" className="mt-5 inline-flex min-h-12 items-center gap-2 font-medium text-leaf underline underline-offset-4 hover:text-deep">
-              Czytaj w bibliotece
-              <ArrowRight aria-hidden="true" className="size-5" />
-            </Link>
+            <p className="text-sm font-medium text-muted">Artykuł dnia z Biblioteki Innowacji ROPS</p>
+            {/* Każdego dnia inna innowacja z katalogu, ta sama dla wszystkich przez cały dzień. */}
+            <InnovationOfTheDay headingId="artykul-dnia-tytul" />
           </article>
         </div>
       </section>
