@@ -211,3 +211,28 @@ def test_cms_create_update_delete(monkeypatch):
     posts, events = asyncio.run(_leftovers())
     assert posts == [] and [e.innovation_id for e in events] == [None]  # statystyki zostają
 
+
+def test_delete_forum_post_and_user():
+    """Zadanie 4: moderacja forum i usuwanie kont (bez kont admina)."""
+    async def _post():
+        async with get_db() as db:
+            post = ForumPost(content="spam", author_name="Bot")
+            db.add(post)
+            await db.flush()
+            db.add(ForumPost(parent_id=post.id, content="odpowiedź na spam"))
+            await db.commit()
+            return post.id
+    post_id = asyncio.run(_post())
+    posts = client.get("/api/admin/forum", headers=ADMIN).json()["data"]
+    assert {p["content"] for p in posts} == {"spam", "odpowiedź na spam"}
+    result = client.delete(f"/api/admin/forum/{post_id}", headers=ADMIN).json()["data"]
+    assert result["replies_deleted"] == 1
+    assert client.get("/api/admin/forum", headers=ADMIN).json()["data"] == []
+
+    removed = client.delete("/api/admin/users/2", headers=ADMIN).json()["data"]["removed"]
+    assert removed == {"testers": 1}
+    assert asyncio.run(_get(User, 2)) is None
+    assert client.delete("/api/admin/users/1", headers=ADMIN).status_code == 409
+    assert client.delete("/api/admin/users/999", headers=ADMIN).status_code == 404
+    assert client.delete("/api/admin/users/3").status_code == 403
+

@@ -148,6 +148,31 @@ export function deleteInnovation(id: number) {
   );
 }
 
+// ---------- Moderacja forum ----------
+
+export type AdminForumPost = {
+  id: number;
+  parent_id: number | null;
+  innovation_id: number | null;
+  innovation_title: string | null;
+  author_name: string;
+  badge: string;
+  content: string;
+  created_at: string;
+};
+
+export function getForumPosts() {
+  return call<AdminForumPost[]>("/api/admin/forum", () => []);
+}
+
+export function deleteForumPost(id: number) {
+  return call<{ id: number; deleted: boolean; replies_deleted: number }>(
+    `/api/admin/forum/${id}`,
+    () => ({ id, deleted: true, replies_deleted: 0 }),
+    { method: "DELETE" },
+  );
+}
+
 export function getUsers() {
   return call<AdminUser[]>("/api/admin/users", () => local.users.map((user) => ({ ...user })));
 }
@@ -161,6 +186,18 @@ export function setUserRole(id: number, role: Exclude<Role, "admin">) {
       return { ...user };
     },
     { method: "POST", body: JSON.stringify({ role }) },
+  );
+}
+
+export function deleteUser(id: number) {
+  return call<{ id: number; deleted: boolean }>(
+    `/api/admin/users/${id}`,
+    () => {
+      local.users = local.users.filter((row) => row.id !== id);
+      local.testers = local.testers.filter((row) => row.user_id !== id);
+      return { id, deleted: true };
+    },
+    { method: "DELETE" },
   );
 }
 

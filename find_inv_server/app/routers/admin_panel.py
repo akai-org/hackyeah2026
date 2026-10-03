@@ -19,7 +19,7 @@ from sqlalchemy import func, or_, select
 from app import admin_store
 from app.config import settings
 from app.database import get_db
-from app.models import Innovation, SearchLog, Tester, User
+from app.models import ForumPost, Innovation, SearchLog, Tester, User
 from app.utils import TAXONOMY_TAGS
 
 log = logging.getLogger(__name__)
@@ -297,6 +297,42 @@ async def delete_innovation(innovation_id: int):
     return _ok({"id": innovation_id, "deleted": True, "removed": removed})
 
 
+# ── Moderacja forum (zadanie 4) ──────────────────────────
+
+
+@router.get("/forum")
+async def list_forum_posts(limit: Annotated[int, Query(ge=1, le=500)] = 200):
+    async with get_db() as db:
+        posts = (await db.execute(select(ForumPost).order_by(ForumPost.created_at.desc()).limit(limit))).scalars().all()
+        titles = dict((await db.execute(select(Innovation.id, Innovation.title))).all())
+    return _ok([
+        {
+            "id": post.id,
+            "parent_id": post.parent_id,
+            "innovation_id": post.innovation_id,
+            "innovation_title": titles.get(post.innovation_id),
+            "author_name": post.author_name,
+            "badge": post.badge,
+            "content": post.content,
+            "created_at": _iso(post.created_at),
+        }
+        for post in posts
+    ])
+
+
+@router.delete("/forum/{post_id}")
+async def delete_forum_post(post_id: int):
+    """Usuwa wpis razem z odpowiedziami na niego."""
+    async with get_db() as db:
+        post = await db.get(ForumPost, post_id)
+        if post is None:
+            _not_found(f"wpis forum {post_id}")
+        replies = (await db.execute(ForumPost.__table__.delete().where(ForumPost.parent_id == post_id))).rowcount
+        await db.delete(post)
+        await db.commit()
+    return _ok({"id": post_id, "deleted": True, "replies_deleted": replies})
+
+
 # ── Użytkownicy ──────────────────────────────────────────
 
 
@@ -333,6 +369,21 @@ async def set_role(user_id: int, body: SetRoleBody):
         await db.commit()
         pending = set((await db.execute(select(Tester.user_id).where(Tester.approved.is_(False)))).scalars())
         return _ok(_user_row(user, pending))
+
+
+@router.delete("/users/{user_id}")
+async def delete_user(user_id: int):
+    """Usuwa konto razem ze zgłoszeniem testera i jego zgłoszeniami do innowacji. Konta admina nie usuwa się z panelu."""
+    async with get_db() as db:
+        user = await db.get(User, user_id)
+        if user is None:
+            _not_found(f"użytkownik {user_id}")
+        if user.role == "admin":
+            raise HTTPException(status.HTTP_409_CONFLICT, "Konta administratora nie usuwa się z panelu")
+        removed = await _detach_references(db, "users", user_id)
+        await db.delete(user)
+        await db.commit()
+    return _ok({"id": user_id, "deleted": True, "removed": removed})
 
 
 # ── Testerzy ─────────────────────────────────────────────
