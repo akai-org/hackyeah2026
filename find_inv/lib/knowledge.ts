@@ -43,15 +43,17 @@ export async function listInnovations(query: InnovationQuery = {}): Promise<Inno
   if (query.search?.trim()) params.set("search", query.search.trim());
   if (query.tags?.length) params.set("tags", query.tags.join(","));
   if (query.cost) params.set("cost_level", query.cost);
-  if (!query.includeArchived) params.set("status", "active,unmaintained");
   params.set("limit", String(query.limit ?? 20));
   params.set("offset", String(query.offset ?? 0));
 
   try {
     const result = await apiFetch<InnovationList | InnovationCard[]>(`/api/innovations?${params}`);
-    // Backend może zwrócić samą listę albo { innovations, total }.
-    if (Array.isArray(result)) return { innovations: result, total: result.length };
-    return { innovations: result.innovations ?? [], total: result.total ?? result.innovations?.length ?? 0 };
+    // Backend może zwrócić samą listę albo { innovations, total }. Filtr `status` w API to dokładne dopasowanie,
+    // więc archiwalne odfiltrowujemy tutaj.
+    const list = Array.isArray(result) ? result : (result.innovations ?? []);
+    const innovations = query.includeArchived ? list : list.filter((item) => item.status !== "archived");
+    const total = Array.isArray(result) ? list.length : (result.total ?? list.length);
+    return { innovations, total: total - (list.length - innovations.length) };
   } catch {
     return localList(query);
   }
@@ -81,7 +83,15 @@ export type GminaPulse = { powiat: string; top_challenges: Challenge[]; matching
 /** „Puls powiatu”: najważniejsze wyzwania i pasujące innowacje (GET /api/gmina-pulse/{powiat}). */
 export async function getPulse(powiat: string, topArea: string): Promise<GminaPulse> {
   try {
-    return await apiFetch<GminaPulse>(`/api/gmina-pulse/${encodeURIComponent(powiat)}`);
+    // Backend A3 zwraca `innovations`, plan API mówi `matching_innovations` — przyjmujemy oba.
+    const result = await apiFetch<Partial<GminaPulse> & { innovations?: InnovationCard[] }>(
+      `/api/gmina-pulse/${encodeURIComponent(powiat)}`,
+    );
+    return {
+      powiat: result.powiat ?? powiat,
+      top_challenges: result.top_challenges ?? [],
+      matching_innovations: result.matching_innovations ?? result.innovations ?? [],
+    };
   } catch {
     const area = topArea.toLowerCase();
     const matching = MOCK_INNOVATIONS.filter(

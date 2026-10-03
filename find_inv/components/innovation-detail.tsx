@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Archive, ExternalLink, MessageSquareText } from "lucide-react";
+import { Archive, ExternalLink, FileText, MessageSquareText, Video } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
 import { COST_LABELS, type InnovationCard } from "@/data/innovations";
@@ -11,6 +11,34 @@ import { getInnovation } from "@/lib/matchmaking";
 import { plural } from "@/lib/utils";
 
 // Pełna karta innowacji: GET /api/innovations/{id}, a bez backendu dane mock.
+
+/** Opis z ROPS: akapity rozdzielone pustą linią, często z etykietą („Problem: …”). Pierwsza „Na czym polega:” dubluje nagłówek. */
+function Description({ text }: { text: string }) {
+  const paragraphs = text
+    .replace(/^\s*Na czym polega:\s*/i, "")
+    .split(/\n\s*\n/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+
+  return (
+    <div className="mt-2 grid max-w-[65ch] gap-3">
+      {paragraphs.map((paragraph, index) => {
+        const label = paragraph.match(/^([A-ZĄĆĘŁŃÓŚŹŻ][^:\n]{1,40}):\s*/);
+        return (
+          <p key={index} className="whitespace-pre-line">
+            {label ? (
+              <>
+                <strong className="text-deep">{label[1]}:</strong> {paragraph.slice(label[0].length)}
+              </>
+            ) : (
+              paragraph
+            )}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
 
 export function InnovationDetail({ id }: { id: number }) {
   const [innovation, setInnovation] = useState<InnovationCard | null | undefined>(undefined);
@@ -43,6 +71,8 @@ export function InnovationDetail({ id }: { id: number }) {
     ["Dla kogo", innovation.target_group],
     ["Obszar", innovation.area ?? innovation.category],
     ["Gdzie działa", innovation.where_implemented],
+    ["Autorzy", innovation.authors ?? undefined],
+    ["Projekt", innovation.project ?? undefined],
     ["Koszt", innovation.cost_level ? COST_LABELS[innovation.cost_level] : undefined],
     [
       "Czas wdrożenia",
@@ -84,7 +114,7 @@ export function InnovationDetail({ id }: { id: number }) {
         {innovation.full_desc && (
           <>
             <h2 className="text-xl font-bold text-deep">Na czym polega</h2>
-            <p className="mt-2 max-w-[65ch]">{innovation.full_desc}</p>
+            <Description text={innovation.full_desc} />
           </>
         )}
 
@@ -124,6 +154,28 @@ export function InnovationDetail({ id }: { id: number }) {
           <MessageSquareText aria-hidden="true" />
           Dostosuj do mojej instytucji
         </Link>
+        {innovation.materials_url && (
+          <a
+            href={innovation.materials_url}
+            target="_blank"
+            rel="noreferrer"
+            className={buttonVariants({ variant: "secondary" })}
+          >
+            <FileText aria-hidden="true" />
+            Materiały do pobrania<span className="sr-only"> (otwiera się w nowej karcie)</span>
+          </a>
+        )}
+        {innovation.video_url && (
+          <a
+            href={innovation.video_url}
+            target="_blank"
+            rel="noreferrer"
+            className={buttonVariants({ variant: "secondary" })}
+          >
+            <Video aria-hidden="true" />
+            Film o innowacji<span className="sr-only"> (otwiera się w nowej karcie)</span>
+          </a>
+        )}
         {innovation.source_url && (
           <a
             href={innovation.source_url}

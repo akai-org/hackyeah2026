@@ -22,6 +22,11 @@ export type InnovationCard = {
   testers_count?: number;
   where_implemented?: string;
   source_url?: string;
+  /** Pola z Biblioteki ROPS (A3): film, materiały do pobrania, autorzy, projekt. */
+  video_url?: string | null;
+  materials_url?: string | null;
+  authors?: string | null;
+  project?: string | null;
   tags: string[];
   match_score?: number;
   is_unmaintained?: boolean;

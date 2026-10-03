@@ -9,6 +9,13 @@ import { cn, plural } from "@/lib/utils";
 // Karta innowacji w wynikach matchmakingu (DESIGN.md 8): stoi prosto, taśma tylko dekoracją,
 // „Dlaczego pasuje” w blockquote z lewą linią. „Nieaktualna” to szara plakietka z ikoną i słowem.
 
+/** Dane ROPS mają czasem całe akapity w polach „dla kogo” i „gdzie” — na karcie skrót, pełny tekst w karcie innowacji. */
+function short(text: string, max = 110): string {
+  const clean = text.replace(/\s+/g, " ").trim();
+  if (clean.length <= max) return clean;
+  return `${clean.slice(0, clean.lastIndexOf(" ", max)).replace(/[,;:.]$/, "")}…`;
+}
+
 function tagLabel(tag: string): string {
   return TAG_LABELS[tag as Tag] ?? tag.replace(/_/g, " ");
 }
@@ -34,7 +41,6 @@ export function MatchCard({
   const titleId = `innowacja-${innovation.id}`;
   const unmaintained = innovation.is_unmaintained ?? innovation.status === "unmaintained";
   const shared = innovation.tags.filter((tag) => queryTags.includes(tag));
-  const score = innovation.match_score ? Math.round(innovation.match_score * 100) : null;
   // Middleman (A5): /wdrozenie?innowacja={id}&problem={opis}
   const deployHref = `/wdrozenie?innowacja=${innovation.id}${query ? `&problem=${encodeURIComponent(query)}` : ""}`;
 
@@ -53,8 +59,8 @@ export function MatchCard({
 
       {rank !== undefined && (
         <p className="mb-1 flex flex-wrap items-center gap-2 text-sm font-bold text-muted">
-          <span>Wynik {rank}</span>
-          {score !== null && <span>· dopasowanie {score}%</span>}
+          {/* Bez procentu dopasowania: wynik TF-IDF nie jest skalibrowany, „28%” czyta się jak „nie pasuje”. */}
+          <span>{rank === 1 ? "Najlepiej pasuje" : `Wynik ${rank}`}</span>
         </p>
       )}
 
@@ -84,7 +90,7 @@ export function MatchCard({
             <dt className="sr-only">Dla kogo</dt>
             <dd className="flex items-start gap-2">
               <Users aria-hidden="true" className="mt-1 size-5 shrink-0 text-leaf" />
-              <span>{innovation.target_group}</span>
+              <span>{short(innovation.target_group)}</span>
             </dd>
           </div>
         )}
@@ -93,7 +99,7 @@ export function MatchCard({
             <dt className="sr-only">Gdzie działa</dt>
             <dd className="flex items-start gap-2">
               <MapPin aria-hidden="true" className="mt-1 size-5 shrink-0 text-leaf" />
-              <span>{innovation.where_implemented}</span>
+              <span>{short(innovation.where_implemented)}</span>
             </dd>
           </div>
         )}
