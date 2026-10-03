@@ -6,7 +6,7 @@ import { PaperCloud } from "@/components/paper-cloud";
 // Tło podstron: jeden liść monstery wychodzący zza krawędzi ekranu i chmurki
 // w pustym miejscu obok nagłówka (DESIGN.md, sekcja 7). Dekoracje leżą tylko
 // w pasie nagłówka i na marginesach, nigdy pod treścią. Bez ruchu (sekcja 9).
-// Znikają w trybie prostym i w druku (.simple-hidden).
+// Znikają w druku (.simple-hidden).
 
 // Chmurki w pasie nagłówka trzymają się prawej krawędzi treści (za akapitem 60ch i polem wyszukiwania)
 // i pojawiają się dopiero od 1280 px, bo węziej dochodziłyby do tekstu.

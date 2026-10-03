@@ -16,17 +16,15 @@ import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { Accessibility } from "lucide-react";
 
-// Tryb prosty (DESIGN.md, sekcja 10). Stan żyje w atrybucie <html data-simple="true">,
-// dzięki temu CSS wyłącza kolaż, liście i animacje bez czekania na React.
-// Atrybut ustawia przed hydracją skrypt SIMPLE_MODE_SCRIPT, a provider tylko go czyta i zmienia.
+// Ustawienia dostępności. Stan żyje w atrybutach <html data-*>, dzięki temu CSS działa bez czekania na React.
+// Atrybuty ustawia przed hydracją skrypt SIMPLE_MODE_SCRIPT, a provider tylko je czyta i zmienia.
 
-export const SIMPLE_MODE_STORAGE_KEY = "hubmi-prosty-widok";
 const SPACING_STORAGE_KEY = "hubmi-duze-odstepy";
 const CONTRAST_STORAGE_KEY = "hubmi-wysoki-kontrast";
 const FONT_SIZE_STORAGE_KEY = "hubmi-rozmiar-czcionki";
 
 /** Skrypt w <head>: ustawia tryb przed pierwszym malowaniem, żeby strona nie mrugała. */
-export const SIMPLE_MODE_SCRIPT = `try{const r=document.documentElement;const f=localStorage.getItem("${FONT_SIZE_STORAGE_KEY}");if(localStorage.getItem("${SIMPLE_MODE_STORAGE_KEY}")==="1")r.dataset.simple="true";if(localStorage.getItem("${SPACING_STORAGE_KEY}")==="1")r.dataset.spacing="large";if(localStorage.getItem("${CONTRAST_STORAGE_KEY}")==="1")r.dataset.contrast="high";if(f==="small"||f==="large")r.dataset.fontSize=f}catch(e){}`;
+export const SIMPLE_MODE_SCRIPT = `try{const r=document.documentElement;const f=localStorage.getItem("${FONT_SIZE_STORAGE_KEY}");if(localStorage.getItem("${SPACING_STORAGE_KEY}")==="1")r.dataset.spacing="large";if(localStorage.getItem("${CONTRAST_STORAGE_KEY}")==="1")r.dataset.contrast="high";if(f==="small"||f==="large")r.dataset.fontSize=f}catch(e){}`;
 
 const listeners = new Set<() => void>();
 
@@ -35,10 +33,6 @@ function subscribe(listener: () => void) {
   return () => {
     listeners.delete(listener);
   };
-}
-
-function readSimpleMode() {
-  return document.documentElement.dataset.simple === "true";
 }
 
 // Serwer zawsze renderuje widok domyślny. React podmienia wartość po hydracji bez ostrzeżeń.
@@ -66,8 +60,6 @@ function readServerFontSize(): FontSize {
 }
 
 type SimpleModeContextValue = {
-  simple: boolean;
-  setSimple: (value: boolean) => void;
   spacing: boolean;
   setSpacing: (value: boolean) => void;
   contrast: boolean;
@@ -79,24 +71,9 @@ type SimpleModeContextValue = {
 const SimpleModeContext = createContext<SimpleModeContextValue | null>(null);
 
 export function SimpleModeProvider({ children }: { children: React.ReactNode }) {
-  const simple = useSyncExternalStore(subscribe, readSimpleMode, readServerSimpleMode);
   const spacing = useSyncExternalStore(subscribe, readSpacing, readServerSimpleMode);
   const contrast = useSyncExternalStore(subscribe, readContrast, readServerSimpleMode);
   const fontSize = useSyncExternalStore(subscribe, readFontSize, readServerFontSize);
-
-  const setSimple = useCallback((value: boolean) => {
-    if (value) {
-      document.documentElement.dataset.simple = "true";
-    } else {
-      delete document.documentElement.dataset.simple;
-    }
-    try {
-      localStorage.setItem(SIMPLE_MODE_STORAGE_KEY, value ? "1" : "0");
-    } catch {
-      // Brak dostępu do pamięci przeglądarki: tryb działa do odświeżenia strony.
-    }
-    listeners.forEach((listener) => listener());
-  }, []);
 
   const setSpacing = useCallback((value: boolean) => {
     if (value) {
@@ -145,8 +122,8 @@ export function SimpleModeProvider({ children }: { children: React.ReactNode }) 
   }, []);
 
   const value = useMemo(
-    () => ({ simple, setSimple, spacing, setSpacing, contrast, setContrast, fontSize, setFontSize }),
-    [simple, setSimple, spacing, setSpacing, contrast, setContrast, fontSize, setFontSize],
+    () => ({ spacing, setSpacing, contrast, setContrast, fontSize, setFontSize }),
+    [spacing, setSpacing, contrast, setContrast, fontSize, setFontSize],
   );
 
   return <SimpleModeContext value={value}>{children}</SimpleModeContext>;
@@ -159,7 +136,7 @@ export function useSimpleMode() {
 }
 
 export function AccessibilitySettings({ className }: { className?: string }) {
-  const { simple, setSimple, spacing, setSpacing, contrast, setContrast, fontSize, setFontSize } = useSimpleMode();
+  const { spacing, setSpacing, contrast, setContrast, fontSize, setFontSize } = useSimpleMode();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -209,9 +186,6 @@ export function AccessibilitySettings({ className }: { className?: string }) {
         >
           <p className="text-lg font-semibold text-deep">Ustawienia dostępności</p>
           <div className="mt-3 grid gap-2">
-            <AccessibilityOption id={`${panelId}-simple`} checked={simple} onCheckedChange={setSimple}>
-              Prosty widok
-            </AccessibilityOption>
             <AccessibilityOption id={`${panelId}-spacing`} checked={spacing} onCheckedChange={setSpacing}>
               Duże odstępy
             </AccessibilityOption>

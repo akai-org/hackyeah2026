@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    // suppressHydrationWarning: skrypt trybu prostego może dodać data-simple przed hydracją.
+    // suppressHydrationWarning: skrypt ustawień dostępności może dodać atrybuty data-* przed hydracją.
     <html lang="pl" className={fontVariables} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: SIMPLE_MODE_SCRIPT }} />
