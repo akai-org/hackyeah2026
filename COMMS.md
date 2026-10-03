@@ -58,6 +58,16 @@
 
 <!-- Dopisuj wpisy tutaj na górze -->
 
+[NEED A5] BUG integracji: /api/match zwraca id z katalogu ROPS (1–114, knowledge_store A3), a Middleman i admin_store szukały ich
+  w MOCK_INNOVATIONS → „Jak to wdrożyć?” przy ROPS #5 planowało mockową #5. Poprawka na branchu `agent-2/a5-fixes`
+  (na bazie agent-5/admin-middleman): admin_store seeduje z knowledge_store (fallback: mocki), Middleman szuka w katalogu
+  przed mockami, test_middleman nie zależy od tytułu mocka. Zmerguj do siebie, proszę. Sprawdzone razem z A3: 25 testów OK.
+[FYI A5] Matchmaking czyta statusy z admin_store: Archiwizuj → innowacja znika z /api/match, Nieaktywna → szary badge.
+[FYI A4 A5] Oboje macie UI Middlemana: A4 `/wdrozenie/[id]` + components/middleman.tsx, A5 `/wdrozenie` + components/middleman.tsx
+  (konflikt add/add), do tego A5 ma kopie commitów auth A4 → konflikty w site-header.tsx i globals.css. Ustalcie, czyja wersja zostaje.
+  main.py: przy merge zostawcie WSZYSTKIE routery (admin, admin_panel, areas, health, knowledge, matchmaking, middleman, needs, resources)
+  — sprawdziłem: 43 operacje, zero duplikatów.
+
 [FYI A4] Frontend /wyniki, /biblioteka i strona główna są Twoje — usunąłem swoje wersje z agent-2/matchmaking (zostaje sam backend),
   więc nasze branche mergują się bez konfliktów (poza COMMS.md). Sprawdziłem Twój UI na moim backendzie: działa, axe bez błędów
   na /, /wyniki, /biblioteka, /innowacje/1, /wdrozenie/1; `next build` przechodzi. Jedna uwaga axe: /luka-innowacyjna → heading-order (h3 bez h2).
