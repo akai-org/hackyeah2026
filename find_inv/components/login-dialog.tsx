@@ -17,9 +17,7 @@ export function LoginDialog() {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const ids = useId();
   const titleId = `${ids}-tytul`;
-  const nameId = `${ids}-imie`;
 
-  const [name, setName] = useState("");
   const [pending, setPending] = useState<Role | null>(null);
 
   useEffect(() => {
@@ -32,7 +30,7 @@ export function LoginDialog() {
   async function choose(role: Role) {
     setPending(role);
     try {
-      await login(role, name);
+    await login(role);
       closeLogin();
       if (role === "admin") router.push("/admin");
     } finally {
@@ -70,19 +68,6 @@ export function LoginDialog() {
           <Info aria-hidden="true" className="mt-1 size-5 shrink-0" />
           To prototyp. Nie potrzebujesz hasła, wybierz tylko, kim jesteś.
         </p>
-
-        <label htmlFor={nameId} className="mt-6 block font-bold text-deep">
-          Jak się do Ciebie zwracać? <span className="font-normal text-muted">(nieobowiązkowe)</span>
-        </label>
-        <input
-          id={nameId}
-          type="text"
-          autoComplete="given-name"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          placeholder="Gość"
-          className="mt-2 min-h-12 w-full rounded-ui border-(length:--bw) border-deep bg-surface px-4 text-base text-ink placeholder:text-muted"
-        />
 
         <fieldset className="mt-6">
           <legend className="font-bold text-deep">Wybierz rolę</legend>

@@ -6,14 +6,13 @@
 export type Role = "user" | "tester" | "consultant" | "admin";
 
 export const ROLES: Array<{ value: Role; label: string; description: string }> = [
-  { value: "user", label: "Mieszkaniec", description: "Szukasz rozwiązania problemu albo zgłaszasz pomysł." },
   { value: "tester", label: "Tester", description: "Sprawdzasz innowacje w praktyce i dajesz informację zwrotną." },
   { value: "consultant", label: "Konsultant", description: "Doradzasz na forum jako ekspert." },
   { value: "admin", label: "Admin", description: "Pracujesz w ROPS i zarządzasz Biblioteką." },
 ];
 
 export const ROLE_LABELS: Record<Role, string> = {
-  user: "Mieszkaniec",
+  user: "Użytkownik",
   tester: "Tester",
   consultant: "Konsultant",
   admin: "Admin",
@@ -134,6 +133,17 @@ export const TESTER_SPECIALIZATIONS = [
 
 // ---------- Forum ----------
 
+export type ForumBadge = Role | "creator" | "user_of";
+
+export const FORUM_BADGE_LABELS: Record<ForumBadge, string> = {
+  user: "Użytkownik",
+  tester: "Tester",
+  consultant: "Konsultant",
+  admin: "Admin",
+  creator: "Twórca",
+  user_of: "Użytkownik",
+};
+
 export type ForumPost = {
   id: number;
   parent_id: number | null;
@@ -141,10 +151,77 @@ export type ForumPost = {
   title?: string;
   content: string;
   author_name: string;
-  badge: Role;
+  badge: ForumBadge;
   /** Czas lokalny (Europa/Warszawa), bez strefy, jak w mock_data.py. */
   created_at: string;
 };
+
+// ---------- Forum wątków innowacji (mock, deterministyczny) ----------
+
+const THREAD_CONTENTS = [
+  "Wdrożyliśmy to rok temu w naszej gminie. Efekty przeszły oczekiwania — szczególnie wśród seniorów.",
+  "Mam pytanie o wymagania techniczne. Czy potrzeba specjalistycznego sprzętu do wdrożenia?",
+  "Korzystamy z tego rozwiązania od sześciu miesięcy. Skróciło czas obsługi o połowę.",
+  "Podczas testów zauważyłam problem z dostępnością dla osób słabowidzących. Warto to poprawić.",
+  "Szukamy partnerów do wdrożenia w powiecie. Czy ktoś ma doświadczenie w regionie małopolskim?",
+  "Udało nam się pozyskać dofinansowanie z programu regionalnego. Chętnie podzielę się kontaktem.",
+  "Jak długo trwa typowe wdrożenie? U nas zajęło trzy miesiące ze szkoleniem pracowników.",
+  "Warto sprawdzić materiały na stronie ROPS — wzory dokumentów są dostępne bezpłatnie.",
+  "Świetna inicjatywa! Nasi wolontariusze bardzo pozytywnie oceniają tę innowację.",
+  "Mieliśmy podobny problem i ta innowacja naprawdę pomogła. Polecam kontakt z autorami.",
+  "Czy jest możliwość dostosowania do potrzeb małej gminy (do 5 tys. mieszkańców)?",
+  "Przeprowadziliśmy pilotaż przez trzy miesiące. Wyniki są obiecujące — dziękujemy twórcom.",
+];
+
+const THREAD_AUTHORS: Array<{ name: string; badge: ForumBadge }> = [
+  { name: "Maria K.", badge: "creator" },
+  { name: "Piotr W.", badge: "tester" },
+  { name: "Anna N.", badge: "user_of" },
+  { name: "Tomasz B.", badge: "user" },
+  { name: "Ewa S.", badge: "consultant" },
+  { name: "Katarzyna L.", badge: "tester" },
+  { name: "Jan M.", badge: "user" },
+];
+
+const THREAD_DATES = [
+  "2026-09-28T10:00:00",
+  "2026-09-29T14:30:00",
+  "2026-09-30T09:15:00",
+  "2026-10-01T11:45:00",
+  "2026-10-02T16:20:00",
+];
+
+function pick<T>(arr: T[], seed: number): T {
+  return arr[Math.abs(seed) % arr.length];
+}
+
+export function getInnovationThread(innovationId: number): ForumPost[] {
+  const count = 3 + (innovationId % 3);
+  const result: ForumPost[] = [];
+
+  result.push({
+    id: 10000 + innovationId * 10,
+    parent_id: null,
+    content: pick(THREAD_CONTENTS, innovationId * 7),
+    author_name: THREAD_AUTHORS[0].name,
+    badge: "creator",
+    created_at: pick(THREAD_DATES, innovationId),
+  });
+
+  for (let i = 1; i < count; i++) {
+    const author = pick(THREAD_AUTHORS.slice(1), innovationId * 3 + i * 17);
+    result.push({
+      id: 10000 + innovationId * 10 + i,
+      parent_id: null,
+      content: pick(THREAD_CONTENTS, innovationId * 13 + i * 7),
+      author_name: author.name,
+      badge: author.badge,
+      created_at: pick(THREAD_DATES, innovationId + i),
+    });
+  }
+
+  return result;
+}
 
 export const MOCK_FORUM_POSTS: ForumPost[] = [
   {
