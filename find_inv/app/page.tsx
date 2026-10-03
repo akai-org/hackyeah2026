@@ -1,11 +1,12 @@
-import { ArrowRight, Frown, Meh, MessageSquareText, ScanSearch, Smile, type LucideIcon } from "lucide-react";
+import { ArrowRight, MessageSquareText, ScanSearch, Smile, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 
 import { CutoutText } from "@/components/cutout-text";
 import { FeaturedInnovations } from "@/components/featured-innovations";
 import { GapIndex } from "@/components/gap-index";
-import { InnovationOfTheDay } from "@/components/innovation-of-the-day";
+import { InnovationOfTheDaySection } from "@/components/innovation-of-the-day";
 import { MalopolskaStatsTiles } from "@/components/malopolska-stats";
+import { QuickNav } from "@/components/quick-nav";
 import { PaperCloud } from "@/components/paper-cloud";
 import { PowiatMap } from "@/components/powiat-map";
 import { RevealOnScroll } from "@/components/reveal-on-scroll";
@@ -36,22 +37,9 @@ const SECTIONS = [
   { id: "kondycja-malopolski", label: "Kondycja Małopolski" },
   { id: "co-juz-dziala", label: "Popularne innowacje" },
   { id: "artykul-dnia", label: "Artykuł dnia" },
-] as const;
-
-type RegionCondition = "happy" | "mid" | "sad";
-
-const REGION_CONDITION: RegionCondition = "mid";
-
-const CONDITION_LABELS: Record<RegionCondition, { icon: LucideIcon; status: string; detail: string }> = {
-  happy: { icon: Smile, status: "Dobra kondycja", detail: "Wskaźniki społeczne są stabilne." },
-  mid: { icon: Meh, status: "Wymaga uwagi", detail: "Część obszarów potrzebuje dodatkowego wsparcia." },
-  sad: { icon: Frown, status: "Trudna sytuacja", detail: "Dane pokazują pilną potrzebę działania." },
-};
+];
 
 export default function HomePage() {
-  const condition = CONDITION_LABELS[REGION_CONDITION];
-  const ConditionIcon = condition.icon;
-
   return (
     <>
       <RevealOnScroll />
@@ -64,22 +52,7 @@ export default function HomePage() {
               Opisz to własnymi słowami. Znajdziemy rozwiązania, które już działają w Małopolsce.
             </p>
             <SearchForm />
-            <nav aria-label="Szybki dostęp" className="mt-6">
-              {/* Kolejność linków = kolejność sekcji poniżej. */}
-              <ul className="flex flex-wrap gap-x-6 gap-y-1">
-                {SECTIONS.map((section) => (
-                  <li key={section.id}>
-                    <a
-                      href={`#${section.id}`}
-                      className="inline-flex min-h-12 items-center gap-2 font-medium text-leaf underline underline-offset-4 hover:text-deep"
-                    >
-                      {section.label}
-                      <ArrowRight aria-hidden="true" className="size-5" />
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </nav>
+            <QuickNav sections={SECTIONS} />
           </div>
 
         </div>
@@ -120,17 +93,13 @@ export default function HomePage() {
           <p className="mt-4 max-w-[60ch] text-lg">
             Z czym mierzą się mieszkańcy regionu. Te liczby pomagają zdecydować, od czego zacząć.
           </p>
-          <div className="mt-8 grid items-center gap-4 rounded-ui border-(length:--bw) border-deep bg-surface p-5 md:grid-cols-[auto_1fr_auto]">
-            <ConditionIcon aria-hidden="true" strokeWidth={1.5} className="size-16 text-leaf" />
-            <span>
-              <span className="block text-xl font-bold text-deep">{condition.status}</span>
-              <span className="mt-1 block">{condition.detail}</span>
-            </span>
-            <Link href="/wyzwania" className="inline-flex min-h-12 items-center gap-2 font-semibold text-leaf underline underline-offset-4 hover:text-deep">
-              Zobacz badania i wyzwania
-              <ArrowRight aria-hidden="true" className="size-5" />
-            </Link>
-          </div>
+          <Link
+            href="/wyzwania"
+            className="mt-4 inline-flex min-h-12 items-center gap-2 font-semibold text-leaf underline underline-offset-4 hover:text-deep"
+          >
+            Zobacz badania i wyzwania
+            <ArrowRight aria-hidden="true" className="size-5" />
+          </Link>
           <div className="mt-10">
             <MalopolskaStatsTiles />
           </div>
@@ -165,16 +134,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Artykuł dnia */}
-      <section id="artykul-dnia" data-reveal aria-labelledby="artykul-dnia-tytul" className="border-y-(length:--bw) border-deep bg-sage">
-        <div className="mx-auto max-w-content px-4 py-10 sm:px-6 lg:py-12">
-          <article className="mx-auto max-w-3xl border-(length:--bw) border-deep bg-surface p-6 shadow-paper md:p-8">
-            <p className="text-sm font-medium text-muted">Artykuł dnia z Biblioteki Innowacji ROPS</p>
-            {/* Każdego dnia inna innowacja z katalogu, ta sama dla wszystkich przez cały dzień. */}
-            <InnovationOfTheDay headingId="artykul-dnia-tytul" />
-          </article>
-        </div>
-      </section>
+      {/* Artykuł dnia — każdego dnia inna innowacja z katalogu; bez danych sekcja się chowa. */}
+      <InnovationOfTheDaySection id="artykul-dnia" />
 
     </>
   );
