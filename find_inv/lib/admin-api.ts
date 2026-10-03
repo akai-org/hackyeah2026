@@ -13,6 +13,7 @@ import {
   type AdminUser,
   type InnovationStatus,
 } from "@/data/admin.mock";
+import { seedEngagement } from "@/data/engagement.mock";
 import type { Role } from "@/data/mock";
 import { apiFetch } from "@/lib/api";
 
@@ -134,4 +135,83 @@ export function getStats() {
       searches_today: local.trends.by_day.at(-1)?.count ?? 0,
     };
   });
+}
+
+// ---------- Analityka zaangażowania (/api/admin/analytics/*, router admin.py) ----------
+// Bez backendu albo bez zebranych zdarzeń widok pokazuje dane przykładowe z data/engagement.mock.ts.
+
+export type EngagementMetric =
+  | "impressions"
+  | "clicks"
+  | "views"
+  | "cta_clicks"
+  | "middleman_starts"
+  | "middleman_plans"
+  | "comments"
+  | "tester_requests";
+
+export type AnalyticsOverview = {
+  days: number;
+  metrics: Record<EngagementMetric, { value: number; previous: number; change_pct: number | null }>;
+  ctr_pct: number | null;
+  unique_visitors: number;
+};
+
+export type AnalyticsDay = { date: string } & Record<EngagementMetric, number>;
+
+export type InnovationEngagement = {
+  id: number;
+  title: string;
+  views_prev: number;
+  views_delta: number;
+  ctr_pct: number | null;
+  trend_pct: number | null;
+  avg_rating: number | null;
+} & Record<EngagementMetric, number>;
+
+export type FunnelStep = {
+  step: EngagementMetric;
+  label: string;
+  count: number;
+  pct_of_first: number | null;
+  pct_of_prev: number | null;
+};
+
+export type AnalyticsFunnel = { days: number; steps: FunnelStep[]; impressions: number; clicks: number; ctr_pct: number | null };
+
+export type DemandRow = { tag: string; searches: number; innovations: number; gap_ratio: number | null };
+
+export type Engagement = {
+  overview: AnalyticsOverview;
+  timeseries: AnalyticsDay[];
+  innovations: InnovationEngagement[];
+  funnel: AnalyticsFunnel;
+  demand: DemandRow[];
+  /** true = dane przykładowe, nie z bazy. */
+  demo: boolean;
+};
+
+/** Wszystkie dane widoku jednym wywołaniem — okres `days` dla liczników, rankingu i lejka. */
+export async function getEngagement(days: number): Promise<Result<Engagement>> {
+  let data: Engagement;
+  try {
+    const get = <T,>(path: string) => apiFetch<T>(path, { headers: ADMIN_HEADERS });
+    const [overview, timeseries, innovations, funnel, demand] = await Promise.all([
+      get<AnalyticsOverview>(`/api/admin/analytics/overview?days=${days}`),
+      get<AnalyticsDay[]>(`/api/admin/analytics/timeseries?days=${Math.max(days, 14)}`),
+      get<{ items: InnovationEngagement[] }>(`/api/admin/analytics/innovations?days=${days}&limit=50`),
+      get<AnalyticsFunnel>(`/api/admin/analytics/funnel?days=${days}`),
+      get<{ items: DemandRow[] }>(`/api/admin/analytics/demand?days=${days}`),
+    ]);
+    data = { overview, timeseries, innovations: innovations.items, funnel, demand: demand.items, demo: false };
+  } catch (error) {
+    if (error instanceof TypeError) return { data: seedEngagement(days), offline: true };
+    throw error;
+  }
+  // Świeża baza bez żadnych zdarzeń — pusty panel nic by nie pokazał, więc dane przykładowe.
+  const { views, impressions } = data.overview.metrics;
+  if (views.value + impressions.value + views.previous + impressions.previous === 0) {
+    return { data: seedEngagement(days), offline: false };
+  }
+  return { data, offline: false };
 }

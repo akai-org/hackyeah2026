@@ -25,6 +25,7 @@ from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
+from app.analytics import as_int, log_event
 from data.mock_data import MOCK_INNOVATIONS
 
 log = logging.getLogger(__name__)
@@ -410,6 +411,7 @@ async def start(body: StartRequest):
     question = step["content"] if step and step["type"] == "question" else _local_question(session, 1)
     session["questions"].append(question)
     _save_session(session)
+    await log_event("middleman_start", as_int(innov.get("id")))
 
     return _ok(
         {
@@ -458,6 +460,7 @@ async def answer(body: AnswerRequest):
             plan = step["content"]
             plan.setdefault("source", {"innovation_id": session["innovation"].get("id"), "title": session["innovation"].get("title")})
             session["plan"] = plan
+            await log_event("middleman_plan", as_int(session["innovation"].get("id")))
             intro = "Mam wszystko, czego potrzebuję. Oto szkic planu wdrożenia."
             async for chunk in _type_out(intro):
                 yield chunk

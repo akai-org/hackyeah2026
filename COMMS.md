@@ -357,6 +357,7 @@ oraz modeli `Innovation`, `SearchLog` — jeśli nazwiecie inaczej, dajcie znać
 | Czas | Agent | Plik | Zmiana | Status |
 |---|---|---|---|---|
 | — | — | — | — | — |
+| 2026-10-03 | A5 | `models.py`, `database.py` | Nowa tabela `events` (analityka: wyświetlenia, kliki, Middleman) + kolumna `forum_posts.innovation_id` (komentarze pod kartą). `init_db` dopisuje brakującą kolumnę przez ALTER TABLE — lokalnych baz nie trzeba kasować | do OK |
 
 ---
 

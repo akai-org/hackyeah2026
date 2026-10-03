@@ -8,7 +8,7 @@ import { RoleBadge } from "@/components/role-badge";
 import { Toast, useToast } from "@/components/toast";
 import { Button } from "@/components/ui/button";
 import { TAG_LABELS, getInnovationThread, type ForumPost } from "@/data/mock";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, apiPost } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +27,29 @@ function nowLocalIso(): string {
   const now = new Date();
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:00`;
+}
+
+/** Post z backendu (/api/forum, camelCase, czas UTC bez strefy). */
+interface ApiForumPost {
+  id: number;
+  parentId: number | null;
+  content: string;
+  authorName: string;
+  badge: ForumPost["badge"];
+  createdAt: string | null;
+}
+
+function fromApi(post: ApiForumPost): ForumPost {
+  const utc = post.createdAt ? new Date(`${post.createdAt}Z`) : new Date();
+  const local = new Date(utc.getTime() - utc.getTimezoneOffset() * 60_000).toISOString().slice(0, 19);
+  return {
+    id: post.id,
+    parent_id: post.parentId,
+    content: post.content,
+    author_name: post.authorName,
+    badge: post.badge,
+    created_at: local,
+  };
 }
 
 const fieldClass =
@@ -79,6 +102,17 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
     };
   }, [innovationId, innovationProp, embedded]);
 
+  // Komentarze zapisane w bazie dokładamy do wątku demo (liczą się do statystyk w panelu admina).
+  useEffect(() => {
+    apiFetch<ApiForumPost[]>(`/api/forum?innovation_id=${innovationId}`)
+      .then((saved) => {
+        const mock = getInnovationThread(innovationId);
+        const ids = new Set(mock.map((p) => p.id));
+        setPosts([...mock, ...saved.map(fromApi).filter((p) => !ids.has(p.id))]);
+      })
+      .catch(() => {});
+  }, [innovationId]);
+
   useEffect(() => {
     if (focusPost === null) return;
     document.getElementById(`${ids}-post-${focusPost}`)?.focus();
@@ -95,36 +129,48 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
   const authorName = nickname.trim() || user?.name || "Gość";
   const authorBadge = usedInnovation ? ("user_of" as const) : (user?.role ?? ("user" as const));
 
-  function addComment(e: React.FormEvent) {
+  /** Zapis w bazie; bez backendu post zostaje tylko lokalnie. */
+  async function savePost(content: string, parentId: number | null): Promise<ForumPost> {
+    try {
+      const saved = await apiPost<ApiForumPost>("/api/forum", {
+        content,
+        parentId,
+        innovationId,
+        authorName,
+        badge: authorBadge,
+      });
+      return fromApi(saved);
+    } catch {
+      return { id: nextId(), parent_id: parentId, content, author_name: authorName, badge: authorBadge, created_at: nowLocalIso() };
+    }
+  }
+
+  async function addComment(e: React.FormEvent) {
     e.preventDefault();
     if (!comment.trim()) {
       setCommentError(true);
       commentRef.current?.focus();
       return;
     }
-    const id = nextId();
-    setPosts((prev) => [
-      ...prev,
-      { id, parent_id: null, content: comment.trim(), author_name: authorName, badge: authorBadge, created_at: nowLocalIso() },
-    ]);
+    const post = await savePost(comment.trim(), null);
+    const id = post.id;
+    setPosts((prev) => [...prev, post]);
     setComment("");
     setCommentError(false);
     setFocusPost(id);
     toast.show("Komentarz dodany.");
   }
 
-  function addReply(e: React.FormEvent, parentId: number) {
+  async function addReply(e: React.FormEvent, parentId: number) {
     e.preventDefault();
     if (!reply.trim()) {
       setReplyError(true);
       replyRef.current?.focus();
       return;
     }
-    const id = nextId();
-    setPosts((prev) => [
-      ...prev,
-      { id, parent_id: parentId, content: reply.trim(), author_name: authorName, badge: authorBadge, created_at: nowLocalIso() },
-    ]);
+    const post = await savePost(reply.trim(), parentId);
+    const id = post.id;
+    setPosts((prev) => [...prev, post]);
     setReply("");
     setReplyError(false);
     setReplyingTo(null);

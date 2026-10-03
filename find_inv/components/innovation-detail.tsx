@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Archive, ExternalLink, FileText, MessageSquareText, Video } from "lucide-react";
 
 import { ForumThread } from "@/components/forum-thread";
@@ -12,6 +12,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { COST_LABELS, type InnovationCard } from "@/data/innovations";
 import { TAG_LABELS, type Tag } from "@/data/mock";
 import { getInnovation } from "@/lib/matchmaking";
+import { track, type CtaButton } from "@/lib/track";
 import { plural } from "@/lib/utils";
 
 // Pełna karta innowacji: GET /api/innovations/{id}, a bez backendu dane mock.
@@ -59,6 +60,16 @@ export function InnovationDetail({ id }: { id: number }) {
   useEffect(() => {
     getInnovation(id).then(setInnovation);
   }, [id]);
+
+  // Jedno wyświetlenie na wejście (StrictMode w dev odpala efekt dwa razy).
+  const trackedView = useRef<number | null>(null);
+  useEffect(() => {
+    if (!innovation || trackedView.current === id) return;
+    trackedView.current = id;
+    track({ type: "innovation_view", innovationId: id });
+  }, [innovation, id]);
+
+  const cta = (button: CtaButton) => () => track({ type: "cta_click", innovationId: id, meta: { button } });
 
   if (innovation === undefined) {
     return (
@@ -163,13 +174,14 @@ export function InnovationDetail({ id }: { id: number }) {
       </div>
 
       <div className="mt-8 flex flex-wrap gap-3">
-        <Link href={`/wdrozenie?innowacja=${innovation.id}`} className={buttonVariants({ variant: "primary" })}>
+        <Link href={`/wdrozenie?innowacja=${innovation.id}`} onClick={cta("wdrozenie")} className={buttonVariants({ variant: "primary" })}>
           <MessageSquareText aria-hidden="true" />
           Dostosuj do mojej instytucji
         </Link>
         {innovation.materials_url && (
           <a
             href={innovation.materials_url}
+            onClick={cta("materialy")}
             target="_blank"
             rel="noreferrer"
             className={buttonVariants({ variant: "secondary" })}
@@ -181,6 +193,7 @@ export function InnovationDetail({ id }: { id: number }) {
         {innovation.video_url && (
           <a
             href={innovation.video_url}
+            onClick={cta("film")}
             target="_blank"
             rel="noreferrer"
             className={buttonVariants({ variant: "secondary" })}
@@ -192,6 +205,7 @@ export function InnovationDetail({ id }: { id: number }) {
         {innovation.source_url && (
           <a
             href={innovation.source_url}
+            onClick={cta("zrodlo")}
             target="_blank"
             rel="noreferrer"
             className={buttonVariants({ variant: "secondary" })}
@@ -215,7 +229,10 @@ export function InnovationDetail({ id }: { id: number }) {
         ) : (
           <button
             type="button"
-            onClick={() => setTesterModalOpen(true)}
+            onClick={() => {
+              cta("zostan_testerem")();
+              setTesterModalOpen(true);
+            }}
             className="mt-4 inline-flex min-h-12 items-center gap-2 rounded-ui border-(length:--bw) border-deep bg-deep px-5 font-bold text-surface hover:bg-leaf"
           >
             Zgłoś się jako tester

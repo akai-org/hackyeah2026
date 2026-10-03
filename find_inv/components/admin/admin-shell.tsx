@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { BarChart3, FlaskConical, Gauge, Library, Lightbulb, Loader2, LogIn, ShieldCheck, Users } from "lucide-react";
+import { Activity, BarChart3, FlaskConical, Gauge, Library, Lightbulb, Loader2, LogIn, ShieldCheck, Users } from "lucide-react";
 
 import { CutoutText } from "@/components/cutout-text";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ export const ADMIN_LINKS = [
   { href: "/admin/uzytkownicy", label: "Użytkownicy", icon: Users },
   { href: "/admin/testy", label: "Testy", icon: FlaskConical },
   { href: "/admin/trendy", label: "Trendy", icon: BarChart3 },
+  { href: "/admin/zaangazowanie", label: "Zaangażowanie", icon: Activity },
   { href: "/admin/pomysly", label: "Pomysły", icon: Lightbulb },
 ];
 
