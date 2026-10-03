@@ -6,6 +6,7 @@ import {
   CircleAlert,
   CircleCheck,
   CircleHelp,
+  FilePen,
   FileText,
   Loader2,
   Paperclip,
@@ -19,6 +20,7 @@ import {
 import { Button, buttonVariants } from "@/components/ui/button";
 import { TAG_LABELS } from "@/data/mock";
 import { useAuth } from "@/lib/auth";
+import { storeIdea } from "@/lib/grants";
 import {
   ALLOWED_EXTENSIONS,
   MAX_FILES,
@@ -401,6 +403,10 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
           <Link href={`/wyniki?q=${encodeURIComponent(searchText)}`} className={buttonVariants({ variant: "secondary" })}>
             <Search aria-hidden="true" />
             Sprawdź, co już działa
+          </Link>
+          <Link href="/wnioski" onClick={() => storeIdea(draft)} className={buttonVariants({ variant: "secondary" })}>
+            <FilePen aria-hidden="true" />
+            Napisz wniosek o grant
           </Link>
           <Button type="button" variant="secondary" onClick={onEdit}>
             <Pencil aria-hidden="true" />

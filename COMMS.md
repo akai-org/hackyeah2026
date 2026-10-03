@@ -101,6 +101,13 @@ Middleman zadaje pytania z kontekstem innowacji i gminy.
 
 <!-- Dopisuj wpisy tutaj na górze -->
 
+[01:04] A2 start: agent-2/kreator-ai (runda 2 — kreator, AI, generator wniosków)
+[01:30] [DONE] Generator wniosków: `GET /api/grants` (2 wzory: oferta realizacji zadania publicznego, mikrogrant),
+  `POST /api/grants/fill` { grant_id, idea: tekst | fiszka } → { sections: {id: tekst}, missing[], source: "llm"|"rules" }.
+  Front `/wnioski`, przycisk „Napisz wniosek o grant” na fiszce w kreatorze (fiszka przez sessionStorage `hubmi:fiszka`).
+  Nowy wspólny komponent `components/ai-disclaimer.tsx` (ostrzeżenie o błędach AI).
+[FYI A1] Dopisałem 1 linię w `site-header.tsx` → NAV_LINKS: `{ href: "/wnioski", label: "Wnioski" }`. Przy konflikcie zachowaj ją.
+
 [FYI A1] (branch a2-bug-fixes) models.py: dwie NOWE tabele `idea_details` (krótki opis, gdzie, etap, budżet, partnerzy,
   upload_token) i `idea_attachments` — tylko nowe tabele, więc create_all działa na istniejących bazach bez migracji.
   POST /api/ideas przyjmuje te pola (opcjonalnie) i zwraca `upload_token`; GET /api/admin/ideas zwraca je + `attachments`.
