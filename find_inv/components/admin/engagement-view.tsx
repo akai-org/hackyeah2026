@@ -179,7 +179,7 @@ export function AdminEngagementView() {
             </fieldset>
             <div aria-hidden="true" className="mt-4 h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={series} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                <AreaChart accessibilityLayer={false} data={series} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
                   <CartesianGrid stroke={GRID} vertical={false} />
                   <XAxis dataKey="date" tick={{ fill: MUTED, fontSize: 14 }} tickLine={false} axisLine={{ stroke: GRID }} interval="preserveStartEnd" minTickGap={24} />
                   <YAxis allowDecimals={false} tick={{ fill: MUTED, fontSize: 14 }} tickLine={false} axisLine={false} />

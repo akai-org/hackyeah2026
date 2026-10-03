@@ -333,6 +333,39 @@ async def delete_forum_post(post_id: int):
     return _ok({"id": post_id, "deleted": True, "replies_deleted": replies})
 
 
+# ── Zgłoszone potrzeby (zadanie 7) ───────────────────────
+# Dane z Zasobnika wiedzy (/api/zasobnik/admin/needs i /trends). Tamte endpointy wymagają ADMIN_TOKEN, którego
+# nie można trzymać w przeglądarce — panel woła te same funkcje pod swoją autoryzacją (rola admin).
+
+
+@router.get("/needs")
+def list_reported_needs(
+    area: str | None = None,
+    region: str | None = None,
+    limit: Annotated[int, Query(ge=1, le=500)] = 200,
+):
+    from sqlmodel import Session
+
+    from app.zasobnik.db import engine
+    from app.zasobnik.routers import admin as zasobnik_admin
+
+    with Session(engine) as session:
+        needs = zasobnik_admin.list_needs(session=session, area=area, region=region, limit=limit, offset=0)
+    return _ok([need.model_dump(mode="json") for need in needs])
+
+
+@router.get("/needs/trends")
+def reported_needs_trends(months: Annotated[int, Query(ge=1, le=36)] = 6):
+    from sqlmodel import Session
+
+    from app.zasobnik.db import engine
+    from app.zasobnik.routers import admin as zasobnik_admin
+
+    with Session(engine) as session:
+        report = zasobnik_admin.trends(session=session, months=months, top=10)
+    return _ok(report.model_dump(mode="json"))
+
+
 # ── Użytkownicy ──────────────────────────────────────────
 
 

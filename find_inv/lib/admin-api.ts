@@ -324,3 +324,61 @@ export async function getEngagement(days: number): Promise<Result<Engagement>> {
   return { data, offline: false };
 }
 
+// ---------- Zgłoszone potrzeby (Zasobnik wiedzy) ----------
+// Bez backendu nie ma czego pokazać — potrzeby zgłaszają mieszkańcy, więc nie podstawiamy danych demo.
+
+export type ReporterType = "resident" | "ngo" | "institution" | "local_government" | "other";
+
+export type NeedArea = { id: number; slug: string; name: string };
+
+export type ReportedNeed = {
+  id: number;
+  description: string;
+  region: string | null;
+  reporter_type: ReporterType;
+  area: NeedArea | null;
+  created_at: string;
+};
+
+export type CountItem = { key: string; count: number };
+
+export type NeedsTrends = {
+  since: string;
+  until: string;
+  total_needs: number;
+  total_searches: number;
+  areas: Array<{
+    area: NeedArea | null;
+    needs: number;
+    searches: number;
+    needs_last_30d: number;
+    needs_prev_30d: number;
+    change_pct: number | null;
+    trend: "up" | "down" | "flat" | "new";
+    monthly: Array<{ month: string; needs: number; searches: number }>;
+  }>;
+  by_region: CountItem[];
+  by_reporter_type: CountItem[];
+  top_queries: CountItem[];
+  zero_result_queries: CountItem[];
+};
+
+const EMPTY_TRENDS: NeedsTrends = {
+  since: "",
+  until: "",
+  total_needs: 0,
+  total_searches: 0,
+  areas: [],
+  by_region: [],
+  by_reporter_type: [],
+  top_queries: [],
+  zero_result_queries: [],
+};
+
+export async function getReportedNeeds(months: number) {
+  const [needs, trends] = await Promise.all([
+    call<ReportedNeed[]>("/api/admin/needs?limit=200", () => []),
+    call<NeedsTrends>(`/api/admin/needs/trends?months=${months}`, () => EMPTY_TRENDS),
+  ]);
+  return { data: { needs: needs.data, trends: trends.data }, offline: needs.offline || trends.offline };
+}

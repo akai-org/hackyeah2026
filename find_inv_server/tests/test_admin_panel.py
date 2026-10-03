@@ -236,3 +236,14 @@ def test_delete_forum_post_and_user():
     assert client.delete("/api/admin/users/999", headers=ADMIN).status_code == 404
     assert client.delete("/api/admin/users/3").status_code == 403
 
+
+def test_reported_needs_from_zasobnik():
+    """Zadanie 7: potrzeby z Zasobnika pod autoryzacją panelu (bez ADMIN_TOKEN w przeglądarce)."""
+    created = client.post("/api/needs", json={"description": "Brak opieki wytchnieniowej w gminie",
+                                               "region": "powiat testowy", "reporter_type": "ngo"})
+    assert created.status_code == 201
+    needs = client.get("/api/admin/needs?region=powiat testowy", headers=ADMIN).json()["data"]
+    assert needs[0]["description"] == "Brak opieki wytchnieniowej w gminie" and needs[0]["reporter_type"] == "ngo"
+    report = client.get("/api/admin/needs/trends?months=3", headers=ADMIN).json()["data"]
+    assert report["total_needs"] >= 1 and {"areas", "by_region", "by_reporter_type"} <= report.keys()
+    assert client.get("/api/admin/needs").status_code == 403
