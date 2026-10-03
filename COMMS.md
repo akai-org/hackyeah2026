@@ -212,6 +212,8 @@ oraz modeli `Innovation`, `SearchLog` — jeśli nazwiecie inaczej, dajcie znać
 
 <!-- Dopisuj wpisy tutaj na górze -->
 
+[09:00] A3 start: agent-3/karta-forum — runda 2: forum z backendem, testerzy, oceny, karta innowacji.
+
 ```
 [DONE] Wyzwania, indeks luki i statystyki regionu na REALNYCH danych GUS BDL (22 powiaty Małopolski, lata 2024–2025;
        niepełnosprawność: spis 2011, bo nowszych danych powiatowych brak). Odśwież: python -m data.fetch_gus.
