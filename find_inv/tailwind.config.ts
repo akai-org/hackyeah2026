@@ -21,6 +21,11 @@ const config = {
       fontFamily: {
         sans: ["var(--font-atkinson)", "system-ui", "Segoe UI", "Roboto", "sans-serif"],
         body: ["var(--font-atkinson)", "system-ui", "Segoe UI", "Roboto", "sans-serif"],
+        cut1: ["var(--font-abril)", "serif"],
+        cut2: ["var(--font-alfa)", "serif"],
+        cut3: ["var(--font-playfair)", "serif"],
+        cut4: ["var(--font-courier)", "monospace"],
+        cut5: ["var(--font-bitter)", "serif"],
       },
       fontSize: {
         sm: ["1rem", { lineHeight: "1.5" }],

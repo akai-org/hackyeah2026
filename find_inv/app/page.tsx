@@ -1,9 +1,14 @@
 import { ArrowRight, Frown, Meh, MessageSquareText, ScanSearch, Smile, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 
-import { InnovationCard } from "@/components/innovation-card";
+import { CutoutText } from "@/components/cutout-text";
+import { FeaturedInnovations } from "@/components/featured-innovations";
+import { GapIndex } from "@/components/gap-index";
+import { MalopolskaStatsTiles } from "@/components/malopolska-stats";
+import { Monstera } from "@/components/monstera";
+import { PaperCloud } from "@/components/paper-cloud";
 import { SearchForm } from "@/components/search-form";
-import { innovations } from "@/data/innovations.mock";
+import { buttonVariants } from "@/components/ui/button";
 
 const STEPS: Array<{ icon: LucideIcon; title: string; text: string }> = [
   {
@@ -41,9 +46,16 @@ export default function HomePage() {
     <>
       {/* Hero */}
       <section aria-labelledby="hero-tytul" className="relative overflow-hidden">
-        <div className="relative mx-auto max-w-content px-4 pt-20 pb-16 sm:px-6 lg:pt-20 lg:pb-24">
+        {/* Mobile i tablet: jeden mały liść w rogu, nad nagłówkiem. */}
+        <Monstera
+          size="small"
+          color="leaf"
+          className="absolute -top-8 -right-10 w-28 rotate-[200deg] sm:w-32 lg:hidden"
+        />
+
+        <div className="relative mx-auto grid max-w-content gap-6 px-4 pt-20 pb-16 sm:px-6 lg:grid-cols-[minmax(0,40rem)_1fr] lg:gap-0 lg:pt-20 lg:pb-24">
           <div>
-            <h1 id="hero-tytul" className="text-hero font-medium text-deep">Z czym masz kłopot?</h1>
+            <CutoutText id="hero-tytul" as="h1" size="hero" text="Z czym masz kłopot?" animate />
             <p className="mt-6 max-w-[38ch] text-lg">
               Opisz to własnymi słowami. Znajdziemy rozwiązania, które już działają w Małopolsce.
             </p>
@@ -68,6 +80,18 @@ export default function HomePage() {
             </nav>
           </div>
 
+          {/* Desktop: duży liść ucięty przez prawą krawędź ekranu, min. 24 px od treści. */}
+          <div aria-hidden="true" className="relative hidden lg:block">
+            {/* Chmurki wypełniają pustą przestrzeń pod liśćmi, z dala od pola wyszukiwania. */}
+            <PaperCloud className="absolute top-[35rem] left-6 w-60 -rotate-2" />
+            <PaperCloud shape="tall" color="mint" className="absolute top-[44rem] left-[18rem] w-36 rotate-3" />
+            <Monstera
+              size="small"
+              color="mint"
+              className="simple-hidden absolute top-72 left-48 w-72 rotate-[150deg]"
+            />
+            <Monstera size="hero" color="leaf" outlined className="absolute -top-6 left-10 rotate-[-28deg]" />
+          </div>
         </div>
       </section>
 
@@ -77,8 +101,9 @@ export default function HomePage() {
         aria-labelledby="jak-to-dziala-tytul"
         className="scroll-mt-6 border-y-(length:--bw) border-deep bg-sage"
       >
-        <div className="mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
-          <h2 id="jak-to-dziala-tytul" className="text-2xl font-medium text-deep">Jak to działa</h2>
+        <div className="relative mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
+          <PaperCloud shape="tall" className="absolute top-8 right-10 hidden w-44 rotate-2 lg:block" />
+          <CutoutText id="jak-to-dziala-tytul" text="Jak to działa" />
           <ol className="mt-10 grid gap-6 md:grid-cols-3">
             {STEPS.map((step, index) => {
               const Icon = step.icon;
@@ -97,14 +122,17 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Kondycja regionu */}
-      <section id="kondycja-malopolski" aria-labelledby="kondycja-tytul" className="scroll-mt-6 border-b-(length:--bw) border-deep bg-paper">
-        <div className="mx-auto max-w-content px-4 py-8 sm:px-6">
-          <div className="grid max-w-3xl items-center gap-4 rounded-ui border-(length:--bw) border-deep bg-surface p-5 md:grid-cols-[auto_1fr_auto]">
+      {/* Kondycja Małopolski + Indeks Luki Innowacyjnej (Zasobnik wiedzy) */}
+      <section id="kondycja-malopolski" aria-labelledby="kondycja-tytul" className="scroll-mt-6">
+        <div className="mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
+          <CutoutText id="kondycja-tytul" text="Kondycja Małopolski" />
+          <p className="mt-4 max-w-[60ch] text-lg">
+            Z czym mierzą się mieszkańcy regionu. Te liczby pomagają zdecydować, od czego zacząć.
+          </p>
+          <div className="mt-8 grid max-w-3xl items-center gap-4 rounded-ui border-(length:--bw) border-deep bg-surface p-5 md:grid-cols-[auto_1fr_auto]">
             <ConditionIcon aria-hidden="true" strokeWidth={1.5} className="size-16 text-leaf" />
             <span>
-              <span id="kondycja-tytul" className="block text-sm font-semibold uppercase tracking-[0.12em] text-leaf">Kondycja Małopolski</span>
-              <span id="kondycja-status" className="mt-1 block text-xl font-bold text-deep">{condition.status}</span>
+              <span className="block text-xl font-bold text-deep">{condition.status}</span>
               <span className="mt-1 block">{condition.detail}</span>
             </span>
             <Link href="/wyzwania" className="inline-flex min-h-12 items-center gap-2 font-semibold text-leaf underline underline-offset-4 hover:text-deep">
@@ -112,23 +140,29 @@ export default function HomePage() {
               <ArrowRight aria-hidden="true" className="size-5" />
             </Link>
           </div>
+          <div className="mt-10">
+            <MalopolskaStatsTiles />
+          </div>
+
+          <h3 className="mt-14 text-xl font-bold text-deep">Gdzie najbardziej brakuje rozwiązań</h3>
+          <div className="mt-4">
+            <GapIndex limit={3} />
+          </div>
         </div>
       </section>
 
       {/* Co już działa */}
       <section id="co-juz-dziala" aria-labelledby="co-juz-dziala-tytul" className="scroll-mt-6">
-        <div className="mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
-          <h2 id="co-juz-dziala-tytul" className="text-2xl font-medium text-deep">Popularne innowacje dla: <span className="text-3xl font-black">Seniora</span></h2>
+        <div className="relative mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
+          <PaperCloud className="absolute -top-6 right-24 hidden w-52 -rotate-1 lg:block" />
+          <CutoutText id="co-juz-dziala-tytul" text="Co już działa" />
           <p className="mt-4 max-w-[60ch] text-lg">
-            Sprawdzone pomysły, które pomagają seniorom być w kontakcie, łatwiej docierać do lekarza i korzystać z internetu.
+            Kilka innowacji z Biblioteki. Każda ma opis, informację, dla kogo jest, ile kosztuje i gdzie już działa.
           </p>
-          <ul className="mt-10 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {innovations.slice(0, 3).map((innovation) => (
-              <li key={innovation.id} className="flex">
-                <InnovationCard innovation={innovation} />
-              </li>
-            ))}
-          </ul>
+          <FeaturedInnovations />
+          <Link href="/biblioteka" className={buttonVariants({ variant: "secondary", className: "mt-10" })}>
+            Zobacz całą bibliotekę
+          </Link>
         </div>
       </section>
 
@@ -137,7 +171,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-content px-4 py-10 sm:px-6 lg:py-12">
           <article className="mx-auto max-w-3xl border-(length:--bw) border-deep bg-surface p-6 shadow-paper md:p-8">
             <p className="text-sm font-medium text-muted">Artykuł dnia</p>
-            <h2 id="artykul-dnia-tytul" className="mt-2 text-2xl font-medium text-deep">
+            <h2 id="artykul-dnia-tytul" className="mt-2 text-2xl font-bold text-deep">
               Jak wspierać seniora, który mieszka sam?
             </h2>
             <p className="mt-3 max-w-[65ch] text-lg">

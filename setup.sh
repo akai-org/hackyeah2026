@@ -5,7 +5,7 @@ echo "=== findinv setup ==="
 
 # ── Backend ──────────────────────────────────────────────
 echo ""
-echo "[1/4] Backend — tworzę venv..."
+echo "[1/5] Backend — tworzę venv..."
 cd find_inv_server
 python3 -m venv .venv
 source .venv/bin/activate
@@ -18,12 +18,22 @@ if [ ! -f .env ]; then
     echo "     OPENROUTER_API_KEY=..."
 fi
 
+echo ""
+echo "[1b/5] Seeduję bazę danych (forum + 114 innowacji ROPS)..."
+# seed_demo najpierw: wgrywa forum (i innowacje demo, gdy baza pusta); seed_innovations podmienia innowacje na ROPS
+python -m data.seed_demo || echo "  ⚠  seed_demo pominięty"
+if python -m data.seed_innovations; then
+    echo "  ✓ Baza zaseedowana danymi ROPS"
+else
+    echo "  ⚠  Seed ROPS nieudany — zostają innowacje demo (uruchom ręcznie: python -m data.seed_innovations)"
+fi
+
 deactivate
 cd ..
 
 # ── Frontend ─────────────────────────────────────────────
 echo ""
-echo "[2/4] Frontend — instaluję paczki..."
+echo "[2/5] Frontend — instaluję paczki..."
 cd find_inv
 npm install --silent
 
@@ -38,7 +48,7 @@ cd ..
 
 # ── Git ───────────────────────────────────────────────────
 echo ""
-echo "[3/4] Git — sprawdzam branch..."
+echo "[3/5] Git — sprawdzam branch..."
 AGENT=${1:-""}
 if [ -n "$AGENT" ]; then
     git checkout -b "agent-$AGENT/start" 2>/dev/null || git checkout "agent-$AGENT/start"
@@ -47,7 +57,7 @@ fi
 
 # ── Gotowe ───────────────────────────────────────────────
 echo ""
-echo "[4/4] Gotowe! Uruchom w dwóch osobnych terminalach:"
+echo "[4/5] Gotowe! Uruchom w dwóch osobnych terminalach:"
 echo ""
 echo "  BACKEND:"
 echo "    cd find_inv_server"

@@ -2,20 +2,24 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Menu, Search, UserRound, X } from "lucide-react";
+import { Menu, Search, X } from "lucide-react";
 
 import { AccessibilitySettings } from "@/components/simple-mode";
+import { CutoutText } from "@/components/cutout-text";
+import { UserMenu } from "@/components/user-menu";
+import { useAuth } from "@/lib/auth";
 
 const NAV_LINKS = [
   { href: "/biblioteka", label: "Biblioteka" },
   { href: "/kreator", label: "Kreator pomysłów" },
   { href: "/forum", label: "Forum" },
+  { href: "/testerzy", label: "Zostań testerem" },
 ];
 
 const SEARCH_TAGS = ["Aplikacja", "Małe firmy", "Niewidomi", "Seniorzy", "Transport", "Zdrowie"];
 
 const linkClass =
-  "inline-flex min-h-12 items-center rounded-ui px-3 text-base font-bold text-deep underline-offset-4 hover:underline";
+  "inline-flex min-h-12 items-center whitespace-nowrap rounded-ui px-2.5 text-base font-bold text-deep underline-offset-4 hover:underline";
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
@@ -23,6 +27,9 @@ export function SiteHeader() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchPlaceholder, setSearchPlaceholder] = useState("Szukaj");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const { user } = useAuth();
+  // Panel ROPS widać w menu tylko po zalogowaniu jako admin.
+  const links = user?.role === "admin" ? [...NAV_LINKS, { href: "/admin", label: "Panel ROPS" }] : NAV_LINKS;
   const buttonRef = useRef<HTMLButtonElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const closeSearchRef = useRef<HTMLButtonElement>(null);
@@ -94,7 +101,7 @@ export function SiteHeader() {
 
       <div className="relative mx-auto flex max-w-content items-center gap-4 px-4 py-3 sm:px-6">
         <Link href="/" aria-label="HubMI, strona główna" className="inline-flex min-h-12 shrink-0 items-center rounded-ui py-1">
-          <span className="text-xl font-bold text-deep">HubMI</span>
+          <CutoutText text="HubMI" as="span" size="logo" labelled={false} />
         </Link>
 
         <div className="flex min-w-0 flex-1 justify-center px-2 sm:px-4">
@@ -119,9 +126,9 @@ export function SiteHeader() {
         </div>
 
         <div className="ml-auto flex shrink-0 items-center gap-3">
-          <nav aria-label="Główna" className="hidden lg:block">
+          <nav aria-label="Główna" className="nav-desktop hidden xl:block">
           <ul className="flex items-center gap-1">
-            {NAV_LINKS.map((link) => (
+            {links.map((link) => (
               <li key={link.href}>
                 <Link href={link.href} className={linkClass}>
                   {link.label}
@@ -131,31 +138,27 @@ export function SiteHeader() {
           </ul>
           </nav>
 
+          <UserMenu compact className="hidden sm:flex" />
+
+          <button
+            ref={buttonRef}
+            type="button"
+            aria-expanded={open}
+            aria-controls="menu-mobilne"
+            onClick={() => setOpen((value) => !value)}
+            className="inline-flex min-h-12 min-w-12 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-ui border-(length:--bw) border-deep bg-surface px-4 font-bold text-deep hover:bg-sage nav-mobile xl:hidden"
+          >
+            {open ? <X aria-hidden="true" className="size-5" /> : <Menu aria-hidden="true" className="size-5" />}
+            {open ? "Zamknij" : "Menu"}
+          </button>
         </div>
-
-        <Link
-          href="/konto"
-          aria-label="Konto użytkownika"
-          title="Konto użytkownika"
-          className="inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center rounded-full border-(length:--bw) border-deep bg-surface text-deep hover:bg-sage"
-        >
-          <UserRound aria-hidden="true" className="size-6" />
-        </Link>
-
-        <button
-          ref={buttonRef}
-          type="button"
-          aria-expanded={open}
-          aria-controls="menu-mobilne"
-          onClick={() => setOpen((value) => !value)}
-          className="inline-flex min-h-12 min-w-12 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-ui border-(length:--bw) border-deep bg-surface px-4 font-bold text-deep hover:bg-sage lg:hidden"
-        >
-          {open ? <X aria-hidden="true" className="size-5" /> : <Menu aria-hidden="true" className="size-5" />}
-          {open ? "Zamknij" : "Menu"}
-        </button>
       </div>
 
-      <div id="menu-mobilne" hidden={!open} className="border-t-(length:--bw) border-deep bg-surface lg:hidden">
+      <div
+        id="menu-mobilne"
+        hidden={!open}
+        className="nav-mobile border-t-(length:--bw) border-deep bg-surface xl:hidden"
+      >
         <nav aria-label="Główna, wersja mobilna" className="mx-auto max-w-content px-4 py-3 sm:px-6">
           <form action="/wyniki" method="get" role="search" className="mb-3 flex sm:hidden" onClick={(event) => { event.preventDefault(); openSearch(); }}>
             <label htmlFor="mobile-header-search" className="sr-only">
@@ -175,7 +178,7 @@ export function SiteHeader() {
             </div>
           </form>
           <ul className="flex flex-col">
-            {NAV_LINKS.map((link) => (
+            {links.map((link) => (
               <li key={link.href}>
                 <Link href={link.href} className={`${linkClass} w-full`} onClick={() => setOpen(false)}>
                   {link.label}
@@ -183,6 +186,7 @@ export function SiteHeader() {
               </li>
             ))}
           </ul>
+          <UserMenu className="mt-2 border-t-2 border-sage px-3 pt-3 sm:hidden" />
         </nav>
       </div>
       {searchOpen && (

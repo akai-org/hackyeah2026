@@ -17,14 +17,32 @@ export function SiteFooter() {
         </div>
 
         <div>
-          <h2 id="kontakt" className="scroll-mt-6 text-lg font-bold text-deep">
+          <h2 className="text-lg font-bold text-deep">
             Kontakt
           </h2>
           <address className="mt-2 not-italic">
-            <p>Regionalny Ośrodek Polityki Społecznej w Krakowie</p>
-            <p className="mt-1 text-muted">Adres e-mail: do uzupełnienia</p>
-            <p className="text-muted">Telefon: do uzupełnienia</p>
+            <p>ROPS Kraków — Regionalny Ośrodek Polityki Społecznej</p>
+            <p className="mt-1">ul. Piastowska 32, 30-070 Kraków</p>
+            <p className="mt-1">
+              <a href="https://rops.krakow.pl" className={linkClass}>
+                rops.krakow.pl
+              </a>
+            </p>
           </address>
+          <nav aria-label="Nawigacja stopki" className="mt-4">
+            <ul className="space-y-1">
+              {[
+                { href: "/biblioteka", label: "Biblioteka innowacji" },
+                { href: "/forum", label: "Forum" },
+                { href: "/kreator", label: "Kreator pomysłów" },
+                { href: "/testerzy", label: "Zostań testerem" },
+              ].map(({ href, label }) => (
+                <li key={href}>
+                  <Link href={href} className={linkClass}>{label}</Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
         </div>
 
         <div>
