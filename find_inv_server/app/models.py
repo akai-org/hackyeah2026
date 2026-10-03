@@ -107,3 +107,14 @@ class Idea(Base):
     author_email: Mapped[str | None] = mapped_column(String(256), nullable=True)
     status: Mapped[str] = mapped_column(String(32), default="pending")  # pending|reviewed|rejected
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class ForumPost(Base):
+    __tablename__ = "forum_posts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    parent_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("forum_posts.id"), nullable=True)
+    content: Mapped[str] = mapped_column(Text)
+    author_name: Mapped[str] = mapped_column(String(128), default="Gość")
+    badge: Mapped[str] = mapped_column(String(32), default="user")  # user|tester|admin|consultant
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
