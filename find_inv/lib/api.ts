@@ -93,6 +93,16 @@ export function matchInnovations(text: string, tags: string[], signal?: AbortSig
   return post<{ innovations: MatchedInnovation[]; total_found: number }>("/api/match", { text, tags }, signal);
 }
 
+/** Poprawia transkrypcję z dyktowania. Przy błędzie zwraca tekst bez zmian. */
+export async function fixTranscript(transcript: string): Promise<string> {
+  try {
+    const data = await post<{ corrected: string; confidence: number }>("/api/voice-fix", { transcript });
+    return data.corrected || transcript;
+  } catch {
+    return transcript;
+  }
+}
+
 /** Zgłoszenie potrzeby do Zasobnika (POST /api/needs) — trafia do trendów admina jako luka. */
 export async function reportNeed(description: string) {
   const response = await fetch(`${API_URL}/api/needs`, {
