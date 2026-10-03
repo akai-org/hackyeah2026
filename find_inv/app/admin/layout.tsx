@@ -33,7 +33,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       { headers: { "X-Dev-Admin": "true" } },
     )
       .then((d) => {
-        if (d) setBadges({ pomysly: d.ideas ?? 0, uzytkownicy: d.pending_testers ?? 0 });
+        if (d) setBadges({ pomysly: (d as Record<string, number>).pending_ideas ?? 0, uzytkownicy: d.pending_testers ?? 0 });
       })
       .catch(() => {});
   }, [user]);
