@@ -1,0 +1,255 @@
+{
+  "source": "Mapa Wyzwań Społecznych, ROPS Kraków, Dział Innowacji Społecznych",
+  "project": "Inkubator Włączenia Społecznego 2.0 (EFS+, Działanie 5.1)",
+  "note": "Dane ogólnopolskie. Załącznik nr 2 do dokumentacji projektu.",
+  "areas": [
+    {
+      "id": 1,
+      "title": "Rodzina i piecza zastępcza",
+      "description": "Rodzina jako podstawowa forma życia zbiorowego wymaga wsparcia w trudnych sytuacjach. Piecza zastępcza sprawowana gdy rodzice biologiczni nie mogą zapewnić opieki dziecku.",
+      "key_data": [
+        "Wzrost liczby dzieci w pieczy zastępczej o 3,5% w 2023 vs 2022",
+        "Niewystarczająca liczba rodzin zastępczych w stosunku do potrzeb",
+        "Brak wszystkich form wsparcia rodzin zastępczych przewidzianych w ustawie",
+        "Dzieci poniżej 10 roku życia trafiają do ośrodków instytucjonalnych wbrew ustawie",
+        "Znaczna część dzieci z orzeczeniami o niepełnosprawności lub chorobami przewlekłymi"
+      ],
+      "key_challenges": [
+        "Zwiększenie liczby pozytywnie zweryfikowanych kandydatów na rodziny zastępcze",
+        "Poprawa współpracy między powiatami w zakresie pieczy zastępczej",
+        "Nierozdzielanie rodzeństwa w toku procedur",
+        "Spójne funkcjonowanie systemu adopcyjnego"
+      ],
+      "sources": [
+        "Piecza zastępcza w 2023 roku – Główny Urząd Statystyczny",
+        "Wsparcie systemu pieczy zastępczej w procesie deinstytucjonalizacji – NIK 2022"
+      ],
+      "persona": {
+        "name": "Ania i Staś",
+        "description": "Rodzeństwo z dysfunkcyjnej rodziny. Ania (7 lat, Zespół Downa), Staś (12 lat, niedosłyszący). Trafili do wielu rodzin zastępczych i placówek."
+      },
+      "taxonomy_tags": ["dzieci", "rodzina", "niepełnosprawność", "OPS"]
+    },
+    {
+      "id": 2,
+      "title": "Bezdomność",
+      "description": "Bezdomność jest przejawem najbardziej jaskrawego wykluczenia społecznego. Wynika z bezrobocia, ubóstwa, uzależnień, przemocy domowej, zadłużenia, rozpadu rodziny, zaburzeń psychicznych.",
+      "key_data": [
+        "Rośnie liczba młodych bezdomnych (0–25 r.ż.)",
+        "'Niewidzialność' i 'niepoliczalność' młodych bezdomnych",
+        "Luka w transferze pomocy międzyinstytucjonalnej dla wychowanków placówek",
+        "'Bezrodzinowość' młodych bezdomnych – brak więzi emocjonalnych"
+      ],
+      "key_challenges": [
+        "Oddzielne traktowanie bezdomności młodych dorosłych i nastolatków",
+        "Instytucjonalna bezsilność wobec potrzeb młodych bezdomnych w noclegowniach",
+        "Luka w transferze pomocy dla byłych wychowanków placówek opiekuńczych"
+      ],
+      "sources": [
+        "DODAJ MNIE – Bezdomność Młodzieży i Młodych Dorosłych w Polsce 2023",
+        "Działania wspierające i aktywizujące osoby bezdomne – NIK",
+        "Diagnoza sytuacji osób doświadczających bezdomności na terenie Warszawy"
+      ],
+      "persona": {
+        "name": "Kuba",
+        "description": "22 lata, były wychowanek placówki opiekuńczo-wychowawczej. Przejawia symptomy uzależnienia od środków psychoaktywnych. Miał mieszkanie wspomagane ale go nie utrzymał."
+      },
+      "taxonomy_tags": ["bezdomność", "młodzież", "uzależnienia", "OPS"]
+    },
+    {
+      "id": 3,
+      "title": "Niepełnosprawność",
+      "description": "Trwała zmiana w prawidłowym funkcjonowaniu organizmu. 5,4 mln osób niepełnosprawnych w Polsce (14,3% ludności wg NSP 2021). Wskaźnik zatrudnienia 30,1% (2023).",
+      "key_data": [
+        "5,4 mln osób niepełnosprawnych = 14,3% populacji (NSP 2021)",
+        "Kobiety 54,9% / Mężczyźni 45,1% wśród osób z niepełnosprawnością",
+        "Wskaźnik zatrudnienia 16-64 lata: 30,1% (2023)",
+        "Kluczowy moment: przejście z edukacji do dorosłości i rynku pracy",
+        "Najbardziej niezaspokojona potrzeba: dostęp do informacji (PFRON 2024)"
+      ],
+      "key_challenges": [
+        "Zwiększenie dostępu do rynku pracy",
+        "Trudność z uzyskaniem wykształcenia pozwalającego na samodzielność",
+        "Budowanie relacji społecznych i towarzyskich",
+        "Wsparcie techniczne, infrastrukturalne, dostępność",
+        "Możliwość samodzielnego przemieszczania się bez asysty",
+        "Dostęp do opieki medycznej, fizjoterapii, farmakoterapii",
+        "Dostosowane mieszkania dla osób z ograniczeniami funkcjonalnymi"
+      ],
+      "sources": [
+        "Strategia na rzecz Osób z Niepełnosprawnościami 2021–2030",
+        "Konwencja o Prawach Osób Niepełnosprawnych – Poradnik RPO",
+        "Raport końcowy badanie potrzeb osób niepełnosprawnych 2024, PFRON",
+        "Sami-Dzielni! Nowe standardy mieszkalnictwa wspomaganego – ROPS Kraków"
+      ],
+      "persona": {
+        "name": "Krystian",
+        "description": "38 lat, mieszka sam w małej miejscowości. Pracuje zdalnie jako operator danych. Ma porażenie czterokończynowe, nie mówi – obsługuje komputer wzrokowo i inteligentny dom."
+      },
+      "taxonomy_tags": ["niepełnosprawność", "dostępność", "rynek_pracy", "transport", "DPS"]
+    },
+    {
+      "id": 4,
+      "title": "Ubóstwo",
+      "description": "W 2023 roku ubóstwo skrajne dotyczyło 6,6% gospodarstw domowych (wzrost o 2pp). Progi: 776 zł ustawowe / 913 zł skrajne / 1092 zł relatywne dla 1-osobowych gospodarstw.",
+      "key_data": [
+        "6,6% gospodarstw w ubóstwie skrajnym w 2023 – wzrost o 2pp vs 2022",
+        "Najwyższe ubóstwo: osoby z innych źródeł niezarobkowych – 17,9%",
+        "Wśród rolników: 14,1%, wśród rencistów: 8,4%",
+        "Wykształcenie maks. gimnazjalne: co 8. osoba żyje w ubóstwie skrajnym (12,8%)",
+        "1/5 Polaków 25–55 lat nie jest w stanie inwestować w siebie i kwalifikacje",
+        "Lęk przed biedą: 30% – najwyższy poziom od 2015 roku",
+        "78% ubogich korzystających z pomocy żywnościowej: sytuacja ekonomiczna pogorszyła się"
+      ],
+      "key_challenges": [
+        "Ubóstwo dzieci – wczesna opieka i edukacja (żłobki, przedszkola)",
+        "Ubóstwo seniorów",
+        "Ubóstwo osób z niepełnosprawnościami",
+        "Ubóstwo pracujących – rolnicy, pracownicy niskopłatni",
+        "Ubóstwo bezrobotnych i bezdomnych – reintegracja zawodowa, spółdzielczość socjalna",
+        "Ubóstwo uchodźców z Ukrainy",
+        "Ubóstwo energetyczne",
+        "Głód i niedożywienie"
+      ],
+      "sources": [
+        "Raport o biedzie 2023, Szlachetna Paczka",
+        "POVERTY WATCH 2023 monitoring ubóstwa i polityki społecznej przeciw ubóstwu w Polsce 2022–2023",
+        "GUS, Zasięg ubóstwa ekonomicznego w Polsce w 2023 r."
+      ],
+      "persona": {
+        "name": "Tomek",
+        "description": "60 lat, mieszka na Śląsku. Wykształcenie techniczne, pracował w gospodarstwie rolnym. Obecnie na rencie rolniczej, nie pracuje. Samotność, zagrożenie alkoholizmem."
+      },
+      "taxonomy_tags": ["ubóstwo", "rynek_pracy", "seniorzy", "dzieci", "rodzina", "gmina_wiejska"]
+    },
+    {
+      "id": 5,
+      "title": "Integracja cudzoziemców",
+      "description": "Integracja cudzoziemców to element polityk włączających – równe szanse uczestnictwa w życiu ekonomicznym, społecznym, kulturowym i politycznym dla wszystkich mieszkańców gminy.",
+      "key_data": [
+        "Model integracji: partycypacyjne projektowanie działań z migrantami",
+        "Badania i planowanie działań oparte na dowodach",
+        "Skuteczna koordynacja wymiany informacji na poziomie lokalnym",
+        "Stabilne finansowanie zamiast krótkotrwałych projektów",
+        "Równy dostęp migrantów do usług publicznych",
+        "Kursy języka polskiego jako priorytet"
+      ],
+      "key_challenges": [
+        "Zapewnienie migrantom równego dostępu do usług społecznych",
+        "Zindywidualizowanie usług publicznych (tłumacz, asysta kulturowa)",
+        "Włączenie kulturowe cudzoziemców i ich dzieci w systemie edukacyjnym",
+        "Rynek pracy otwarty na cudzoziemców – uznawanie kwalifikacji",
+        "Integracja dzieci migrantów w polskim systemie edukacyjnym",
+        "Zmiana postaw wolnych od stereotypów wobec cudzoziemców",
+        "Zabezpieczenie potrzeb zdrowia psychicznego cudzoziemców"
+      ],
+      "sources": [
+        "Model lokalnej polityki włączania migrantów i migrantek w życie miast – UW",
+        "Uchodźcy z Ukrainy w Polsce – Wyzwania i potencjał integracji, Monitor Deloitte 2022",
+        "Polacy i Ukraińcy – wyzwania integracji uchodźców, PIE 2022"
+      ],
+      "persona": {
+        "name": "Swietłana",
+        "description": "37 lat, pochodzi z Ukrainy. Ma 2 małych dzieci (4 i 9 lat). Mąż został w Ukrainie. Nauczycielka historii – w Polsce szuka pracy poza zawodem. Wyzwania: wynajem mieszkania, adaptacja dzieci."
+      },
+      "taxonomy_tags": ["migranci", "rynek_pracy", "dzieci", "edukacja", "NGO", "samorząd"]
+    },
+    {
+      "id": 6,
+      "title": "Zdrowie",
+      "description": "Promowanie zdrowego stylu życia i zapewnienie dostępu do opieki medycznej jako kluczowe obszary zdrowia fizycznego i psychicznego.",
+      "key_data": [
+        "Choroba niedokrwienna serca – największe wyzwanie polskiego systemu ochrony zdrowia",
+        "Udary – druga najczęstsza przyczyna zgonów, duży wpływ na sprawność",
+        "Wzrost liczby przypadków nowotworów i choroby Alzheimera",
+        "Choroby przewlekłe: cukrzyca, obturacyjna choroba płuc",
+        "Pandemia nasiliła samotność – głównie osoby starsze mieszkające samotnie",
+        "Palenie tytoniu i nieodpowiednia dieta – główne przyczyny wzrostu umieralności"
+      ],
+      "key_challenges": [
+        "Wzrost świadomości i edukacja o zdrowym stylu życia i prewencji",
+        "Równy dostęp do wysokiej jakości opieki zdrowotnej dla wszystkich",
+        "Dostosowanie systemów opieki zdrowotnej do rosnącej liczby osób starszych",
+        "Promocja zdrowia wśród dzieci i młodzieży",
+        "Zwiększenie świadomości o zdrowiu psychicznym i przeciwdziałanie stygmatyzacji"
+      ],
+      "sources": [
+        "Raport o samotności 2021, Szlachetna Paczka",
+        "Mapa potrzeb zdrowotnych 2022–2026, Minister Zdrowia",
+        "State of Health in the EU – Polska 2023, OECD/European Observatory"
+      ],
+      "persona": {
+        "name": "Stanisław",
+        "description": "56 lat. Pracuje na etat i opiekuje się chorą matką. Zaniedbuje własne zdrowie. Boryka się z otyłością i chorobą serca. Wycofany społecznie."
+      },
+      "taxonomy_tags": ["seniorzy", "zdrowie_psychiczne", "samotność", "dostępność", "gmina_wiejska"]
+    },
+    {
+      "id": 7,
+      "title": "Zdrowie psychiczne",
+      "description": "Dobrostan jednostki obejmujący równowagę emocjonalną, psychiczną i społeczną. Zdrowie psychiczne to nie tylko brak chorób, ale pozytywne samopoczucie i umiejętność adaptacji.",
+      "key_data": [
+        "Dzieci i młodzież: wzrost prób samobójczych",
+        "Mlodzi Polacy: brak motywacji, problemy z samoakceptacją",
+        "FOMO dotyka co trzeciego młodego Polaka",
+        "Nadmierne korzystanie z urządzeń elektronicznych a stany depresyjne",
+        "Finansowanie opieki psychiatrycznej: ok. 3% wydatków NFZ (bardzo niski poziom)",
+        "Stygmatyzacja powoduje niechęć do szukania specjalistycznej pomocy",
+        "Długofalowe skutki pandemii COVID-19 w zdrowiu psychicznym dorosłych i dzieci"
+      ],
+      "key_challenges": [
+        "Edukacja prozdrowotna w zakresie zdrowia psychicznego wśród dzieci, młodzieży i seniorów",
+        "Wzmacnianie kompetencji rodzicielskich w rozpoznawaniu problemów psychicznych dzieci",
+        "Zmiana modelu: z opieki instytucjonalnej na środowiskową",
+        "Ograniczanie stygmatyzacji osób z problemami psychicznymi"
+      ],
+      "sources": [
+        "Raport MŁODE GŁOWY – Fundacja UNAWEZA 2023",
+        "Raport z badania kondycji psychicznej młodzieży – Żyj z sensem 2022",
+        "Pomiędzy pandemią COVID-19 a wojną w Ukrainie – Diagnoza stanu polskiego społeczeństwa, Kraków 2022"
+      ],
+      "personas": [
+        {
+          "name": "Mateusz",
+          "description": "17 lat, liceum w dużym mieście. Większość czasu przed komputerem. Stany depresyjne po rozstaniu. Wyobcowanie, poczucie pustki."
+        },
+        {
+          "name": "Karina",
+          "description": "41 lat, choroba afektywna dwubiegunowa. Długoterminowe leczenie psychiatryczne. Wraca na rynek pracy po hospitalizacji."
+        }
+      ],
+      "taxonomy_tags": ["zdrowie_psychiczne", "młodzież", "dzieci", "samotność", "rynek_pracy"]
+    },
+    {
+      "id": 8,
+      "title": "Seniorzy",
+      "description": "Sytuacja społeczna seniorów jako odzwierciedlenie aktualnych wyzwań socjalnych. Potrzeba dostosowania się do starzejącej się populacji – opieka zdrowotna, opiekuńcza i zapewnienie godnej starości.",
+      "key_data": [
+        "Największe problemy seniorów: zdrowie, samotność, finanse, cyfryzacja",
+        "Postępujące starzenie się społeczeństwa w Polsce",
+        "Znaczna liczba seniorów w budynkach z barierami architektonicznymi",
+        "Polipragmazja – wielolekowość jako duże zagrożenie dla seniorów",
+        "Poczucie samotności koreluje z sytuacją materialną (im gorsza, tym większa samotność)"
+      ],
+      "key_challenges": [
+        "Dostosowanie systemu opieki zdrowotnej do potrzeb osób starszych",
+        "Przeciwdziałanie samotności i izolacji społecznej seniorów",
+        "Cyfryzacja – włączenie seniorów w cyfrowy świat",
+        "Wsparcie finansowe seniorów w ubóstwie",
+        "Eliminacja barier architektonicznych w miejscach zamieszkania",
+        "Opieka długoterminowa bez instytucjonalizacji (deinstytucjonalizacja)"
+      ],
+      "sources": [
+        "Sytuacja osób starszych w Polsce w 2022 roku – GUS",
+        "Wielolekowość seniorów w Polsce – Fundacja Centrum Inicjatyw 2021",
+        "Ocena potrzeb w zakresie wsparcia dla Seniorów 2023 – SeniorApp",
+        "Program Opieka 75+ na rok 2024 – MPiPS"
+      ],
+      "persona": {
+        "name": "Nieznany senior",
+        "description": "Osoba 70+, samotna, w budynku z barierami architektonicznymi. Problemy z wielolekowością, samotność, trudności z poruszaniem się."
+      },
+      "taxonomy_tags": ["seniorzy", "samotność", "wykluczenie_cyfrowe", "dostępność", "zdrowie_psychiczne", "DPS", "transport"]
+    }
+  ]
+}
