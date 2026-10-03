@@ -1,0 +1,11 @@
+# środowisko wirtualne - każdy tworzy własne
+.venv/
+venv/
+
+# python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# sekrety
+.env

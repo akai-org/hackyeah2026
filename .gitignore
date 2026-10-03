@@ -1,0 +1,11 @@
+# OS / edytory
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# sekrety
+.env
+.env.*
+!.env.example
