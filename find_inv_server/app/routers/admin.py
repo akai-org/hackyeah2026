@@ -285,6 +285,7 @@ async def admin_stats(_: bool = AdminDep):
             pending_count = (await db.execute(select(func.count()).select_from(Tester).where(Tester.approved == False))).scalar() or 0  # noqa: E712
             search_count = (await db.execute(select(func.count()).select_from(SearchLog))).scalar() or 0
             idea_count = (await db.execute(select(func.count()).select_from(Idea))).scalar() or 0
+            pending_ideas = (await db.execute(select(func.count()).select_from(Idea).where(Idea.status == "pending"))).scalar() or 0
 
         return {"data": {
             "innovations": inn_count,
@@ -293,6 +294,7 @@ async def admin_stats(_: bool = AdminDep):
             "pending_testers": pending_count,
             "searches": search_count,
             "ideas": idea_count,
+            "pending_ideas": pending_ideas,
         }}
     except Exception:
         return {"data": {
@@ -302,6 +304,7 @@ async def admin_stats(_: bool = AdminDep):
             "pending_testers": 3,
             "searches": 156,
             "ideas": 0,
+            "pending_ideas": 0,
         }}
 
 
