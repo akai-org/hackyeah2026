@@ -366,16 +366,17 @@ function ResultCard({ innovation, query }: { innovation: MatchedInnovation; quer
         {innovation.target_group && (
           <div>
             <dt className="text-sm text-muted">Dla kogo</dt>
-            <dd className="font-bold">{innovation.target_group}</dd>
+            <dd className={detailClass(innovation.target_group)}>{innovation.target_group}</dd>
           </div>
         )}
         {innovation.where_implemented && (
           <div>
             <dt className="flex items-center gap-1 text-sm text-muted">
               <MapPin aria-hidden="true" className="size-4" />
-              Gdzie już działa
+              {/* W danych ROPS to pole bywa listą miejsc, a bywa opisem, kto może skorzystać. */}
+              {isPlaceList(innovation.where_implemented) ? "Gdzie już działa" : "Kto może wdrożyć"}
             </dt>
-            <dd className="font-bold">{innovation.where_implemented}</dd>
+            <dd className={detailClass(innovation.where_implemented)}>{innovation.where_implemented}</dd>
           </div>
         )}
       </dl>
@@ -425,6 +426,15 @@ function ResultCard({ innovation, query }: { innovation: MatchedInnovation; quer
       </div>
     </article>
   );
+}
+
+// Krótka wartość wyróżniona pogrubieniem, dłuższy opis zwykłym krojem — czytelniej.
+function detailClass(value: string) {
+  return value.length > 60 ? undefined : "font-bold";
+}
+
+function isPlaceList(value: string) {
+  return value.length <= 60 && !/skorzysta|instytucj|organizacj|placówk/i.test(value);
 }
 
 function formatMonths(months: number) {

@@ -189,11 +189,18 @@ def local_chat_answer(question: str, innovations: list[dict]) -> str:
     if any(w in q for w in ("tan", "koszt", "budzet", "pieniad", "drog", "ile kosztuje")):
         ordered = sorted(innovations, key=lambda i: COST_ORDER.get(i.get("cost_level"), 3))
         best = ordered[0]
-        lines = [f"Najtańsza w tym zestawieniu jest „{best['title']}” (koszt {COST_LABEL.get(best.get('cost_level'), 'nieznany')})."]
-        lines += [f"- {i['title']}: koszt {COST_LABEL.get(i.get('cost_level'), 'nieznany')}" for i in ordered[1:]]
+        costs = {i.get("cost_level") for i in innovations}
+        if len(costs) == 1 and len(innovations) > 1:
+            lines = [f"Wszystkie te rozwiązania mają podobny koszt: {COST_LABEL.get(best.get('cost_level'), 'nieznany')}."]
+            lines.append("Dokładną kwotę sprawdź w karcie innowacji albo przygotuj plan wdrożenia („Dostosuj do mojej instytucji”).")
+        else:
+            lines = [f"Najtańsza w tym zestawieniu jest „{best['title']}” (koszt {COST_LABEL.get(best.get('cost_level'), 'nieznany')})."]
+            lines += [f"- {i['title']}: koszt {COST_LABEL.get(i.get('cost_level'), 'nieznany')}" for i in ordered[1:]]
     elif any(w in q for w in ("szybk", "czas", "dlugo", "kiedy", "ile trwa", "miesi")):
         ordered = sorted(innovations, key=lambda i: i.get("implementation_time_months") or 99)
         best = ordered[0]
+        if not best.get("implementation_time_months"):
+            return "Karty tych innowacji nie podają czasu wdrożenia. Oszacujesz go, przygotowując plan wdrożenia („Dostosuj do mojej instytucji”)."
         lines = [f"Najszybciej wdrożysz „{best['title']}” ({_months(best.get('implementation_time_months'))})."]
         lines += [f"- {i['title']}: {_months(i.get('implementation_time_months'))}" for i in ordered[1:]]
     else:
