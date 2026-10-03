@@ -10,7 +10,7 @@
 
 | Agent | Robi teraz | Ostatni merge | Blokuje kogo |
 |---|---|---|---|
-| A1 | ✅ kompletny (21 inno, 13 stron, pełna UX) | Frontend+Backend+Fixes | — |
+| A1 | ✅ kompletny (21 inno, 13 stron, WCAG AA, pełna UX) | Frontend+Backend+Fixes+Polish | — |
 | A2 | ⏸ czeka na A1+A3 | — | — |
 | A3 | ⏸ czeka na A1 | — | A2 |
 | A4 | ⏸ czeka na A1 | — | — |
@@ -36,6 +36,7 @@
 
 ## 🟥 Agent 1 — Core
 
+[10:XX] [DONE] Sesja 3: admin panel polish (refresh stats, dates, counts), MiddlemanModal focus trap + WCAG 2.4.2 dynamic titles, voice-fix integration, live tester counts, setup.sh auto-seed.
 [16:45] [DONE] Finalne poprawki: middleman mock 2-turnowy (pyta follow-up → plan), fix nested <main> admin, fix search_log missing imports, +4 innowacje (21 total), wyszukiwanie w full_desc+tags.
 [16:20] [DONE] /biblioteka/[id] strona szczegółów + POST /api/testerzy (zapisuje do DB) + kreator używa /api/tag i /api/match + forum widzi rolę zalogowanego usera.
 [15:00] [DONE] Homepage "Co już działa" pobiera z backendu (SSR). Wszystkie 13 stron frontend → HTTP 200.
