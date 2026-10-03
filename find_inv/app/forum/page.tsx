@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MessageSquare, Send } from "lucide-react";
 
 import { CutoutText } from "@/components/cutout-text";
@@ -62,6 +62,11 @@ export default function ForumPage() {
   const { user } = useAuth();
   const [posts, setPosts] = useState<ForumPost[]>(MOCK_FORUM_POSTS);
   const [newContent, setNewContent] = useState("");
+
+  useEffect(() => {
+    document.title = "Forum dyskusyjne – HubMI";
+    return () => { document.title = "HubMI – znajdź rozwiązanie, które już działa"; };
+  }, []);
 
   function addPost() {
     const content = newContent.trim();

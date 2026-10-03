@@ -23,6 +23,11 @@ function BiblotekaContent() {
   const [items, setItems] = useState<BackendInnovation[]>([]);
   const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    document.title = "Biblioteka innowacji – HubMI";
+    return () => { document.title = "HubMI – znajdź rozwiązanie, które już działa"; };
+  }, []);
+
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
   const [status, setStatus] = useState(searchParams.get("status") ?? "");
   const [selectedTags, setSelectedTags] = useState<string[]>(

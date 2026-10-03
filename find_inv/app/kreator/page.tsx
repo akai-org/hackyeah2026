@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronRight, Lightbulb, Loader2, Tag } from "lucide-react";
 
 import { CutoutText } from "@/components/cutout-text";
@@ -31,6 +31,11 @@ export default function KreatorPage() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [fiszka, setFiszka] = useState<Fiszka | null>(null);
+
+  useEffect(() => {
+    document.title = "Kreator pomysłów – HubMI";
+    return () => { document.title = "HubMI – znajdź rozwiązanie, które już działa"; };
+  }, []);
 
   function toggleTag(tag: string) {
     setSelectedTags((prev) =>

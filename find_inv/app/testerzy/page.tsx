@@ -23,6 +23,11 @@ export default function TesterzyPage() {
   const [innovationCount, setInnovationCount] = useState(23);
 
   useEffect(() => {
+    document.title = "Zostań testerem innowacji – HubMI";
+    return () => { document.title = "HubMI – znajdź rozwiązanie, które już działa"; };
+  }, []);
+
+  useEffect(() => {
     apiFetch<{ testers: number; innovations: number }>("/api/admin/stats", {
       headers: { "X-Dev-Admin": "true" },
     })

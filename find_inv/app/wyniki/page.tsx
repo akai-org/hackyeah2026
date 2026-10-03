@@ -45,6 +45,11 @@ function ResultsContent() {
   const [middleman, setMiddleman] = useState<{ id: number; title: string } | null>(null);
 
   useEffect(() => {
+    if (query) document.title = `Wyniki: ${query.slice(0, 50)} – HubMI`;
+    return () => { document.title = "HubMI – znajdź rozwiązanie, które już działa"; };
+  }, [query]);
+
+  useEffect(() => {
     if (!query) return;
     setTagsLoading(true);
     setMatchLoading(false);

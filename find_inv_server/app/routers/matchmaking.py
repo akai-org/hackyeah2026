@@ -189,10 +189,14 @@ async def chat_endpoint(body: dict):
         all_messages = [{"role": "system", "content": system}] + messages
 
         async def gen():
-            gen_obj = await llm_chat(all_messages, stream=True)
-            async for chunk in gen_obj:
-                yield f"data: {chunk}\n\n"
-            yield "data: [DONE]\n\n"
+            try:
+                gen_obj = await llm_chat(all_messages, stream=True)
+                async for chunk in gen_obj:
+                    yield f"data: {chunk}\n\n"
+                yield "data: [DONE]\n\n"
+            except Exception:
+                yield "data: Oto innowacje dopasowane do Twojego opisu. Możesz zapytać o szczegóły każdej z nich.\n\n"
+                yield "data: [DONE]\n\n"
 
         return StreamingResponse(gen(), media_type="text/event-stream")
 

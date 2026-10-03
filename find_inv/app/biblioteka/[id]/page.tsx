@@ -43,9 +43,13 @@ export default function InnovationDetailPage() {
   useEffect(() => {
     if (!id) return;
     apiFetch<DetailInnovation>(`/api/innovations/${id}`)
-      .then(setItem)
+      .then((data) => {
+        setItem(data);
+        if (data?.title) document.title = `${data.title} – HubMI`;
+      })
       .catch(() => setError(true))
       .finally(() => setLoading(false));
+    return () => { document.title = "HubMI – znajdź rozwiązanie, które już działa"; };
   }, [id]);
 
   if (loading) {
