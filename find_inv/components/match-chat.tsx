@@ -27,7 +27,7 @@ export function MatchChat({ innovations, tags }: MatchChatProps) {
   const [status, setStatus] = useState("");
   const [failed, setFailed] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
-  const logRef = useRef<HTMLOListElement>(null);
+  const logRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
@@ -85,33 +85,37 @@ export function MatchChat({ innovations, tags }: MatchChatProps) {
       </p>
 
       {messages.length > 0 && (
-        <ol
+        // tabIndex: przewijany obszar musi być osiągalny klawiaturą.
+        <div
           ref={logRef}
           role="log"
           aria-label="Rozmowa z asystentem"
           aria-busy={streaming}
-          className="mt-5 grid max-h-[28rem] gap-4 overflow-y-auto pr-1"
+          tabIndex={0}
+          className="mt-5 max-h-[28rem] overflow-y-auto rounded-ui pr-1"
         >
-          {messages.map((message, index) => {
-            const mine = message.role === "user";
-            const Icon = mine ? UserRound : Bot;
-            return (
-              <li key={index} className={cn("flex gap-3", mine && "flex-row-reverse")}>
-                <Icon aria-hidden="true" className="mt-2 size-6 shrink-0 text-leaf" />
-                <div
-                  className={cn(
-                    "max-w-[60ch] rounded-ui border-2 px-4 py-3 whitespace-pre-line",
-                    mine ? "border-deep bg-mint" : "border-sage bg-paper",
-                  )}
-                >
-                  <p className="sr-only">{mine ? "Ty:" : "Asystent:"}</p>
-                  {message.content ||
-                    (streaming && index === messages.length - 1 ? <span className="text-muted">Piszę…</span> : null)}
-                </div>
-              </li>
-            );
-          })}
-        </ol>
+          <ol className="grid gap-4">
+            {messages.map((message, index) => {
+              const mine = message.role === "user";
+              const Icon = mine ? UserRound : Bot;
+              return (
+                <li key={index} className={cn("flex gap-3", mine && "flex-row-reverse")}>
+                  <Icon aria-hidden="true" className="mt-2 size-6 shrink-0 text-leaf" />
+                  <div
+                    className={cn(
+                      "max-w-[60ch] rounded-ui border-2 px-4 py-3 whitespace-pre-line",
+                      mine ? "border-deep bg-mint" : "border-sage bg-paper",
+                    )}
+                  >
+                    <p className="sr-only">{mine ? "Ty:" : "Asystent:"}</p>
+                    {message.content ||
+                      (streaming && index === messages.length - 1 ? <span className="text-muted">Piszę…</span> : null)}
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
       )}
 
       <p role="status" aria-live="polite" className="sr-only">

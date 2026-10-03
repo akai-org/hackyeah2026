@@ -18,9 +18,14 @@ import { cn, plural } from "@/lib/utils";
 type GapIndexProps = {
   /** Ile powiatów pokazać (np. 3 na stronie głównej). Bez limitu: wszystkie + „Puls powiatu”. */
   limit?: number;
+  /** Poziom nagłówka wiersza: 2 na osobnej stronie, 3 w sekcji strony głównej. */
+  level?: 2 | 3;
 };
 
-function Pulse({ entry }: { entry: GapEntry }) {
+type Level = 2 | 3 | 4 | 5;
+
+function Pulse({ entry, level }: { entry: GapEntry; level: Level }) {
+  const Heading = `h${level}` as const;
   const [pulse, setPulse] = useState<GminaPulse | null>(null);
 
   useEffect(() => {
@@ -39,7 +44,7 @@ function Pulse({ entry }: { entry: GapEntry }) {
   return (
     <div className="grid gap-6">
       <div>
-        <h4 className="text-lg font-bold text-deep">Najważniejsze wyzwania</h4>
+        <Heading className="text-lg font-bold text-deep">Najważniejsze wyzwania</Heading>
         {pulse.top_challenges.length ? (
           <ul className="mt-3 grid gap-3 md:grid-cols-3">
             {pulse.top_challenges.map((challenge) => (
@@ -62,13 +67,13 @@ function Pulse({ entry }: { entry: GapEntry }) {
         )}
       </div>
       <div>
-        <h4 className="text-lg font-bold text-deep">Co może pomóc</h4>
+        <Heading className="text-lg font-bold text-deep">Co może pomóc</Heading>
         <ul className="mt-3 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {pulse.matching_innovations.map((innovation) => (
             <li key={innovation.id} className="flex">
               <MatchCard
                 innovation={innovation}
-                headingLevel="h5"
+                headingLevel={`h${Math.min(level + 1, 5) as Level}`}
                 query={`Powiat ${entry.powiat}: ${entry.top_area}`}
               />
             </li>
@@ -79,7 +84,8 @@ function Pulse({ entry }: { entry: GapEntry }) {
   );
 }
 
-export function GapIndex({ limit }: GapIndexProps) {
+export function GapIndex({ limit, level = 3 }: GapIndexProps) {
+  const RowHeading = `h${level}` as const;
   const ids = useId();
   const [entries, setEntries] = useState<GapEntry[]>(MOCK_GAP_INDEX);
   const [open, setOpen] = useState<string | null>(null);
@@ -105,9 +111,9 @@ export function GapIndex({ limit }: GapIndexProps) {
           return (
             <li key={entry.powiat} className="border-(length:--bw) border-deep bg-surface">
               <div className="grid items-center gap-x-6 gap-y-2 p-4 md:grid-cols-[11rem_minmax(0,1fr)_15rem]">
-                <h3 className="text-lg font-bold text-deep">
+                <RowHeading className="text-lg font-bold text-deep">
                   <span className="sr-only">{index + 1}. </span>Powiat {entry.powiat}
-                </h3>
+                </RowHeading>
 
                 <div className="flex items-center gap-3">
                   <div className="relative h-6 flex-1 border-l border-muted" aria-hidden="true">
@@ -144,7 +150,7 @@ export function GapIndex({ limit }: GapIndexProps) {
                     <span className="sr-only"> {entry.powiat}</span>
                   </Button>
                   <div id={panelId} hidden={!expanded} className={cn(expanded && "mt-5 pb-2")}>
-                    {expanded && <Pulse entry={entry} />}
+                    {expanded && <Pulse entry={entry} level={(level + 1) as Level} />}
                   </div>
                 </div>
               )}

@@ -15,7 +15,7 @@ export default function GapPage() {
         zobaczyć wyzwania i to, co może pomóc.
       </p>
       <div className="mt-10">
-        <GapIndex />
+        <GapIndex level={2} />
       </div>
     </div>
   );

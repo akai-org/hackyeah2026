@@ -203,3 +203,16 @@ html[data-simple="true"] .simple-hidden {
     padding: 0 !important;
   }
 }
+
+/* Tryb prosty: tekst 20 px nie mieści pełnej nawigacji w jednym rzędzie, więc menu mobilne zostaje do 1536 px. */
+@media (min-width: 80rem) and (max-width: 95.99rem) {
+  html[data-simple="true"] .nav-desktop {
+    display: none;
+  }
+  html[data-simple="true"] button.nav-mobile {
+    display: inline-flex;
+  }
+  html[data-simple="true"] div.nav-mobile:not([hidden]) {
+    display: block;
+  }
+}

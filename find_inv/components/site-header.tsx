@@ -16,7 +16,7 @@ const NAV_LINKS = [
 ];
 
 const linkClass =
-  "inline-flex min-h-12 items-center rounded-ui px-2.5 text-base font-bold text-deep underline-offset-4 hover:underline";
+  "inline-flex min-h-12 items-center whitespace-nowrap rounded-ui px-2.5 text-base font-bold text-deep underline-offset-4 hover:underline";
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
@@ -49,7 +49,7 @@ export function SiteHeader() {
           <CutoutText text="HubMI" as="span" size="logo" labelled={false} />
         </Link>
 
-        <nav aria-label="Główna" className="hidden xl:block">
+        <nav aria-label="Główna" className="nav-desktop hidden xl:block">
           <ul className="flex items-center gap-1">
             {NAV_LINKS.map((link) => (
               <li key={link.href}>
@@ -62,7 +62,7 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-4">
-          <SimpleModeToggle className="hidden xl:flex" />
+          <SimpleModeToggle className="nav-desktop hidden xl:flex" />
           <UserMenu compact className="hidden sm:flex" />
 
           <button
@@ -71,7 +71,7 @@ export function SiteHeader() {
             aria-expanded={open}
             aria-controls="menu-mobilne"
             onClick={() => setOpen((value) => !value)}
-            className="inline-flex min-h-12 min-w-12 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-ui border-(length:--bw) border-deep bg-surface px-4 font-bold text-deep hover:bg-sage xl:hidden"
+            className="inline-flex min-h-12 min-w-12 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-ui border-(length:--bw) border-deep bg-surface px-4 font-bold text-deep hover:bg-sage nav-mobile xl:hidden"
           >
             {open ? <X aria-hidden="true" className="size-5" /> : <Menu aria-hidden="true" className="size-5" />}
             {open ? "Zamknij" : "Menu"}
@@ -79,7 +79,11 @@ export function SiteHeader() {
         </div>
       </div>
 
-      <div id="menu-mobilne" hidden={!open} className="border-t-(length:--bw) border-deep bg-surface xl:hidden">
+      <div
+        id="menu-mobilne"
+        hidden={!open}
+        className="nav-mobile border-t-(length:--bw) border-deep bg-surface xl:hidden"
+      >
         <nav aria-label="Główna, wersja mobilna" className="mx-auto max-w-content px-4 py-3 sm:px-6">
           <ul className="flex flex-col">
             {NAV_LINKS.map((link) => (

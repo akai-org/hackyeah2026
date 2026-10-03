@@ -74,7 +74,10 @@ export function SimpleModeToggle({ className }: { className?: string }) {
   return (
     <div className={cn("flex min-h-12 items-center gap-3", className)}>
       <Switch id={id} checked={simple} onCheckedChange={setSimple} />
-      <label htmlFor={id} className="flex min-h-12 cursor-pointer items-center text-base font-bold text-deep">
+      <label
+        htmlFor={id}
+        className="flex min-h-12 cursor-pointer items-center text-base font-bold whitespace-nowrap text-deep"
+      >
         Prosty widok
       </label>
     </div>
