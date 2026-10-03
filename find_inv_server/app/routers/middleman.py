@@ -123,6 +123,13 @@ def _find_innovation(body: StartRequest) -> dict:
                 found = admin_store.get_innovation(wanted)
             except ImportError:
                 found = None
+            if found is None:  # katalog ROPS (A3) — te same id, które zwraca /api/match
+                try:
+                    from app.knowledge_store import get_innovation
+
+                    found = get_innovation(wanted)
+                except ImportError:
+                    pass
             found = found or next((i for i in MOCK_INNOVATIONS if i["id"] == wanted), None)
     if found:
         return dict(found)
