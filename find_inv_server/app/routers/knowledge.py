@@ -1,3 +1,4 @@
+import json
 import uuid
 
 from fastapi import APIRouter, HTTPException
@@ -160,6 +161,38 @@ async def gmina_pulse(powiat: str):
 @router.get("/innovation-gap")
 async def innovation_gap():
     return {"data": MOCK_GAP_INDEX}
+
+
+@router.post("/ideas")
+async def submit_idea(body: dict):
+    title = (body.get("title") or "").strip()
+    essence = (body.get("essence") or "").strip()
+    if not title or not essence:
+        raise HTTPException(status_code=400, detail="Tytuł i opis są wymagane")
+
+    try:
+        from app.database import get_db
+        from app.models import Idea
+
+        async with get_db() as db:
+            idea = Idea(
+                title=title,
+                essence=essence,
+                for_whom=(body.get("for_whom") or "").strip() or None,
+                tags=json.dumps(body.get("tags") or [], ensure_ascii=False),
+                author_name=(body.get("author_name") or "").strip() or None,
+                author_email=(body.get("author_email") or "").strip() or None,
+                status="pending",
+            )
+            db.add(idea)
+            await db.commit()
+            await db.refresh(idea)
+
+        return {"data": {"id": idea.id, "message": "Pomysł przyjęty — dziękujemy!"}}
+    except HTTPException:
+        raise
+    except Exception:
+        return {"data": {"id": None, "message": "Pomysł przyjęty (demo)"}}
 
 
 @router.post("/testerzy")

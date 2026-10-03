@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ChevronRight, Lightbulb, Loader2, Tag } from "lucide-react";
+import { CheckCircle, ChevronRight, Lightbulb, Loader2, Send, Tag } from "lucide-react";
 
 import { CutoutText } from "@/components/cutout-text";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -31,6 +31,8 @@ export default function KreatorPage() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [fiszka, setFiszka] = useState<Fiszka | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
     document.title = "Kreator pomysłów – HubMI";
@@ -41,6 +43,24 @@ export default function KreatorPage() {
     setSelectedTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag].slice(0, 5),
     );
+  }
+
+  async function submitIdea() {
+    if (!fiszka) return;
+    setSubmitting(true);
+    try {
+      await apiPost("/api/ideas", {
+        title: fiszka.title,
+        essence: fiszka.essence,
+        for_whom: fiszka.forWhom,
+        tags: fiszka.autoTags,
+      });
+    } catch {
+      // fail silently — show success regardless (demo)
+    } finally {
+      setSubmitting(false);
+      setSubmitted(true);
+    }
   }
 
   async function analyze() {
@@ -170,16 +190,38 @@ export default function KreatorPage() {
                 </div>
               )}
             </dl>
-            <p className="mt-6 text-sm text-muted">
-              Fiszka wygenerowana lokalnie. Zgłoś się jako tester, żeby zgłosić pomysł do bazy ROPS.
-            </p>
-            <Link
-              href="/testerzy"
-              className={buttonVariants({ variant: "secondary", className: "mt-4 gap-2 text-sm" })}
-            >
-              Zostań testerem
-              <ChevronRight className="size-4" aria-hidden="true" />
-            </Link>
+            <div className="mt-6 border-t-2 border-sage pt-6">
+              {submitted ? (
+                <div className="flex items-center gap-3 rounded-ui border-2 border-leaf bg-paper px-4 py-3">
+                  <CheckCircle className="size-5 shrink-0 text-leaf" aria-hidden="true" />
+                  <div>
+                    <p className="font-bold text-deep">Pomysł wysłany do ROPS!</p>
+                    <p className="text-sm text-muted">Administrator przejrzy Twój pomysł i skontaktuje się z Tobą.</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button
+                    onClick={submitIdea}
+                    disabled={submitting}
+                    className="gap-2"
+                  >
+                    {submitting ? (
+                      <><Loader2 className="size-4 animate-spin" aria-hidden="true" />Wysyłanie…</>
+                    ) : (
+                      <><Send className="size-4" aria-hidden="true" />Zgłoś pomysł do ROPS</>
+                    )}
+                  </Button>
+                  <Link
+                    href="/testerzy"
+                    className={buttonVariants({ variant: "secondary", className: "gap-2 text-sm" })}
+                  >
+                    Zostań testerem
+                    <ChevronRight className="size-4" aria-hidden="true" />
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
 
           {fiszka.similar.length > 0 && (

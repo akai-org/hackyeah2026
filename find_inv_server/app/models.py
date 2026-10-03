@@ -93,3 +93,17 @@ class SearchLog(Base):
     tags: Mapped[str] = mapped_column(Text, default="[]")  # JSON list
     results_count: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class Idea(Base):
+    __tablename__ = "ideas"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    title: Mapped[str] = mapped_column(String(256))
+    essence: Mapped[str] = mapped_column(Text)
+    for_whom: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    tags: Mapped[str] = mapped_column(Text, default="[]")  # JSON list
+    author_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    author_email: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    status: Mapped[str] = mapped_column(String(32), default="pending")  # pending|reviewed|rejected
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
