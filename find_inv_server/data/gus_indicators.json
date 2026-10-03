@@ -1,0 +1,323 @@
+{
+  "source": "GUS, Bank Danych Lokalnych (bdl.stat.gov.pl)",
+  "variables": {
+    "pct_65_plus": {
+      "variable_id": 634989,
+      "description": "odsetek osób w wieku 65 lat i więcej w populacji ogółem",
+      "year": 2025
+    },
+    "social_aid_per_10k": {
+      "variable_id": 1548717,
+      "description": "beneficjenci środowiskowej pomocy społecznej na 10 tys. ludności",
+      "year": 2024
+    },
+    "unemployment_rate": {
+      "variable_id": 461691,
+      "description": "stopa bezrobocia rejestrowanego (grudzień)",
+      "year": 2025
+    },
+    "foster_care_per_1000": {
+      "variable_id": 1724774,
+      "description": "dzieci w rodzinnej pieczy zastępczej na 1000 dzieci do 18 r.ż.",
+      "year": 2025
+    },
+    "disabled_2011": {
+      "variable_id": 400018,
+      "description": "osoby z niepełnosprawnością razem (NSP 2011)",
+      "year": 2011
+    },
+    "population_2011": {
+      "variable_id": 72305,
+      "description": "ludność ogółem (2011)",
+      "year": 2011
+    },
+    "medical_visits": {
+      "variable_id": 1616687,
+      "description": "porady lekarskie ogółem",
+      "year": 2025
+    },
+    "population": {
+      "variable_id": 72305,
+      "description": "ludność ogółem",
+      "year": 2025
+    }
+  },
+  "region": {
+    "pct_65_plus": {
+      "value": 19.2,
+      "year": 2025
+    },
+    "social_aid_per_10k": {
+      "value": 273,
+      "year": 2024
+    },
+    "unemployment_rate": {
+      "value": 4.7,
+      "year": 2025
+    },
+    "foster_care_per_1000": {
+      "value": 4.08,
+      "year": 2025
+    },
+    "disabled_2011": {
+      "value": 394309,
+      "year": 2011
+    },
+    "population_2011": {
+      "value": 3346796,
+      "year": 2011
+    },
+    "medical_visits": {
+      "value": 28847796,
+      "year": 2025
+    },
+    "population": {
+      "value": 3429342,
+      "year": 2025
+    }
+  },
+  "powiaty": {
+    "bocheński": {
+      "unit_id": "011212001000",
+      "pct_65_plus": 18.1,
+      "social_aid_per_10k": 219,
+      "unemployment_rate": 3.0,
+      "foster_care_per_1000": 4.91,
+      "disabled_2011": 10336,
+      "population_2011": 103869,
+      "medical_visits": 770689,
+      "population": 106926
+    },
+    "krakowski": {
+      "unit_id": "011212006000",
+      "pct_65_plus": 17.8,
+      "social_aid_per_10k": 160,
+      "unemployment_rate": 4.4,
+      "foster_care_per_1000": 3.34,
+      "disabled_2011": 33750,
+      "population_2011": 261857,
+      "medical_visits": 1658938,
+      "population": 304885
+    },
+    "miechowski": {
+      "unit_id": "011212008000",
+      "pct_65_plus": 23.9,
+      "social_aid_per_10k": 300,
+      "unemployment_rate": 6.0,
+      "foster_care_per_1000": 6.16,
+      "disabled_2011": 5827,
+      "population_2011": 50327,
+      "medical_visits": 385855,
+      "population": 45898
+    },
+    "myślenicki": {
+      "unit_id": "011212009000",
+      "pct_65_plus": 16.7,
+      "social_aid_per_10k": 225,
+      "unemployment_rate": 3.8,
+      "foster_care_per_1000": 1.05,
+      "disabled_2011": 11318,
+      "population_2011": 122599,
+      "medical_visits": 966299,
+      "population": 129979
+    },
+    "proszowicki": {
+      "unit_id": "011212014000",
+      "pct_65_plus": 21.2,
+      "social_aid_per_10k": 306,
+      "unemployment_rate": 6.8,
+      "foster_care_per_1000": 6.94,
+      "disabled_2011": 5319,
+      "population_2011": 43995,
+      "medical_visits": 335727,
+      "population": 41647
+    },
+    "wielicki": {
+      "unit_id": "011212019000",
+      "pct_65_plus": 15.9,
+      "social_aid_per_10k": 168,
+      "unemployment_rate": 4.2,
+      "foster_care_per_1000": 3.43,
+      "disabled_2011": 14145,
+      "population_2011": 115356,
+      "medical_visits": 807835,
+      "population": 146697
+    },
+    "m. Kraków": {
+      "unit_id": "011212161000",
+      "pct_65_plus": 20.0,
+      "social_aid_per_10k": 178,
+      "unemployment_rate": 2.5,
+      "foster_care_per_1000": 3.27,
+      "disabled_2011": 107460,
+      "population_2011": 759137,
+      "medical_visits": 11193961,
+      "population": 816614
+    },
+    "gorlicki": {
+      "unit_id": "011212205000",
+      "pct_65_plus": 20.0,
+      "social_aid_per_10k": 567,
+      "unemployment_rate": 7.3,
+      "foster_care_per_1000": 5.03,
+      "disabled_2011": 14706,
+      "population_2011": 109225,
+      "medical_visits": 705726,
+      "population": 103725
+    },
+    "limanowski": {
+      "unit_id": "011212207000",
+      "pct_65_plus": 15.6,
+      "social_aid_per_10k": 522,
+      "unemployment_rate": 7.7,
+      "foster_care_per_1000": 3.21,
+      "disabled_2011": 12992,
+      "population_2011": 127387,
+      "medical_visits": 834738,
+      "population": 131480
+    },
+    "nowosądecki": {
+      "unit_id": "011212210000",
+      "pct_65_plus": 15.7,
+      "social_aid_per_10k": 561,
+      "unemployment_rate": 8.2,
+      "foster_care_per_1000": 2.53,
+      "disabled_2011": 19834,
+      "population_2011": 208715,
+      "medical_visits": 944723,
+      "population": 214457
+    },
+    "m. Nowy Sącz": {
+      "unit_id": "011212262000",
+      "pct_65_plus": 21.7,
+      "social_aid_per_10k": 312,
+      "unemployment_rate": 4.2,
+      "foster_care_per_1000": 8.01,
+      "disabled_2011": 11361,
+      "population_2011": 84325,
+      "medical_visits": 1005761,
+      "population": 79416
+    },
+    "chrzanowski": {
+      "unit_id": "011212303000",
+      "pct_65_plus": 23.8,
+      "social_aid_per_10k": 318,
+      "unemployment_rate": 7.0,
+      "foster_care_per_1000": 9.83,
+      "disabled_2011": 16530,
+      "population_2011": 127848,
+      "medical_visits": 945410,
+      "population": 116781
+    },
+    "olkuski": {
+      "unit_id": "011212312000",
+      "pct_65_plus": 24.1,
+      "social_aid_per_10k": 205,
+      "unemployment_rate": 7.0,
+      "foster_care_per_1000": 5.54,
+      "disabled_2011": 16073,
+      "population_2011": 114688,
+      "medical_visits": 776963,
+      "population": 103887
+    },
+    "oświęcimski": {
+      "unit_id": "011212313000",
+      "pct_65_plus": 22.1,
+      "social_aid_per_10k": 212,
+      "unemployment_rate": 5.5,
+      "foster_care_per_1000": 5.45,
+      "disabled_2011": 17584,
+      "population_2011": 155082,
+      "medical_visits": 1125660,
+      "population": 146696
+    },
+    "wadowicki": {
+      "unit_id": "011212318000",
+      "pct_65_plus": 18.7,
+      "social_aid_per_10k": 209,
+      "unemployment_rate": 6.3,
+      "foster_care_per_1000": 4.66,
+      "disabled_2011": 15645,
+      "population_2011": 158354,
+      "medical_visits": 972649,
+      "population": 156502
+    },
+    "brzeski": {
+      "unit_id": "011212402000",
+      "pct_65_plus": 18.4,
+      "social_aid_per_10k": 270,
+      "unemployment_rate": 5.5,
+      "foster_care_per_1000": 3.37,
+      "disabled_2011": 10377,
+      "population_2011": 92403,
+      "medical_visits": 563317,
+      "population": 90942
+    },
+    "dąbrowski": {
+      "unit_id": "011212404000",
+      "pct_65_plus": 18.8,
+      "social_aid_per_10k": 519,
+      "unemployment_rate": 12.0,
+      "foster_care_per_1000": 2.18,
+      "disabled_2011": 5811,
+      "population_2011": 59499,
+      "medical_visits": 368191,
+      "population": 56975
+    },
+    "tarnowski": {
+      "unit_id": "011212416000",
+      "pct_65_plus": 18.0,
+      "social_aid_per_10k": 349,
+      "unemployment_rate": 7.6,
+      "foster_care_per_1000": 3.21,
+      "disabled_2011": 17928,
+      "population_2011": 198276,
+      "medical_visits": 902505,
+      "population": 196521
+    },
+    "m. Tarnów": {
+      "unit_id": "011212463000",
+      "pct_65_plus": 25.5,
+      "social_aid_per_10k": 319,
+      "unemployment_rate": 5.0,
+      "foster_care_per_1000": 6.72,
+      "disabled_2011": 16910,
+      "population_2011": 113593,
+      "medical_visits": 1546133,
+      "population": 101177
+    },
+    "nowotarski": {
+      "unit_id": "011216911000",
+      "pct_65_plus": 17.7,
+      "social_aid_per_10k": 222,
+      "unemployment_rate": 5.4,
+      "foster_care_per_1000": 4.69,
+      "disabled_2011": 16113,
+      "population_2011": 188602,
+      "medical_visits": 1069343,
+      "population": 189704
+    },
+    "suski": {
+      "unit_id": "011216915000",
+      "pct_65_plus": 18.5,
+      "social_aid_per_10k": 345,
+      "unemployment_rate": 5.1,
+      "foster_care_per_1000": 6.29,
+      "disabled_2011": 8557,
+      "population_2011": 84019,
+      "medical_visits": 590990,
+      "population": 82252
+    },
+    "tatrzański": {
+      "unit_id": "011216917000",
+      "pct_65_plus": 19.9,
+      "social_aid_per_10k": 246,
+      "unemployment_rate": 9.0,
+      "foster_care_per_1000": 4.88,
+      "disabled_2011": 5733,
+      "population_2011": 67640,
+      "medical_visits": 376383,
+      "population": 66181
+    }
+  }
+}

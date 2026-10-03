@@ -2,17 +2,27 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlmodel import Session
 
 from app.config import settings
 from app.database import init_db
-from app.routers import health
+from app.routers import admin, health, knowledge, matchmaking, middleman
 from app.routers import auth as auth_router
-from app.routers import matchmaking, knowledge, admin, middleman
+from app.zasobnik.db import engine as zasobnik_engine
+from app.zasobnik.db import init_db as init_zasobnik_db
+from app.zasobnik.routers import admin as zasobnik_admin
+from app.zasobnik.routers import areas, needs, resources
+from app.zasobnik.seed import seed as seed_zasobnik
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
+    # Zasobnik wiedzy ma osobną, synchroniczną bazę (zasobnik.db).
+    init_zasobnik_db()
+    if settings.seed_demo_data:
+        with Session(zasobnik_engine) as session:
+            seed_zasobnik(session)
     yield
 
 
@@ -32,6 +42,12 @@ app.include_router(matchmaking.router)
 app.include_router(knowledge.router)
 app.include_router(admin.router)
 app.include_router(middleman.router)
+
+# Zasobnik wiedzy: /api/areas, /api/resources, /api/needs, /api/zasobnik/admin/*
+app.include_router(areas.router, prefix="/api")
+app.include_router(resources.router, prefix="/api")
+app.include_router(needs.router, prefix="/api")
+app.include_router(zasobnik_admin.router, prefix="/api")
 
 
 @app.get("/")

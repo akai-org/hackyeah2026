@@ -2,15 +2,43 @@ import json
 import uuid
 
 from fastapi import APIRouter, HTTPException
+from sqlalchemy import or_, select
 
-from data.mock_data import (
-    MOCK_CHALLENGES,
-    MOCK_GAP_INDEX,
-    MOCK_INNOVATIONS,
-    MOCK_STATS_MALOPOLSKA,
-)
+from app import knowledge_store as store
+from app.database import get_db
+from app.models import Innovation
+from data import challenges as ch
 
 router = APIRouter(prefix="/api", tags=["knowledge"])
+
+# Pola spoza tabeli innovations, które dokładamy do karty szczegółów z parsed_innovations.json.
+EXTRA_FIELDS = ("video_url", "materials_url", "who_can_use", "authors", "project", "categories")
+
+
+def _row(inn: Innovation, *, full: bool = False) -> dict:
+    out = {
+        "id": inn.id,
+        "title": inn.title,
+        "short_desc": inn.short_desc,
+        "category": inn.category,
+        "area": inn.area,
+        "target_group": inn.target_group,
+        "location": inn.location,
+        "status": inn.status,
+        "cost_level": inn.cost_level,
+        "testers_count": inn.testers_count,
+        "where_implemented": inn.where_implemented,
+        "source_url": inn.source_url,
+        "tags": inn.tags_list(),
+        "is_unmaintained": inn.status == "unmaintained",
+    }
+    if full:
+        out["full_desc"] = inn.full_desc
+        out["implementation_time_months"] = inn.implementation_time_months
+        extra = next((i for i in store.load_innovations() if i.get("source_url") == inn.source_url), None)
+        if extra:
+            out.update({k: extra.get(k) for k in EXTRA_FIELDS})
+    return out
 
 
 @router.get("/innovations")
@@ -23,144 +51,126 @@ async def list_innovations(
     limit: int = 20,
     offset: int = 0,
 ):
+    tag_filter = [t.strip() for t in tags.split(",") if t.strip()]
     try:
-        from app.database import get_db
-        from app.models import Innovation
-        from sqlalchemy import select, or_
-
         async with get_db() as db:
-            q = select(Innovation)
+            q = select(Innovation).order_by(Innovation.id)
             if search:
-                q = q.where(
-                    or_(
-                        Innovation.title.ilike(f"%{search}%"),
-                        Innovation.short_desc.ilike(f"%{search}%"),
-                        Innovation.full_desc.ilike(f"%{search}%"),
-                        Innovation.tags.ilike(f"%{search}%"),
-                    )
-                )
+                q = q.where(or_(
+                    Innovation.title.ilike(f"%{search}%"),
+                    Innovation.short_desc.ilike(f"%{search}%"),
+                    Innovation.full_desc.ilike(f"%{search}%"),
+                    Innovation.tags.ilike(f"%{search}%"),
+                ))
             if status:
                 q = q.where(Innovation.status == status)
             if category:
                 q = q.where(Innovation.category.ilike(f"%{category}%"))
             if area:
                 q = q.where(Innovation.area.ilike(f"%{area}%"))
-            q = q.offset(offset).limit(limit)
-            rows = await db.execute(q)
-            items = rows.scalars().all()
-
-        if not items:
-            raise ValueError("empty DB")
-
-        tag_filter = [t.strip() for t in tags.split(",") if t.strip()] if tags else []
-
-        result = []
-        for inn in items:
-            inn_tags = inn.tags_list()
-            if tag_filter and not any(t in inn_tags for t in tag_filter):
-                continue
-            result.append({
-                "id": inn.id,
-                "title": inn.title,
-                "short_desc": inn.short_desc,
-                "category": inn.category,
-                "area": inn.area,
-                "target_group": inn.target_group,
-                "location": inn.location,
-                "status": inn.status,
-                "cost_level": inn.cost_level,
-                "testers_count": inn.testers_count,
-                "where_implemented": inn.where_implemented,
-                "source_url": inn.source_url,
-                "tags": inn_tags,
-                "is_unmaintained": inn.status == "unmaintained",
-            })
-        return {"data": result}
-
+            if tag_filter:
+                # tagi trzymane jako JSON string – dopasowanie z cudzysłowami, żeby "OPS" nie trafiał w "DOPS"
+                q = q.where(or_(*[Innovation.tags.ilike(f'%"{t}"%') for t in tag_filter]))
+            items = (await db.execute(q.offset(offset).limit(limit))).scalars().all()
+            has_data = items or (await db.execute(select(Innovation.id).limit(1))).first()
+        if has_data:
+            return {"data": [_row(i) for i in items]}
     except Exception:
-        return {"data": MOCK_INNOVATIONS}
+        pass
+
+    # Fallback bez bazy: te same 114 innowacji ROPS z parsed_innovations.json
+    found = store.search_innovations(search or None, tag_filter or None, category or None, area or None, status or None)
+    return {"data": [store.public(i) for i in found[offset : offset + limit]]}
 
 
 @router.get("/innovations/{innovation_id}")
 async def get_innovation(innovation_id: int):
     try:
-        from app.database import get_db
-        from app.models import Innovation
-        from sqlalchemy import select
-        from fastapi import HTTPException
-
         async with get_db() as db:
-            row = await db.execute(select(Innovation).where(Innovation.id == innovation_id))
-            inn = row.scalar_one_or_none()
-
-        if inn is None:
+            inn = (await db.execute(select(Innovation).where(Innovation.id == innovation_id))).scalar_one_or_none()
+            any_rows = inn is not None or (await db.execute(select(Innovation.id).limit(1))).first()
+        if inn is not None:
+            return {"data": _row(inn, full=True)}
+        if any_rows:
             raise HTTPException(status_code=404, detail="Innowacja nie znaleziona")
+    except HTTPException:
+        raise
+    except Exception:
+        pass
 
-        return {"data": {
-            "id": inn.id,
-            "title": inn.title,
-            "short_desc": inn.short_desc,
-            "full_desc": inn.full_desc,
-            "category": inn.category,
-            "area": inn.area,
-            "target_group": inn.target_group,
-            "location": inn.location,
-            "status": inn.status,
-            "cost_level": inn.cost_level,
-            "implementation_time_months": inn.implementation_time_months,
-            "testers_count": inn.testers_count,
-            "where_implemented": inn.where_implemented,
-            "source_url": inn.source_url,
-            "tags": inn.tags_list(),
-            "is_unmaintained": inn.status == "unmaintained",
-        }}
-    except Exception as e:
-        if "404" in str(e):
-            raise
-        item = next((i for i in MOCK_INNOVATIONS if i["id"] == innovation_id), None)
-        if item is None:
-            from fastapi import HTTPException
-            raise HTTPException(status_code=404, detail="Innowacja nie znaleziona")
-        return {"data": item}
+    item = store.get_innovation(innovation_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="Innowacja nie znaleziona")
+    return {"data": store.public(item, full=True)}
 
 
 @router.get("/challenges")
 async def list_challenges(powiat: str = "", area: str = ""):
-    items = MOCK_CHALLENGES
+    items = store.all_challenges()
     if powiat:
-        items = [c for c in items if c.get("powiat", "") == powiat]
+        items = [c for c in items if c["powiat"].lower() == powiat.lower()]
     if area:
-        items = [c for c in items if area.lower() in c.get("area", "").lower()]
+        items = [c for c in items if area.lower() in c["area"].lower()]
     return {"data": items}
 
 
 @router.get("/challenges/map")
 async def challenges_map():
-    powiats: dict = {}
-    for c in MOCK_CHALLENGES:
-        p = c.get("powiat", "nieznany")
-        if p not in powiats:
-            gap = next((g for g in MOCK_GAP_INDEX if g["powiat"] == p), None)
-            powiats[p] = {"powiat": p, "challenges": [], "gap_index": gap}
-        powiats[p]["challenges"].append(c)
-    return {"data": list(powiats.values())}
+    by_powiat: dict[str, list[dict]] = {}
+    for c in store.all_challenges():
+        by_powiat.setdefault(c["powiat"], []).append(c)
+    return {"data": [
+        {"powiat": p, "challenges": cs, "gap_index": store.powiat_gap(p)}
+        for p, cs in by_powiat.items()
+    ]}
+
+
+def _pl(num: float, digits: int = 1) -> str:
+    return f"{num:.{digits}f}".replace(".", ",")
 
 
 @router.get("/stats/malopolska")
 async def stats_malopolska():
-    return {"data": MOCK_STATS_MALOPOLSKA}
+    reg = ch.GUS["region"]
+    aging, aid, unemp, disabled = (reg[k] for k in ("pct_65_plus", "social_aid_per_10k", "unemployment_rate", "disabled_2011"))
+    return {"data": {
+        "aging_pct": aging["value"],
+        "poverty_per_10k": aid["value"],
+        "unemployment_pct": unemp["value"],
+        "disability_count": disabled["value"],
+        "source_year": aging["year"],
+        "source": ch.SOURCE,
+        "innovations_total": len(store.load_innovations()),
+        # gotowe kafelki dla strony głównej – każdy z własnym rokiem danych
+        "indicators": [
+            {"value": f"{_pl(aging['value'])}%", "label": "mieszkańców ma 65 lat lub więcej", "source": f"GUS {aging['year']}"},
+            {"value": str(aid["value"]), "label": "na 10 tys. osób korzysta z pomocy społecznej", "source": f"GUS {aid['year']}"},
+            {"value": f"{_pl(unemp['value'])}%", "label": "stopa bezrobocia rejestrowanego", "source": f"GUS {unemp['year']}"},
+            {"value": f"{disabled['value'] / 1000:.0f} tys.", "label": "osób z niepełnosprawnością", "source": f"GUS, spis {disabled['year']}"},
+        ],
+    }}
 
 
 @router.get("/gmina-pulse/{powiat}")
 async def gmina_pulse(powiat: str):
-    challenges = [c for c in MOCK_CHALLENGES if c.get("powiat") == powiat][:3]
-    innovations = MOCK_INNOVATIONS[:3]
-    return {"data": {"powiat": powiat, "top_challenges": challenges, "matching_innovations": innovations}}
+    name = next((p for p in ch.POWIATY if p.lower() == powiat.lower()), None)
+    if not name:
+        raise HTTPException(status_code=404, detail="Nieznany powiat")
+    top = sorted((c for c in store.all_challenges() if c["powiat"] == name), key=lambda c: -c["severity"])[:3]
+    hints = list(dict.fromkeys(t for c in top for t in ch.AREAS[c["area"]]["tags"]))
+    matching = store.innovations_for_area(hints, limit=3)
+    return {"data": {
+        "powiat": name,
+        "top_challenges": top,
+        "matching_innovations": [store.public(i) for i in matching],
+        "gap": store.powiat_gap(name),
+    }}
 
 
 @router.get("/innovation-gap")
 async def innovation_gap():
-    return {"data": MOCK_GAP_INDEX}
+    gaps = [store.powiat_gap(p) for p in ch.POWIATY]
+    return {"data": sorted(gaps, key=lambda g: -g["gap_score"])}
 
 
 @router.post("/ideas")

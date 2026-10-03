@@ -11,8 +11,8 @@
 | Agent | Robi teraz | Ostatni merge | Blokuje kogo |
 |---|---|---|---|
 | A1 | ✅ kompletny (21 inno, 13 stron, WCAG AA, pełna UX) | Frontend+Backend+Fixes+Polish | — |
-| A2 | ⏸ czeka na A1+A3 | — | — |
-| A3 | ⏸ czeka na A1 | — | A2 |
+| A2 | ✅ matchmaking zmergowany z rdzeniem A1 (baza innovations, app.llm, ChromaDB) + 114 innowacji ROPS (seed A3) | agent-2/matchmaking | — |
+| A3 | ✅ seed ROPS (114) + knowledge na DB | merge main → agent-3/start | — |
 | A4 | ⏸ czeka na A1 | — | — |
 | A5 | ⏸ czeka na A1 | — | — |
 
@@ -36,6 +36,8 @@
 
 ## 🟥 Agent 1 — Core
 
+<!-- Dopisuj wpisy tutaj na górze -->
+
 [10:XX] [DONE] Sesja 3: admin panel polish (refresh stats, dates, counts), MiddlemanModal focus trap + WCAG 2.4.2 dynamic titles, voice-fix integration, live tester counts, setup.sh auto-seed.
 [16:45] [DONE] Finalne poprawki: middleman mock 2-turnowy (pyta follow-up → plan), fix nested <main> admin, fix search_log missing imports, +4 innowacje (21 total), wyszukiwanie w full_desc+tags.
 [16:20] [DONE] /biblioteka/[id] strona szczegółów + POST /api/testerzy (zapisuje do DB) + kreator używa /api/tag i /api/match + forum widzi rolę zalogowanego usera.
@@ -46,11 +48,117 @@
 [09:XX] [DONE] Push 1 — models.py, database.py, config.py, main.py. Merge do main.
 [FYI] A2/A3/A4/A5 — możecie zaczynać. Pull origin main.
 
+```
+[NEED A1 od A3] Seed 114 innowacji ROPS czeka na Twój Push 1/2 (nie ma go na main). Potrzebuję:
+  - app/database.py: get_db() (async context manager z sesją) + init tabel
+  - app/models.py: Innovation(title, short_desc, full_desc, category, area, target_group, location, status,
+    cost_level, implementation_time_months, testers_count, where_implemented, source_url, embedding_id, tags[JSON str])
+  - app/embeddings.py: embed_and_store(doc_id, text, metadata)
+  - app/utils.py: run_autotagger (opcjonalnie, seed działa też bez LLM: python -m data.seed_innovations)
+  Uwaga: A2 zbudował własny stos (SQLModel, app/db.py) na agent-2/matchmaking — uzgodnij z nim jeden wspólny, zanim zmergujesz.
+  Dane gotowe: find_inv_server/data/parsed_innovations.json, skrypt: data/seed_innovations.py. Daj znać [DONE] — odpalam seed.
+```
+[DONE] — napisz tu gdy: models.py gotowy, llm.py gotowy, embeddings.py gotowy, utils.py gotowy, auth gotowy, merge do main
+[FYI]  — napisz tu przy każdej zmianie shared files
+```
+
 ---
 
 ## 🟧 Agent 2 — Matchmaking
 
 <!-- Dopisuj wpisy tutaj na górze -->
+
+[FYI A1] agent-2/matchmaking jest zmergowany z najnowszym main (+ agent-3/start) — PR wejdzie bez konfliktów. Co zmienia w Twoich plikach:
+  - routers/matchmaking.py: moja wersja na Twoim rdzeniu — katalog z tabeli innovations (get_db, tags_list), ChromaDB gdy
+    jest OPENROUTER_API_KEY, inaczej ranking TF-IDF + 0.1 × tagi (bez klucza nie czeka na błąd sieci przy każdym żądaniu).
+    LLM: app.llm.chat + app.utils.run_autotagger (z kluczem), bez klucza lokalny tagger z is_relevant. Log do search_logs
+    z /api/match z prawdziwym results_count (trendy w /api/admin/trends). Chat: {messages, innovation_ids|context_innovation_ids}.
+  - SSE czatu: chunki `data: {"content": "..."}` → w find_inv/lib/api.ts apiStream rozpakowuje JSON (goły tekst też działa).
+  - Moduł Zasobnik (SQLModel, zasobnik.db) przeniesiony do app/zasobnik/ — Twoje models.py/auth.py/admin.py bez zmian.
+    Jego admin jest teraz pod /api/zasobnik/admin/* (kolidował z /api/admin/trends). Publiczne /api/areas, /resources, /needs bez zmian.
+  - config.py: +extra="ignore", +zasobnik_database_url/admin_token/seed_demo_data. requirements: +sqlmodel.
+  Sprawdzone na bazie z seedem A3 (114 ROPS): /api/match → id 43 „Zakupy bez barier” = /api/innovations/43; 17 testów OK; next build OK;
+  /wyniki z main: tagi, karty i czat działają w przeglądarce.
+
+[NEED A5] v2 (`agent-5/admin-middleman-v2`) nadal szuka innowacji w MOCK_INNOVATIONS → „Jak to wdrożyć?” planuje złą innowację.
+  Gotowa poprawka na v2: branch `agent-2/a5-fixes-v2` (3 commity: katalog ROPS z knowledge_store w admin_store i Middlemanie
+  + dwa testy porównujące tytuł z magazynem zamiast z tytułem mocka). Na v2 samodzielnie: 11 testów OK.
+[DONE dla A5] /api/match woła `admin_store.log_search(query, tags, results_count)` — trendy w panelu rosną na żywo (sprawdzone: total 118→119).
+[FYI ALL] Próbny merge całego zespołu (agent-2/matchmaking + agent-2/a5-fixes-v2, który zawiera frontend A4): 26 testów backendu OK,
+  `next build` 17 tras OK. Konflikty tylko w COMMS.md i find_inv_server/app/main.py → w main.py zostawcie WSZYSTKIE routery:
+  admin, admin_panel, areas, health, knowledge, matchmaking, middleman, needs, resources. Front wymaga `npm install` (recharts od A5).
+
+[NEED A5] BUG integracji: /api/match zwraca id z katalogu ROPS (1–114, knowledge_store A3), a Middleman i admin_store szukały ich
+  w MOCK_INNOVATIONS → „Jak to wdrożyć?” przy ROPS #5 planowało mockową #5. Poprawka na branchu `agent-2/a5-fixes`
+  (na bazie agent-5/admin-middleman): admin_store seeduje z knowledge_store (fallback: mocki), Middleman szuka w katalogu
+  przed mockami, test_middleman nie zależy od tytułu mocka. Zmerguj do siebie, proszę. Sprawdzone razem z A3: 25 testów OK.
+[FYI A5] Matchmaking czyta statusy z admin_store: Archiwizuj → innowacja znika z /api/match, Nieaktywna → szary badge.
+[FYI A4 A5] Oboje macie UI Middlemana: A4 `/wdrozenie/[id]` + components/middleman.tsx, A5 `/wdrozenie` + components/middleman.tsx
+  (konflikt add/add), do tego A5 ma kopie commitów auth A4 → konflikty w site-header.tsx i globals.css. Ustalcie, czyja wersja zostaje.
+  main.py: przy merge zostawcie WSZYSTKIE routery (admin, admin_panel, areas, health, knowledge, matchmaking, middleman, needs, resources)
+  — sprawdziłem: 43 operacje, zero duplikatów.
+
+[FYI A4] Frontend /wyniki, /biblioteka i strona główna są Twoje — usunąłem swoje wersje z agent-2/matchmaking (zostaje sam backend),
+  więc nasze branche mergują się bez konfliktów (poza COMMS.md). Sprawdziłem Twój UI na moim backendzie: działa, axe bez błędów
+  na /, /wyniki, /biblioteka, /innowacje/1, /wdrozenie/1; `next build` przechodzi. Jedna uwaga axe: /luka-innowacyjna → heading-order (h3 bez h2).
+[NEED A4] Branch `agent-2/a4-extras` (na bazie agent-4/matchmaking-ui) dodaje do Twoich komponentów:
+  - dyktowanie → POST /api/voice-fix (search-form.tsx, przy błędzie zostaje surowy tekst),
+  - pusty wynik → przycisk „Zgłoś tę potrzebę do ROPS” → POST /api/needs (components/report-need.tsx, match-results.tsx).
+  Zmerguj go do siebie albo zmerguję do main po Twoim PR.
+
+[DONE dla A4] Backend przyjmuje Twoje kontrakty: /api/match {text, tags, limit} (limit 1–20, domyślnie 5);
+  /api/chat {messages, tags, context_innovation_ids} (stare `innovation_ids` też działa); chunki SSE jako
+  `data: {"content": "..."}`, koniec `data: [DONE]`. /api/tag zwraca {tags, area, target_group, location, type, is_relevant}.
+
+[DONE] /biblioteka na realnych danych (GET /api/innovations od A3): wyszukiwarka, filtr tematów (?tags=a,b — tu prowadzi
+  „Zobacz więcej” z /wyniki), stronicowanie po 12, axe bez błędów. Strona główna „Co już działa” pokazuje 3 realne innowacje ROPS.
+  Wspólna karta: `components/rops-innovation-card.tsx` (`<RopsInnovationCard innovation query? headingLevel? />`) — użyjcie jej
+  wszędzie, gdzie pokazujecie innowację. Stare `data/innovations.mock.ts` i `components/innovation-card.tsx` nie są już używane.
+
+[DONE] /api/match rankuje 114 innowacji ROPS z `knowledge_store` (A3) — TF-IDF + 0.1 × wspólne tagi, odcina karty < 50% najlepszego wyniku.
+  Branch agent-2/matchmaking ma zmergowany agent-3/start (0 konfliktów po rozwiązaniu main.py/.gitignore/COMMS).
+[DONE] LLM bez czekania na A1: `app/matchmaking_llm.py` (prywatny klient OpenRouter, czyta OPENROUTER_API_KEY z .env).
+  Kolejność: app.llm/app.utils (A1) → matchmaking_llm (gdy jest klucz) → reguły lokalne. Przetestowane na fałszywym serwerze OpenAI.
+[FYI A3 A1] Odp. na uwagę A3: SQLModel/`app/db.py`/`zasobnik.db` to NIE stos matchmakingu, tylko osobny moduł Zasobnik wiedzy
+  (/api/areas, /api/resources, /api/needs, /api/admin/*) wgrany przez właściciela repo. Ma własną bazę i zmienną ZASOBNIK_DATABASE_URL,
+  więc A1 robi `app/database.py` (async, DATABASE_URL) bez kolizji. Kolidują tylko NAZWY plików `app/models.py` i `app/auth.py` —
+  A1: dopisz swoje modele/funkcje do tych plików albo daj znać, przeniosę Zasobnik do `app/zasobnik/`.
+
+[FYI A4] Mój klient API przeniosłem do `find_inv/lib/matchmaking-api.ts`, więc Twój `lib/api.ts` (apiFetch, sesja) wchodzi bez konfliktu.
+  Sprawdziłem próbny merge `agent-4/auth-kreator-forum` + `agent-2/matchmaking`: 0 konfliktów, `next build` przechodzi.
+  Poza swoimi plikami zmieniłem tylko istniejący `components/search-form.tsx` (dyktowanie → /api/voice-fix).
+
+[DONE] Matchmaking działa bez LLM (`app/local_matching.py`): lokalny autotagger (słowa kluczowe → TAXONOMY_TAGS)
+  i ranking `podobieństwo leksykalne + 0.1 * wspólne tagi`. To też fallback, gdy LLM/ChromaDB padnie.
+  Wyszukiwania z /api/match lądują w SearchLog Zasobnika → `/api/admin/trends` (top_queries, zero_result_queries).
+  Pusty wynik na /wyniki → przycisk „Zgłoś tę potrzebę do ROPS” → `POST /api/needs`.
+[FYI A1] `local_matching.TAXONOMY_TAGS` to kopia listy z AGENTS.md — po Push 2 przełączę import na `app.utils`.
+
+[FYI A1 A5] Na branchu agent-2/matchmaking jest wmergowany moduł Zasobnik wiedzy (SQLModel, sync, baza `zasobnik.db`):
+  `app/models.py`, `app/db.py`, `app/auth.py` (require_admin, X-Admin-Token), `app/services.py`, `app/seed.py`,
+  routery `/api/areas`, `/api/resources`, `/api/needs`, `/api/admin/*` (m.in. `/api/admin/trends`).
+  KOLIZJE do rozwiązania przy merge: A1 tworzy własne `app/models.py` i `app/auth.py`, A5 własne `routers/admin.py`
+  i też `/api/admin/trends`. Nie nadpisujcie — dopiszcie swoje modele/funkcje obok albo dajcie znać, przeniosę Zasobnik do `app/zasobnik/`.
+  Config: Zasobnik używa `ZASOBNIK_DATABASE_URL`, więc `DATABASE_URL` (aiosqlite) od A1 jest wolny. Settings ma `extra="ignore"`.
+
+[DONE] Frontend matchmakingu: `/wyniki?q=...` (find_inv/components/matchmaking.tsx, find_inv/lib/api.ts)
+- chipy „Zrozumiałem” z usuwaniem/dodawaniem tagów + „Zaktualizuj wyniki”, 5 kart (3 w trybie prostym),
+  badge „Nieaktualna”, komunikat dla `is_relevant: false`, panel kryzysowy z numerami pomocowymi,
+  streaming chat „Zapytaj o te rozwiązania”. Przetestowane e2e w Chromium.
+[NEED A5] Przycisk „Dostosuj do mojej instytucji” linkuje do `/wdrozenie?innowacja={id}&problem={tekst}`
+  — zrób stronę Middlemana pod tym adresem albo napisz, jaki URL mam ustawić.
+[NEED A3] „Zobacz więcej w Bibliotece” → `/biblioteka?tags=a,b` — obsłuż param `tags` w bibliotece.
+
+[DONE] Mocki matchmakingu w `app/routers/matchmaking.py` — frontend może integrować:
+- `POST /api/tag`       body `{ text }` → `{ tags, area, target_group, location, type, is_relevant }`
+- `POST /api/match`     body `{ text, tags[] }` → `{ innovations[5], total_found }` (karta ma `match_score`, `is_unmaintained`)
+- `POST /api/voice-fix` body `{ transcript }` → `{ corrected, confidence }`
+- `POST /api/chat`      body `{ messages: [{role, content}], innovation_ids[] }` → SSE `data: ...` / `data: [DONE]`
+  Chunk z `\n` wysyłany jako kilka linii `data:` (spec SSE) — parser na froncie ma sklejać je `\n`.
+Puste `text` → `{ data: null, error: "..." }`. Router sam przełączy się na real LLM/ChromaDB
+gdy `app/llm.py`, `app/embeddings.py`, `app/utils.py` trafią na main (interfejs bez zmian).
+[FYI A1] Dopisałem w `main.py` `include_router(matchmaking.router)`. Router używa `app.database.SessionLocal`
+oraz modeli `Innovation`, `SearchLog` — jeśli nazwiecie inaczej, dajcie znać.
 
 ```
 [NEED A3] — napisz gdy potrzebujesz seed danych do testowania
@@ -65,10 +173,25 @@
 <!-- Dopisuj wpisy tutaj na górze -->
 
 ```
-[DONE] — napisz gdy seed_innovations.py przeszedł i dane są w DB + ChromaDB
-         To odblokuje A2 do testowania matchmakingu
-[DONE] — napisz gdy /api/innovations działa
-[DONE] — napisz gdy /api/challenges/map działa (frontend mapa)
+[DONE] Wyzwania, indeks luki i statystyki regionu na REALNYCH danych GUS BDL (22 powiaty Małopolski, lata 2024–2025;
+       niepełnosprawność: spis 2011, bo nowszych danych powiatowych brak). Odśwież: python -m data.fetch_gus.
+       Poprawka: wcześniejsza lista miała "żywiecki" (to śląskie) – teraz 22 powiaty z GUS.
+       Indeks luki: najwięcej białych plam na płd.-wsch. (nowosądecki, tarnowski, limanowski) – wysokie ubóstwo, w Bibliotece ROPS
+       tylko 2 innowacje na ubóstwo. Dobry punkt na pitch.
+[FYI] A1: strona główna – kafelki statystyk z /api/stats/malopolska (pole `indicators`), usunięte zmyślone "31% seniorów bez
+      umiejętności cyfrowych" / "18% samotność". Fallbacki w page.tsx też na danych GUS.
+[FYI] A1/A4: zmieniłem find_inv/app/biblioteka/[id]/page.tsx — opis w sekcjach z nagłówkami (h2) + przyciski "Zobacz film" / "Materiały (PDF)"
+      + Autorzy i Projekt ROPS w sidebarze. Pola opcjonalne, działa też dla starych danych. Typy/strony 200 sprawdzone.
+[DONE] Seed 114 innowacji ROPS (Biblioteka Innowacji Społecznych, rops.krakow.pl) → SQLite (+ ChromaDB, gdy jest OPENROUTER_API_KEY).
+       python -m data.seed_innovations   — zastępuje 21 innowacji z seed_demo.py; setup.sh odpala go teraz zamiast seed_demo (demo = fallback).
+       A2: /api/match zwraca już realne innowacje ROPS (sprawdzone bez klucza, ranking fallback). Z kluczem: odpal seed ponownie → wektory w ChromaDB.
+[DONE] knowledge.py na main'owym kontrakcie A1 (frontend bez zmian): /api/innovations (lista), /api/innovations/{id} (+ video_url,
+       materials_url, who_can_use, authors), /api/challenges, /api/challenges/map, /api/innovation-gap, /api/gmina-pulse/{powiat}
+       (top_challenges + matching_innovations), /api/stats/malopolska. Bez bazy → fallback na parsed_innovations.json, nie na mocki.
+       Poprawka: filtr ?tags= działa teraz w SQL (wcześniej był po LIMIT, więc gubił wyniki).
+       (nieaktualne – patrz wpis o GUS BDL wyżej)
+[FYI]  Ponowne uruchomienie seed_innovations czyści tabelę innovations (statusy zmienione w adminie przepadają).
+[DONE] Dla stosu A2 (SQLModel): python -m data.export_to_zasobnik --post http://localhost:8000 --token <ADMIN_TOKEN>
 ```
 
 ---

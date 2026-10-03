@@ -1,204 +1,379 @@
+"""Matchmaking społeczny — autotagger, dopasowanie innowacji, voice-fix, RAG chat.
+
+Każda funkcja ma warstwy, od najlepszej do zawsze działającej:
+  LLM: rdzeń A1 (app.llm / app.utils), gdy jest OPENROUTER_API_KEY → lokalne reguły (app.local_matching).
+  Katalog: tabela innovations (A1, seed z data/parsed_innovations.json od A3) → JSON A3 → mocki.
+  Dopasowanie: ChromaDB (embeddingi, wymagają klucza) → ranking TF-IDF + tagi na katalogu.
+Interfejs odpowiedzi jest ten sam niezależnie od warstwy.
+"""
+
 import asyncio
+import inspect
 import json
+import logging
+import re
+from typing import AsyncIterator
 
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, ConfigDict, Field
 
-from data.mock_data import MOCK_INNOVATIONS, MOCK_TAG_RESPONSE
+from app import knowledge_store
+from app.config import settings
+from app.local_matching import TAXONOMY_TAGS, local_chat_answer, local_tag_result, rank_locally
+
+log = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["matchmaking"])
 
+TOP_N = 5
+TAG_BOOST = 0.1
+# Limity chronią budżet LLM przed bardzo długimi wejściami.
+MAX_TEXT = 2000
+MAX_CHAT_MESSAGES = 20
+HIDDEN_STATUSES = {"archived", "pending"}
+
+
+def _llm_enabled() -> bool:
+    # Bez klucza każde wywołanie LLM/embeddingu kończy się błędem sieci — nie czekamy na niego przy każdym żądaniu.
+    return bool(settings.openrouter_api_key)
+
+
+def _llm_chat():
+    """Funkcja chat(messages, stream) z rdzenia A1 albo None, gdy LLM jest niedostępny."""
+    if not _llm_enabled():
+        return None
+    try:
+        from app import llm
+    except ImportError:
+        return None
+    return llm.chat
+
+
+async def _autotag(text: str) -> dict:
+    if _llm_enabled():
+        from app.utils import run_autotagger
+
+        return await run_autotagger(text)
+    return local_tag_result(text)
+
+
+def _parse_json_object(raw: str) -> dict:
+    """LLM czasem owija JSON w ```json … ``` albo dopisuje zdanie — wycinamy sam obiekt."""
+    return json.loads(raw[raw.find("{") : raw.rfind("}") + 1])
+
+
+# ── Schematy ─────────────────────────────────────────────
+
+
+class TagRequest(BaseModel):
+    text: str
+
+
+class MatchRequest(BaseModel):
+    text: str
+    tags: list[str] = Field(default_factory=list)
+    limit: int = Field(default=TOP_N, ge=1, le=20)
+
+
+class VoiceFixRequest(BaseModel):
+    transcript: str
+
+
+class ChatMessage(BaseModel):
+    role: str  # "user" | "assistant"
+    content: str
+
+
+class ChatRequest(BaseModel):
+    # A4 wysyła context_innovation_ids, frontend z main innovation_ids — przyjmujemy obie nazwy.
+    model_config = ConfigDict(populate_by_name=True)
+
+    messages: list[ChatMessage]
+    innovation_ids: list[int] = Field(default_factory=list, alias="context_innovation_ids")
+    tags: list[str] = Field(default_factory=list)
+
+
+# ── Pomocnicze ───────────────────────────────────────────
+
+
+def _ok(data):
+    return {"data": data, "error": None}
+
+
+def _err(msg: str):
+    return {"data": None, "error": msg}
+
+
+def _sse(chunk: str) -> str:
+    # Chunk jako JSON {"content": ...}: znaki nowej linii nie łamią ramek SSE (ustalone z A4).
+    return f"data: {json.dumps({'content': chunk}, ensure_ascii=False)}\n\n"
+
+
+def _innovation_to_dict(innov) -> dict:
+    return {
+        "id": innov.id,
+        "title": innov.title,
+        "short_desc": innov.short_desc,
+        "full_desc": innov.full_desc,
+        "category": innov.category,
+        "area": innov.area,
+        "target_group": innov.target_group,
+        "location": innov.location,
+        "status": innov.status,
+        "cost_level": innov.cost_level,
+        "implementation_time_months": innov.implementation_time_months,
+        "testers_count": innov.testers_count,
+        "where_implemented": innov.where_implemented,
+        "source_url": innov.source_url,
+        "tags": innov.tags_list(),
+        "embedding_id": innov.embedding_id,
+        "is_unmaintained": innov.status == "unmaintained",
+    }
+
+
+async def _fetch_innovations(where=None) -> list[dict]:
+    """SELECT innowacji z bazy rdzenia (A1). Zwraca [], jeśli baza nie jest gotowa."""
+    try:
+        from sqlalchemy import select
+
+        from app.database import get_db
+        from app.models import Innovation
+
+        query = select(Innovation)
+        if where is not None:
+            query = query.where(where(Innovation))
+        async with get_db() as db:
+            rows = (await db.execute(query)).scalars().all()
+    except Exception:  # brak tabel / seedu → wołający spada na JSON A3 albo mocki
+        log.exception("innovations select failed")
+        return []
+    return [_innovation_to_dict(r) for r in rows]
+
+
+def _admin_statuses() -> dict[int, str]:
+    """Statusy z panelu admina A5 (admin_store), jeśli moduł jest w aplikacji."""
+    try:
+        from app import admin_store
+    except ImportError:
+        return {}
+    try:
+        return {i["id"]: i["status"] for i in admin_store.list_innovations()}
+    except Exception:
+        log.exception("admin_store statuses failed")
+        return {}
+
+
+async def _catalog() -> list[dict]:
+    """Widoczne innowacje: baza (A1) → JSON ROPS (A3) → mocki. Archiwalne i oczekujące są ukryte."""
+    innovations = await _fetch_innovations()
+    if not innovations:
+        innovations = [knowledge_store.public(i, full=True) for i in knowledge_store.load_innovations()]
+    statuses = _admin_statuses()
+    visible = []
+    for innov in innovations:
+        status = statuses.get(innov["id"], innov.get("status"))
+        if status not in HIDDEN_STATUSES:
+            visible.append({**innov, "status": status, "is_unmaintained": status == "unmaintained"})
+    return visible
+
+
+async def _log_search(query: str, tags: list[str], results: int) -> None:
+    """search_logs rdzenia — z nich liczy /api/admin/trends (A1)."""
+    try:
+        from app.database import get_db
+        from app.models import SearchLog
+
+        async with get_db() as db:
+            db.add(SearchLog(query=query[:500], tags=json.dumps(tags, ensure_ascii=False), results_count=results))
+            await db.commit()
+    except Exception:  # logowanie trendów nie może psuć odpowiedzi
+        log.exception("search_logs insert failed")
+
+
+def _log_search_zasobnik(query: str, results: int) -> None:
+    """SearchLog Zasobnika — trafia do /api/zasobnik/admin/trends (top_queries, zero_result_queries)."""
+    try:
+        from sqlmodel import Session
+
+        from app.zasobnik.db import engine
+        from app.zasobnik.models import SearchLog
+
+        with Session(engine) as session:
+            session.add(SearchLog(query=query.lower()[:200], results=results))
+            session.commit()
+    except Exception:
+        log.exception("zasobnik search log failed")
+
+
+def _log_search_admin(query: str, tags: list[str], results: int) -> None:
+    """Trendy panelu admina A5 (admin_store.log_search), jeśli moduł jest w aplikacji."""
+    try:
+        from app import admin_store
+    except ImportError:
+        return
+    try:
+        admin_store.log_search(query, tags, results)
+    except Exception:
+        log.exception("admin_store.log_search failed")
+
+
+def _schedule_logs(background: BackgroundTasks, text: str, tags: list[str], results: int) -> None:
+    background.add_task(_log_search, text, tags, results)
+    background.add_task(_log_search_zasobnik, text, results)
+    background.add_task(_log_search_admin, text, tags, results)
+
+
+# ── Endpointy ────────────────────────────────────────────
+
 
 @router.post("/tag")
-async def tag(body: dict):
+async def tag(body: TagRequest):
+    text = body.text.strip()[:MAX_TEXT]
+    if not text:
+        return _err("Pusty opis problemu")
     try:
-        from app.utils import run_autotagger
-        from app.database import get_db
-        from app.models import SearchLog
-        result = await run_autotagger(body.get("text", ""))
-        asyncio.create_task(_log_search(body.get("text", ""), result))
-        return {"data": result}
+        result = await _autotag(text)
+        result["tags"] = [t for t in result.get("tags", []) if t in TAXONOMY_TAGS]
+        result.setdefault("is_relevant", True)
     except Exception:
-        return {"data": MOCK_TAG_RESPONSE}
-
-
-async def _log_search(query: str, tag_result: dict):
-    try:
-        from app.database import get_db
-        from app.models import SearchLog
-        async with get_db() as db:
-            log = SearchLog(
-                query=query,
-                tags=json.dumps(tag_result.get("tags", []), ensure_ascii=False),
-                results_count=5,
-            )
-            db.add(log)
-            await db.commit()
-    except Exception:
-        pass
+        log.exception("autotagger failed, using local tagger")
+        result = local_tag_result(text)
+    return _ok(result)
 
 
 @router.post("/match")
-async def match(body: dict):
-    try:
-        from app.embeddings import similarity_search
-        from app.database import get_db
-        from app.models import Innovation
-        from sqlalchemy import select
+async def match(body: MatchRequest, background: BackgroundTasks):
+    text = body.text.strip()[:MAX_TEXT]
+    if not text:
+        return _err("Pusty opis problemu")
 
-        text = body.get("text", "")
-        query_tags = set(body.get("tags", []))
-
-        results = await similarity_search(text, n_results=50)
-        if not results:
-            raise ValueError("no results — ChromaDB empty, fall to mock")
-
-        ids = [r["id"] for r in results]
-        score_map = {r["id"]: r["score"] for r in results}
-
-        async with get_db() as db:
-            rows = await db.execute(
-                select(Innovation).where(Innovation.embedding_id.in_(ids))
-            )
-            innovations = rows.scalars().all()
-
-        ranked = []
-        for innov in innovations:
-            innov_tags = set(innov.tags_list())
-            score = score_map.get(innov.embedding_id, 0) + 0.1 * len(innov_tags & query_tags)
-            ranked.append({
-                "id": innov.id,
-                "title": innov.title,
-                "short_desc": innov.short_desc,
-                "full_desc": innov.full_desc,
-                "category": innov.category,
-                "area": innov.area,
-                "target_group": innov.target_group,
-                "location": innov.location,
-                "status": innov.status,
-                "cost_level": innov.cost_level,
-                "implementation_time_months": innov.implementation_time_months,
-                "testers_count": innov.testers_count,
-                "where_implemented": innov.where_implemented,
-                "source_url": innov.source_url,
-                "tags": innov.tags_list(),
-                "match_score": round(score, 4),
-                "is_unmaintained": innov.status == "unmaintained",
-            })
-
-        ranked.sort(key=lambda x: x["match_score"], reverse=True)
-        return {"data": {"innovations": ranked[:5], "total_found": len(ranked)}}
-
-    except Exception:
-        # ChromaDB empty or error — tag-based fallback from SQLite
+    catalog = await _catalog()
+    ranked: list[dict] = []
+    if _llm_enabled():
         try:
-            from app.database import get_db
-            from app.models import Innovation
-            from sqlalchemy import select
+            from app.embeddings import similarity_search
 
-            query_tags = set(body.get("tags", []))
-            async with get_db() as db:
-                rows = await db.execute(select(Innovation).limit(100))
-                all_items = rows.scalars().all()
-
-            if not all_items:
-                raise ValueError("empty DB")
-
-            text_lower = text.lower()
-            words = [w for w in text_lower.split() if len(w) > 2]
-
-            ranked = []
-            for innov in all_items:
-                innov_tags = set(innov.tags_list())
-                tag_score = len(innov_tags & query_tags) * 0.15
-
-                haystack = f"{innov.title} {innov.short_desc or ''} {innov.full_desc or ''}".lower()
-                text_hits = sum(1 for w in words if w in haystack)
-                text_score = min(text_hits * 0.08, 0.4)
-
-                ranked.append({
-                    "id": innov.id, "title": innov.title, "short_desc": innov.short_desc,
-                    "full_desc": innov.full_desc, "category": innov.category, "area": innov.area,
-                    "target_group": innov.target_group, "location": innov.location, "status": innov.status,
-                    "cost_level": innov.cost_level, "implementation_time_months": innov.implementation_time_months,
-                    "testers_count": innov.testers_count, "where_implemented": innov.where_implemented,
-                    "source_url": innov.source_url, "tags": innov.tags_list(),
-                    "match_score": round(0.4 + tag_score + text_score, 4),
-                    "is_unmaintained": innov.status == "unmaintained",
-                })
-
-            ranked.sort(key=lambda x: (-x["match_score"], x["title"]))
-            return {"data": {"innovations": ranked[:5], "total_found": len(ranked)}}
-
+            score_map = {r["id"]: r["score"] for r in await similarity_search(text, n_results=50)}
+            query_tags = set(body.tags)
+            for innov in catalog:
+                if innov.get("embedding_id") in score_map:
+                    cosine = score_map[innov["embedding_id"]]
+                    score = cosine + TAG_BOOST * len(set(innov["tags"]) & query_tags)
+                    ranked.append({**innov, "match_score": round(score, 4)})
+            ranked.sort(key=lambda i: i["match_score"], reverse=True)
         except Exception:
-            mock = [dict(i, is_unmaintained=i.get("status") == "unmaintained") for i in MOCK_INNOVATIONS]
-            return {"data": {"innovations": mock[:5], "total_found": len(mock)}}
+            log.exception("similarity_search failed, using local ranking")
+            ranked = []
+    if not ranked:  # brak klucza, pusta ChromaDB albo błąd → ranking lokalny na tym samym katalogu
+        ranked = rank_locally(text, body.tags, catalog)
+
+    _schedule_logs(background, text, body.tags, len(ranked))
+    return _ok({"innovations": ranked[: body.limit], "total_found": len(ranked)})
+
+
+VOICE_FIX_PROMPT = (
+    "Poprawiasz transkrypcję mowy po polsku. Popraw gramatykę, interpunkcję i oczywiste błędy "
+    "rozpoznawania mowy, NIE zmieniaj sensu ani nie dopisuj treści. "
+    'Odpowiedz wyłącznie JSON: {"corrected": "...", "confidence": 0.0-1.0}'
+)
 
 
 @router.post("/voice-fix")
-async def voice_fix(body: dict):
-    transcript = body.get("transcript", "")
+async def voice_fix(body: VoiceFixRequest):
+    transcript = body.transcript.strip()[:MAX_TEXT]
+    llm_chat = _llm_chat()
+    if llm_chat is None or not transcript:
+        return _ok({"corrected": transcript, "confidence": 1.0})
+
     try:
-        from app.llm import chat
-        fixed = await chat(
-            messages=[
-                {
-                    "role": "system",
-                    "content": "Popraw gramatykę i interpunkcję poniższego tekstu po polsku. Zwróć TYLKO poprawiony tekst, bez komentarzy.",
-                },
+        raw = await llm_chat(
+            [
+                {"role": "system", "content": VOICE_FIX_PROMPT},
                 {"role": "user", "content": transcript},
             ]
         )
-        return {"data": {"corrected": fixed, "confidence": 0.9}}
+        parsed = _parse_json_object(raw)
+        return _ok(
+            {
+                "corrected": parsed.get("corrected") or transcript,
+                "confidence": float(parsed.get("confidence", 0.8)),
+            }
+        )
     except Exception:
-        return {"data": {"corrected": transcript, "confidence": 1.0}}
+        log.exception("voice-fix failed")
+        return _ok({"corrected": transcript, "confidence": 0.5})
+
+
+CHAT_SYSTEM_PROMPT = (
+    "Jesteś asystentem platformy HubMI.pl, która łączy mieszkańców, NGO i urzędników z Małopolski "
+    "ze sprawdzonymi innowacjami społecznymi z bazy ROPS Kraków. Odpowiadaj po polsku, krótko "
+    "i konkretnie, prostym językiem. Opieraj się WYŁĄCZNIE na innowacjach poniżej — jeśli czegoś "
+    "w nich nie ma, powiedz to wprost. Odwołuj się do innowacji po tytule. Pisz zwykłym "
+    "tekstem, bez formatowania Markdown (bez gwiazdek i nagłówków).\n\n"
+    "Innowacje dopasowane do problemu użytkownika:\n{context}"
+)
+
+
+def _rag_context(innovations: list[dict]) -> str:
+    if not innovations:
+        return "(brak — poproś użytkownika o dokładniejszy opis problemu)"
+    parts = []
+    for i in innovations:
+        parts.append(
+            f"### {i['title']}\n{i['short_desc']}\n{i.get('full_desc') or ''}\n"
+            f"Grupa docelowa: {i.get('target_group')} | Koszt: {i.get('cost_level')} | "
+            f"Czas wdrożenia: {i.get('implementation_time_months')} mies. | "
+            f"Gdzie wdrożono: {i.get('where_implemented')}"
+            + (" | UWAGA: innowacja nieaktualna" if i.get("is_unmaintained") else "")
+        )
+    return "\n\n".join(parts)
 
 
 @router.post("/chat")
-async def chat_endpoint(body: dict):
-    async def mock_gen():
-        yield "data: Oto przykładowe innowacje dopasowane do Twojego problemu.\n\n"
-        await asyncio.sleep(0.05)
-        yield "data: Możesz zapytać o szczegóły każdej z nich.\n\n"
+async def chat(body: ChatRequest):
+    async def gen() -> AsyncIterator[str]:
+        ids = set(body.innovation_ids)
+        innovations = [i for i in await _catalog() if i["id"] in ids] if ids else []
+
+        async def local_answer() -> AsyncIterator[str]:
+            question = next((m.content for m in reversed(body.messages) if m.role == "user"), "")
+            question = question.split("Pytanie:")[-1]  # pierwsza wiadomość niesie też opis problemu
+            # Słowo po słowie, żeby frontend dostał ten sam efekt pisania co z LLM.
+            for word in re.split(r"(?<=\s)", local_chat_answer(question, innovations)):
+                yield _sse(word)
+                await asyncio.sleep(0.02)
+
+        llm_chat = _llm_chat()
+        if llm_chat is None:
+            async for event in local_answer():
+                yield event
+            yield "data: [DONE]\n\n"
+            return
+
+        messages = [{"role": "system", "content": CHAT_SYSTEM_PROMPT.format(context=_rag_context(innovations))}]
+        history = [m for m in body.messages if m.role in ("user", "assistant")][-MAX_CHAT_MESSAGES:]
+        messages += [{"role": m.role, "content": m.content[:MAX_TEXT]} for m in history]
+        sent = False
+        try:
+            stream = llm_chat(messages, stream=True)
+            if inspect.isawaitable(stream):
+                stream = await stream
+            async for chunk in stream:
+                if chunk:
+                    sent = True
+                    yield _sse(chunk)
+        except Exception:
+            log.exception("chat stream failed")
+            if sent:  # urwane w połowie — nie mieszamy dwóch odpowiedzi
+                yield _sse("\n(Odpowiedź przerwana. Zapytaj jeszcze raz.)")
+            else:
+                async for event in local_answer():
+                    yield event
         yield "data: [DONE]\n\n"
 
-    try:
-        from app.llm import chat as llm_chat
-        from app.database import get_db
-        from app.models import Innovation
-        from sqlalchemy import select
-
-        messages = body.get("messages", [])
-        innovation_ids = [str(i) for i in body.get("innovation_ids", [])]
-
-        context = ""
-        if innovation_ids:
-            async with get_db() as db:
-                rows = await db.execute(
-                    select(Innovation).where(Innovation.id.in_([int(i) for i in innovation_ids if i.isdigit()]))
-                )
-                innovations = rows.scalars().all()
-                parts = [f"### {inn.title}\n{inn.full_desc or inn.short_desc}" for inn in innovations]
-                context = "\n\n".join(parts)
-
-        system = (
-            "Jesteś asystentem platformy HubMI.pl — pomagasz znaleźć odpowiednie innowacje społeczne z Małopolski.\n"
-            + (f"Kontekst — innowacje pokazane użytkownikowi:\n\n{context}" if context else "")
-        )
-
-        all_messages = [{"role": "system", "content": system}] + messages
-
-        async def gen():
-            try:
-                gen_obj = await llm_chat(all_messages, stream=True)
-                async for chunk in gen_obj:
-                    yield f"data: {chunk}\n\n"
-                yield "data: [DONE]\n\n"
-            except Exception:
-                yield "data: Oto innowacje dopasowane do Twojego opisu. Możesz zapytać o szczegóły każdej z nich.\n\n"
-                yield "data: [DONE]\n\n"
-
-        return StreamingResponse(gen(), media_type="text/event-stream")
-
-    except Exception:
-        return StreamingResponse(mock_gen(), media_type="text/event-stream")
+    return StreamingResponse(
+        gen(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )

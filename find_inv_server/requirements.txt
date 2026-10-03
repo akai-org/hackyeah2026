@@ -6,3 +6,4 @@ sqlalchemy[asyncio]>=2.0
 aiosqlite>=0.20
 chromadb>=0.5
 openai>=1.0
+sqlmodel==0.0.47

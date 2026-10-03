@@ -13,6 +13,8 @@ import {
   TrendingUp,
   Users,
   ExternalLink,
+  FileText,
+  PlayCircle,
   ChevronRight,
 } from "lucide-react";
 
@@ -30,6 +32,32 @@ const COST_LABEL: Record<string, string> = {
 interface DetailInnovation extends BackendInnovation {
   full_desc?: string;
   implementation_time_months?: number;
+  // pola z Biblioteki Innowacji ROPS (A3) — mogą nie występować
+  video_url?: string | null;
+  materials_url?: string | null;
+  authors?: string | null;
+  project?: string | null;
+}
+
+interface DescSection {
+  heading: string | null;
+  paragraphs: string[];
+}
+
+// Opisy ROPS mają bloki "Na czym polega: …\n\nProblem: …" — rozbijamy je na sekcje z nagłówkami.
+function parseDescription(text: string): DescSection[] {
+  return text
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter(Boolean)
+    .map((block) => {
+      const m = block.match(/^([^:\n]{3,40}):\s*([\s\S]*)$/);
+      const body = m ? m[2] : block;
+      return {
+        heading: m ? m[1] : null,
+        paragraphs: body.split("\n").map((p) => p.trim()).filter(Boolean),
+      };
+    });
 }
 
 export default function InnovationDetailPage() {
@@ -111,8 +139,19 @@ export default function InnovationDetailPage() {
             )}
 
             {item.full_desc && item.full_desc !== item.short_desc && (
-              <div className="mt-6 prose prose-stone max-w-none">
-                <p className="text-base leading-relaxed">{item.full_desc}</p>
+              <div className="mt-8 space-y-6">
+                {parseDescription(item.full_desc).map((section, i) => (
+                  <section key={i}>
+                    {section.heading && (
+                      <h2 className="text-xl font-bold text-deep">{section.heading}</h2>
+                    )}
+                    {section.paragraphs.map((para, j) => (
+                      <p key={j} className="mt-2 max-w-[70ch] text-base leading-relaxed">
+                        {para}
+                      </p>
+                    ))}
+                  </section>
+                ))}
               </div>
             )}
 
@@ -139,6 +178,32 @@ export default function InnovationDetailPage() {
                 Jak to wdrożyć?
               </button>
 
+              {item.video_url && (
+                <a
+                  href={item.video_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={buttonVariants({ variant: "secondary", className: "gap-2" })}
+                >
+                  <PlayCircle className="size-4" aria-hidden="true" />
+                  Zobacz film
+                  <span className="sr-only">(otwiera się w nowej karcie)</span>
+                </a>
+              )}
+
+              {item.materials_url && (
+                <a
+                  href={item.materials_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={buttonVariants({ variant: "secondary", className: "gap-2" })}
+                >
+                  <FileText className="size-4" aria-hidden="true" />
+                  Materiały (PDF)
+                  <span className="sr-only">(otwiera się w nowej karcie)</span>
+                </a>
+              )}
+
               {item.source_url && (
                 <Link
                   href={item.source_url}
@@ -148,6 +213,7 @@ export default function InnovationDetailPage() {
                 >
                   Źródło
                   <ExternalLink className="size-4" aria-hidden="true" />
+                  <span className="sr-only">(otwiera się w nowej karcie)</span>
                 </Link>
               )}
 
@@ -228,6 +294,18 @@ export default function InnovationDetailPage() {
                     Testerów
                   </dt>
                   <dd className="mt-0.5 font-bold text-deep">{item.testers_count}</dd>
+                </div>
+              )}
+              {item.authors && (
+                <div className="px-5 py-4">
+                  <dt className="text-sm text-muted">Autorzy</dt>
+                  <dd className="mt-0.5 text-deep whitespace-pre-line">{item.authors.replace(/^-\s*/gm, "")}</dd>
+                </div>
+              )}
+              {item.project && (
+                <div className="px-5 py-4">
+                  <dt className="text-sm text-muted">Projekt ROPS</dt>
+                  <dd className="mt-0.5 text-deep">{item.project}</dd>
                 </div>
               )}
               {item.status && (

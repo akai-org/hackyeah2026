@@ -66,7 +66,7 @@ export function apiStream(path: string, body: unknown, onChunk: (chunk: string) 
           if (line.startsWith("data: ")) {
             const data = line.slice(6);
             if (data === "[DONE]") return;
-            onChunk(data);
+            onChunk(chunkText(data));
           }
         }
       }
@@ -76,4 +76,17 @@ export function apiStream(path: string, body: unknown, onChunk: (chunk: string) 
   })();
 
   return () => controller.abort();
+}
+
+/** Matchmaking wysyła `{"content": "..."}` (nowe linie nie łamią SSE); goły tekst też przyjmujemy. */
+function chunkText(data: string): string {
+  try {
+    const parsed: unknown = JSON.parse(data);
+    if (parsed && typeof parsed === "object" && typeof (parsed as { content?: unknown }).content === "string") {
+      return (parsed as { content: string }).content;
+    }
+  } catch {
+    // Zwykły tekst, nie JSON.
+  }
+  return data;
 }

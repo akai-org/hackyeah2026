@@ -10,6 +10,7 @@ __pycache__/
 # sekrety
 .env
 
-# lokalna baza SQLite i ChromaDB
+# lokalne bazy (SQLite: findinv.db, zasobnik.db) i ChromaDB
 *.db
 chroma_db/
+rops_raw/
