@@ -345,6 +345,77 @@ html[data-contrast="high"] ::selection {
   }
 }
 
+/* ---------- Kreator pomysłów: zmiana trybu i kroki asystenta ---------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Zmiana trybu przez View Transitions API (components/idea-creator.tsx). Reszta strony się nie rusza. */
+  html[data-kreator-dir]::view-transition-old(root),
+  html[data-kreator-dir]::view-transition-new(root) {
+    animation: none;
+  }
+
+  html[data-kreator-dir="forward"]::view-transition-old(kreator-body) {
+    animation: kreator-out-left 200ms cubic-bezier(0.4, 0, 1, 1) both;
+  }
+
+  html[data-kreator-dir="forward"]::view-transition-new(kreator-body) {
+    animation: kreator-in-right 280ms cubic-bezier(0.2, 0.8, 0.2, 1) 80ms both;
+  }
+
+  html[data-kreator-dir="back"]::view-transition-old(kreator-body) {
+    animation: kreator-out-right 200ms cubic-bezier(0.4, 0, 1, 1) both;
+  }
+
+  html[data-kreator-dir="back"]::view-transition-new(kreator-body) {
+    animation: kreator-in-left 280ms cubic-bezier(0.2, 0.8, 0.2, 1) 80ms both;
+  }
+
+  /* Bez View Transitions: nowa treść po prostu się pojawia. */
+  .mode-appear {
+    animation: appear 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  html[data-kreator-dir] .mode-appear {
+    animation: none;
+  }
+
+  .step-in-forward {
+    animation: kreator-in-right 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  .step-in-back {
+    animation: kreator-in-left 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+}
+
+@keyframes kreator-out-left {
+  to {
+    opacity: 0;
+    translate: -40px 0;
+  }
+}
+
+@keyframes kreator-out-right {
+  to {
+    opacity: 0;
+    translate: 40px 0;
+  }
+}
+
+@keyframes kreator-in-right {
+  from {
+    opacity: 0;
+    translate: 40px 0;
+  }
+}
+
+@keyframes kreator-in-left {
+  from {
+    opacity: 0;
+    translate: -40px 0;
+  }
+}
+
 /* ---------- Wejście sekcji w viewport i hover kart (components/reveal-on-scroll.tsx) ---------- */
 
 @media (prefers-reduced-motion: no-preference) {

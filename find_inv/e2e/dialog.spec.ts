@@ -1,13 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { openQuickSearch } from "./helpers";
+
 // Wspólny <Dialog> (components/ui/dialog.tsx) na przykładzie szybkiego wyszukiwania (Ctrl+K)
 // i okna logowania.
 
 async function openSearchWithKeyboard(page: Page) {
   await page.goto("/");
-  await page.locator("body").press("Control+k");
-  const dialog = page.getByRole("dialog", { name: "Czego szukasz?" });
-  await expect(dialog).toBeVisible();
+  const dialog = await openQuickSearch(page);
   return dialog;
 }
 

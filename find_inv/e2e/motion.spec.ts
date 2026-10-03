@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { openQuickSearch } from "./helpers";
+
 // Animacje: sekcje poniżej ekranu pojawiają się przy przewinięciu; przy prefers-reduced-motion nic nie jest ukryte.
 
 test("sekcja poniżej ekranu czeka na przewinięcie, potem się pokazuje", async ({ page }) => {
@@ -32,9 +34,7 @@ test("prefers-reduced-motion: brak ukrytych sekcji i animacji hover", async ({ p
 
 test("zamykanie okna: najpierw animacja wyjścia, potem znika", async ({ page }) => {
   await page.goto("/");
-  await page.locator("body").press("Control+k");
-  const dialog = page.getByRole("dialog", { name: "Czego szukasz?" });
-  await expect(dialog).toBeVisible();
+  const dialog = await openQuickSearch(page);
   await page.keyboard.press("Escape");
   // Zaraz po Esc okno jest jeszcze w DOM i gra animację dialog-out.
   expect(await page.locator("dialog[data-closing]").evaluate((el) => getComputedStyle(el).animationName)).toBe(
@@ -58,8 +58,7 @@ test("zamykanie panelu dostępności z animacją", async ({ page }) => {
 test("prefers-reduced-motion: okno zamyka się od razu, bez animacji", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
-  await page.locator("body").press("Control+k");
-  await expect(page.getByRole("dialog", { name: "Czego szukasz?" })).toBeVisible();
+  await openQuickSearch(page);
   await page.keyboard.press("Escape");
   await expect(page.locator("dialog[data-closing]")).toHaveCount(0);
   await expect(page.getByRole("dialog", { name: "Czego szukasz?" })).toBeHidden();
@@ -68,11 +67,11 @@ test("prefers-reduced-motion: okno zamyka się od razu, bez animacji", async ({ 
 test("hover przycisku-opcji: uniesienie z twardym cieniem", async ({ page, isMobile }) => {
   test.skip(isMobile, "na ekranie dotykowym nie ma hover");
   await page.goto("/");
-  await page.locator("body").press("Control+k");
+  await openQuickSearch(page);
   const option = page.getByRole("dialog").getByRole("button", { name: "Innowacje", exact: true });
   await option.hover();
   await expect.poll(() => option.evaluate((el) => getComputedStyle(el).translate)).toBe("-2px -2px");
-  expect(await option.evaluate((el) => getComputedStyle(el).boxShadow)).toContain("3px 3px 0px");
+  await expect.poll(() => option.evaluate((el) => getComputedStyle(el).boxShadow)).toContain("3px 3px 0px");
 });
 
 test("hover głównego przycisku też ma płynne przejście", async ({ page }) => {

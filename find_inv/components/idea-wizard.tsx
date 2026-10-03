@@ -127,6 +127,8 @@ function TextAnswer({
 export function IdeaWizard({ onFinish, busy }: { onFinish: (answers: WizardAnswers) => void; busy: boolean }) {
   const ids = useId();
   const [index, setIndex] = useState(0);
+  // Kierunek ostatniego kroku: „Dalej” wjeżdża z prawej, „Wstecz” z lewej.
+  const [direction, setDirection] = useState<"forward" | "back">("forward");
   const [answers, setAnswers] = useState<WizardAnswers>({
     problem: "",
     idea: "",
@@ -169,7 +171,10 @@ export function IdeaWizard({ onFinish, busy }: { onFinish: (answers: WizardAnswe
     }
     setInvalid(false);
     if (last) onFinish(answers);
-    else setIndex(index + 1);
+    else {
+      setDirection("forward");
+      setIndex(index + 1);
+    }
   }
 
   return (
@@ -185,77 +190,83 @@ export function IdeaWizard({ onFinish, busy }: { onFinish: (answers: WizardAnswe
         aria-valuenow={index + 1}
         className="mt-2 h-2 overflow-hidden rounded-ui bg-sage"
       >
-        <div className="h-full bg-leaf" style={{ width: `${((index + 1) / STEPS.length) * 100}%` }} />
+        <div
+          className="h-full bg-leaf transition-[width] duration-300 ease-out motion-reduce:transition-none"
+          style={{ width: `${((index + 1) / STEPS.length) * 100}%` }}
+        />
       </div>
 
-      <h2 ref={headingRef} tabIndex={-1} id={`${ids}-pytanie`} className="mt-6 text-2xl font-bold text-deep">
-        {step.question}
-      </h2>
-      <p className="mt-1 text-muted">{step.hint}</p>
+      {/* key: każdy krok to nowy element, więc animacja wejścia gra przy każdej zmianie. */}
+      <div key={index} className={direction === "forward" ? "step-in-forward" : "step-in-back"}>
+        <h2 ref={headingRef} tabIndex={-1} id={`${ids}-pytanie`} className="mt-6 text-2xl font-bold text-deep">
+          {step.question}
+        </h2>
+        <p className="mt-1 text-muted">{step.hint}</p>
 
-      {step.kind === "text" && (
-        <TextAnswer
-          key={step.key}
-          step={step}
-          value={answers[step.key]}
-          onChange={setAnswer(step.key)}
-          invalid={invalid}
-          inputRef={answerRef}
-        />
-      )}
+        {step.kind === "text" && (
+          <TextAnswer
+            key={step.key}
+            step={step}
+            value={answers[step.key]}
+            onChange={setAnswer(step.key)}
+            invalid={invalid}
+            inputRef={answerRef}
+          />
+        )}
 
-      {step.kind === "stage" && (
-        <fieldset className="mt-4" aria-labelledby={`${ids}-pytanie`}>
-          <ul className="space-y-2">
-            {STAGES.map((stage) => (
-              <li key={stage}>
-                <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-ui border-(length:--bw) border-deep bg-surface px-4 has-checked:bg-mint">
-                  <input
-                    type="radio"
-                    name={`${ids}-etap`}
-                    value={stage}
-                    checked={answers.stage === stage}
-                    onChange={() => setAnswer("stage")(() => stage)}
-                    className="size-5 accent-deep"
-                  />
-                  {stage}
-                </label>
-              </li>
-            ))}
-          </ul>
-        </fieldset>
-      )}
+        {step.kind === "stage" && (
+          <fieldset className="mt-4" aria-labelledby={`${ids}-pytanie`}>
+            <ul className="space-y-2">
+              {STAGES.map((stage) => (
+                <li key={stage}>
+                  <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-ui border-(length:--bw) border-deep bg-surface px-4 has-checked:bg-mint">
+                    <input
+                      type="radio"
+                      name={`${ids}-etap`}
+                      value={stage}
+                      checked={answers.stage === stage}
+                      onChange={() => setAnswer("stage")(() => stage)}
+                      className="size-5 accent-deep"
+                    />
+                    {stage}
+                  </label>
+                </li>
+              ))}
+            </ul>
+          </fieldset>
+        )}
 
-      {step.kind === "money" && (
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <div>
-            <label htmlFor={`${ids}-budzet`} className="block font-bold text-deep">
-              Budżet
-            </label>
-            <input
-              id={`${ids}-budzet`}
-              type="text"
-              value={answers.budget}
-              onChange={(event) => setAnswer("budget")(() => event.target.value)}
-              placeholder="np. ok. 5 tys. zł rocznie"
-              className="mt-2 min-h-12 w-full rounded-ui border-(length:--bw) border-deep bg-surface px-4 text-base text-ink placeholder:text-muted"
-            />
+        {step.kind === "money" && (
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor={`${ids}-budzet`} className="block font-bold text-deep">
+                Budżet
+              </label>
+              <input
+                id={`${ids}-budzet`}
+                type="text"
+                value={answers.budget}
+                onChange={(event) => setAnswer("budget")(() => event.target.value)}
+                placeholder="np. ok. 5 tys. zł rocznie"
+                className="mt-2 min-h-12 w-full rounded-ui border-(length:--bw) border-deep bg-surface px-4 text-base text-ink placeholder:text-muted"
+              />
+            </div>
+            <div>
+              <label htmlFor={`${ids}-partnerzy`} className="block font-bold text-deep">
+                Partnerzy
+              </label>
+              <input
+                id={`${ids}-partnerzy`}
+                type="text"
+                value={answers.partners}
+                onChange={(event) => setAnswer("partners")(() => event.target.value)}
+                placeholder="np. GOPS, szkoła"
+                className="mt-2 min-h-12 w-full rounded-ui border-(length:--bw) border-deep bg-surface px-4 text-base text-ink placeholder:text-muted"
+              />
+            </div>
           </div>
-          <div>
-            <label htmlFor={`${ids}-partnerzy`} className="block font-bold text-deep">
-              Partnerzy
-            </label>
-            <input
-              id={`${ids}-partnerzy`}
-              type="text"
-              value={answers.partners}
-              onChange={(event) => setAnswer("partners")(() => event.target.value)}
-              placeholder="np. GOPS, szkoła"
-              className="mt-2 min-h-12 w-full rounded-ui border-(length:--bw) border-deep bg-surface px-4 text-base text-ink placeholder:text-muted"
-            />
-          </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {invalid && (
         <p
@@ -269,7 +280,10 @@ export function IdeaWizard({ onFinish, busy }: { onFinish: (answers: WizardAnswe
 
       <div className="mt-8 flex flex-wrap gap-3">
         {index > 0 && (
-          <Button type="button" variant="secondary" onClick={() => setIndex(index - 1)} disabled={busy}>
+          <Button type="button" variant="secondary" onClick={() => {
+            setDirection("back");
+            setIndex(index - 1);
+          }} disabled={busy}>
             Wstecz
           </Button>
         )}

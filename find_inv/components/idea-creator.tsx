@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { CircleAlert, ListChecks, Loader2, PenLine, Sparkles } from "lucide-react";
 
 import { DictationButton, DictationNotice, DictationStatus, useDictation } from "@/components/dictation";
@@ -38,6 +39,26 @@ export function IdeaCreator() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const startRef = useRef<HTMLDivElement>(null);
   const dictation = useDictation(setText, () => setError(false));
+
+  // Zmiana trybu z animacją (View Transitions API): stara treść wyjeżdża, nowa wjeżdża z drugiej strony —
+  // „Asystent” leży na prawo od „Opiszę sam”, więc w jego stronę jedziemy w lewo. Bez API / przy reduced
+  // motion: zwykła podmiana z krótkim pojawieniem się (.mode-appear).
+  function changeMode(value: Mode) {
+    if (value === mode) return;
+    const apply = () => {
+      setMode(value);
+      setCard(null);
+    };
+    const root = document.documentElement;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce || typeof document.startViewTransition !== "function") {
+      apply();
+      return;
+    }
+    root.setAttribute("data-kreator-dir", value === "wizard" ? "forward" : "back");
+    const transition = document.startViewTransition(() => flushSync(apply));
+    void transition.finished.finally(() => root.removeAttribute("data-kreator-dir"));
+  }
 
   function toggleTag(tag: Tag) {
     setChosen((current) => (current.includes(tag) ? current.filter((item) => item !== tag) : [...current, tag]));
@@ -96,17 +117,14 @@ export function IdeaCreator() {
             {MODES.map(({ value, label, text: description, icon: Icon }) => (
               <label
                 key={value}
-                className="flex cursor-pointer items-start gap-3 rounded-ui border-(length:--bw) border-deep bg-surface p-4 has-checked:bg-mint"
+                className="flex cursor-pointer items-start gap-3 rounded-ui border-(length:--bw) border-deep bg-surface p-4 hover:bg-paper has-checked:bg-mint"
               >
                 <input
                   type="radio"
                   name={`${ids}-tryb`}
                   value={value}
                   checked={mode === value}
-                  onChange={() => {
-                    setMode(value);
-                    setCard(null);
-                  }}
+                  onChange={() => changeMode(value)}
                   disabled={analyzing}
                   className="mt-1 size-5 shrink-0 accent-deep"
                 />
@@ -123,6 +141,7 @@ export function IdeaCreator() {
         </fieldset>
       </div>
 
+      <div key={mode} className="mode-appear [view-transition-name:kreator-body]">
       {mode === "wizard" ? (
         // Po utworzeniu fiszki asystent znika (ale pamięta odpowiedzi) — „Popraw opis” wraca do pytań.
         <div hidden={Boolean(card)}>
@@ -209,6 +228,7 @@ export function IdeaCreator() {
           </Button>
         </form>
       )}
+      </div>
 
       <p role="status" aria-live="polite" className={cn("flex items-center gap-2 font-bold text-deep", analyzing && "mt-4")}>
         {analyzing && (
