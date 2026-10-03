@@ -1,15 +1,43 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle, Clock, Tag, X } from "lucide-react";
-import { apiFetch, apiPost } from "@/lib/api";
+import { CheckCircle, Clock, Download, Paperclip, Tag, X } from "lucide-react";
+import { API_URL, apiFetch, apiPost, readSessionCookie } from "@/lib/api";
+import { formatSize } from "@/lib/ideas";
 import { cn } from "@/lib/utils";
+
+interface Attachment {
+  id: number;
+  filename: string;
+  size: number;
+}
+
+/** Pobranie przez fetch z nagłówkiem admina — zwykły link nie wysłałby autoryzacji do API. */
+async function downloadAttachment(ideaId: number, attachment: Attachment) {
+  const headers = new Headers({ "X-Dev-Admin": "true" });
+  const session = readSessionCookie();
+  if (session) headers.set("X-Session-Token", session);
+  const response = await fetch(`${API_URL}/api/admin/ideas/${ideaId}/attachments/${attachment.id}`, { headers });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const url = URL.createObjectURL(await response.blob());
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = attachment.filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
 
 interface Idea {
   id: number;
   title: string;
   essence: string;
   for_whom: string | null;
+  short_desc?: string | null;
+  place?: string | null;
+  stage?: string | null;
+  budget?: string | null;
+  partners?: string | null;
+  attachments?: Attachment[];
   tags: string[];
   author_name: string | null;
   author_email: string | null;
@@ -102,9 +130,42 @@ export default function PomyslyPage() {
                       </span>
                     </div>
                     <h2 className="mt-2 font-bold text-deep">{idea.title}</h2>
-                    <p className="mt-1 text-sm">{idea.essence}</p>
-                    {idea.for_whom && (
-                      <p className="mt-1 text-sm text-muted">Dla kogo: {idea.for_whom}</p>
+                    {idea.short_desc && <p className="mt-1 text-sm font-bold">{idea.short_desc}</p>}
+                    <p className="mt-1 whitespace-pre-line text-sm">{idea.essence}</p>
+                    <dl className="mt-2 grid gap-x-3 gap-y-0.5 text-sm sm:grid-cols-[8rem_1fr]">
+                      {([
+                        ["Dla kogo", idea.for_whom],
+                        ["Gdzie", idea.place],
+                        ["Etap", idea.stage],
+                        ["Budżet", idea.budget],
+                        ["Partnerzy", idea.partners],
+                      ] as const)
+                        .filter(([, value]) => value)
+                        .map(([label, value]) => (
+                          <div key={label} className="contents">
+                            <dt className="text-muted">{label}</dt>
+                            <dd>{value}</dd>
+                          </div>
+                        ))}
+                    </dl>
+                    {idea.attachments && idea.attachments.length > 0 && (
+                      <ul className="mt-2 flex flex-wrap gap-2" aria-label={`Załączniki: ${idea.title}`}>
+                        {idea.attachments.map((attachment) => (
+                          <li key={attachment.id}>
+                            <button
+                              type="button"
+                              onClick={() => downloadAttachment(idea.id, attachment).catch(() => alert("Nie udało się pobrać pliku."))}
+                              className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-ui border-2 border-deep bg-paper px-3 text-sm hover:bg-sage"
+                            >
+                              <Paperclip className="size-4" aria-hidden="true" />
+                              {attachment.filename}
+                              <span className="text-muted">({formatSize(attachment.size)})</span>
+                              <Download className="size-4" aria-hidden="true" />
+                              <span className="sr-only">— pobierz</span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
                     )}
                     {idea.tags.length > 0 && (
                       <ul className="mt-2 flex flex-wrap gap-1.5" aria-label="Tagi">
