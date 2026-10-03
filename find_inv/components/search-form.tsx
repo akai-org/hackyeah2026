@@ -1,67 +1,17 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
-import { CircleAlert, Info, Mic, Search, Square } from "lucide-react";
+import { useId, useRef, useState } from "react";
+import { CircleAlert, Search } from "lucide-react";
 
+import { DictationButton, DictationNotice, DictationStatus, useDictation } from "@/components/dictation";
 import { Button } from "@/components/ui/button";
-import { fixTranscript } from "@/lib/matchmaking";
 import { cn } from "@/lib/utils";
 
 const EXAMPLES = [
   "Samotny senior na wsi potrzebuje regularnego kontaktu i kogoś, kto zareaguje, gdy nie odbierze telefonu",
   "Starsza osoba nie ma własnego samochodu i trudno jej dojechać na wizytę u lekarza albo zrobić zakupy",
 ];
-
-// Web Speech API nie ma typów w lib.dom, więc opisujemy tylko to, czego używamy.
-type RecognitionResultEvent = {
-  resultIndex: number;
-  results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }>;
-};
-
-type Recognition = {
-  lang: string;
-  interimResults: boolean;
-  continuous: boolean;
-  maxAlternatives: number;
-  onresult: ((event: RecognitionResultEvent) => void) | null;
-  onerror: ((event: { error: string }) => void) | null;
-  onend: (() => void) | null;
-  start: () => void;
-  stop: () => void;
-  abort: () => void;
-};
-
-type RecognitionConstructor = new () => Recognition;
-
-function getRecognition(): RecognitionConstructor | null {
-  const speechWindow = window as unknown as {
-    SpeechRecognition?: RecognitionConstructor;
-    webkitSpeechRecognition?: RecognitionConstructor;
-  };
-  return speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition ?? null;
-}
-
-const noopSubscribe = () => () => {};
-
-/** Na serwerze zawsze false, w przeglądarce sprawdza wsparcie. Bez ostrzeżeń hydracji. */
-function useDictationSupported() {
-  return useSyncExternalStore(
-    noopSubscribe,
-    () => getRecognition() !== null,
-    () => false,
-  );
-}
-
-const DICTATION_ERRORS: Record<string, string> = {
-  "not-allowed": "Brak dostępu do mikrofonu. Zezwól na mikrofon w ustawieniach przeglądarki albo wpisz tekst.",
-  "service-not-allowed": "Brak dostępu do mikrofonu. Zezwól na mikrofon w ustawieniach przeglądarki albo wpisz tekst.",
-  "no-speech": "Nic nie usłyszałem. Kliknij „Podyktuj” i spróbuj jeszcze raz albo wpisz tekst.",
-  "audio-capture": "Nie znaleziono mikrofonu. Podłącz mikrofon albo wpisz tekst.",
-  network: "Dyktowanie wymaga połączenia z internetem. Sprawdź połączenie albo wpisz tekst.",
-};
-
-type DictationState = "idle" | "recording" | "done" | "error";
 
 type SearchFormProps = {
   /** Tekst startowy pola, np. poprzedni opis na stronie wyników. */
@@ -81,14 +31,9 @@ export function SearchForm({ initialText = "", showExamples = true, className }:
   const [text, setText] = useState(initialText);
   const [error, setError] = useState(false);
   const [errorKey, setErrorKey] = useState(0);
-  const [dictation, setDictation] = useState<DictationState>("idle");
-  const [dictationMessage, setDictationMessage] = useState("");
-
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const recognitionRef = useRef<Recognition | null>(null);
-  const supported = useDictationSupported();
-
-  useEffect(() => () => recognitionRef.current?.abort(), []);
+  const dictation = useDictation(setText, () => setError(false));
+  const supported = dictation.supported;
 
   function updateText(value: string) {
     setText(value);
@@ -104,84 +49,13 @@ export function SearchForm({ initialText = "", showExamples = true, className }:
       textareaRef.current?.focus();
       return;
     }
-    recognitionRef.current?.abort();
+    dictation.abort();
     router.push(`/wyniki?q=${encodeURIComponent(query)}`);
   }
 
   function applyExample(example: string) {
     updateText(example);
     textareaRef.current?.focus();
-  }
-
-  function toggleDictation() {
-    if (dictation === "recording") {
-      recognitionRef.current?.stop();
-      return;
-    }
-
-    const RecognitionImpl = getRecognition();
-    if (!RecognitionImpl) {
-      setDictation("error");
-      setDictationMessage("Dyktowanie nie jest obsługiwane w tej przeglądarce. Wpisz tekst ręcznie.");
-      return;
-    }
-
-    const recognition = new RecognitionImpl();
-    recognition.lang = "pl-PL";
-    recognition.interimResults = false;
-    recognition.continuous = false;
-    recognition.maxAlternatives = 1;
-
-    let heard = false;
-    let failed = false;
-
-    recognition.onresult = (event) => {
-      let transcript = "";
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        if (event.results[i].isFinal) transcript += event.results[i][0].transcript;
-      }
-      transcript = transcript.trim();
-      if (!transcript) return;
-      heard = true;
-      setText((previous) => (previous.trim() ? `${previous.trimEnd()} ${transcript}` : transcript));
-      setError(false);
-      // Backend poprawia gramatykę i błędy rozpoznawania mowy. Podmieniamy tylko podyktowany fragment.
-      void fixTranscript(transcript).then((corrected) => {
-        if (corrected !== transcript) setText((current) => current.replace(transcript, corrected));
-      });
-    };
-
-    recognition.onerror = (event) => {
-      if (event.error === "aborted") return;
-      failed = true;
-      setDictation("error");
-      setDictationMessage(
-        DICTATION_ERRORS[event.error] ?? "Dyktowanie nie zadziałało. Spróbuj jeszcze raz albo wpisz tekst.",
-      );
-    };
-
-    recognition.onend = () => {
-      recognitionRef.current = null;
-      if (failed) return;
-      if (heard) {
-        setDictation("done");
-        setDictationMessage("Gotowe, sprawdź tekst");
-      } else {
-        setDictation("error");
-        setDictationMessage(DICTATION_ERRORS["no-speech"]);
-      }
-    };
-
-    recognitionRef.current = recognition;
-    setDictation("recording");
-    setDictationMessage("Nagrywam…");
-    try {
-      recognition.start();
-    } catch {
-      recognitionRef.current = null;
-      setDictation("error");
-      setDictationMessage("Dyktowanie nie zadziałało. Spróbuj jeszcze raz albo wpisz tekst.");
-    }
   }
 
   const describedBy = [supported ? hintId : null, error ? errorId : null].filter(Boolean).join(" ") || undefined;
@@ -221,19 +95,7 @@ export function SearchForm({ initialText = "", showExamples = true, className }:
             <Search aria-hidden="true" />
             Szukaj
           </Button>
-          <Button type="button" variant="secondary" onClick={toggleDictation} className="w-full">
-            {dictation === "recording" ? (
-              <>
-                <Square aria-hidden="true" className="fill-current" />
-                Zatrzymaj
-              </>
-            ) : (
-              <>
-                <Mic aria-hidden="true" />
-                Podyktuj
-              </>
-            )}
-          </Button>
+          <DictationButton dictation={dictation} className="w-full" />
         </div>
       </div>
 
@@ -249,27 +111,8 @@ export function SearchForm({ initialText = "", showExamples = true, className }:
         </p>
       )}
 
-      {/* Region aria-live jest w DOM od początku, żeby czytnik ogłaszał każdą zmianę stanu dyktowania. */}
-      <p
-        role="status"
-        aria-live="polite"
-        className={cn(
-          "flex items-start gap-2 font-semibold",
-          dictationMessage && "mt-3",
-          dictation === "error" ? "text-alert" : "text-deep",
-        )}
-      >
-        {dictation === "recording" && <Mic aria-hidden="true" className="mt-0.5 size-5 shrink-0" />}
-        {dictation === "error" && <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />}
-        {dictationMessage}
-      </p>
-
-      {supported && (
-        <p id={hintId} className="mt-3 flex max-w-[65ch] items-start gap-2 text-sm text-muted">
-          <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-          Dyktowanie może przetwarzać dźwięk w zewnętrznej usłudze przeglądarki. Nie podawaj danych osobowych.
-        </p>
-      )}
+      <DictationStatus dictation={dictation} />
+      <DictationNotice dictation={dictation} id={hintId} />
 
       {showExamples && (
         <div role="group" aria-labelledby={examplesId} className="mt-6">

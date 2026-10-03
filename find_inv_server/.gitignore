@@ -14,3 +14,6 @@ __pycache__/
 *.db
 chroma_db/
 rops_raw/
+
+# załączniki do fiszek pomysłów
+uploads/

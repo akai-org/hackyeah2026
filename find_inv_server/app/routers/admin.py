@@ -348,7 +348,7 @@ async def admin_recent(_: bool = AdminDep):
 async def admin_ideas(status: str = "", _: bool = AdminDep):
     try:
         from app.database import get_db
-        from app.models import Idea
+        from app.models import Idea, IdeaAttachment, IdeaDetails
         from sqlalchemy import select
         import json as _json
 
@@ -358,6 +358,22 @@ async def admin_ideas(status: str = "", _: bool = AdminDep):
                 q = q.where(Idea.status == status)
             rows = await db.execute(q)
             ideas = rows.scalars().all()
+            ids = [i.id for i in ideas]
+            details = {
+                d.idea_id: d
+                for d in (await db.execute(select(IdeaDetails).where(IdeaDetails.idea_id.in_(ids)))).scalars()
+            }
+            attachments: dict[int, list] = {}
+            for a in (await db.execute(
+                select(IdeaAttachment).where(IdeaAttachment.idea_id.in_(ids)).order_by(IdeaAttachment.id)
+            )).scalars():
+                attachments.setdefault(a.idea_id, []).append(
+                    {"id": a.id, "filename": a.filename, "size": a.size, "content_type": a.content_type}
+                )
+
+        def extra(idea_id: int, field: str):
+            d = details.get(idea_id)
+            return getattr(d, field) if d else None
 
         return {"data": [
             {
@@ -365,6 +381,12 @@ async def admin_ideas(status: str = "", _: bool = AdminDep):
                 "title": i.title,
                 "essence": i.essence,
                 "for_whom": i.for_whom,
+                "short_desc": extra(i.id, "short_desc"),
+                "place": extra(i.id, "place"),
+                "stage": extra(i.id, "stage"),
+                "budget": extra(i.id, "budget"),
+                "partners": extra(i.id, "partners"),
+                "attachments": attachments.get(i.id, []),
                 "tags": _json.loads(i.tags) if i.tags else [],
                 "author_name": i.author_name,
                 "author_email": i.author_email,
@@ -375,6 +397,30 @@ async def admin_ideas(status: str = "", _: bool = AdminDep):
         ]}
     except Exception:
         return {"data": []}
+
+
+@router.get("/ideas/{idea_id}/attachments/{attachment_id}")
+async def download_idea_attachment(idea_id: int, attachment_id: int, _: bool = AdminDep):
+    from fastapi.responses import FileResponse
+
+    from app.database import get_db
+    from app.models import IdeaAttachment
+    from app.routers.ideas import uploads_dir
+
+    async with get_db() as db:
+        attachment = await db.get(IdeaAttachment, attachment_id)
+    if attachment is None or attachment.idea_id != idea_id:
+        raise HTTPException(status_code=404, detail="Nie znaleziono pliku")
+    path = uploads_dir(idea_id) / attachment.stored_name
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="Plik nie istnieje na dysku")
+    # Zawsze jako pobranie (attachment) i bez zgadywania typu — plik od użytkownika nie otworzy się jako strona.
+    return FileResponse(
+        path,
+        filename=attachment.filename,
+        media_type="application/octet-stream",
+        headers={"X-Content-Type-Options": "nosniff"},
+    )
 
 
 @router.post("/ideas/{idea_id}/status")

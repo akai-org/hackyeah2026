@@ -1,8 +1,10 @@
 import json
+import secrets
 import uuid
+from typing import Literal
 
-from fastapi import APIRouter, HTTPException
-from sqlalchemy import or_, select
+from fastapi import APIRouter, HTTPException, Query
+from sqlalchemy import and_, func, or_, select
 
 from app import knowledge_store as store
 from app.database import get_db
@@ -48,6 +50,9 @@ async def list_innovations(
     category: str = "",
     area: str = "",
     status: str = "",
+    cost_level: str = "",
+    tags_mode: Literal["any", "all"] = Query("any", description="any: dowolny z tagów, all: wszystkie tagi"),
+    include_archived: bool = True,
     limit: int = 20,
     offset: int = 0,
 ):
@@ -64,23 +69,41 @@ async def list_innovations(
                 ))
             if status:
                 q = q.where(Innovation.status == status)
+            if not include_archived:
+                q = q.where(Innovation.status != "archived")
+            if cost_level:
+                q = q.where(Innovation.cost_level == cost_level)
             if category:
                 q = q.where(Innovation.category.ilike(f"%{category}%"))
             if area:
                 q = q.where(Innovation.area.ilike(f"%{area}%"))
             if tag_filter:
                 # tagi trzymane jako JSON string – dopasowanie z cudzysłowami, żeby "OPS" nie trafiał w "DOPS"
-                q = q.where(or_(*[Innovation.tags.ilike(f'%"{t}"%') for t in tag_filter]))
+                conditions = [Innovation.tags.ilike(f'%"{t}"%') for t in tag_filter]
+                q = q.where(and_(*conditions) if tags_mode == "all" else or_(*conditions))
             items = (await db.execute(q.offset(offset).limit(limit))).scalars().all()
+            # total z tymi samymi filtrami, bez limit/offset — frontend potrzebuje go do „Pokaż więcej”.
+            total = (await db.execute(select(func.count()).select_from(q.order_by(None).subquery()))).scalar_one()
             has_data = items or (await db.execute(select(Innovation.id).limit(1))).first()
         if has_data:
-            return {"data": [_row(i) for i in items]}
+            return {"data": _page([_row(i) for i in items], total, limit, offset)}
     except Exception:
         pass
 
     # Fallback bez bazy: te same 114 innowacji ROPS z parsed_innovations.json
-    found = store.search_innovations(search or None, tag_filter or None, category or None, area or None, status or None)
-    return {"data": [store.public(i) for i in found[offset : offset + limit]]}
+    found = store.search_innovations(
+        search or None, tag_filter or None, category or None, area or None, status or None, cost_level or None
+    )
+    if tag_filter and tags_mode == "all":
+        found = [i for i in found if set(tag_filter) <= set(i.get("tags", []))]
+    if not include_archived:
+        found = [i for i in found if i.get("status") != "archived"]
+    return {"data": _page([store.public(i) for i in found[offset : offset + limit]], len(found), limit, offset)}
+
+
+def _page(innovations: list[dict], total: int, limit: int, offset: int) -> dict:
+    """Strona wyników z łączną liczbą trafień — bez `total` lista nie wie, że jest coś poza pierwszą stroną."""
+    return {"innovations": innovations, "total": total, "limit": limit, "offset": offset}
 
 
 @router.get("/innovations/{innovation_id}")
@@ -173,6 +196,11 @@ async def innovation_gap():
     return {"data": sorted(gaps, key=lambda g: -g["gap_score"])}
 
 
+def _optional(body: dict, key: str, limit: int) -> str | None:
+    value = str(body.get(key) or "").strip()
+    return value[:limit] or None
+
+
 @router.post("/ideas")
 async def submit_idea(body: dict):
     title = (body.get("title") or "").strip()
@@ -182,7 +210,7 @@ async def submit_idea(body: dict):
 
     try:
         from app.database import get_db
-        from app.models import Idea
+        from app.models import Idea, IdeaDetails
 
         async with get_db() as db:
             idea = Idea(
@@ -195,10 +223,22 @@ async def submit_idea(body: dict):
                 status="pending",
             )
             db.add(idea)
+            await db.flush()
+            # Pola fiszki spoza tabeli ideas + klucz, którym autor dołącza pliki (POST /api/ideas/{id}/attachments).
+            upload_token = secrets.token_urlsafe(24)
+            db.add(IdeaDetails(
+                idea_id=idea.id,
+                short_desc=_optional(body, "short_desc", 1000),
+                place=_optional(body, "place", 256),
+                stage=_optional(body, "stage", 128),
+                budget=_optional(body, "budget", 256),
+                partners=_optional(body, "partners", 512),
+                upload_token=upload_token,
+            ))
             await db.commit()
             await db.refresh(idea)
 
-        return {"data": {"id": idea.id, "message": "Pomysł przyjęty — dziękujemy!"}}
+        return {"data": {"id": idea.id, "upload_token": upload_token, "message": "Pomysł przyjęty — dziękujemy!"}}
     except HTTPException:
         raise
     except Exception:

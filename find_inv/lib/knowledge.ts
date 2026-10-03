@@ -43,17 +43,18 @@ export async function listInnovations(query: InnovationQuery = {}): Promise<Inno
   if (query.search?.trim()) params.set("search", query.search.trim());
   if (query.tags?.length) params.set("tags", query.tags.join(","));
   if (query.cost) params.set("cost_level", query.cost);
+  // Wybrane tematy zawężają wyniki (wszystkie naraz), jak w filtrze lokalnym poniżej.
+  if (query.tags?.length) params.set("tags_mode", "all");
+  // Archiwalne odfiltrowuje backend — wtedy `total` i przesunięcie strony zgadzają się z tym, co widać.
+  if (!query.includeArchived) params.set("include_archived", "false");
   params.set("limit", String(query.limit ?? 20));
   params.set("offset", String(query.offset ?? 0));
 
   try {
     const result = await apiFetch<InnovationList | InnovationCard[]>(`/api/innovations?${params}`);
-    // Backend może zwrócić samą listę albo { innovations, total }. Filtr `status` w API to dokładne dopasowanie,
-    // więc archiwalne odfiltrowujemy tutaj.
-    const list = Array.isArray(result) ? result : (result.innovations ?? []);
-    const innovations = query.includeArchived ? list : list.filter((item) => item.status !== "archived");
-    const total = Array.isArray(result) ? list.length : (result.total ?? list.length);
-    return { innovations, total: total - (list.length - innovations.length) };
+    // Starszy backend zwracał samą listę — wtedy nie znamy łącznej liczby i bierzemy długość strony.
+    if (Array.isArray(result)) return { innovations: result, total: result.length };
+    return { innovations: result.innovations ?? [], total: result.total ?? result.innovations?.length ?? 0 };
   } catch {
     return localList(query);
   }
