@@ -1,69 +1,152 @@
-import Image from "next/image";
+import Link from "next/link";
+import { MessageSquareText, Puzzle, ScanSearch, type LucideIcon } from "lucide-react";
 
-export default function Home() {
+import { CutoutText } from "@/components/cutout-text";
+import { InnovationCard } from "@/components/innovation-card";
+import { Monstera } from "@/components/monstera";
+import { SearchForm } from "@/components/search-form";
+import { buttonVariants } from "@/components/ui/button";
+import { innovations } from "@/data/innovations.mock";
+
+const STEPS: Array<{ icon: LucideIcon; title: string; text: string }> = [
+  {
+    icon: MessageSquareText,
+    title: "Opisz problem",
+    text: "Napisz albo podyktuj, co się dzieje. Nie musisz znać fachowych słów.",
+  },
+  {
+    icon: ScanSearch,
+    title: "Zobacz, co już działa",
+    text: "Pokażemy innowacje z Biblioteki, które pomogły w podobnej sytuacji. Przy każdej zobaczysz, czy ma dowody skuteczności.",
+  },
+  {
+    icon: Puzzle,
+    title: "Dostosuj do swojej instytucji",
+    text: "Wybierz rozwiązanie i przygotuj szkic planu wdrożenia dla swojej gminy albo organizacji.",
+  },
+];
+
+const AUDIENCES = [
+  {
+    title: "Mieszkańcy",
+    text: "Opisujesz kłopot zwykłymi słowami i widzisz, kto w Małopolsce już sobie z nim poradził.",
+  },
+  {
+    title: "Organizacje pozarządowe",
+    text: "Znajdujesz sprawdzone pomysły na projekt i argumenty do wniosku o dofinansowanie.",
+  },
+  {
+    title: "Samorządy (gminy i powiaty)",
+    text: "Porównujesz rozwiązania z innych gmin i dostajesz szkic planu wdrożenia dla swojego urzędu.",
+  },
+  {
+    title: "Eksperci i ROPS",
+    text: "Widzisz, z czym ludzie szukają pomocy, i wiesz, gdzie w Bibliotece brakuje rozwiązań.",
+  },
+];
+
+export default function HomePage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <>
+      {/* Hero */}
+      <section aria-labelledby="hero-tytul" className="relative overflow-hidden">
+        {/* Mobile i tablet: jeden mały liść w rogu, nad nagłówkiem. */}
+        <Monstera
+          size="small"
+          color="leaf"
+          className="absolute -top-8 -right-10 w-28 rotate-[200deg] sm:w-32 lg:hidden"
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
+
+        <div className="relative mx-auto grid max-w-content gap-6 px-4 pt-20 pb-16 sm:px-6 lg:grid-cols-[minmax(0,40rem)_1fr] lg:gap-0 lg:pt-20 lg:pb-24">
+          <div>
+            <CutoutText id="hero-tytul" as="h1" size="hero" text="Z czym masz kłopot?" animate />
+            <p className="mt-6 max-w-[38ch] text-lg">
+              Opisz to własnymi słowami. Znajdziemy rozwiązania, które już działają w Małopolsce.
+            </p>
+            <SearchForm />
+          </div>
+
+          {/* Desktop: duży liść ucięty przez prawą krawędź ekranu, min. 24 px od treści. */}
+          <div aria-hidden="true" className="relative hidden lg:block">
+            <Monstera
+              size="small"
+              color="mint"
+              className="simple-hidden absolute top-72 left-48 w-72 rotate-[150deg]"
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <Monstera
+              size="hero"
+              color="leaf"
+              outlined
+              className="absolute -top-6 left-10 rotate-[-28deg]"
+            />
+          </div>
         </div>
-      </main>
-    </div>
+      </section>
+
+      {/* Jak to działa */}
+      <section
+        id="jak-to-dziala"
+        aria-labelledby="jak-to-dziala-tytul"
+        className="scroll-mt-6 border-y-(length:--bw) border-deep bg-sage"
+      >
+        <div className="mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
+          <CutoutText id="jak-to-dziala-tytul" text="Jak to działa" />
+          <ol className="mt-10 grid gap-6 md:grid-cols-3">
+            {STEPS.map((step, index) => {
+              const Icon = step.icon;
+              return (
+                <li key={step.title} className="border-(length:--bw) border-deep bg-surface p-6 shadow-paper">
+                  <div className="flex items-center justify-between gap-4">
+                    <p className="font-bold text-muted">Krok {index + 1}</p>
+                    <Icon aria-hidden="true" className="size-8 text-leaf" strokeWidth={1.75} />
+                  </div>
+                  <h3 className="mt-3 text-xl font-bold text-deep">{step.title}</h3>
+                  <p className="mt-2">{step.text}</p>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      </section>
+
+      {/* Co już działa */}
+      <section id="co-juz-dziala" aria-labelledby="co-juz-dziala-tytul" className="scroll-mt-6">
+        <div className="mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
+          <CutoutText id="co-juz-dziala-tytul" text="Co już działa" />
+          <p className="mt-4 max-w-[60ch] text-lg">
+            Kilka innowacji z Biblioteki. Każda ma opis, informację, dla kogo jest, i ocenę dowodów skuteczności.
+          </p>
+          <ul className="mt-10 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {innovations.slice(0, 3).map((innovation) => (
+              <li key={innovation.id} className="flex">
+                <InnovationCard innovation={innovation} />
+              </li>
+            ))}
+          </ul>
+          <Link href="/biblioteka" className={buttonVariants({ variant: "secondary", className: "mt-10" })}>
+            Zobacz całą bibliotekę
+          </Link>
+        </div>
+      </section>
+
+      {/* Dla kogo */}
+      <section
+        id="dla-kogo"
+        aria-labelledby="dla-kogo-tytul"
+        className="scroll-mt-6 border-t-(length:--bw) border-deep bg-surface"
+      >
+        <div className="mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
+          <CutoutText id="dla-kogo-tytul" text="Dla kogo" />
+          <ul className="mt-10 grid gap-x-12 gap-y-8 md:grid-cols-2">
+            {AUDIENCES.map((audience) => (
+              <li key={audience.title} className="border-l-4 border-leaf pl-5">
+                <h3 className="text-xl font-bold text-deep">{audience.title}</h3>
+                <p className="mt-2 max-w-[48ch]">{audience.text}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    </>
   );
 }
