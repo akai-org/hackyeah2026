@@ -105,7 +105,7 @@ html[data-simple="true"] *::after {
     font-size: calc(1em * var(--s, 1));
     transform: translateY(var(--dy, 0)) rotate(var(--r, 0deg));
     /* Cień liczony po clip-path, dlatego filter na rodzicu, a nie box-shadow na wycinku. */
-    filter: drop-shadow(3px 3px 0 rgba(27, 67, 50, 0.25));
+    filter: drop-shadow(3px 3px 0 rgba(18, 50, 41, 0.25));
   }
 
   .cutout-char:last-child {
