@@ -53,7 +53,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </ul>
         </nav>
       </aside>
-      <main>{children}</main>
+      <div>{children}</div>
     </div>
   );
 }
