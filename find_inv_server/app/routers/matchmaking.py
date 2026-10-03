@@ -31,6 +31,9 @@ except ImportError:
 
 TOP_N = 5
 TAG_BOOST = 0.1
+# Limity chronią budżet LLM przed bardzo długimi wejściami.
+MAX_TEXT = 2000
+MAX_CHAT_MESSAGES = 20
 
 
 # ── Schematy ─────────────────────────────────────────────
@@ -148,7 +151,7 @@ def _mock_match(tags: list[str]) -> list[dict]:
 
 @router.post("/tag")
 async def tag(body: TagRequest, background: BackgroundTasks):
-    text = body.text.strip()
+    text = body.text.strip()[:MAX_TEXT]
     if not text:
         return _err("Pusty opis problemu")
     if not REAL_BACKEND:
@@ -166,7 +169,7 @@ async def tag(body: TagRequest, background: BackgroundTasks):
 
 @router.post("/match")
 async def match(body: MatchRequest):
-    text = body.text.strip()
+    text = body.text.strip()[:MAX_TEXT]
     if not text:
         return _err("Pusty opis problemu")
     if not REAL_BACKEND:
@@ -202,7 +205,7 @@ VOICE_FIX_PROMPT = (
 
 @router.post("/voice-fix")
 async def voice_fix(body: VoiceFixRequest):
-    transcript = body.transcript.strip()
+    transcript = body.transcript.strip()[:MAX_TEXT]
     if not REAL_BACKEND or not transcript:
         return _ok({"corrected": transcript, "confidence": 1.0})
 
@@ -264,7 +267,8 @@ async def chat(body: ChatRequest):
             innovations = [i for i in MOCK_INNOVATIONS if i["id"] in ids]
 
         messages = [{"role": "system", "content": CHAT_SYSTEM_PROMPT.format(context=_rag_context(innovations))}]
-        messages += [m.model_dump() for m in body.messages if m.role in ("user", "assistant")]
+        history = [m for m in body.messages if m.role in ("user", "assistant")][-MAX_CHAT_MESSAGES:]
+        messages += [{"role": m.role, "content": m.content[:MAX_TEXT]} for m in history]
         try:
             stream = llm.chat(messages, stream=True)
             if inspect.isawaitable(stream):

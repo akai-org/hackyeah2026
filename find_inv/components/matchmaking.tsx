@@ -207,15 +207,28 @@ function TagEditor({
 }) {
   const ids = useId();
   const [toAdd, setToAdd] = useState("");
+  const listRef = useRef<HTMLUListElement>(null);
+  const selectRef = useRef<HTMLSelectElement>(null);
+  const focusIndexRef = useRef<number | null>(null);
   const available = TAXONOMY_TAGS.filter((tag) => !tags.includes(tag));
+
+  // Usunięty chip zabiera ze sobą fokus, więc przenosimy go na sąsiedni chip albo na listę tagów.
+  useEffect(() => {
+    const index = focusIndexRef.current;
+    if (index === null) return;
+    focusIndexRef.current = null;
+    const buttons = listRef.current?.querySelectorAll<HTMLButtonElement>("button");
+    const target = buttons?.length ? buttons[Math.min(index, buttons.length - 1)] : selectRef.current;
+    target?.focus();
+  }, [tags]);
 
   return (
     <div role="group" aria-labelledby={`${ids}-zrozumialem`}>
       <p id={`${ids}-zrozumialem`} className="font-bold text-deep">
         Zrozumiałem
       </p>
-      <ul className="mt-2 flex flex-wrap gap-3">
-        {tags.map((tag) => (
+      <ul ref={listRef} className="mt-2 flex flex-wrap gap-3">
+        {tags.map((tag, index) => (
           <li
             key={tag}
             className="inline-flex min-h-10 items-center gap-1 rounded-ui border-(length:--bw) border-deep bg-mint py-1 pl-4 pr-1 text-ink"
@@ -223,7 +236,10 @@ function TagEditor({
             {tagLabel(tag)}
             <button
               type="button"
-              onClick={() => onChange(tags.filter((t) => t !== tag))}
+              onClick={() => {
+                onChange(tags.filter((t) => t !== tag));
+                focusIndexRef.current = index;
+              }}
               disabled={disabled}
               aria-label={`Usuń tag ${tagLabel(tag)}`}
               className="inline-flex size-10 cursor-pointer items-center justify-center rounded-ui hover:bg-sage disabled:cursor-not-allowed"
@@ -248,6 +264,7 @@ function TagEditor({
             Wybierz tag do dodania
           </label>
           <select
+            ref={selectRef}
             id={`${ids}-dodaj`}
             value={toAdd}
             onChange={(event) => setToAdd(event.target.value)}
