@@ -29,6 +29,14 @@ const STEPS: Array<{ icon: LucideIcon; title: string; text: string }> = [
   },
 ];
 
+// Sekcje strony głównej w kolejności, w jakiej leżą na stronie.
+const SECTIONS = [
+  { id: "jak-to-dziala", label: "Jak to działa" },
+  { id: "kondycja-malopolski", label: "Kondycja Małopolski" },
+  { id: "co-juz-dziala", label: "Popularne innowacje" },
+  { id: "artykul-dnia", label: "Artykuł dnia" },
+] as const;
+
 type RegionCondition = "happy" | "mid" | "sad";
 
 const REGION_CONDITION: RegionCondition = "mid";
@@ -54,23 +62,21 @@ export default function HomePage() {
               Opisz to własnymi słowami. Znajdziemy rozwiązania, które już działają w Małopolsce.
             </p>
             <SearchForm />
-            <nav aria-label="Szybki dostęp" className="mt-6 flex flex-wrap gap-x-6 gap-y-1">
-              <a href="#artykul-dnia" className="inline-flex min-h-12 items-center gap-2 font-medium text-leaf underline underline-offset-4 hover:text-deep">
-                Sprawdź artykuł dnia
-                <ArrowRight aria-hidden="true" className="size-5" />
-              </a>
-              <a href="#co-juz-dziala" className="inline-flex min-h-12 items-center gap-2 font-medium text-leaf underline underline-offset-4 hover:text-deep">
-                Popularne innowacje
-                <ArrowRight aria-hidden="true" className="size-5" />
-              </a>
-              <a href="#kondycja-malopolski" className="inline-flex min-h-12 items-center gap-2 font-medium text-leaf underline underline-offset-4 hover:text-deep">
-                Kondycja Małopolski
-                <ArrowRight aria-hidden="true" className="size-5" />
-              </a>
-              <a href="#jak-to-dziala" className="inline-flex min-h-12 items-center gap-2 font-medium text-leaf underline underline-offset-4 hover:text-deep">
-                Jak to działa
-                <ArrowRight aria-hidden="true" className="size-5" />
-              </a>
+            <nav aria-label="Szybki dostęp" className="mt-6">
+              {/* Kolejność linków = kolejność sekcji poniżej. */}
+              <ul className="flex flex-wrap gap-x-6 gap-y-1">
+                {SECTIONS.map((section) => (
+                  <li key={section.id}>
+                    <a
+                      href={`#${section.id}`}
+                      className="inline-flex min-h-12 items-center gap-2 font-medium text-leaf underline underline-offset-4 hover:text-deep"
+                    >
+                      {section.label}
+                      <ArrowRight aria-hidden="true" className="size-5" />
+                    </a>
+                  </li>
+                ))}
+              </ul>
             </nav>
           </div>
 
