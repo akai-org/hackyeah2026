@@ -2,10 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
-import { CircleAlert, CircleHelp, Loader2, Pencil, Save, Search, Sparkles } from "lucide-react";
+import { CircleAlert, CircleCheck, CircleHelp, Loader2, Pencil, Save, Search, Sparkles } from "lucide-react";
 
 import { DictationButton, DictationNotice, DictationStatus, useDictation } from "@/components/dictation";
-import { Toast, useToast } from "@/components/toast";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { TAG_GROUPS, TAG_KEYWORDS, TAG_LABELS, TARGET_GROUP_LABELS, type Tag } from "@/data/mock";
 import { apiPost } from "@/lib/api";
@@ -87,12 +86,14 @@ function DetailField({
   label,
   value,
   placeholder,
+  readOnly = false,
   onChange,
 }: {
   id: string;
   label: string;
   value: string;
   placeholder: string;
+  readOnly?: boolean;
   onChange: (value: string) => void;
 }) {
   const missingId = `${id}-brak`;
@@ -107,9 +108,13 @@ function DetailField({
           type="text"
           value={value}
           onChange={(event) => onChange(event.target.value)}
+          readOnly={readOnly}
           placeholder={placeholder}
           aria-describedby={value.trim() ? undefined : missingId}
-          className="min-h-12 w-full rounded-ui border-(length:--bw) border-deep bg-surface px-4 text-base text-ink placeholder:text-muted"
+          className={cn(
+            "min-h-12 w-full rounded-ui border-(length:--bw) border-deep px-4 text-base text-ink placeholder:text-muted",
+            readOnly ? "bg-paper" : "bg-surface",
+          )}
         />
         {/* Brak oznaczony tekstem i ikoną, nie samym kolorem (DESIGN.md 8). */}
         {!value.trim() && (
@@ -151,13 +156,14 @@ export function IdeaCreator() {
   const [details, setDetails] = useState<Details>({ audience: "", place: "", budget: "", partners: "" });
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(false);
+  // Po zapisie fiszka zostaje na ekranie z potwierdzeniem; ponowny zapis utworzyłby duplikat.
+  const [saved, setSaved] = useState<{ id: number | null } | null>(null);
   const { user } = useAuth();
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const dictation = useDictation(setText, () => setError(false));
   const cardHeadingRef = useRef<HTMLHeadingElement>(null);
   const timers = useRef<number[]>([]);
-  const toast = useToast();
 
   useEffect(() => () => timers.current.forEach((timer) => window.clearTimeout(timer)), []);
 
@@ -194,23 +200,24 @@ export function IdeaCreator() {
         setCard(built);
         setDetails({ audience: built.audience, place: built.place, budget: "", partners: "" });
         setSaveError(false);
+        setSaved(null);
       }, ANALYSIS_MS),
     ];
   }
 
   async function saveCard() {
-    if (!card) return;
+    if (!card || saved) return;
     setSaving(true);
     setSaveError(false);
     try {
-      await apiPost("/api/ideas", {
+      const result = await apiPost<{ id: number | null; message: string }>("/api/ideas", {
         title: card.title,
         essence: ideaEssence(card, details),
         for_whom: details.audience.trim() || null,
         tags: card.tags,
         author_name: user?.name ?? null,
       });
-      toast.show("Fiszka zapisana. Ekspert ROPS przejrzy ją w ciągu kilku dni.");
+      setSaved({ id: result?.id ?? null });
     } catch (error) {
       console.error(error);
       setSaveError(true);
@@ -343,6 +350,7 @@ export function IdeaCreator() {
                 label="Dla kogo"
                 value={details.audience}
                 placeholder="np. seniorzy mieszkający samotnie"
+                readOnly={Boolean(saved)}
                 onChange={(audience) => setDetails((current) => ({ ...current, audience }))}
               />
 
@@ -351,6 +359,7 @@ export function IdeaCreator() {
                 label="Gdzie"
                 value={details.place}
                 placeholder="np. świetlica wiejska w gminie Racławice"
+                readOnly={Boolean(saved)}
                 onChange={(place) => setDetails((current) => ({ ...current, place }))}
               />
 
@@ -362,6 +371,7 @@ export function IdeaCreator() {
                 label="Budżet"
                 value={details.budget}
                 placeholder="np. ok. 5 tys. zł rocznie"
+                readOnly={Boolean(saved)}
                 onChange={(budget) => setDetails((current) => ({ ...current, budget }))}
               />
 
@@ -370,6 +380,7 @@ export function IdeaCreator() {
                 label="Partnerzy"
                 value={details.partners}
                 placeholder="np. GOPS, szkoła, koło gospodyń wiejskich"
+                readOnly={Boolean(saved)}
                 onChange={(partners) => setDetails((current) => ({ ...current, partners }))}
               />
 
@@ -403,10 +414,17 @@ export function IdeaCreator() {
             </dl>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button type="button" onClick={saveCard} disabled={saving}>
-                {saving ? <Loader2 aria-hidden="true" className="animate-spin" /> : <Save aria-hidden="true" />}
-                {saving ? "Zapisuję…" : "Zapisz fiszkę"}
-              </Button>
+              {saved ? (
+                <Button type="button" disabled>
+                  <CircleCheck aria-hidden="true" />
+                  Zapisano
+                </Button>
+              ) : (
+                <Button type="button" onClick={saveCard} disabled={saving}>
+                  {saving ? <Loader2 aria-hidden="true" className="animate-spin" /> : <Save aria-hidden="true" />}
+                  {saving ? "Zapisuję…" : "Zapisz fiszkę"}
+                </Button>
+              )}
               <Link
                 href={`/wyniki?q=${encodeURIComponent(text.trim())}`}
                 className={buttonVariants({ variant: "secondary" })}
@@ -418,6 +436,16 @@ export function IdeaCreator() {
                 <Pencil aria-hidden="true" />
                 Popraw opis
               </Button>
+            </div>
+            {/* Potwierdzenie na fiszce, przy przycisku — komunikat na dole ekranu łatwo przeoczyć. */}
+            <div role="status" aria-live="polite">
+              {saved && (
+                <p className="mt-4 flex items-start gap-2 rounded-ui border-2 border-leaf bg-mint px-4 py-3 font-bold text-ink">
+                  <CircleCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-deep" />
+                  {saved.id ? `Fiszka zapisana (nr ${saved.id}).` : "Fiszka zapisana."} Ekspert ROPS przejrzy ją w ciągu
+                  kilku dni.
+                </p>
+              )}
             </div>
             {saveError && (
               <p
@@ -432,7 +460,6 @@ export function IdeaCreator() {
         </section>
       )}
 
-      <Toast message={toast.message} onClose={toast.hide} />
     </>
   );
 }
