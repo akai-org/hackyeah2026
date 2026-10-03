@@ -24,6 +24,8 @@ async def tag(body: dict):
 
 async def _log_search(query: str, tag_result: dict):
     try:
+        from app.database import get_db
+        from app.models import SearchLog
         async with get_db() as db:
             log = SearchLog(
                 query=query,
