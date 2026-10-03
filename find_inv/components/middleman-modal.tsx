@@ -195,7 +195,7 @@ export function MiddlemanModal({ innovationId, innovationTitle, onClose }: Props
               ["Do uzupełnienia", plan.missing],
             ] as [string, unknown][]).map(([label, items]) =>
               Array.isArray(items) && items.length ? (
-                <div key={label} className="border-l-4 border-leaf pl-4">
+                <div key={label} className="">
                   <p className="font-bold text-muted">{label}</p>
                   <ul className="mt-1 list-disc pl-5 space-y-1">
                     {(items as string[]).map((item, i) => <li key={i}>{item}</li>)}
