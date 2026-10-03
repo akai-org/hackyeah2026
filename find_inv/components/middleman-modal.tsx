@@ -176,14 +176,14 @@ export function MiddlemanModal({ innovationId, innovationTitle, onClose }: Props
               ["Finansowanie", plan.funding_hints],
             ] as [string, unknown][]).map(([label, value]) =>
               value ? (
-                <div key={label} className="border-l-4 border-leaf pl-4">
+                <div key={label} className="">
                   <p className="font-bold text-muted">{label}</p>
                   <p>{String(value)}</p>
                 </div>
               ) : null,
             )}
             {Array.isArray(plan.steps) && (
-              <div className="border-l-4 border-leaf pl-4">
+              <div className="">
                 <p className="font-bold text-muted">Kroki wdrożenia</p>
                 <ol className="mt-1 list-decimal pl-5 space-y-1">
                   {(plan.steps as string[]).map((s, i) => <li key={i}>{s}</li>)}

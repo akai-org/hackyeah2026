@@ -5,10 +5,15 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
+  Bell,
+  BellOff,
+  CircleCheck,
   CircleHelp,
   Clock,
+  FlaskConical,
   Link2,
   MapPin,
+  MessageSquareText,
   Tag,
   TrendingUp,
   Users,
@@ -19,10 +24,13 @@ import {
 } from "lucide-react";
 
 import { apiFetch } from "@/lib/api";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { MiddlemanModal } from "@/components/middleman-modal";
+import { TesterApplyModal } from "@/components/tester-apply-modal";
+import { Toast, useToast } from "@/components/toast";
 import { PageBackdrop } from "@/components/page-backdrop";
 import { BackendInnovationCard, type BackendInnovation } from "@/components/backend-innovation-card";
+import { TAG_LABELS } from "@/data/mock";
 
 const COST_LABEL: Record<string, string> = {
   low: "Niski koszt",
@@ -72,6 +80,24 @@ export default function InnovationDetailPage() {
   const [middlemanOpen, setMiddlemanOpen] = useState(false);
   const [similar, setSimilar] = useState<BackendInnovation[]>([]);
   const [copied, setCopied] = useState(false);
+
+  const toast = useToast();
+  const [testerModalOpen, setTesterModalOpen] = useState(false);
+  const [testerStatus, setTesterStatus] = useState<"none" | "pending">("none");
+  const [interestOpen, setInterestOpen] = useState(false);
+  const [interestSaved, setInterestSaved] = useState(false);
+
+  useEffect(() => {
+    if (!id) return;
+    try {
+      const saved = localStorage.getItem(`hubmi-tester-${id}`);
+      if (saved) setTesterStatus("pending");
+      const interest = localStorage.getItem(`hubmi-interest-${id}`);
+      if (interest) setInterestSaved(true);
+    } catch {
+      // localStorage unavailable
+    }
+  }, [id]);
 
   useEffect(() => {
     if (!id) return;
@@ -328,6 +354,122 @@ export default function InnovationDetailPage() {
         </div>
       </div>
 
+      {/* Community sections */}
+      <div className="mx-auto max-w-content border-t-2 border-sage px-4 pt-10 pb-4 sm:px-6">
+        <div className="grid gap-6 md:grid-cols-3">
+
+          {/* Dyskusja */}
+          <div className="border-(length:--bw) border-deep bg-surface p-6 shadow-paper">
+            <div className="flex items-center gap-3">
+              <MessageSquareText className="size-6 shrink-0 text-leaf" aria-hidden="true" />
+              <h2 className="text-lg font-bold text-deep">Dyskusja</h2>
+            </div>
+            <p className="mt-3 text-base text-ink">
+              Porozmawiaj z innymi zainteresowanymi tą innowacją.
+            </p>
+            <Link
+              href={`/forum?innowacja=${item.id}`}
+              className={buttonVariants({ variant: "primary", className: "mt-5 w-full justify-center gap-2" })}
+            >
+              <MessageSquareText className="size-4" aria-hidden="true" />
+              Zobacz dyskusję na forum
+            </Link>
+          </div>
+
+          {/* Testowanie */}
+          <div className="border-(length:--bw) border-deep bg-surface p-6 shadow-paper">
+            <div className="flex items-center gap-3">
+              <FlaskConical className="size-6 shrink-0 text-leaf" aria-hidden="true" />
+              <h2 className="text-lg font-bold text-deep">Testowanie</h2>
+            </div>
+            <p className="mt-3 text-base text-ink">
+              Przetestuj innowację i podziel się opinią z twórcami.
+            </p>
+            {testerStatus === "pending" ? (
+              <div className="mt-5 flex items-center gap-2 rounded-ui border-2 border-leaf bg-paper px-4 py-3 text-base font-bold text-leaf">
+                <CircleCheck className="size-5 shrink-0" aria-hidden="true" />
+                Zgłoszenie wysłane — oczekuje na akceptację
+              </div>
+            ) : (
+              <Button
+                variant="primary"
+                className="mt-5 w-full gap-2"
+                onClick={() => setTesterModalOpen(true)}
+              >
+                <FlaskConical className="size-4" aria-hidden="true" />
+                Zgłoś się jako tester
+              </Button>
+            )}
+          </div>
+
+          {/* Zainteresowanie */}
+          <div className="border-(length:--bw) border-deep bg-surface p-6 shadow-paper">
+            <div className="flex items-center gap-3">
+              <Bell className="size-6 shrink-0 text-leaf" aria-hidden="true" />
+              <h2 className="text-lg font-bold text-deep">Podobne innowacje</h2>
+            </div>
+            <p className="mt-3 text-base text-ink">
+              Interesuje Cię ta tematyka? Dowiaduj się o nowych innowacjach.
+            </p>
+
+            {interestSaved ? (
+              <div className="mt-5 flex items-center gap-2 rounded-ui border-2 border-leaf bg-paper px-4 py-3 text-base font-bold text-leaf">
+                <CircleCheck className="size-5 shrink-0" aria-hidden="true" />
+                Zainteresowanie zapisane
+              </div>
+            ) : interestOpen ? (
+              <div className="mt-4">
+                {item.tags.length > 0 && (
+                  <ul className="flex flex-wrap gap-2" aria-label="Tagi tej innowacji">
+                    {item.tags.map((tag) => (
+                      <li
+                        key={tag}
+                        className="inline-flex items-center gap-1 rounded-full border border-leaf bg-paper px-2.5 py-1 text-sm text-leaf"
+                      >
+                        <Tag className="size-3" aria-hidden="true" />
+                        {(TAG_LABELS as Record<string, string>)[tag] ?? tag}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <div className="mt-4 flex gap-3">
+                  <Button
+                    variant="primary"
+                    className="flex-1 gap-2"
+                    onClick={() => {
+                      try {
+                        localStorage.setItem(`hubmi-interest-${item.id}`, JSON.stringify(item.tags));
+                      } catch {
+                        // silent
+                      }
+                      setInterestSaved(true);
+                      setInterestOpen(false);
+                      toast.show("Zapisano zainteresowanie. Poinformujemy Cię o podobnych innowacjach.");
+                    }}
+                  >
+                    <Bell className="size-4" aria-hidden="true" />
+                    Zapisz zainteresowanie
+                  </Button>
+                  <Button variant="secondary" onClick={() => setInterestOpen(false)}>
+                    Anuluj
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button
+                variant="secondary"
+                className="mt-5 w-full gap-2"
+                onClick={() => setInterestOpen(true)}
+              >
+                <Bell className="size-4" aria-hidden="true" />
+                Interesują mnie podobne
+              </Button>
+            )}
+          </div>
+
+        </div>
+      </div>
+
       {similar.length > 0 && (
         <section aria-labelledby="podobne-tytul" className="mx-auto max-w-content border-t-2 border-sage px-4 py-12 sm:px-6">
           <h2 id="podobne-tytul" className="text-xl font-bold text-deep">Podobne innowacje</h2>
@@ -348,6 +490,20 @@ export default function InnovationDetailPage() {
           onClose={() => setMiddlemanOpen(false)}
         />
       )}
+
+      {testerModalOpen && (
+        <TesterApplyModal
+          innovationId={item.id}
+          innovationTitle={item.title}
+          onClose={() => setTesterModalOpen(false)}
+          onSuccess={() => {
+            setTesterStatus("pending");
+            toast.show("Zgłoszenie wysłane — oczekuje na akceptację twórcy.");
+          }}
+        />
+      )}
+
+      <Toast message={toast.message} onClose={toast.hide} />
     </PageBackdrop>
   );
 }
