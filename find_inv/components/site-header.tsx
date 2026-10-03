@@ -32,7 +32,7 @@ export function SiteHeader() {
     user?.role === "admin"
       ? [...NAV_LINKS, { href: "/admin", label: "Panel ROPS" }]
       : user?.role === "tester"
-        ? NAV_LINKS.map((link) => (link.href === "/testerzy" ? { href: "/testerzy/panel", label: "Panel testera" } : link))
+        ? [...NAV_LINKS, { href: "/testerzy/panel", label: "Panel testera" }]
         : NAV_LINKS;
   const buttonRef = useRef<HTMLButtonElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
