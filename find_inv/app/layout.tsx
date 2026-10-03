@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { LoginDialog } from "@/components/login-dialog";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SIMPLE_MODE_SCRIPT, SimpleModeProvider } from "@/components/simple-mode";
@@ -31,6 +32,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               {children}
             </main>
             <SiteFooter />
+            <LoginDialog />
           </AuthProvider>
         </SimpleModeProvider>
       </body>

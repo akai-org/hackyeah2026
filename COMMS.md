@@ -14,6 +14,10 @@
 | A2 | ✅ matchmaking zmergowany z rdzeniem A1 (baza innovations, app.llm, ChromaDB) + 114 innowacji ROPS (seed A3) | agent-2/matchmaking | — |
 | A3 | ✅ seed ROPS (114) + knowledge na DB | merge main → agent-3/start | — |
 | A4 | ⏸ czeka na A1 | — | — |
+| A1 | ⏳ w trakcie | — | A2, A3, A4, A5 |
+| A2 | ⏸ czeka na A1+A3 | — | — |
+| A3 | ⏸ czeka na A1 | — | A2 |
+| A4 | ✅ auth + /kreator /testerzy /forum (PR) | — | — |
 | A5 | ⏸ czeka na A1 | — | — |
 
 **Aktualizuj tabelę przy każdym PR.** Status: `⏳ w trakcie` / `✅ gotowy` / `⏸ czeka` / `🔴 bloker`
@@ -199,6 +203,44 @@ oraz modeli `Innovation`, `SearchLog` — jeśli nazwiecie inaczej, dajcie znać
 ## 🟩 Agent 4 — Creator + Tester + Forum
 
 <!-- Dopisuj wpisy tutaj na górze -->
+
+[20:20] [FYI A5] Middleman zostaje TWÓJ — usunąłem swoje /wdrozenie/[id]. Przyciski „Jak to wdrożyć?” (wyniki, Biblioteka,
+        karta /innowacje/[id], puls powiatu) prowadzą do `/wdrozenie?innowacja={id}&problem={opis}`. Id innowacji są liczbowe (ROPS).
+        Twój Middleman importuje `data/innovations.mock` — plik zostaje, ale realne karty są w `data/innovations.ts` / GET /api/innovations.
+[20:20] [FYI merge] agent-4/matchmaking-ui ↔ agent-5/admin-middleman: globals.css łączy się czysto. Konflikt tylko w
+        `components/site-header.tsx` — wersja A4 zawiera już zmianę A5 (link „Panel ROPS” dla admina) → bierz wersję A4.
+        COMMS.md: zostaw wpisy obu stron.
+[20:20] [DONE] Wmergowałem `agent-2/a4-extras` (voice-fix przy dyktowaniu + „Zgłoś tę potrzebę do ROPS”) do agent-4/matchmaking-ui.
+[20:20] [DONE] axe-core (WCAG 2.1 A/AA + best practices): 0 naruszeń na wszystkich stronach A4, desktop i 375 px, także po
+        interakcjach (logowanie, fiszka, błędy formularzy, czat, puls powiatu, tryb prosty). `next build` przechodzi.
+
+[19:40] [FYI ALL] A4 bierze cały frontend modułów bez właściciela (branch `agent-4/matchmaking-ui`):
+        /wyniki (matchmaking: tagi → 5 kart → czat), /innowacje/[id], /biblioteka,
+        strona główna (Kondycja Małopolski), /luka-innowacyjna (Indeks Luki + Puls powiatu). Nie dubluj tych stron.
+        Każde wywołanie ma zapas w mockach — gdy endpoint zacznie odpowiadać, front sam przełączy się na real.
+[19:40] [FYI A2] Front woła: POST /api/tag {text} → {tags, target_group?, location?, is_relevant?};
+        POST /api/match {text, tags, limit:5} → {innovations: InnovationCard[], total_found};
+        POST /api/chat {messages, tags, context_innovation_ids} → SSE: `data: <tekst>` albo `data: {"content": "..."}`, koniec `data: [DONE]`.
+        UWAGA: chunk z 
+ w środku łamie SSE — wysyłaj JSON (`json.dumps({"content": chunk})`).
+[19:40] [FYI A3] GET /api/innovations?search=&tags=a,b&cost_level=&status=active,unmaintained&limit=&offset=
+        → {innovations, total} (albo goła lista); GET /api/innovations/{id}; GET /api/stats/malopolska;
+        GET /api/innovation-gap → [{powiat, gap_score, top_area, innovations_count}];
+        GET /api/gmina-pulse/{powiat} → {powiat, top_challenges[], matching_innovations[]}.
+[19:40] [FYI A5] Middleman: POST /api/middleman/start {innovation_id, institution_type, location, problem_desc}
+        → {session_id, first_question}; POST /api/middleman/answer {session_id, answer} → SSE zdarzeń
+        `{"type":"question","content":"..."}` albo `{"type":"plan","content":{staff_needed, estimated_cost,
+        location_suggestions, steps[], timeline, funding_hints}}`. (Nieaktualne — patrz wpis 20:20: Middleman UI jest A5.)
+
+[18:30] [DONE] Branch `agent-4/auth-kreator-forum`: auth we froncie + strony /kreator, /testerzy, /forum (mock, bez backendu).
+[18:30] [FYI A5] Auth: `import { useAuth } from "@/lib/auth"` → `{ user, status, offline, login, logout, setRole, openLogin }`.
+        `user = { id, name, role }`, role: "user" | "tester" | "consultant" | "admin". Czekaj na `status === "ready"` przed sprawdzeniem roli.
+        Wywołania API: `apiFetch<T>(path, init)` z `@/lib/api` — dokłada nagłówek `X-Session-Token` + `credentials: "include"`, zwraca samo `data`.
+        Logowanie jako Admin robi `router.push("/admin")` — strona /admin jest Twoja.
+[18:30] [FYI A1] Front woła POST /api/auth/session { name, role } → oczekuje `{ data: { session_token, role } }`,
+        potem GET /api/auth/me → `{ data: { id, name, role } }`; token czyta z cookie "session" ALBO nagłówka X-Session-Token.
+        Dopóki endpointów nie ma, front robi sesję lokalną (token "offline-…") — po Push 2 przełączy się sam.
+[18:30] [FYI] Wspólne komponenty: `<RoleBadge role="tester" />`, `<Toast>` + `useToast()`, dane w `find_inv/data/mock.ts` (TAXONOMY_TAGS z etykietami PL, ROLES).
 
 ```
 [NEED A2] — jeśli potrzebujesz run_autotagger a utils.py nie jest jeszcze na main

@@ -5,7 +5,7 @@ import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react"
 import { CircleAlert, Info, Mic, Search, Square } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { apiPost } from "@/lib/api";
+import { fixTranscript } from "@/lib/matchmaking";
 import { cn } from "@/lib/utils";
 
 const EXAMPLES = [
@@ -65,7 +65,14 @@ const DICTATION_ERRORS: Record<string, string> = {
 
 type DictationState = "idle" | "recording" | "done" | "error";
 
-export function SearchForm() {
+type SearchFormProps = {
+  /** Tekst startowy pola, np. poprzedni opis na stronie wyników. */
+  initialText?: string;
+  showExamples?: boolean;
+  className?: string;
+};
+
+export function SearchForm({ initialText = "", showExamples = true, className }: SearchFormProps) {
   const router = useRouter();
   const ids = useId();
   const fieldId = `${ids}-pole`;
@@ -73,7 +80,7 @@ export function SearchForm() {
   const errorId = `${ids}-blad`;
   const examplesId = `${ids}-przyklady`;
 
-  const [text, setText] = useState("");
+  const [text, setText] = useState(initialText);
   const [error, setError] = useState(false);
   const [errorKey, setErrorKey] = useState(0);
   const [dictation, setDictation] = useState<DictationState>("idle");
@@ -125,26 +132,30 @@ export function SearchForm() {
 
     let heard = false;
     let failed = false;
-    let heardTranscript = "";
 
     recognition.onresult = (event) => {
-      let segment = "";
+      let transcript = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
-        if (event.results[i].isFinal) segment += event.results[i][0].transcript;
+        if (event.results[i].isFinal) transcript += event.results[i][0].transcript;
       }
-      segment = segment.trim();
-      if (!segment) return;
+      transcript = transcript.trim();
+      if (!transcript) return;
       heard = true;
-      heardTranscript = segment;
-      setText((previous) => (previous.trim() ? `${previous.trimEnd()} ${segment}` : segment));
+      setText((previous) => (previous.trim() ? `${previous.trimEnd()} ${transcript}` : transcript));
       setError(false);
+      // Backend poprawia gramatykę i błędy rozpoznawania mowy. Podmieniamy tylko podyktowany fragment.
+      void fixTranscript(transcript).then((corrected) => {
+        if (corrected !== transcript) setText((current) => current.replace(transcript, corrected));
+      });
     };
 
     recognition.onerror = (event) => {
       if (event.error === "aborted") return;
       failed = true;
       setDictation("error");
-      setDictationMessage(DICTATION_ERRORS[event.error] ?? "Dyktowanie nie zadziałało. Spróbuj jeszcze raz albo wpisz tekst.");
+      setDictationMessage(
+        DICTATION_ERRORS[event.error] ?? "Dyktowanie nie zadziałało. Spróbuj jeszcze raz albo wpisz tekst.",
+      );
     };
 
     recognition.onend = () => {
@@ -153,18 +164,6 @@ export function SearchForm() {
       if (heard) {
         setDictation("done");
         setDictationMessage("Gotowe, sprawdź tekst");
-        // Silently apply voice-fix to improve transcript quality (no API key = no-op)
-        apiPost<{ corrected: string }>("/api/voice-fix", { transcript: heardTranscript })
-          .then((r) => {
-            if (r?.corrected && r.corrected.trim()) {
-              setText((prev) =>
-                prev.endsWith(heardTranscript)
-                  ? prev.slice(0, -heardTranscript.length) + r.corrected
-                  : prev,
-              );
-            }
-          })
-          .catch(() => {});
       } else {
         setDictation("error");
         setDictationMessage(DICTATION_ERRORS["no-speech"]);
@@ -186,7 +185,14 @@ export function SearchForm() {
   const describedBy = [supported ? hintId : null, error ? errorId : null].filter(Boolean).join(" ") || undefined;
 
   return (
-    <form action="/wyniki" method="get" role="search" noValidate onSubmit={handleSubmit} className="mt-8">
+    <form
+      action="/wyniki"
+      method="get"
+      role="search"
+      noValidate
+      onSubmit={handleSubmit}
+      className={cn("mt-8", className)}
+    >
       <label htmlFor={fieldId} className="block text-lg font-bold text-deep">
         Opisz swój problem
       </label>
@@ -265,24 +271,26 @@ export function SearchForm() {
         </p>
       )}
 
-      <div role="group" aria-labelledby={examplesId} className="mt-6">
-        <p id={examplesId} className="font-bold text-deep">
-          Przykłady
-        </p>
-        <ul className="mt-2 flex flex-wrap gap-3">
-          {EXAMPLES.map((example, index) => (
-            <li key={example} className={index >= 3 ? "simple-hidden" : undefined}>
-              <button
-                type="button"
-                onClick={() => applyExample(example)}
-                className="min-h-12 cursor-pointer rounded-ui border-(length:--bw) border-deep bg-surface px-4 py-2 text-left text-base text-ink hover:bg-mint"
-              >
-                {example}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
+      {showExamples && (
+        <div role="group" aria-labelledby={examplesId} className="mt-6">
+          <p id={examplesId} className="font-bold text-deep">
+            Przykłady
+          </p>
+          <ul className="mt-2 flex flex-wrap gap-3">
+            {EXAMPLES.map((example, index) => (
+              <li key={example} className={index >= 3 ? "simple-hidden" : undefined}>
+                <button
+                  type="button"
+                  onClick={() => applyExample(example)}
+                  className="min-h-12 cursor-pointer rounded-ui border-(length:--bw) border-deep bg-surface px-4 py-2 text-left text-base text-ink hover:bg-mint"
+                >
+                  {example}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </form>
   );
 }

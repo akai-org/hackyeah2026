@@ -1,163 +1,157 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { apiPost } from "@/lib/api";
+import { createContext, use, useCallback, useEffect, useMemo, useState } from "react";
 
-export type Role = "user" | "tester" | "consultant" | "admin";
+import { ApiError, apiFetch, readSessionCookie, writeSessionCookie } from "@/lib/api";
+import type { Role } from "@/data/mock";
 
-export interface AuthUser {
-  id: number;
+// Logowanie bez hasła (CONTEXT.md): użytkownik wybiera rolę, backend wydaje token sesji,
+// token żyje w cookie "session". Gdy backend nie odpowiada (np. auth jeszcze nie wdrożony),
+// sesja działa lokalnie w przeglądarce, żeby demo nie stanęło.
+
+export type User = {
+  id: number | string;
   name: string;
   role: Role;
-}
+};
 
-interface AuthCtx {
-  user: AuthUser | null;
-  loading: boolean;
-  openLogin: () => void;
+type AuthStatus = "loading" | "ready";
+
+type AuthContextValue = {
+  user: User | null;
+  status: AuthStatus;
+  /** true, gdy sesja jest tylko w przeglądarce, bo backend nie odpowiedział. */
+  offline: boolean;
+  login: (role: Role, name?: string) => Promise<User>;
   logout: () => void;
-  setUser: (u: AuthUser | null) => void;
+  setRole: (role: Role) => Promise<void>;
+  loginOpen: boolean;
+  openLogin: () => void;
+  closeLogin: () => void;
+};
+
+const OFFLINE_PREFIX = "offline-";
+const OFFLINE_STORAGE_KEY = "hubmi-sesja-offline";
+const DEFAULT_NAME = "Gość";
+
+function readOfflineUser(): User | null {
+  try {
+    const raw = localStorage.getItem(OFFLINE_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as User) : null;
+  } catch {
+    return null;
+  }
 }
 
-const Ctx = createContext<AuthCtx>({
-  user: null,
-  loading: true,
-  openLogin: () => {},
-  logout: () => {},
-  setUser: () => {},
-});
+function saveOfflineUser(user: User | null) {
+  try {
+    if (user) localStorage.setItem(OFFLINE_STORAGE_KEY, JSON.stringify(user));
+    else localStorage.removeItem(OFFLINE_STORAGE_KEY);
+  } catch {
+    // Brak pamięci przeglądarki: sesja przetrwa do odświeżenia strony.
+  }
+}
 
-const ROLE_LABELS: Record<Role, string> = {
-  user: "Mieszkaniec",
-  tester: "Tester",
-  consultant: "Konsultant",
-  admin: "Administrator",
-};
-
-const DEFAULT_NAMES: Record<Role, string> = {
-  user: "Mieszkaniec",
-  tester: "Tester",
-  consultant: "Konsultant",
-  admin: "Admin",
-};
+const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUserState] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [nameInput, setNameInput] = useState("");
-  const dialogRef = useRef<HTMLDialogElement>(null);
-  const nameRef = useRef<HTMLInputElement>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [status, setStatus] = useState<AuthStatus>("loading");
+  const [offline, setOffline] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
 
+  // Przy starcie: kto jest zalogowany (GET /api/auth/me).
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}/api/auth/me`, {
-      credentials: "include",
-    })
-      .then((r) => r.ok ? r.json() : null)
-      .then((j) => j?.data ? setUserState(j.data) : null)
-      .catch(() => null)
-      .finally(() => setLoading(false));
+    let cancelled = false;
+
+    async function restore() {
+      const token = readSessionCookie();
+      if (!token) return null;
+      if (token.startsWith(OFFLINE_PREFIX)) {
+        setOffline(true);
+        return readOfflineUser();
+      }
+      try {
+        return await apiFetch<User>("/api/auth/me");
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+          writeSessionCookie(null);
+          return null;
+        }
+        // Backend niedostępny: zostaje to, co wiemy z ostatniego logowania.
+        setOffline(true);
+        return readOfflineUser();
+      }
+    }
+
+    restore().then((restored) => {
+      if (cancelled) return;
+      setUser(restored);
+      setStatus("ready");
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  useEffect(() => {
-    const d = dialogRef.current;
-    if (!d) return;
-    if (modalOpen) {
-      d.showModal();
-      setTimeout(() => nameRef.current?.focus(), 50);
-    } else {
-      d.close();
-    }
-  }, [modalOpen]);
+  const login = useCallback(async (role: Role, name?: string) => {
+    const displayName = name?.trim() || DEFAULT_NAME;
+    let next: User;
 
-  const setUser = useCallback((u: AuthUser | null) => setUserState(u), []);
-
-  async function loginAs(role: Role) {
     try {
-      const name = nameInput.trim() || DEFAULT_NAMES[role];
-      const data = await apiPost<AuthUser & { session_token: string }>("/api/auth/session", {
-        name,
-        role,
+      const session = await apiFetch<{ session_token: string; role: Role }>("/api/auth/session", {
+        method: "POST",
+        body: JSON.stringify({ name: displayName, role }),
       });
-      document.cookie = `session=${data.session_token}; path=/; samesite=lax`;
-      setUserState({ id: data.id, name: data.name, role: data.role });
-      setModalOpen(false);
-      setNameInput("");
+      writeSessionCookie(session.session_token);
+      next = await apiFetch<User>("/api/auth/me").catch(() => ({ id: "?", name: displayName, role: session.role }));
+      setOffline(false);
     } catch {
-      /* ignore */
+      next = { id: OFFLINE_PREFIX + crypto.randomUUID(), name: displayName, role };
+      writeSessionCookie(String(next.id));
+      setOffline(true);
     }
-  }
 
-  function logout() {
-    document.cookie = "session=; max-age=0; path=/";
-    setUserState(null);
-  }
+    // Kopia w przeglądarce przydaje się, gdy backend zniknie w trakcie demo.
+    saveOfflineUser(next);
+    setUser(next);
+    return next;
+  }, []);
 
-  return (
-    <Ctx.Provider value={{ user, loading, openLogin: () => setModalOpen(true), logout, setUser }}>
-      {children}
+  const logout = useCallback(() => {
+    writeSessionCookie(null);
+    saveOfflineUser(null);
+    setUser(null);
+    setOffline(false);
+  }, []);
 
-      {/* Login modal */}
-      <dialog
-        ref={dialogRef}
-        onClose={() => setModalOpen(false)}
-        className="w-full max-w-sm rounded-ui border-(length:--bw) border-deep bg-surface p-8 shadow-paper backdrop:bg-ink/40"
-      >
-        <div className="flex items-center justify-between">
-          <h2 id="login-tytul" className="text-xl font-bold text-deep">Zaloguj się</h2>
-          <button
-            onClick={() => setModalOpen(false)}
-            aria-label="Zamknij"
-            className="inline-flex size-10 items-center justify-center rounded-ui hover:bg-sage"
-          >
-            <X className="size-5" />
-          </button>
-        </div>
-        <p className="mt-2 text-sm text-muted">Tryb demo — wybierz rolę i wpisz swoje imię (opcjonalnie).</p>
-
-        <div className="mt-5">
-          <label htmlFor="login-imie" className="block text-sm font-bold text-deep">
-            Imię (opcjonalne)
-          </label>
-          <input
-            ref={nameRef}
-            id="login-imie"
-            type="text"
-            value={nameInput}
-            onChange={(e) => setNameInput(e.target.value)}
-            placeholder="np. Anna"
-            className="mt-1 w-full rounded-ui border-(length:--bw) border-deep bg-paper px-4 py-2 text-base"
-          />
-        </div>
-
-        <p className="mt-5 text-sm font-bold text-deep">Wybierz rolę</p>
-        <ul className="mt-2 flex flex-col gap-2">
-          {(Object.entries(ROLE_LABELS) as [Role, string][]).map(([role, label]) => (
-            <li key={role}>
-              <Button
-                variant={role === "admin" ? "primary" : "secondary"}
-                className="w-full justify-start"
-                onClick={() => loginAs(role)}
-              >
-                {label}
-              </Button>
-            </li>
-          ))}
-        </ul>
-      </dialog>
-    </Ctx.Provider>
+  const setRole = useCallback(
+    async (role: Role) => {
+      if (!user) return;
+      if (!offline) {
+        await apiFetch<{ role: Role }>("/api/auth/set-role", { method: "POST", body: JSON.stringify({ role }) });
+      }
+      const next = { ...user, role };
+      saveOfflineUser(next);
+      setUser(next);
+    },
+    [user, offline],
   );
+
+  const openLogin = useCallback(() => setLoginOpen(true), []);
+  const closeLogin = useCallback(() => setLoginOpen(false), []);
+
+  const value = useMemo(
+    () => ({ user, status, offline, login, logout, setRole, loginOpen, openLogin, closeLogin }),
+    [user, status, offline, login, logout, setRole, loginOpen, openLogin, closeLogin],
+  );
+
+  return <AuthContext value={value}>{children}</AuthContext>;
 }
 
 export function useAuth() {
-  return useContext(Ctx);
+  const context = use(AuthContext);
+  if (!context) throw new Error("useAuth musi być użyty wewnątrz AuthProvider");
+  return context;
 }
-
-export const ROLE_BADGE: Record<Role, { label: string; className: string }> = {
-  user: { label: "Mieszkaniec", className: "bg-sage text-deep" },
-  tester: { label: "Tester", className: "bg-butter text-ink" },
-  consultant: { label: "Konsultant", className: "bg-mint text-deep" },
-  admin: { label: "Admin", className: "bg-deep text-surface" },
-};

@@ -72,6 +72,19 @@ html[data-simple="true"] *::after {
   transition: none !important;
 }
 
+/* Tryb prosty: tekst 20 px nie mieści pełnej nawigacji w jednym rzędzie, więc menu mobilne zostaje do 1536 px. */
+@media (min-width: 80rem) and (max-width: 95.99rem) {
+  html[data-simple="true"] .nav-desktop {
+    display: none;
+  }
+  html[data-simple="true"] button.nav-mobile {
+    display: inline-flex;
+  }
+  html[data-simple="true"] div.nav-mobile:not([hidden]) {
+    display: block;
+  }
+}
+
 /* ---------- Kolaż: <CutoutText> (DESIGN.md, sekcja 6) ---------- */
 
 @layer components {
@@ -162,19 +175,42 @@ html[data-simple="true"] .simple-hidden {
   display: none !important;
 }
 
-/* ---------- Print styles ---------- */
+/* ---------- Ruch w odpowiedzi na akcję (DESIGN.md, sekcja 9) ---------- */
+
+@layer components {
+  /* Powiadomienie i nowa karta (fiszka, post) pojawiają się krótko, bez wjazdów z daleka. */
+  .toast-in,
+  .appear {
+    animation: appear 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  @keyframes appear {
+    from {
+      opacity: 0;
+      translate: 0 6px;
+    }
+    to {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+}
+
+/* ---------- Druk: „Pobierz plan (PDF)” (window.print) ---------- */
 
 @media print {
-  header, footer, nav, button, .print\\:hidden {
+  body {
+    background: #fff;
+  }
+
+  header,
+  footer,
+  .print-hidden,
+  .simple-hidden {
     display: none !important;
   }
-  body {
-    background: white;
-    color: black;
-    font-size: 12pt;
-  }
-  a {
-    color: black;
-    text-decoration: none;
+
+  .shadow-paper {
+    box-shadow: none !important;
   }
 }

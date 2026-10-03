@@ -1,43 +1,13 @@
 import Link from "next/link";
-import { MessageSquareText, Puzzle, ScanSearch, TrendingUp, AlertTriangle, type LucideIcon } from "lucide-react";
+import { MessageSquareText, Puzzle, ScanSearch, type LucideIcon } from "lucide-react";
 
 import { CutoutText } from "@/components/cutout-text";
-import { BackendInnovationCard, type BackendInnovation } from "@/components/backend-innovation-card";
-import { InnovationCard } from "@/components/innovation-card";
+import { FeaturedInnovations } from "@/components/featured-innovations";
+import { GapIndex } from "@/components/gap-index";
+import { MalopolskaStatsTiles } from "@/components/malopolska-stats";
 import { Monstera } from "@/components/monstera";
 import { SearchForm } from "@/components/search-form";
 import { buttonVariants } from "@/components/ui/button";
-import { innovations } from "@/data/innovations.mock";
-
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
-
-async function apiFetch<T>(path: string): Promise<T | null> {
-  try {
-    const res = await fetch(`${API}${path}`, { next: { revalidate: 120 } });
-    if (!res.ok) return null;
-    const json = await res.json();
-    return json.data as T ?? null;
-  } catch {
-    return null;
-  }
-}
-
-// Dane GUS BDL dla Małopolski (te same co z /api/stats/malopolska) – gdy backend nie odpowiada.
-const STATS_FALLBACK = [
-  { value: "19,2%", label: "mieszkańców ma 65 lat lub więcej", source: "GUS 2025" },
-  { value: "273", label: "na 10 tys. osób korzysta z pomocy społecznej", source: "GUS 2024" },
-  { value: "4,7%", label: "stopa bezrobocia rejestrowanego", source: "GUS 2025" },
-  { value: "394 tys.", label: "osób z niepełnosprawnością", source: "GUS, spis 2011" },
-];
-
-// Wynik /api/innovation-gap (GUS BDL + Biblioteka ROPS) – gdy backend nie odpowiada.
-const GAP_FALLBACK = [
-  { powiat: "nowosądecki", gap_score: 5.2, top_area: "ubóstwo" },
-  { powiat: "tarnowski", gap_score: 4.5, top_area: "ubóstwo" },
-  { powiat: "limanowski", gap_score: 4.4, top_area: "ubóstwo" },
-  { powiat: "dąbrowski", gap_score: 4.0, top_area: "ubóstwo" },
-  { powiat: "gorlicki", gap_score: 3.7, top_area: "ubóstwo" },
-];
 
 const STEPS: Array<{ icon: LucideIcon; title: string; text: string }> = [
   {
@@ -76,29 +46,7 @@ const AUDIENCES = [
   },
 ];
 
-interface MalopolskaStats {
-  indicators?: { value: string; label: string; source: string }[];
-}
-
-interface GapEntry {
-  powiat: string;
-  gap_score: number;
-  top_area: string;
-  innovations_count: number;
-}
-
-export default async function HomePage() {
-  const [liveInnovations, statsData, gapData] = await Promise.all([
-    apiFetch<BackendInnovation[]>("/api/innovations?limit=3&status=active"),
-    apiFetch<MalopolskaStats>("/api/stats/malopolska"),
-    apiFetch<GapEntry[]>("/api/innovation-gap"),
-  ]);
-
-  const liveStats = statsData?.indicators?.length ? statsData.indicators : STATS_FALLBACK;
-
-  const liveGap = gapData
-    ? [...gapData].sort((a, b) => b.gap_score - a.gap_score).slice(0, 5)
-    : GAP_FALLBACK;
+export default function HomePage() {
   return (
     <>
       {/* Hero */}
@@ -126,12 +74,7 @@ export default async function HomePage() {
               color="mint"
               className="simple-hidden absolute top-72 left-48 w-72 rotate-[150deg]"
             />
-            <Monstera
-              size="hero"
-              color="leaf"
-              outlined
-              className="absolute -top-6 left-10 rotate-[-28deg]"
-            />
+            <Monstera size="hero" color="leaf" outlined className="absolute -top-6 left-10 rotate-[-28deg]" />
           </div>
         </div>
       </section>
@@ -162,108 +105,35 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Kondycja Małopolski + Indeks Luki Innowacyjnej (Zasobnik wiedzy) */}
+      <section id="kondycja" aria-labelledby="kondycja-tytul" className="scroll-mt-6">
+        <div className="mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
+          <CutoutText id="kondycja-tytul" text="Kondycja Małopolski" />
+          <p className="mt-4 max-w-[60ch] text-lg">
+            Z czym mierzą się mieszkańcy regionu. Te liczby pomagają zdecydować, od czego zacząć.
+          </p>
+          <div className="mt-10">
+            <MalopolskaStatsTiles />
+          </div>
+
+          <h3 className="mt-14 text-xl font-bold text-deep">Gdzie najbardziej brakuje rozwiązań</h3>
+          <div className="mt-4">
+            <GapIndex limit={3} />
+          </div>
+        </div>
+      </section>
+
       {/* Co już działa */}
       <section id="co-juz-dziala" aria-labelledby="co-juz-dziala-tytul" className="scroll-mt-6">
         <div className="mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
           <CutoutText id="co-juz-dziala-tytul" text="Co już działa" />
           <p className="mt-4 max-w-[60ch] text-lg">
-            Kilka innowacji z Biblioteki. Każda ma opis, informację, dla kogo jest, i ocenę dowodów skuteczności.
+            Kilka innowacji z Biblioteki. Każda ma opis, informację, dla kogo jest, ile kosztuje i gdzie już działa.
           </p>
-          <ul className="mt-10 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {liveInnovations
-              ? liveInnovations.map((inn) => (
-                  <li key={inn.id} className="flex">
-                    <BackendInnovationCard innovation={inn} headingLevel="h3" />
-                  </li>
-                ))
-              : innovations.slice(0, 3).map((innovation) => (
-                  <li key={innovation.id} className="flex">
-                    <InnovationCard innovation={innovation} />
-                  </li>
-                ))
-            }
-          </ul>
+          <FeaturedInnovations />
           <Link href="/biblioteka" className={buttonVariants({ variant: "secondary", className: "mt-10" })}>
             Zobacz całą bibliotekę
           </Link>
-        </div>
-      </section>
-
-      {/* Kondycja Małopolski */}
-      <section
-        id="kondycja"
-        aria-labelledby="kondycja-tytul"
-        className="scroll-mt-6 border-y-(length:--bw) border-deep bg-paper"
-      >
-        <div className="mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
-          <CutoutText id="kondycja-tytul" text="Kondycja Małopolski" />
-          <p className="mt-4 max-w-[60ch] text-lg">
-            Dane społeczne, które stoją za innowacjami w naszej Bibliotece.
-          </p>
-          <ul className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {liveStats.map(({ value, label, source }) => (
-              <li key={label} className="border-(length:--bw) border-deep bg-surface p-6 shadow-paper">
-                <p className="text-3xl font-bold text-deep tabular-nums">{value}</p>
-                <p className="mt-2">{label}</p>
-                <p className="mt-1 text-sm text-muted">{source}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      {/* Indeks Luki Innowacyjnej */}
-      <section
-        id="luka-innowacyjna"
-        aria-labelledby="luka-tytul"
-        className="scroll-mt-6"
-      >
-        <div className="mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
-          <div className="flex items-start gap-4">
-            <TrendingUp className="mt-1 size-8 shrink-0 text-leaf" aria-hidden="true" />
-            <div>
-              <CutoutText id="luka-tytul" text="Indeks Luki Innowacyjnej" />
-              <p className="mt-4 max-w-[60ch] text-lg">
-                Gdzie w Małopolsce jest problem, ale brakuje odpowiedzi? Wyższy wynik = więcej potrzeby, mniej rozwiązań.
-              </p>
-              <p className="mt-2 text-sm text-muted">
-                Wskaźniki: GUS, Bank Danych Lokalnych. Rozwiązania: Biblioteka Innowacji Społecznych ROPS.
-              </p>
-            </div>
-          </div>
-          <ul className="mt-10 space-y-3" aria-label="Indeks luki innowacyjnej per powiat">
-            {liveGap.map(({ powiat, gap_score, top_area }) => (
-              <li key={powiat}>
-                <Link
-                  href={`/wyniki?q=${encodeURIComponent(`innowacje dla obszaru: ${top_area} w powiecie ${powiat}`)}`}
-                  className="flex items-center gap-4 border-(length:--bw) border-deep bg-surface px-5 py-4 shadow-paper hover:bg-paper transition-colors"
-                  title={`Znajdź innowacje dla powiatu ${powiat} — ${top_area}`}
-                >
-                  <div className="w-32 shrink-0">
-                    <p className="font-bold text-deep capitalize">{powiat}</p>
-                    <p className="text-sm text-muted">{top_area}</p>
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="h-4 rounded-ui bg-leaf"
-                        style={{ width: `${Math.min(100, (gap_score / 6) * 100)}%` }}
-                        role="presentation"
-                        aria-hidden="true"
-                      />
-                      <span className="text-sm font-bold tabular-nums text-deep">{gap_score.toFixed(1)}</span>
-                    </div>
-                  </div>
-                  {gap_score > 4 && (
-                    <AlertTriangle className="size-5 shrink-0 text-alert" aria-label="Wysoki priorytet" />
-                  )}
-                </Link>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-6 text-sm text-muted">
-            Dane: ROPS Kraków, OZPS 2023–2024. Wyższy wynik = większa luka między problemem a dostępnymi innowacjami.
-          </p>
         </div>
       </section>
 
@@ -283,38 +153,6 @@ export default async function HomePage() {
               </li>
             ))}
           </ul>
-        </div>
-      </section>
-
-      {/* Kontakt */}
-      <section
-        id="kontakt"
-        aria-labelledby="kontakt-tytul"
-        className="scroll-mt-6 border-t-(length:--bw) border-deep bg-sage"
-      >
-        <div className="mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
-          <CutoutText id="kontakt-tytul" text="Kontakt" />
-          <div className="mt-6 grid gap-8 md:grid-cols-2">
-            <div>
-              <h3 className="text-xl font-bold text-deep">ROPS Kraków</h3>
-              <p className="mt-2 text-muted">Regionalny Ośrodek Polityki Społecznej w Krakowie</p>
-              <p className="mt-1">ul. Piastowska 32, 30-070 Kraków</p>
-              <p className="mt-1">
-                <a href="https://rops.krakow.pl" className="underline text-leaf font-bold">
-                  rops.krakow.pl
-                </a>
-              </p>
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-deep">HubMI.pl</h3>
-              <p className="mt-2 text-muted">
-                Platforma budowana w ramach projektu HackYeah 2026 dla Województwa Małopolskiego.
-              </p>
-              <Link href="/biblioteka" className={buttonVariants({ variant: "secondary", className: "mt-4" })}>
-                Przeglądaj Bibliotekę innowacji
-              </Link>
-            </div>
-          </div>
         </div>
       </section>
     </>
