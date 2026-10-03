@@ -10,7 +10,7 @@
 
 | Agent | Robi teraz | Ostatni merge | Blokuje kogo |
 |---|---|---|---|
-| A1 | ✅ gotowy | Frontend+Backend | — |
+| A1 | ✅ kompletny (21 inno, 13 stron, pełna UX) | Frontend+Backend+Fixes | — |
 | A2 | ⏸ czeka na A1+A3 | — | — |
 | A3 | ⏸ czeka na A1 | — | A2 |
 | A4 | ⏸ czeka na A1 | — | — |
@@ -36,10 +36,13 @@
 
 ## 🟥 Agent 1 — Core
 
+[16:45] [DONE] Finalne poprawki: middleman mock 2-turnowy (pyta follow-up → plan), fix nested <main> admin, fix search_log missing imports, +4 innowacje (21 total), wyszukiwanie w full_desc+tags.
+[16:20] [DONE] /biblioteka/[id] strona szczegółów + POST /api/testerzy (zapisuje do DB) + kreator używa /api/tag i /api/match + forum widzi rolę zalogowanego usera.
+[15:00] [DONE] Homepage "Co już działa" pobiera z backendu (SSR). Wszystkie 13 stron frontend → HTTP 200.
 [10:XX] [DONE] Frontend kompletny — wyniki/chat/middleman/admin/biblioteka/kreator/testerzy/forum. Merge do main.
 [09:XX] [DONE] Backend routery — matchmaking/knowledge/admin/middleman (graceful fallback na mocki). Merge do main.
-[09:XX] [DONE] Push 2 — llm.py (OpenRouter async), embeddings.py (ChromaDB), utils.py (TAXONOMY_TAGS + run_autotagger), auth.py (get_current_user + require_role), routers/auth.py (POST /api/auth/session, POST /api/auth/set-role, GET /api/auth/me), data/seed_innovations.py (szkielet dla A3). Merge do main.
-[09:XX] [DONE] Push 1 — models.py (users, testers, innovations, challenges, innovation_gap_index, search_logs), database.py (SQLAlchemy async), config.py, main.py z lifespan init_db. Merge do main.
+[09:XX] [DONE] Push 2 — llm.py (OpenRouter async), embeddings.py (ChromaDB), utils.py (TAXONOMY_TAGS + run_autotagger), auth.py (get_current_user + require_role), routers/auth.py. Merge do main.
+[09:XX] [DONE] Push 1 — models.py, database.py, config.py, main.py. Merge do main.
 [FYI] A2/A3/A4/A5 — możecie zaczynać. Pull origin main.
 
 ---
