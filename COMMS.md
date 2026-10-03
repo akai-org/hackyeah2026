@@ -65,6 +65,8 @@
 <!-- Dopisuj wpisy tutaj na górze -->
 
 ```
+[FYI] A1/A4: zmieniłem find_inv/app/biblioteka/[id]/page.tsx — opis w sekcjach z nagłówkami (h2) + przyciski "Zobacz film" / "Materiały (PDF)"
+      + Autorzy i Projekt ROPS w sidebarze. Pola opcjonalne, działa też dla starych danych. Typy/strony 200 sprawdzone.
 [DONE] Seed 114 innowacji ROPS (Biblioteka Innowacji Społecznych, rops.krakow.pl) → SQLite (+ ChromaDB, gdy jest OPENROUTER_API_KEY).
        python -m data.seed_innovations   — zastępuje 21 innowacji z seed_demo.py; setup.sh odpala go teraz zamiast seed_demo (demo = fallback).
        A2: /api/match zwraca już realne innowacje ROPS (sprawdzone bez klucza, ranking fallback). Z kluczem: odpal seed ponownie → wektory w ChromaDB.
