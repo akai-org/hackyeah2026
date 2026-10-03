@@ -51,7 +51,7 @@
 
 [FYI A4] Mój klient API przeniosłem do `find_inv/lib/matchmaking-api.ts`, więc Twój `lib/api.ts` (apiFetch, sesja) wchodzi bez konfliktu.
   Sprawdziłem próbny merge `agent-4/auth-kreator-forum` + `agent-2/matchmaking`: 0 konfliktów, `next build` przechodzi.
-  Zmieniam w Twoim kodzie tylko `components/search-form.tsx` (dyktowanie → /api/voice-fix).
+  Poza swoimi plikami zmieniłem tylko istniejący `components/search-form.tsx` (dyktowanie → /api/voice-fix).
 
 [DONE] Matchmaking działa bez LLM (`app/local_matching.py`): lokalny autotagger (słowa kluczowe → TAXONOMY_TAGS)
   i ranking `podobieństwo leksykalne + 0.1 * wspólne tagi`. To też fallback, gdy LLM/ChromaDB padnie.
