@@ -4,7 +4,7 @@
 import { API_URL, readSessionCookie } from "@/lib/api";
 
 export type CardSource = "wyniki" | "mapa" | "biblioteka" | "forum" | "inne";
-export type CtaButton = "wdrozenie" | "zostan_testerem" | "zrodlo" | "materialy" | "film" | "zobacz_karte";
+export type CtaButton = "wdrozenie" | "zostan_testerem" | "zrodlo" | "materialy" | "film" | "forum" | "zobacz_karte";
 
 type TrackEvent =
   | { type: "innovation_view"; innovationId: number; meta?: { source?: string } }

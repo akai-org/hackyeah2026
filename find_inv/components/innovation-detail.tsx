@@ -2,47 +2,127 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Archive, ExternalLink, FileText, MessageSquareText, Video } from "lucide-react";
+import { Archive, ExternalLink, FileText, MessageSquareText, MessageSquarePlus, Pause, Play, Video } from "lucide-react";
 
 import { ForumThread } from "@/components/forum-thread";
+import { StarRating } from "@/components/star-rating";
 import { TesterApplyModal } from "@/components/tester-apply-modal";
 import { Toast, useToast } from "@/components/toast";
 import { TestRequestBox } from "@/components/test-request";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { COST_LABELS, type InnovationCard } from "@/data/innovations";
 import { TAG_LABELS, type Tag } from "@/data/mock";
 import { getInnovation } from "@/lib/matchmaking";
 import { track, type CtaButton } from "@/lib/track";
 import { plural } from "@/lib/utils";
 
-// Pełna karta innowacji: GET /api/innovations/{id}, a bez backendu dane mock.
+const PLAIN_COST: Record<string, string> = {
+  low: "niski koszt — do 10 tys. zł",
+  medium: "średni koszt — 10–50 tys. zł",
+  high: "wysoki koszt — powyżej 50 tys. zł",
+};
 
-/** Opis z ROPS: akapity rozdzielone pustą linią, często z etykietą („Problem: …”). Pierwsza „Na czym polega:” dubluje nagłówek. */
+function plainTime(months: number): string {
+  if (months <= 1) return "ok. miesiąc";
+  if (months <= 3) return `ok. ${months} miesiące`;
+  return `ok. ${months} miesięcy`;
+}
+
 function Description({ text }: { text: string }) {
   const paragraphs = text
     .replace(/^\s*Na czym polega:\s*/i, "")
     .split(/\n\s*\n/)
-    .map((paragraph) => paragraph.trim())
+    .map((p) => p.trim())
     .filter(Boolean);
 
   return (
     <div className="mt-2 grid max-w-[65ch] gap-3">
-      {paragraphs.map((paragraph, index) => {
-        const label = paragraph.match(/^([A-ZĄĆĘŁŃÓŚŹŻ][^:\n]{1,40}):\s*/);
+      {paragraphs.map((p, i) => {
+        const label = p.match(/^([A-ZĄĆĘŁŃÓŚŹŻ][^:\n]{1,40}):\s*/);
         return (
-          <p key={index} className="whitespace-pre-line">
+          <p key={i} className="whitespace-pre-line">
             {label ? (
               <>
-                <strong className="text-deep">{label[1]}:</strong> {paragraph.slice(label[0].length)}
+                <strong className="text-deep">{label[1]}:</strong> {p.slice(label[0].length)}
               </>
             ) : (
-              paragraph
+              p
             )}
           </p>
         );
       })}
     </div>
   );
+}
+
+function extractYoutubeId(url: string): string | null {
+  const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
+function extractVimeoId(url: string): string | null {
+  const m = url.match(/vimeo\.com\/(\d+)/);
+  return m ? m[1] : null;
+}
+
+function VideoEmbed({ url }: { url: string }) {
+  const ytId = extractYoutubeId(url);
+  const vimeoId = extractVimeoId(url);
+
+  if (ytId) {
+    return (
+      <div className="relative mt-6 w-full" style={{ paddingTop: "56.25%" }}>
+        <iframe
+          src={`https://www.youtube.com/embed/${ytId}`}
+          title="Film o innowacji"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          loading="lazy"
+          className="absolute inset-0 h-full w-full border-(length:--bw) border-deep"
+        />
+      </div>
+    );
+  }
+  if (vimeoId) {
+    return (
+      <div className="relative mt-6 w-full" style={{ paddingTop: "56.25%" }}>
+        <iframe
+          src={`https://player.vimeo.com/video/${vimeoId}`}
+          title="Film o innowacji"
+          allow="autoplay; fullscreen; picture-in-picture"
+          allowFullScreen
+          loading="lazy"
+          className="absolute inset-0 h-full w-full border-(length:--bw) border-deep"
+        />
+      </div>
+    );
+  }
+  return null;
+}
+
+function useSpeech(text: string) {
+  const [speaking, setSpeaking] = useState(false);
+  const utterRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  function toggle() {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    if (speaking) {
+      window.speechSynthesis.cancel();
+      setSpeaking(false);
+      return;
+    }
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "pl-PL";
+    utterance.onend = () => setSpeaking(false);
+    utterance.onerror = () => setSpeaking(false);
+    utterRef.current = utterance;
+    window.speechSynthesis.speak(utterance);
+    setSpeaking(true);
+  }
+
+  useEffect(() => () => { window.speechSynthesis?.cancel(); }, []);
+
+  return { speaking, toggle, supported: typeof window !== "undefined" && "speechSynthesis" in window };
 }
 
 export function InnovationDetail({ id }: { id: number }) {
@@ -52,16 +132,9 @@ export function InnovationDetail({ id }: { id: number }) {
   const toast = useToast();
 
   useEffect(() => {
-    try {
-      if (localStorage.getItem(`hubmi-tester-${id}`)) setTesterStatus("pending");
-    } catch {}
-  }, [id]);
-
-  useEffect(() => {
     getInnovation(id).then(setInnovation);
   }, [id]);
 
-  // Jedno wyświetlenie na wejście (StrictMode w dev odpala efekt dwa razy).
   const trackedView = useRef<number | null>(null);
   useEffect(() => {
     if (!innovation || trackedView.current === id) return;
@@ -70,6 +143,18 @@ export function InnovationDetail({ id }: { id: number }) {
   }, [innovation, id]);
 
   const cta = (button: CtaButton) => () => track({ type: "cta_click", innovationId: id, meta: { button } });
+
+  const readText = innovation
+    ? [
+        innovation.title,
+        innovation.short_desc,
+        innovation.full_desc ?? "",
+      ]
+        .filter(Boolean)
+        .join(". ")
+    : "";
+
+  const speech = useSpeech(readText);
 
   if (innovation === undefined) {
     return (
@@ -97,12 +182,13 @@ export function InnovationDetail({ id }: { id: number }) {
     ["Gdzie działa", innovation.where_implemented],
     ["Autorzy", innovation.authors ?? undefined],
     ["Projekt", innovation.project ?? undefined],
-    ["Koszt", innovation.cost_level ? COST_LABELS[innovation.cost_level] : undefined],
+    [
+      "Koszt",
+      innovation.cost_level ? PLAIN_COST[innovation.cost_level] ?? COST_LABELS[innovation.cost_level] : undefined,
+    ],
     [
       "Czas wdrożenia",
-      innovation.implementation_time_months
-        ? `${innovation.implementation_time_months} ${plural(innovation.implementation_time_months, "miesiąc", "miesiące", "miesięcy")}`
-        : undefined,
+      innovation.implementation_time_months ? plainTime(innovation.implementation_time_months) : undefined,
     ],
     [
       "Testy w praktyce",
@@ -111,6 +197,10 @@ export function InnovationDetail({ id }: { id: number }) {
         : undefined,
     ],
   ];
+
+  const isYoutubeOrVimeo =
+    !!innovation.video_url &&
+    (extractYoutubeId(innovation.video_url) !== null || extractVimeoId(innovation.video_url) !== null);
 
   return (
     <article aria-labelledby="karta-tytul" className="max-w-4xl">
@@ -129,6 +219,11 @@ export function InnovationDetail({ id }: { id: number }) {
       )}
 
       <p className="mt-4 max-w-[60ch] text-lg">{innovation.short_desc}</p>
+
+      {/* Osadzone wideo (YouTube / Vimeo) */}
+      {innovation.video_url && isYoutubeOrVimeo && (
+        <VideoEmbed url={innovation.video_url} />
+      )}
 
       <div className="relative mt-8 border-(length:--bw) border-deep bg-surface p-6 shadow-paper sm:p-8">
         <span
@@ -178,6 +273,25 @@ export function InnovationDetail({ id }: { id: number }) {
           <MessageSquareText aria-hidden="true" />
           Dostosuj do mojej instytucji
         </Link>
+
+        {/* Zapytaj eksperta — otwiera forum z kontekstem tej innowacji */}
+        <Link
+          href={`/forum?innowacja=${innovation.id}`}
+          onClick={cta("forum")}
+          className={buttonVariants({ variant: "secondary" })}
+        >
+          <MessageSquarePlus aria-hidden="true" />
+          Zapytaj eksperta
+        </Link>
+
+        {/* Odsłuch TTS */}
+        {speech.supported && (
+          <Button type="button" variant="secondary" onClick={speech.toggle} aria-label={speech.speaking ? "Zatrzymaj odsłuch" : "Odczytaj kartę na głos"}>
+            {speech.speaking ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
+            {speech.speaking ? "Zatrzymaj" : "Odczytaj"}
+          </Button>
+        )}
+
         {innovation.materials_url && (
           <a
             href={innovation.materials_url}
@@ -190,7 +304,7 @@ export function InnovationDetail({ id }: { id: number }) {
             Materiały do pobrania<span className="sr-only"> (otwiera się w nowej karcie)</span>
           </a>
         )}
-        {innovation.video_url && (
+        {innovation.video_url && !isYoutubeOrVimeo && (
           <a
             href={innovation.video_url}
             onClick={cta("film")}
@@ -215,6 +329,8 @@ export function InnovationDetail({ id }: { id: number }) {
           </a>
         )}
       </div>
+
+      <StarRating innovationId={id} />
 
       <TestRequestBox innovation={innovation} />
 

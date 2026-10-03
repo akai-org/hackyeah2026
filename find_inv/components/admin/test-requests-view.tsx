@@ -44,7 +44,7 @@ export function AdminTestRequestsView() {
   const submitted = data?.filter((row) => row.status === "submitted") ?? [];
 
   const innovationLink = (report: TestReport) => (
-    <Link href={`/biblioteka/${report.innovation_id}`} className="font-bold text-deep underline underline-offset-4">
+    <Link href={`/innowacje/${report.innovation_id}`} className="font-bold text-deep underline underline-offset-4">
       {report.innovation_title ?? `Innowacja #${report.innovation_id}`}
     </Link>
   );

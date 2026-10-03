@@ -118,7 +118,7 @@ export function BackendInnovationCard({ innovation, headingLevel: Heading = "h3"
           </button>
         )}
         <Link
-          href={`/biblioteka/${innovation.id}`}
+          href={`/innowacje/${innovation.id}`}
           className={buttonVariants({ variant: "secondary", className: "gap-2 text-sm" })}
         >
           Szczegóły

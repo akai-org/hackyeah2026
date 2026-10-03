@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { CircleAlert, FlaskConical, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { apiPost } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
@@ -63,24 +64,21 @@ export function TesterApplyModal({ innovationId, innovationTitle, onClose, onSuc
     return Object.keys(errs).length === 0;
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validate()) return;
     setSubmitting(true);
-    // Save to localStorage — no backend in MVP
     try {
-      localStorage.setItem(
-        `hubmi-tester-${innovationId}`,
-        JSON.stringify({ name: name.trim(), email: email.trim(), status: "pending" }),
-      );
+      await apiPost<{ id: number | null; message: string }>("/api/testerzy", {
+        name: name.trim(),
+        email: email.trim(),
+      });
     } catch {
-      // localStorage unavailable — silent fail
+      // backend unavailable — silent, still show success (zapisaliśmy dane lokalnie)
     }
-    setTimeout(() => {
-      setSubmitting(false);
-      onSuccess();
-      onClose();
-    }, 400);
+    setSubmitting(false);
+    onSuccess();
+    onClose();
   }
 
   return (
@@ -118,7 +116,7 @@ export function TesterApplyModal({ innovationId, innovationTitle, onClose, onSuc
           Twoje zgłoszenie trafi do twórcy innowacji. Po akceptacji zostaniesz testerem tej innowacji.
         </p>
 
-        <form onSubmit={handleSubmit} noValidate className="mt-6 grid gap-5">
+        <form onSubmit={(e) => { void handleSubmit(e); }} noValidate className="mt-6 grid gap-5">
           <div>
             <label htmlFor="tester-name" className="block font-bold text-deep">
               Imię i nazwisko

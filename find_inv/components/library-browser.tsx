@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
-import { Lightbulb, Loader2, Search, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Lightbulb, Loader2, Search, X } from "lucide-react";
 
 import { CutoutText } from "@/components/cutout-text";
 import { MatchCard } from "@/components/match-card";
@@ -47,6 +47,7 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const requestRef = useRef(0);
+  const tagsScrollRef = useRef<HTMLUListElement>(null);
 
   // Nowe filtry: pobierz pierwszą stronę (tekst z opóźnieniem, żeby nie pytać przy każdej literze).
   useEffect(() => {
@@ -114,25 +115,52 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-end gap-4">
-          <div>
-            <label htmlFor={`${ids}-temat`} className="block font-bold text-deep">
-              Temat
-            </label>
-            <select
-              id={`${ids}-temat`}
-              value=""
-              onChange={(event) => event.target.value && update({ tags: [...filters.tags, event.target.value as Tag] })}
-              className={cn(fieldClass, "mt-2 cursor-pointer")}
+        {/* Poziomy scroll tagów: strzałki + scroll, działa na mobile */}
+        <div>
+          <p id={`${ids}-tematy`} className="block font-bold text-deep">
+            Tematy
+          </p>
+          <div className="relative mt-2 flex items-center gap-1">
+            <button
+              type="button"
+              aria-label="Przewiń tematy w lewo"
+              onClick={() => { tagsScrollRef.current?.scrollBy({ left: -160, behavior: "smooth" }); }}
+              className="shrink-0 rounded-ui border-(length:--bw) border-deep bg-surface p-1.5 hover:bg-sage focus-visible:outline-2 focus-visible:outline-deep"
             >
-              <option value="">Dodaj temat</option>
+              <ChevronLeft className="size-4" aria-hidden="true" />
+            </button>
+
+            <ul
+              ref={tagsScrollRef}
+              role="group"
+              aria-labelledby={`${ids}-tematy`}
+              className="flex gap-2 overflow-x-auto scroll-smooth py-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
               {remainingTags.map((tag) => (
-                <option key={tag} value={tag}>
-                  {TAG_LABELS[tag]}
-                </option>
+                <li key={tag} className="shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => update({ tags: [...filters.tags, tag as Tag] })}
+                    className="inline-flex min-h-10 cursor-pointer items-center whitespace-nowrap rounded-ui border-(length:--bw) border-deep bg-surface px-3 text-sm text-ink hover:bg-mint focus-visible:outline-2 focus-visible:outline-deep"
+                  >
+                    {TAG_LABELS[tag as Tag]}
+                  </button>
+                </li>
               ))}
-            </select>
+            </ul>
+
+            <button
+              type="button"
+              aria-label="Przewiń tematy w prawo"
+              onClick={() => { tagsScrollRef.current?.scrollBy({ left: 160, behavior: "smooth" }); }}
+              className="shrink-0 rounded-ui border-(length:--bw) border-deep bg-surface p-1.5 hover:bg-sage focus-visible:outline-2 focus-visible:outline-deep"
+            >
+              <ChevronRight className="size-4" aria-hidden="true" />
+            </button>
           </div>
+        </div>
+
+        <div className="flex flex-wrap items-end gap-4">
           <div>
             <label htmlFor={`${ids}-koszt`} className="block font-bold text-deep">
               Koszt
