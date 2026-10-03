@@ -13,12 +13,14 @@ from datetime import datetime, timedelta
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import func, or_, select
 
 from app import admin_store
+from app.config import settings
 from app.database import get_db
 from app.models import Innovation, SearchLog, Tester, User
+from app.utils import TAXONOMY_TAGS
 
 log = logging.getLogger(__name__)
 
@@ -144,6 +146,155 @@ async def archive_innovation(innovation_id: int):
 @router.post("/innovations/{innovation_id}/flag-unmaintained")
 async def flag_unmaintained(innovation_id: int):
     return await _set_status(innovation_id, "unmaintained")
+
+
+# ── CMS innowacji (zadanie 3) ────────────────────────────
+
+
+class InnovationIn(BaseModel):
+    """Wszystkie pola karty innowacji, które edytuje admin."""
+
+    title: str = Field(min_length=3, max_length=256)
+    short_desc: str = Field(min_length=10, max_length=2000)
+    full_desc: str | None = None
+    category: str | None = Field(default=None, max_length=128)
+    area: str | None = Field(default=None, max_length=128)
+    target_group: str | None = Field(default=None, max_length=256)
+    location: str | None = Field(default=None, max_length=256)
+    status: Literal["pending", "active", "archived", "unmaintained"] = "active"
+    cost_level: Literal["low", "medium", "high"] | None = None
+    implementation_time_months: int | None = Field(default=None, ge=0, le=120)
+    where_implemented: str | None = Field(default=None, max_length=512)
+    source_url: str | None = Field(default=None, max_length=512)
+    tags: list[str] = Field(default_factory=list)
+
+    @field_validator("tags")
+    @classmethod
+    def only_taxonomy(cls, tags: list[str]) -> list[str]:
+        unknown = [tag for tag in tags if tag not in TAXONOMY_TAGS]
+        if unknown:
+            raise ValueError(f"Tagi spoza taksonomii: {', '.join(unknown)}")
+        return list(dict.fromkeys(tags))
+
+    @field_validator("title", "short_desc", "full_desc", "category", "area", "target_group", "location",
+                     "where_implemented", "source_url")
+    @classmethod
+    def strip(cls, value: str | None) -> str | None:
+        return value.strip() or None if isinstance(value, str) else value
+
+
+def _innovation_full(innov) -> dict:
+    return {
+        **_innovation_row(innov),
+        "full_desc": innov.full_desc,
+        "area": innov.area,
+        "implementation_time_months": innov.implementation_time_months,
+        "source_url": innov.source_url,
+        "testers_count": innov.testers_count,
+    }
+
+
+async def _reindex(innov) -> str:
+    """Przelicza wektor innowacji w ChromaDB. Bez klucza OpenRouter embeddingu nie da się policzyć —
+    wtedy usuwamy stary wektor (żeby wyszukiwanie semantyczne nie znajdowało nieaktualnej treści)."""
+    if not settings.openrouter_api_key:
+        _drop_vector(innov.id)
+        return "skipped"
+    try:
+        from app.embeddings import embed_and_store
+
+        text = f"{innov.title} {innov.short_desc or ''} {innov.full_desc or ''}"
+        await embed_and_store(str(innov.id), text, {"innovation_id": innov.id})
+        return "updated"
+    except Exception:
+        log.exception("reindex of innovation %s failed", innov.id)
+        _drop_vector(innov.id)
+        return "failed"
+
+
+def _drop_vector(innovation_id: int) -> None:
+    try:
+        from app.embeddings import get_collection
+
+        get_collection().delete(ids=[str(innovation_id)])
+    except Exception:
+        log.exception("deleting vector of innovation %s failed", innovation_id)
+
+
+async def _detach_references(db, table_name: str, row_id: int) -> dict[str, int]:
+    """Sprząta wiersze wskazujące na usuwany rekord — w każdej tabeli z kluczem obcym do `table_name`.
+    Treść (komentarze, zgłoszenia, oceny, przypisania) jest usuwana; zdarzenia analityczne zostają
+    bez powiązania, żeby statystyki się nie zmieniły. Działa też dla tabel dodanych później (np. przez A3)."""
+    from app.database import Base
+
+    removed: dict[str, int] = {}
+    for table in reversed(Base.metadata.sorted_tables):
+        for column in table.columns:
+            if not any(fk.column.table.name == table_name for fk in column.foreign_keys):
+                continue
+            if table.name == "events" and column.nullable:
+                await db.execute(table.update().where(column == row_id).values({column.name: None}))
+                continue
+            if table.name == "forum_posts":  # najpierw odpowiedzi na usuwane wpisy
+                ids = select(table.c.id).where(column == row_id).scalar_subquery()
+                await db.execute(table.delete().where(table.c.parent_id.in_(ids)))
+            result = await db.execute(table.delete().where(column == row_id))
+            if result.rowcount:
+                removed[table.name] = removed.get(table.name, 0) + result.rowcount
+    return removed
+
+
+@router.get("/innovations/{innovation_id}")
+async def get_innovation(innovation_id: int):
+    async with get_db() as db:
+        innov = await db.get(Innovation, innovation_id)
+    if innov is None:
+        _not_found(f"innowacja {innovation_id}")
+    return _ok(_innovation_full(innov))
+
+
+@router.post("/innovations", status_code=status.HTTP_201_CREATED)
+async def create_innovation(body: InnovationIn):
+    async with get_db() as db:
+        innov = Innovation(**body.model_dump(exclude={"tags"}), tags=json.dumps(body.tags, ensure_ascii=False))
+        db.add(innov)
+        await db.flush()
+        innov.embedding_id = str(innov.id)
+        await db.commit()
+        await db.refresh(innov)
+    embedding = await _reindex(innov)
+    return _ok({**_innovation_full(innov), "embedding": embedding})
+
+
+@router.put("/innovations/{innovation_id}")
+async def update_innovation(innovation_id: int, body: InnovationIn):
+    async with get_db() as db:
+        innov = await db.get(Innovation, innovation_id)
+        if innov is None:
+            _not_found(f"innowacja {innovation_id}")
+        for field, value in body.model_dump(exclude={"tags"}).items():
+            setattr(innov, field, value)
+        innov.tags = json.dumps(body.tags, ensure_ascii=False)
+        innov.embedding_id = str(innov.id)
+        innov.updated_at = datetime.now()
+        await db.commit()
+        await db.refresh(innov)
+    admin_store.set_innovation_status(innovation_id, innov.status)
+    embedding = await _reindex(innov)
+    return _ok({**_innovation_full(innov), "embedding": embedding})
+
+
+@router.delete("/innovations/{innovation_id}")
+async def delete_innovation(innovation_id: int):
+    async with get_db() as db:
+        innov = await db.get(Innovation, innovation_id)
+        if innov is None:
+            _not_found(f"innowacja {innovation_id}")
+        removed = await _detach_references(db, "innovations", innovation_id)
+        await db.delete(innov)
+        await db.commit()
+    _drop_vector(innovation_id)
+    return _ok({"id": innovation_id, "deleted": True, "removed": removed})
 
 
 # ── Użytkownicy ──────────────────────────────────────────

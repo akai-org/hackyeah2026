@@ -77,6 +77,77 @@ export function setInnovationStatus(id: number, action: InnovationAction) {
   );
 }
 
+// ---------- CMS innowacji: dodawanie, edycja, usuwanie ----------
+
+/** Wszystkie pola karty, które edytuje admin (POST/PUT /api/admin/innovations). */
+export type InnovationInput = {
+  title: string;
+  short_desc: string;
+  full_desc: string | null;
+  category: string | null;
+  area: string | null;
+  target_group: string | null;
+  location: string | null;
+  status: InnovationStatus;
+  cost_level: "low" | "medium" | "high" | null;
+  implementation_time_months: number | null;
+  where_implemented: string | null;
+  source_url: string | null;
+  tags: string[];
+};
+
+export type AdminInnovationFull = AdminInnovation &
+  Pick<InnovationInput, "full_desc" | "area" | "implementation_time_months" | "source_url"> & {
+    /** Wektor w ChromaDB: przeliczony, pominięty (brak klucza OpenRouter) albo błąd. */
+    embedding?: "updated" | "skipped" | "failed";
+  };
+
+function localFull(item: AdminInnovation): AdminInnovationFull {
+  return { full_desc: null, area: null, implementation_time_months: null, source_url: null, ...item };
+}
+
+export function getInnovation(id: number) {
+  return call<AdminInnovationFull>(`/api/admin/innovations/${id}`, () =>
+    localFull(local.innovations.find((row) => row.id === id)!),
+  );
+}
+
+export function saveInnovation(input: InnovationInput, id?: number) {
+  return call<AdminInnovationFull>(
+    id === undefined ? "/api/admin/innovations" : `/api/admin/innovations/${id}`,
+    () => {
+      const now = new Date().toISOString().slice(0, 19);
+      const base = {
+        ...input,
+        category: input.category ?? "",
+        target_group: input.target_group ?? "",
+        cost_level: input.cost_level ?? "low",
+        where_implemented: input.where_implemented ?? "",
+      };
+      if (id === undefined) {
+        const row = { ...base, id: Math.max(0, ...local.innovations.map((r) => r.id)) + 1, created_at: now, updated_at: now };
+        local.innovations.unshift(row);
+        return localFull(row);
+      }
+      const row = local.innovations.find((r) => r.id === id)!;
+      Object.assign(row, base, { updated_at: now });
+      return localFull(row);
+    },
+    { method: id === undefined ? "POST" : "PUT", body: JSON.stringify(input) },
+  );
+}
+
+export function deleteInnovation(id: number) {
+  return call<{ id: number; deleted: boolean }>(
+    `/api/admin/innovations/${id}`,
+    () => {
+      local.innovations = local.innovations.filter((row) => row.id !== id);
+      return { id, deleted: true };
+    },
+    { method: "DELETE" },
+  );
+}
+
 export function getUsers() {
   return call<AdminUser[]>("/api/admin/users", () => local.users.map((user) => ({ ...user })));
 }
@@ -215,3 +286,4 @@ export async function getEngagement(days: number): Promise<Result<Engagement>> {
   }
   return { data, offline: false };
 }
+

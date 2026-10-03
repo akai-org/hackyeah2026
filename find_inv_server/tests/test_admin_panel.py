@@ -9,7 +9,8 @@ from sqlalchemy import delete, select
 from app import admin_store
 from app.database import get_db
 from app.main import app
-from app.models import Innovation, SearchLog, User
+from app.models import Event, ForumPost, Innovation, SearchLog, User
+from app.models import TestReport as ModelTestReport
 from app.models import Tester as ModelTester
 
 client = TestClient(app)
@@ -52,7 +53,7 @@ async def _seed() -> None:
 
 async def _clear() -> None:
     async with get_db() as db:
-        for model in (SearchLog, ModelTester, User, Innovation):
+        for model in (Event, ModelTestReport, ForumPost, SearchLog, ModelTester, User, Innovation):
             await db.execute(delete(model))
         await db.commit()
 
@@ -150,3 +151,63 @@ def test_trends_and_stats_from_database():
 
     client.post("/api/match", json={"text": "klub seniora", "tags": []})  # nowe wyszukiwanie trafia do search_logs
     assert client.get("/api/admin/stats", headers=ADMIN).json()["data"]["searches"] == 4
+
+
+CARD = {
+    "title": "Banki czasu dla seniorów", "short_desc": "Sąsiedzi wymieniają się godzinami pomocy.",
+    "full_desc": "Pełny opis", "category": "usługi społeczne", "area": "wsparcie społeczne",
+    "target_group": "seniorzy", "location": "Tarnów", "status": "active", "cost_level": "low",
+    "implementation_time_months": 4, "where_implemented": "Tarnów", "source_url": "https://example.org",
+    "tags": ["seniorzy", "wolontariat"],
+}
+
+
+def test_cms_create_update_delete(monkeypatch):
+    """Zadanie 3: dodanie, edycja wszystkich pól i usunięcie innowacji; wektor w ChromaDB idzie za rekordem."""
+    from app.routers import admin_panel
+
+    dropped: list[int] = []
+    monkeypatch.setattr(admin_panel, "_drop_vector", dropped.append)
+    monkeypatch.setattr(admin_panel.settings, "openrouter_api_key", "")
+
+    created = client.post("/api/admin/innovations", json=CARD, headers=ADMIN)
+    assert created.status_code == 201
+    item = created.json()["data"]
+    assert item["tags"] == ["seniorzy", "wolontariat"] and item["implementation_time_months"] == 4
+    assert item["embedding"] == "skipped"
+    new_id = item["id"]
+    assert asyncio.run(_get(Innovation, new_id)).embedding_id == str(new_id)
+
+    updated = client.put(f"/api/admin/innovations/{new_id}", json={**CARD, "title": "Bank czasu", "status": "unmaintained",
+                                                                    "tags": ["seniorzy"]}, headers=ADMIN).json()["data"]
+    assert updated["title"] == "Bank czasu" and updated["status"] == "unmaintained" and updated["tags"] == ["seniorzy"]
+    assert client.get(f"/api/admin/innovations/{new_id}", headers=ADMIN).json()["data"]["full_desc"] == "Pełny opis"
+
+    assert client.post("/api/admin/innovations", json={**CARD, "tags": ["kosmos"]}, headers=ADMIN).status_code == 422
+    assert client.put("/api/admin/innovations/9999", json=CARD, headers=ADMIN).status_code == 404
+
+    async def _attach():
+        async with get_db() as db:
+            post = ForumPost(innovation_id=new_id, content="komentarz")
+            db.add(post)
+            await db.flush()
+            db.add_all([ForumPost(parent_id=post.id, content="odpowiedź"),
+                        ModelTestReport(user_id=2, innovation_id=new_id),
+                        Event(type="view", innovation_id=new_id)])
+            await db.commit()
+    asyncio.run(_attach())
+
+    deleted = client.delete(f"/api/admin/innovations/{new_id}", headers=ADMIN).json()["data"]
+    assert deleted["deleted"] and deleted["removed"] == {"forum_posts": 1, "test_reports": 1}
+    assert asyncio.run(_get(Innovation, new_id)) is None
+    assert dropped[-1] == new_id
+    assert client.delete(f"/api/admin/innovations/{new_id}", headers=ADMIN).status_code == 404
+
+    async def _leftovers():
+        async with get_db() as db:
+            posts = (await db.execute(select(ForumPost))).scalars().all()
+            events = (await db.execute(select(Event))).scalars().all()
+        return posts, events
+    posts, events = asyncio.run(_leftovers())
+    assert posts == [] and [e.innovation_id for e in events] == [None]  # statystyki zostają
+
