@@ -5,6 +5,7 @@ import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react"
 import { CircleAlert, Info, Mic, Search, Square } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { apiPost } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 const EXAMPLES = [
@@ -124,16 +125,18 @@ export function SearchForm() {
 
     let heard = false;
     let failed = false;
+    let heardTranscript = "";
 
     recognition.onresult = (event) => {
-      let transcript = "";
+      let segment = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
-        if (event.results[i].isFinal) transcript += event.results[i][0].transcript;
+        if (event.results[i].isFinal) segment += event.results[i][0].transcript;
       }
-      transcript = transcript.trim();
-      if (!transcript) return;
+      segment = segment.trim();
+      if (!segment) return;
       heard = true;
-      setText((previous) => (previous.trim() ? `${previous.trimEnd()} ${transcript}` : transcript));
+      heardTranscript = segment;
+      setText((previous) => (previous.trim() ? `${previous.trimEnd()} ${segment}` : segment));
       setError(false);
     };
 
@@ -150,6 +153,18 @@ export function SearchForm() {
       if (heard) {
         setDictation("done");
         setDictationMessage("Gotowe, sprawdź tekst");
+        // Silently apply voice-fix to improve transcript quality (no API key = no-op)
+        apiPost<{ corrected: string }>("/api/voice-fix", { transcript: heardTranscript })
+          .then((r) => {
+            if (r?.corrected && r.corrected.trim()) {
+              setText((prev) =>
+                prev.endsWith(heardTranscript)
+                  ? prev.slice(0, -heardTranscript.length) + r.corrected
+                  : prev,
+              );
+            }
+          })
+          .catch(() => {});
       } else {
         setDictation("error");
         setDictationMessage(DICTATION_ERRORS["no-speech"]);
