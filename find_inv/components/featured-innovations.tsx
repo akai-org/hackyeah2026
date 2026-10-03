@@ -102,11 +102,11 @@ export function FeaturedInnovations({ headingId, children }: { headingId: string
       {children}
 
       <ul
-        className={cn("mt-10 grid gap-8 md:grid-cols-2 lg:grid-cols-3", fade)}
+        className={cn("mt-10 grid auto-rows-fr items-stretch gap-8 md:grid-cols-2 lg:grid-cols-3", fade)}
         style={{ transitionDuration: `${FADE_MS}ms` }}
       >
         {byAudience[index].map((innovation) => (
-          <li key={innovation.id} className="flex">
+          <li key={innovation.id} className="flex min-w-0">
             <MatchCard innovation={innovation} />
           </li>
         ))}

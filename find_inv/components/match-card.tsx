@@ -54,7 +54,7 @@ export function MatchCard({
     <article
       aria-labelledby={titleId}
       className={cn(
-        "relative flex h-full flex-col border-(length:--bw) border-border p-6 shadow-raised",
+        "relative flex h-full min-w-0 flex-col overflow-hidden border-(length:--bw) border-border p-6 shadow-raised",
         unmaintained ? "bg-background" : "bg-surface",
       )}
     >

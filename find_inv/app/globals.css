@@ -11,11 +11,11 @@
 @theme {
   --color-*: initial;
 
-  --color-background: #f4fbf8;
+  --color-background: #f4fbfb;
   --color-surface: #ffffff;
   --color-secondary: #c2d2b8;
-  --color-foreground: #412722;
-  --color-muted: #5e4b46;
+  --color-foreground: #000000;
+  --color-muted: #888888;
   --color-border: #5f7568;
 
   --color-primary: #345995;
@@ -23,7 +23,7 @@
   --color-primary-foreground: #ffffff;
 
   --color-accent: #f4845f;
-  --color-accent-foreground: #412722;
+  --color-accent-foreground: #000000;
 
   --color-success: #2e6b45;
   --color-warning: #7a4e00;
@@ -31,7 +31,7 @@
 
   --color-focus: #1f3f73;
   /* Przyciemnienie pod oknami modalnymi (zawsze z modyfikatorem krycia, np. bg-overlay/60). */
-  --color-overlay: #412722;
+  --color-overlay: #000000;
 
   /* Cień kartki: twardy, zabarwiony kolorem treści, nigdy czysta czerń. */
   --shadow-raised: 0 12px 24px color-mix(in srgb, var(--color-foreground) 16%, transparent);
@@ -109,8 +109,7 @@
     background-color: var(--color-background);
     background-image:
       radial-gradient(48rem 26rem at 88% -8%, color-mix(in srgb, var(--color-secondary) 60%, transparent), transparent 70%),
-      radial-gradient(36rem 22rem at -12% 30%, color-mix(in srgb, var(--color-primary) 7%, transparent), transparent 70%),
-      radial-gradient(12rem 9rem at 96% 92%, color-mix(in srgb, var(--color-accent) 10%, transparent), transparent 70%);
+      radial-gradient(36rem 22rem at -12% 30%, color-mix(in srgb, var(--color-primary) 7%, transparent), transparent 70%);
   }
 
   .bg-section-fade {
@@ -125,11 +124,19 @@
 
   /* Groszek: drobne, rzadkie kropki w kolorze treści przy 8% krycia, wygaszane maską
      w stronę treści, więc pod tekstem praktycznie znikają. */
-  .bg-dots {
-    position: relative;
-    isolation: isolate;
-  }
+.bg-dots {
+  position: relative;
+  isolation: isolate;
+  background-color: color-mix(
+    in srgb,
+    var(--color-primary) 18%,
+    var(--color-background)
+  );
+}
 
+[data-contrast="high"] .bg-dots {
+  background-color: var(--color-background);
+}
   .bg-dots::before {
     content: "";
     position: absolute;
@@ -138,17 +145,17 @@
     pointer-events: none;
     background-image: radial-gradient(
       circle,
-      color-mix(in srgb, var(--color-foreground) 8%, transparent) 1.25px,
-      transparent 1.75px
+      color-mix(in srgb, #ffffff 72%, transparent) 1.5px,
+      transparent 2px
     );
-    background-size: 22px 22px;
-    -webkit-mask-image: radial-gradient(ellipse 55% 70% at 100% 0%, #000 0%, transparent 100%);
-    mask-image: radial-gradient(ellipse 55% 70% at 100% 0%, #000 0%, transparent 100%);
+    background-size: 24px 24px;
+    -webkit-mask-image: none;
+    mask-image: none;
   }
 
   .bg-dots-bottom::before {
-    -webkit-mask-image: radial-gradient(ellipse 45% 90% at 0% 100%, #000 0%, transparent 100%);
-    mask-image: radial-gradient(ellipse 45% 90% at 0% 100%, #000 0%, transparent 100%);
+    -webkit-mask-image: none;
+    mask-image: none;
   }
 
   /* Twardy cień wyciętego papieru (litery kolażu, chmurki). Filter, bo cień liczy się po clip-path. */

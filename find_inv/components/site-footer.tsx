@@ -1,13 +1,10 @@
 import Link from "next/link";
-import { Smile } from "lucide-react";
 
 const linkClass = "inline-flex min-h-12 items-center font-bold text-primary underline underline-offset-4 hover:text-primary-hover";
 
 export function SiteFooter() {
   return (
-    <footer className="bg-section-fade bg-dots relative overflow-hidden border-t-(length:--bw) border-border/40">
-      <Smile aria-hidden="true" className="simple-hidden absolute -bottom-10 -left-10 size-32 text-primary opacity-60" />
-
+    <footer className="relative overflow-hidden border-t-(length:--bw) border-border/40">
       <div className="relative mx-auto grid max-w-content gap-10 px-4 py-12 sm:px-6 md:grid-cols-3">
         <div>
           <p className="text-lg font-bold text-foreground">HubMI</p>
