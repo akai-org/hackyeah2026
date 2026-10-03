@@ -5,13 +5,12 @@ zwracają mocki z data/mock_data.py. Gdy moduły pojawią się na main, router s
 przełącza się na realne wywołania — interfejs odpowiedzi zostaje ten sam.
 """
 
-import asyncio
 import inspect
 import json
 import logging
 from typing import AsyncIterator
 
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -99,6 +98,7 @@ def _innovation_to_dict(innov) -> dict:
         "where_implemented": innov.where_implemented,
         "source_url": innov.source_url,
         "tags": tags or [],
+        "embedding_id": innov.embedding_id,
         "is_unmaintained": innov.status == "unmaintained",
     }
 
@@ -112,8 +112,12 @@ async def _fetch_innovations(where) -> list[dict]:
         from app.models import Innovation
     except ImportError:
         return []
-    async with SessionLocal() as db:
-        rows = (await db.execute(select(Innovation).where(where(Innovation)))).scalars().all()
+    try:
+        async with SessionLocal() as db:
+            rows = (await db.execute(select(Innovation).where(where(Innovation)))).scalars().all()
+    except Exception:  # brak tabel / seedu → wołający spada na mocki
+        log.exception("innovations select failed")
+        return []
     return [_innovation_to_dict(r) for r in rows]
 
 
@@ -143,7 +147,7 @@ def _mock_match(tags: list[str]) -> list[dict]:
 
 
 @router.post("/tag")
-async def tag(body: TagRequest):
+async def tag(body: TagRequest, background: BackgroundTasks):
     text = body.text.strip()
     if not text:
         return _err("Pusty opis problemu")
@@ -156,7 +160,7 @@ async def tag(body: TagRequest):
         log.exception("autotagger failed")
         return _err("Nie udało się przeanalizować opisu")
     result["tags"] = [t for t in result.get("tags", []) if t in TAXONOMY_TAGS]
-    asyncio.create_task(_log_search(text, result["tags"]))
+    background.add_task(_log_search, text, result["tags"])
     return _ok(result)
 
 
@@ -181,25 +185,12 @@ async def match(body: MatchRequest):
         innovations = _mock_match(body.tags)
         return _ok({"innovations": innovations, "total_found": len(innovations)})
 
-    emb_by_id = await _embedding_ids(innovations)
     query_tags = set(body.tags)
     for innov in innovations:
-        cosine = score_map.get(emb_by_id.get(innov["id"]), 0.0)
+        cosine = score_map.get(innov["embedding_id"], 0.0)
         innov["match_score"] = round(cosine + TAG_BOOST * len(set(innov["tags"]) & query_tags), 4)
     innovations.sort(key=lambda i: i["match_score"], reverse=True)
     return _ok({"innovations": innovations[:TOP_N], "total_found": len(innovations)})
-
-
-async def _embedding_ids(innovations: list[dict]) -> dict[int, str]:
-    from sqlalchemy import select
-
-    from app.database import SessionLocal
-    from app.models import Innovation
-
-    ids = [i["id"] for i in innovations]
-    async with SessionLocal() as db:
-        rows = await db.execute(select(Innovation.id, Innovation.embedding_id).where(Innovation.id.in_(ids)))
-    return {row.id: row.embedding_id for row in rows}
 
 
 VOICE_FIX_PROMPT = (
