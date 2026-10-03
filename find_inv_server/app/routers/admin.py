@@ -308,6 +308,42 @@ async def admin_stats(_: bool = AdminDep):
         }}
 
 
+@router.get("/recent")
+async def admin_recent(_: bool = AdminDep):
+    try:
+        from app.database import get_db
+        from app.models import SearchLog, ForumPost, Idea
+        from sqlalchemy import select
+        import json as _json
+
+        async with get_db() as db:
+            search_rows = await db.execute(select(SearchLog).order_by(SearchLog.created_at.desc()).limit(5))
+            searches = search_rows.scalars().all()
+
+            forum_rows = await db.execute(select(ForumPost).order_by(ForumPost.created_at.desc()).limit(5))
+            posts = forum_rows.scalars().all()
+
+            idea_rows = await db.execute(select(Idea).order_by(Idea.created_at.desc()).limit(5))
+            ideas = idea_rows.scalars().all()
+
+        return {"data": {
+            "searches": [
+                {"query": s.query, "tags": _json.loads(s.tags) if s.tags else [], "created_at": s.created_at.isoformat() if s.created_at else None}
+                for s in searches
+            ],
+            "forum_posts": [
+                {"content": p.content[:80], "author_name": p.author_name, "badge": p.badge, "created_at": p.created_at.isoformat() if p.created_at else None}
+                for p in posts
+            ],
+            "ideas": [
+                {"title": i.title, "status": i.status, "created_at": i.created_at.isoformat() if i.created_at else None}
+                for i in ideas
+            ],
+        }}
+    except Exception:
+        return {"data": {"searches": [], "forum_posts": [], "ideas": []}}
+
+
 @router.get("/ideas")
 async def admin_ideas(status: str = "", _: bool = AdminDep):
     try:
