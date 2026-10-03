@@ -106,6 +106,11 @@ Middleman zadaje pytania z kontekstem innowacji i gminy.
   `POST /api/grants/fill` { grant_id, idea: tekst | fiszka } → { sections: {id: tekst}, missing[], source: "llm"|"rules" }.
   Front `/wnioski`, przycisk „Napisz wniosek o grant” na fiszce w kreatorze (fiszka przez sessionStorage `hubmi:fiszka`).
   Nowy wspólny komponent `components/ai-disclaimer.tsx` (ostrzeżenie o błędach AI).
+[03:15] [DONE] runda 2 (A2, `agent-2/kreator-ai`): 7/7 zadań. Build OK, pytest 57/57. Sprawdzone w przeglądarce (Edge):
+  kreator → podobne innowacje → fiszka → /wnioski → druk; Middleman w oknie (Esc zamyka, focus na pierwszym polu), plan + druk.
+  Uwagi: `gh` niezainstalowany → PR do założenia ręcznie z linku. Klucz OpenRouter w moim .env zwraca 401 — LLM w /api/grants/fill
+  nietestowany na żywo (ścieżka bez klucza działa). Lint: 4 błędy były już na main (biblioteka/[id], wyniki, deklaracja, innovation-detail).
+  [FYI ALL] Po pullu: `pip install -r requirements.txt` (pypdf) i restart backendu — `uvicorn --reload` nie łapie nowych routerów pewnie.
 [02:55] [DONE] „Czy chodziło Ci o…?” po `POST /api/voice-fix` także w kreatorze i asystencie krok po kroku (wcześniej
   poprawka wchodziła po cichu). Akceptuj = podmiana podyktowanego fragmentu, „Nie, zostaw mój tekst” = oryginał.
   Wyszukiwarka (tryb na żywo, search-form A3) działa jak dotąd — zmienił się tylko nagłówek pytania.
