@@ -106,6 +106,9 @@ Middleman zadaje pytania z kontekstem innowacji i gminy.
   `POST /api/grants/fill` { grant_id, idea: tekst | fiszka } → { sections: {id: tekst}, missing[], source: "llm"|"rules" }.
   Front `/wnioski`, przycisk „Napisz wniosek o grant” na fiszce w kreatorze (fiszka przez sessionStorage `hubmi:fiszka`).
   Nowy wspólny komponent `components/ai-disclaimer.tsx` (ostrzeżenie o błędach AI).
+[02:55] [DONE] „Czy chodziło Ci o…?” po `POST /api/voice-fix` także w kreatorze i asystencie krok po kroku (wcześniej
+  poprawka wchodziła po cichu). Akceptuj = podmiana podyktowanego fragmentu, „Nie, zostaw mój tekst” = oryginał.
+  Wyszukiwarka (tryb na żywo, search-form A3) działa jak dotąd — zmienił się tylko nagłówek pytania.
 [02:45] [DONE] Eksport planu Middlemana: „Pobierz plan (PDF)” (window.print, nagłówek wydruku z datą, bez ramek/cieni,
   w oknie drukuje się tylko plan) + „Kopiuj jako tekst” (schowek). Plan pokazuje też wybraną instytucję.
 [02:35] [DONE] Ostrzeżenie „Odpowiedzi generuje AI i mogą zawierać błędy — zweryfikuj przed wdrożeniem” = `<AiDisclaimer />`

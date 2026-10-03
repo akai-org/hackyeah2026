@@ -3,7 +3,13 @@
 import { useId, useRef, useState } from "react";
 import { CircleAlert, FileUp, ListChecks, Loader2, PenLine, Sparkles } from "lucide-react";
 
-import { DictationButton, DictationNotice, DictationStatus, useDictation } from "@/components/dictation";
+import {
+  DictationButton,
+  DictationNotice,
+  DictationStatus,
+  DictationSuggestion,
+  useDictation,
+} from "@/components/dictation";
 import { IdeaCardEditor } from "@/components/idea-card-editor";
 import { IdeaMatches } from "@/components/idea-matches";
 import { IdeaWizard, type WizardAnswers } from "@/components/idea-wizard";
@@ -214,6 +220,7 @@ export function IdeaCreator() {
             </p>
           )}
           <DictationStatus dictation={dictation} />
+          <DictationSuggestion dictation={dictation} />
           <DictationNotice dictation={dictation} id={dictationHintId} />
           {error && (
             <p
