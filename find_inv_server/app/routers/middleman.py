@@ -235,7 +235,7 @@ def _local_plan(session: dict) -> dict:
     if place:
         location = f"{place}: " + location[0].lower() + location[1:]
     if has_room:
-        location = "Wskazane przez Was miejsce — sprawdźcie dostępność (próg, toaleta, dojazd) przed startem. " + location
+        location += ". Wasze miejsce sprawdźcie przed startem: próg, toaleta, dojazd"
 
     missing = []
     if not has_partner:
