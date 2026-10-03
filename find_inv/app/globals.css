@@ -182,3 +182,24 @@ html[data-simple="true"] .simple-hidden {
     }
   }
 }
+
+/* ---------- Wydruk / PDF planu wdrożenia ---------- */
+
+@media print {
+  header,
+  footer,
+  .print-hidden,
+  nextjs-portal {
+    display: none !important;
+  }
+
+  body {
+    background: #fff !important;
+  }
+
+  main article {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+}
