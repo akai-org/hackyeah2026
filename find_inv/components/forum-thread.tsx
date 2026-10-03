@@ -39,14 +39,18 @@ interface Innovation {
 
 interface Props {
   innovationId: number;
+  /** Gdy true: bez back-linku i tytułu, montowany wewnątrz strony innowacji. */
+  embedded?: boolean;
+  /** Przekazana z zewnątrz (embedded) — nie trzeba fetch-ować. */
+  innovation?: Innovation;
 }
 
-export function ForumThread({ innovationId }: Props) {
+export function ForumThread({ innovationId, embedded, innovation: innovationProp }: Props) {
   const { user } = useAuth();
   const ids = useId();
   const toast = useToast();
 
-  const [innovation, setInnovation] = useState<Innovation | null>(null);
+  const [innovation, setInnovation] = useState<Innovation | null>(innovationProp ?? null);
   const [posts, setPosts] = useState<ForumPost[]>(() => getInnovationThread(innovationId));
   const [comment, setComment] = useState("");
   const [commentError, setCommentError] = useState(false);
@@ -59,18 +63,19 @@ export function ForumThread({ innovationId }: Props) {
   const replyRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
+    if (innovationProp) return;
     apiFetch<Innovation>(`/api/innovations/${innovationId}`)
       .then((data) => {
         if (data) {
           setInnovation(data);
-          document.title = `Dyskusja: ${data.title} – HubMI`;
+          if (!embedded) document.title = `Dyskusja: ${data.title} – HubMI`;
         }
       })
       .catch(() => {});
     return () => {
-      document.title = "HubMI – znajdź rozwiązanie, które już działa";
+      if (!embedded) document.title = "HubMI – znajdź rozwiązanie, które już działa";
     };
-  }, [innovationId]);
+  }, [innovationId, innovationProp, embedded]);
 
   useEffect(() => {
     if (focusPost === null) return;
@@ -129,27 +134,35 @@ export function ForumThread({ innovationId }: Props) {
     .filter((p) => p.parent_id === null)
     .sort((a, b) => a.created_at.localeCompare(b.created_at));
 
+  const wrapperClass = embedded
+    ? ""
+    : "mx-auto max-w-content px-4 py-12 sm:px-6";
+
   return (
-    <div className="mx-auto max-w-content px-4 py-12 sm:px-6">
-      {/* Back link */}
-      <Link
-        href={`/biblioteka/${innovationId}`}
-        className="inline-flex items-center gap-2 text-sm font-bold text-leaf underline underline-offset-4 hover:text-deep"
-      >
-        <ArrowLeft className="size-4" aria-hidden="true" />
-        {innovation ? `Wróć do: ${innovation.title}` : "Wróć do innowacji"}
-      </Link>
+    <div className={wrapperClass}>
+      {/* Back link — tylko w widoku pełnoekranowym */}
+      {!embedded && (
+        <Link
+          href={`/biblioteka/${innovationId}`}
+          className="inline-flex items-center gap-2 text-sm font-bold text-leaf underline underline-offset-4 hover:text-deep"
+        >
+          <ArrowLeft className="size-4" aria-hidden="true" />
+          {innovation ? `Wróć do: ${innovation.title}` : "Wróć do innowacji"}
+        </Link>
+      )}
 
-      {/* Header */}
-      <div className="mt-8">
-        <p className="text-sm font-bold uppercase tracking-widest text-muted">Dyskusja społeczności</p>
-        <h1 className="mt-1 text-3xl font-bold text-deep">
-          {innovation?.title ?? "Wczytywanie…"}
-        </h1>
-      </div>
+      {/* Header — tylko w widoku pełnoekranowym */}
+      {!embedded && (
+        <div className="mt-8">
+          <p className="text-sm font-bold uppercase tracking-widest text-muted">Dyskusja społeczności</p>
+          <h1 className="mt-1 text-3xl font-bold text-deep">
+            {innovation?.title ?? "Wczytywanie…"}
+          </h1>
+        </div>
+      )}
 
-      {/* Tags + innovation link */}
-      {innovation && (
+      {/* Tags + link — tylko w widoku pełnoekranowym */}
+      {!embedded && innovation && (
         <div className="mt-4 flex flex-wrap items-center gap-3">
           {innovation.tags.length > 0 && (
             <ul className="flex flex-wrap gap-2" aria-label="Tagi innowacji">

@@ -6,14 +6,12 @@ import Link from "next/link";
 import {
   ArrowLeft,
   Bell,
-  BellOff,
   CircleCheck,
   CircleHelp,
   Clock,
   FlaskConical,
   Link2,
   MapPin,
-  MessageSquareText,
   Tag,
   TrendingUp,
   Users,
@@ -27,6 +25,7 @@ import { apiFetch } from "@/lib/api";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { MiddlemanModal } from "@/components/middleman-modal";
 import { TesterApplyModal } from "@/components/tester-apply-modal";
+import { ForumThread } from "@/components/forum-thread";
 import { Toast, useToast } from "@/components/toast";
 import { PageBackdrop } from "@/components/page-backdrop";
 import { BackendInnovationCard, type BackendInnovation } from "@/components/backend-innovation-card";
@@ -354,27 +353,9 @@ export default function InnovationDetailPage() {
         </div>
       </div>
 
-      {/* Community sections */}
+      {/* Community action cards */}
       <div className="mx-auto max-w-content border-t-2 border-sage px-4 pt-10 pb-4 sm:px-6">
-        <div className="grid gap-6 md:grid-cols-3">
-
-          {/* Dyskusja */}
-          <div className="border-(length:--bw) border-deep bg-surface p-6 shadow-paper">
-            <div className="flex items-center gap-3">
-              <MessageSquareText className="size-6 shrink-0 text-leaf" aria-hidden="true" />
-              <h2 className="text-lg font-bold text-deep">Dyskusja</h2>
-            </div>
-            <p className="mt-3 text-base text-ink">
-              Porozmawiaj z innymi zainteresowanymi tą innowacją.
-            </p>
-            <Link
-              href={`/forum?innowacja=${item.id}`}
-              className={buttonVariants({ variant: "primary", className: "mt-5 w-full justify-center gap-2" })}
-            >
-              <MessageSquareText className="size-4" aria-hidden="true" />
-              Zobacz dyskusję na forum
-            </Link>
-          </div>
+        <div className="grid gap-6 sm:grid-cols-2">
 
           {/* Testowanie */}
           <div className="border-(length:--bw) border-deep bg-surface p-6 shadow-paper">
@@ -469,6 +450,26 @@ export default function InnovationDetailPage() {
 
         </div>
       </div>
+
+      {/* Embedded forum thread */}
+      <section
+        aria-labelledby="dyskusja-tytul"
+        className="mx-auto max-w-content border-t-2 border-sage px-4 py-12 sm:px-6"
+      >
+        <h2 id="dyskusja-tytul" className="text-xl font-bold text-deep">
+          Dyskusja społeczności
+        </h2>
+        <p className="mt-1 text-muted">
+          Komentarze twórców, testerów i użytkowników tej innowacji.
+        </p>
+        <div className="mt-8">
+          <ForumThread
+            innovationId={item.id}
+            embedded
+            innovation={{ title: item.title, tags: item.tags }}
+          />
+        </div>
+      </section>
 
       {similar.length > 0 && (
         <section aria-labelledby="podobne-tytul" className="mx-auto max-w-content border-t-2 border-sage px-4 py-12 sm:px-6">
