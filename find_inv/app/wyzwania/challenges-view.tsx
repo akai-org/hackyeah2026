@@ -56,10 +56,15 @@ function SourceLink({ source, year }: { source: string; year?: number }) {
   );
 }
 
-export function ChallengesView() {
+function normalize(text: string) {
+  return text.toLocaleLowerCase("pl").normalize("NFD").replace(/\p{Diacritic}/gu, "");
+}
+
+export function ChallengesView({ initialQuery = "", initialPowiat = "" }: { initialQuery?: string; initialPowiat?: string }) {
   const [challenges, setChallenges] = useState<ApiChallenge[] | null>(null);
   const [failed, setFailed] = useState(false);
-  const [powiat, setPowiat] = useState("");
+  const [powiat, setPowiat] = useState(initialPowiat);
+  const [query, setQuery] = useState(initialQuery);
 
   useEffect(() => {
     let active = true;
@@ -78,8 +83,11 @@ export function ChallengesView() {
 
   const groups = useMemo(() => {
     const byArea = new Map<string, Group>();
+    const words = normalize(query).split(/\s+/).filter(Boolean);
     for (const item of challenges ?? []) {
       if (powiat && item.powiat !== powiat) continue;
+      const haystack = normalize(`${item.title} ${item.description} ${item.area} ${item.powiat}`);
+      if (!words.every((word) => haystack.includes(word))) continue;
       const group = byArea.get(item.area) ?? {
         area: item.area,
         title: item.title,
@@ -95,7 +103,7 @@ export function ChallengesView() {
     }
     // Najpierw obszary, które dotyczą najwięcej powiatów.
     return [...byArea.values()].sort((a, b) => b.items.length - a.items.length);
-  }, [challenges, powiat]);
+  }, [challenges, powiat, query]);
 
   const sources = useMemo(
     () =>
@@ -131,26 +139,54 @@ export function ChallengesView() {
   return (
     <>
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <label className="grid gap-1 font-bold text-deep">
-          Pokaż dla powiatu
-          <select
-            value={powiat}
-            onChange={(event) => setPowiat(event.target.value)}
-            className="min-h-12 rounded-ui border-(length:--bw) border-deep bg-surface px-3 text-base font-normal text-ink"
-          >
-            <option value="">Cała Małopolska</option>
-            {powiaty.map((name) => (
-              <option key={name} value={name}>
-                {powiatLabel(name)}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="flex flex-wrap items-end gap-4">
+          <label className="grid gap-1 font-bold text-deep">
+            Szukaj problemu
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="np. seniorzy, opieka zdrowotna"
+              className="min-h-12 w-72 max-w-full rounded-ui border-(length:--bw) border-deep bg-surface px-3 text-base font-normal text-ink placeholder:text-muted"
+            />
+          </label>
+          <label className="grid gap-1 font-bold text-deep">
+            Pokaż dla powiatu
+            <select
+              value={powiat}
+              onChange={(event) => setPowiat(event.target.value)}
+              className="min-h-12 rounded-ui border-(length:--bw) border-deep bg-surface px-3 text-base font-normal text-ink"
+            >
+              <option value="">Cała Małopolska</option>
+              {powiaty.map((name) => (
+                <option key={name} value={name}>
+                  {powiatLabel(name)}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
         <p aria-live="polite" className="text-muted">
           {groups.length} {groups.length === 1 ? "obszar" : groups.length < 5 ? "obszary" : "obszarów"} ·{" "}
           {groups.reduce((sum, group) => sum + group.items.length, 0)} wskaźników
         </p>
       </div>
+
+      {groups.length === 0 && (
+        <p className="mt-8 text-lg">
+          Nic nie pasuje do wyszukiwania.{" "}
+          <button
+            type="button"
+            onClick={() => {
+              setQuery("");
+              setPowiat("");
+            }}
+            className="font-bold text-leaf underline underline-offset-4 hover:text-deep"
+          >
+            Pokaż wszystkie wyzwania
+          </button>
+        </p>
+      )}
 
       <ul className="mt-8 grid gap-6 md:grid-cols-2">
         {groups.map((group) => (

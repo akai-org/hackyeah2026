@@ -8,7 +8,13 @@ export const metadata: Metadata = {
   description: "Przewodniki i materiały o innowacjach społecznych dla gmin, organizacji i mieszkańców Małopolski.",
 };
 
-export default function EducationPage() {
+function first(value: string | string[] | undefined): string {
+  return (Array.isArray(value) ? value[0] : value) ?? "";
+}
+
+export default async function EducationPage({ searchParams }: PageProps<"/edukacja">) {
+  const query = first((await searchParams).q);
+
   return (
     <>
       <section aria-labelledby="edukacja-tytul" className="border-b-(length:--bw) border-deep bg-paper">
@@ -25,7 +31,7 @@ export default function EducationPage() {
           <h2 id="materialy-tytul" className="sr-only">
             Materiały edukacyjne
           </h2>
-          <EducationList />
+          <EducationList key={query} initialQuery={query} />
         </div>
       </section>
     </>

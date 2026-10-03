@@ -9,7 +9,14 @@ export const metadata: Metadata = {
   description: "Wskaźniki wyzwań społecznych w powiatach Małopolski — z danymi źródłowymi GUS i raportami ROPS.",
 };
 
-export default function ChallengesPage() {
+function first(value: string | string[] | undefined): string {
+  return (Array.isArray(value) ? value[0] : value) ?? "";
+}
+
+export default async function ChallengesPage({ searchParams }: PageProps<"/wyzwania">) {
+  const params = await searchParams;
+  const initial = { query: first(params.q), powiat: first(params.powiat) };
+
   return (
     <div className="min-h-screen">
       <section aria-labelledby="wyzwania-tytul" className="border-b-(length:--bw) border-deep bg-paper">
@@ -36,7 +43,8 @@ export default function ChallengesPage() {
           <h2 id="obszary-tytul" className="sr-only">
             Obszary wyzwań
           </h2>
-          <ChallengesView />
+          {/* key: nowe wyszukiwanie z nagłówka na tej samej stronie zaczyna od nowa. */}
+          <ChallengesView key={JSON.stringify(initial)} initialQuery={initial.query} initialPowiat={initial.powiat} />
         </div>
       </section>
     </div>

@@ -7,6 +7,7 @@ import { Menu, Search, X } from "lucide-react";
 import { AccessibilitySettings } from "@/components/simple-mode";
 import { CutoutText } from "@/components/cutout-text";
 import { Dialog } from "@/components/ui/dialog";
+import { QuickSearch } from "@/components/quick-search";
 import { UserMenu } from "@/components/user-menu";
 import { useAuth } from "@/lib/auth";
 
@@ -16,17 +17,12 @@ const NAV_LINKS = [
   { href: "/edukacja", label: "Edukacja" },
 ];
 
-const SEARCH_TAGS = ["Aplikacja", "Małe firmy", "Niewidomi", "Seniorzy", "Transport", "Zdrowie"];
-
 const linkClass =
   "inline-flex min-h-12 items-center whitespace-nowrap rounded-ui px-2.5 text-base font-bold text-deep underline-offset-4 hover:underline";
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchPlaceholder, setSearchPlaceholder] = useState("Szukaj");
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const { user } = useAuth();
   // Panel ROPS widać w menu tylko po zalogowaniu jako admin, panel testera — jako tester.
   const links =
@@ -150,69 +146,7 @@ export function SiteHeader() {
         initialFocusRef={searchInputRef}
         size="lg"
       >
-        <div className="mt-6 flex flex-wrap gap-2" aria-label="Popularne kategorie wyszukiwania">
-          {[
-            ["Problemy", "Szukaj problemu"],
-            ["Innowacje", "Szukaj innowacji"],
-            ["Artykuły", "Szukaj artykułu"],
-          ].map(([label, placeholder]) => (
-            <button
-              key={label}
-              type="button"
-              onClick={() => {
-                setSearchQuery("");
-                setSearchPlaceholder(placeholder);
-                searchInputRef.current?.focus();
-              }}
-              className="min-h-12 rounded-ui border-(length:--bw) border-deep bg-paper px-4 font-semibold text-deep hover:bg-sage"
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        <form action="/wyniki" method="get" role="search" className="mt-6 flex gap-3">
-          <label htmlFor="quick-search" className="sr-only">Szukaj</label>
-          <input type="hidden" name="tags" value={selectedTags.join(",")} />
-          <div className="flex min-h-12 min-w-0 flex-1 flex-wrap items-center gap-2 rounded-ui border-(length:--bw) border-deep bg-paper px-3 py-2">
-            {selectedTags.map((tag) => (
-              <span key={tag} className="rounded-full bg-mint px-2 py-1 text-sm font-semibold text-deep">#{tag}</span>
-            ))}
-            <input
-              ref={searchInputRef}
-              id="quick-search"
-              name="q"
-              type="search"
-              autoComplete="off"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder={searchPlaceholder}
-              className="min-w-[8rem] flex-1 bg-transparent px-1 text-base text-ink outline-none placeholder:text-muted"
-            />
-          </div>
-          <button type="submit" className="inline-flex min-h-12 items-center gap-2 rounded-ui border-(length:--bw) border-deep bg-deep px-5 font-bold text-surface hover:bg-leaf">
-            <Search aria-hidden="true" className="size-5" />
-            Szukaj
-          </button>
-        </form>
-        <details className="mt-4 rounded-ui border-(length:--bw) border-sage bg-paper">
-          <summary className="flex min-h-12 cursor-pointer items-center justify-between gap-4 px-4 font-semibold text-deep">
-            Wybierz tagi
-            <span className="text-sm text-muted">{selectedTags.length ? `Wybrano: ${selectedTags.length}` : "wielokrotny wybór"}</span>
-          </summary>
-          <div className="grid gap-1 border-t-(length:--bw) border-sage p-3 sm:grid-cols-2" aria-label="Lista tagów wyszukiwania">
-            {SEARCH_TAGS.map((tag) => (
-              <label key={tag} className="flex min-h-12 cursor-pointer items-center gap-3 rounded-ui px-3 hover:bg-sage">
-                <input
-                  type="checkbox"
-                  checked={selectedTags.includes(tag)}
-                  onChange={() => setSelectedTags((current) => (current.includes(tag) ? current.filter((item) => item !== tag) : [...current, tag]))}
-                  className="size-5 accent-deep"
-                />
-                <span className="text-base text-deep">#{tag}</span>
-              </label>
-            ))}
-          </div>
-        </details>
+        <QuickSearch inputRef={searchInputRef} onNavigate={closeSearch} />
         <p className="mt-4 text-sm text-muted">Naciśnij Escape, aby zamknąć.</p>
       </Dialog>
       <AccessibilitySettings />

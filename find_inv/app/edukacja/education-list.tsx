@@ -43,10 +43,15 @@ function ResourceLink({ href, icon: Icon, children }: { href: string; icon: type
   );
 }
 
-export function EducationList() {
+function normalize(text: string) {
+  return text.toLocaleLowerCase("pl").normalize("NFD").replace(/\p{Diacritic}/gu, "");
+}
+
+export function EducationList({ initialQuery = "" }: { initialQuery?: string }) {
   const [items, setItems] = useState<EducationResource[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [area, setArea] = useState("");
+  const [query, setQuery] = useState(initialQuery);
 
   useEffect(() => {
     let active = true;
@@ -64,7 +69,12 @@ export function EducationList() {
     return [...all].sort((a, b) => a[1].localeCompare(b[1], "pl"));
   }, [items]);
 
-  const visible = (items ?? []).filter((item) => !area || item.areas.some((entry) => entry.slug === area));
+  const words = normalize(query).split(/\s+/).filter(Boolean);
+  const visible = (items ?? []).filter((item) => {
+    if (area && !item.areas.some((entry) => entry.slug === area)) return false;
+    const haystack = normalize(`${item.title} ${item.summary} ${item.content} ${item.tags.join(" ")}`);
+    return words.every((word) => haystack.includes(word));
+  });
 
   if (failed) {
     return (
@@ -90,6 +100,16 @@ export function EducationList() {
 
   return (
     <>
+      <label className="mb-6 grid max-w-md gap-1 font-bold text-deep">
+        Szukaj materiału
+        <input
+          type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="np. spółdzielnia, kryzys psychiczny"
+          className="min-h-12 rounded-ui border-(length:--bw) border-deep bg-surface px-3 text-base font-normal text-ink placeholder:text-muted"
+        />
+      </label>
       {areas.length > 0 && (
         <fieldset>
           <legend className="font-bold text-deep">Temat</legend>
