@@ -75,6 +75,9 @@
        działają BEZ DB — czytają data/parsed_innovations.json (114 realnych innowacji z Biblioteki Innowacji ROPS, sparsowane z rops.krakow.pl).
        A2: możesz brać dane z app/knowledge_store.py (search_innovations / get_innovation) zamiast mocków.
        UWAGA: wskaźniki wyzwań per powiat (data/challenges.py) są POGLĄDOWE, nie z GUS.
+[DONE] A2: 114 innowacji ROPS możesz wgrać do swojego Zasobnika od ręki (bez czekania na A1):
+       cd find_inv_server && python -m data.export_to_zasobnik --post http://localhost:8000 --token <ADMIN_TOKEN>
+       (po starcie z seedem obszarów; przetestowane na agent-2/matchmaking: created=114, ponowne uruchomienie = updated=114)
 [NEED A1] — Push 1/2 (app.database, models.Innovation, embeddings) nie jest na main; data/seed_innovations.py gotowy, odpalę po merge.
 [DONE] — napisz gdy seed_innovations.py przeszedł i dane są w DB + ChromaDB
          To odblokuje A2 do testowania matchmakingu
