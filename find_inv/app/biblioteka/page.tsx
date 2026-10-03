@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Search, SlidersHorizontal } from "lucide-react";
 
 import { CutoutText } from "@/components/cutout-text";
@@ -18,7 +18,6 @@ const STATUS_OPTIONS = [
 
 function BiblotekaContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
 
   const [items, setItems] = useState<BackendInnovation[]>([]);
   const [loading, setLoading] = useState(true);
