@@ -21,6 +21,7 @@ import {
 import { apiFetch } from "@/lib/api";
 import { buttonVariants } from "@/components/ui/button";
 import { MiddlemanModal } from "@/components/middleman-modal";
+import { PageBackdrop } from "@/components/page-backdrop";
 import { BackendInnovationCard, type BackendInnovation } from "@/components/backend-innovation-card";
 
 const COST_LABEL: Record<string, string> = {
@@ -118,7 +119,7 @@ export default function InnovationDetailPage() {
   }
 
   return (
-    <>
+    <PageBackdrop layout="gutters">
       <div className="mx-auto max-w-content px-4 py-12 sm:px-6">
         <Link
           href="/biblioteka"
@@ -347,6 +348,6 @@ export default function InnovationDetailPage() {
           onClose={() => setMiddlemanOpen(false)}
         />
       )}
-    </>
+    </PageBackdrop>
   );
 }

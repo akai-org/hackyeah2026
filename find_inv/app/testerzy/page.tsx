@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ClipboardCheck, MessageSquareText, Search, type LucideIcon } from "lucide-react";
 
 import { CutoutText } from "@/components/cutout-text";
-import { Monstera } from "@/components/monstera";
+import { PageBackdrop } from "@/components/page-backdrop";
 import { TesterForm } from "@/components/tester-form";
 
 export const metadata: Metadata = { title: "Zostań testerem innowacji" };
@@ -33,14 +33,8 @@ const BENEFITS = [
 
 export default function TestersPage() {
   return (
-    <div className="relative overflow-hidden">
-      <Monstera
-        size="small"
-        color="mint"
-        className="simple-hidden absolute -top-10 -right-12 hidden w-48 rotate-[210deg] lg:block"
-      />
-
-      <div className="relative mx-auto max-w-content px-4 py-16 sm:px-6">
+    <PageBackdrop>
+      <div className="mx-auto max-w-content px-4 py-16 sm:px-6">
         <CutoutText as="h1" size="section" text="Zostań testerem" />
         <p className="mt-4 max-w-[60ch] text-lg">
           Testerzy sprawdzają innowacje społeczne w prawdziwym życiu, zanim polecimy je innym gminom. Nie musisz być
@@ -85,6 +79,6 @@ export default function TestersPage() {
           <TesterForm />
         </div>
       </div>
-    </div>
+    </PageBackdrop>
   );
 }
