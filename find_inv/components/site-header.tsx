@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Menu, Search, X } from "lucide-react";
+import { Menu, Search, UserRound, X } from "lucide-react";
 
 import { AccessibilitySettings } from "@/components/simple-mode";
 
 const NAV_LINKS = [
-  { href: "/#kontakt", label: "Kontakt" },
+  { href: "/biblioteka", label: "Biblioteka" },
+  { href: "/kreator", label: "Kreator pomysłów" },
+  { href: "/forum", label: "Forum" },
 ];
 
 const linkClass =
@@ -15,20 +17,68 @@ const linkClass =
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchPlaceholder, setSearchPlaceholder] = useState("Szukaj");
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const closeSearchRef = useRef<HTMLButtonElement>(null);
+  const searchDialogRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
 
-  // Escape zamyka menu i oddaje focus przyciskowi. Menu nie więzi focusa.
+  function openSearch() {
+    previousFocusRef.current = document.activeElement as HTMLElement;
+    setSearchOpen(true);
+  }
+
+  function closeSearch() {
+    setSearchOpen(false);
+    requestAnimationFrame(() => previousFocusRef.current?.focus());
+  }
+
   useEffect(() => {
-    if (!open) return;
     function onKeyDown(event: KeyboardEvent) {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        openSearch();
+        return;
+      }
       if (event.key === "Escape") {
-        setOpen(false);
-        buttonRef.current?.focus();
+        if (searchOpen) {
+          closeSearch();
+        } else if (open) {
+          setOpen(false);
+          buttonRef.current?.focus();
+        }
       }
     }
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [open]);
+  }, [open, searchOpen]);
+
+  useEffect(() => {
+    if (searchOpen) searchInputRef.current?.focus();
+  }, [searchOpen]);
+
+  useEffect(() => {
+    if (!searchOpen) return;
+    function onPointerDown(event: PointerEvent) {
+      if (!searchDialogRef.current?.contains(event.target as Node)) closeSearch();
+    }
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [searchOpen]);
+
+  function trapSearchFocus(event: React.KeyboardEvent<HTMLDivElement>) {
+    if (event.key !== "Tab") return;
+    const focusable = Array.from(searchDialogRef.current?.querySelectorAll<HTMLElement>("button, input") ?? []);
+    const currentIndex = focusable.indexOf(document.activeElement as HTMLElement);
+    const nextIndex = event.shiftKey
+      ? (currentIndex <= 0 ? focusable.length - 1 : currentIndex - 1)
+      : (currentIndex === focusable.length - 1 ? 0 : currentIndex + 1);
+    event.preventDefault();
+    focusable[nextIndex]?.focus();
+  }
 
   return (
     <header className="relative z-10 border-b-(length:--bw) border-deep bg-paper">
@@ -39,28 +89,33 @@ export function SiteHeader() {
         Przejdź do treści
       </a>
 
-      <div className="relative mx-auto flex max-w-content items-center justify-between gap-4 px-4 py-3 sm:px-6">
-        <Link href="/" aria-label="HubMI, strona główna" className="inline-flex min-h-12 items-center rounded-ui py-1">
+      <div className="relative mx-auto flex max-w-content items-center gap-4 px-4 py-3 sm:px-6">
+        <Link href="/" aria-label="HubMI, strona główna" className="inline-flex min-h-12 shrink-0 items-center rounded-ui py-1">
           <span className="text-xl font-bold text-deep">HubMI</span>
         </Link>
 
-        <div className="ml-auto flex items-center gap-3">
-          <form action="/wyniki" method="get" role="search" className="absolute left-1/2 hidden -translate-x-1/2 sm:flex">
+        <div className="flex min-w-0 flex-1 justify-center px-2 sm:px-4">
+          <form action="/wyniki" method="get" role="search" className="hidden w-full max-w-md sm:flex" onClick={(event) => { event.preventDefault(); openSearch(); }}>
             <label htmlFor="header-search" className="sr-only">
-              Szukaj rozwiązania
+              Szukaj
             </label>
-            <div className="flex min-h-12 items-center rounded-ui border-(length:--bw) border-deep bg-surface">
+            <div className="flex min-h-12 w-full items-center rounded-ui border-(length:--bw) border-deep bg-surface">
               <Search aria-hidden="true" className="ml-3 size-5 text-leaf" />
               <input
                 id="header-search"
                 name="q"
                 type="search"
-                placeholder="Szukaj rozwiązania"
-                className="min-w-0 bg-transparent px-3 text-base text-ink outline-none placeholder:text-muted sm:w-44 lg:w-56"
+                placeholder="Szukaj"
+                readOnly
+                onFocus={openSearch}
+                className="min-w-0 flex-1 bg-transparent px-3 text-base text-ink outline-none placeholder:text-muted"
               />
+              <kbd className="mr-3 rounded border border-sage px-2 py-1 text-sm font-semibold text-muted">Ctrl+K</kbd>
             </div>
           </form>
+        </div>
 
+        <div className="ml-auto flex shrink-0 items-center gap-3">
           <nav aria-label="Główna" className="hidden lg:block">
           <ul className="flex items-center gap-1">
             {NAV_LINKS.map((link) => (
@@ -73,8 +128,16 @@ export function SiteHeader() {
           </ul>
           </nav>
 
-          <AccessibilitySettings className="hidden lg:block" />
         </div>
+
+        <Link
+          href="/konto"
+          aria-label="Konto użytkownika"
+          title="Konto użytkownika"
+          className="inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center rounded-full border-(length:--bw) border-deep bg-surface text-deep hover:bg-sage"
+        >
+          <UserRound aria-hidden="true" className="size-6" />
+        </Link>
 
         <button
           ref={buttonRef}
@@ -91,9 +154,9 @@ export function SiteHeader() {
 
       <div id="menu-mobilne" hidden={!open} className="border-t-(length:--bw) border-deep bg-surface lg:hidden">
         <nav aria-label="Główna, wersja mobilna" className="mx-auto max-w-content px-4 py-3 sm:px-6">
-          <form action="/wyniki" method="get" role="search" className="mb-3 flex sm:hidden">
+          <form action="/wyniki" method="get" role="search" className="mb-3 flex sm:hidden" onClick={(event) => { event.preventDefault(); openSearch(); }}>
             <label htmlFor="mobile-header-search" className="sr-only">
-              Szukaj rozwiązania
+              Szukaj
             </label>
             <div className="flex min-h-12 w-full items-center rounded-ui border-(length:--bw) border-deep bg-paper">
               <Search aria-hidden="true" className="ml-3 size-5 text-leaf" />
@@ -101,7 +164,9 @@ export function SiteHeader() {
                 id="mobile-header-search"
                 name="q"
                 type="search"
-                placeholder="Szukaj rozwiązania"
+                placeholder="Szukaj"
+                readOnly
+                onFocus={openSearch}
                 className="min-w-0 flex-1 bg-transparent px-3 text-base text-ink outline-none placeholder:text-muted"
               />
             </div>
@@ -115,9 +180,78 @@ export function SiteHeader() {
               </li>
             ))}
           </ul>
-          <AccessibilitySettings className="mt-2 border-t-2 border-sage px-3 pt-2" />
         </nav>
       </div>
+      {searchOpen && (
+        <div
+          className="fixed inset-0 z-[60] flex items-start justify-center bg-black/75 px-4 pt-[min(18vh,9rem)]"
+        >
+          <div
+            ref={searchDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="szybkie-wyszukiwanie-tytul"
+            onKeyDown={trapSearchFocus}
+            className="w-full max-w-2xl rounded-ui border-(length:--bw) border-deep bg-surface p-5 shadow-paper sm:p-8"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 id="szybkie-wyszukiwanie-tytul" className="mt-2 text-2xl font-bold text-deep">Czego szukasz?</h2>
+              </div>
+              <button
+                ref={closeSearchRef}
+                type="button"
+                aria-label="Zamknij wyszukiwanie"
+                title="Zamknij wyszukiwanie"
+                onClick={closeSearch}
+                className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-ui border-(length:--bw) border-deep bg-surface text-deep hover:bg-sage"
+              >
+                <X aria-hidden="true" className="size-6" />
+              </button>
+            </div>
+            <div className="mt-6 flex flex-wrap gap-2" aria-label="Popularne kategorie wyszukiwania">
+              {[
+                ["Problemy", "Szukaj problemu"],
+                ["Innowacje", "Szukaj innowacji"],
+                ["Artykuły", "Szukaj artykułu"],
+              ].map(([label, placeholder]) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSearchPlaceholder(placeholder);
+                    searchInputRef.current?.focus();
+                  }}
+                  className="min-h-12 rounded-ui border-(length:--bw) border-deep bg-paper px-4 font-semibold text-deep hover:bg-sage"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <form action="/wyniki" method="get" role="search" className="mt-6 flex gap-3">
+              <label htmlFor="quick-search" className="sr-only">Szukaj</label>
+              <input
+                ref={searchInputRef}
+                id="quick-search"
+                name="q"
+                type="search"
+                autoComplete="off"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder={searchPlaceholder}
+                className="min-h-12 min-w-0 flex-1 rounded-ui border-(length:--bw) border-deep bg-paper px-4 text-base text-ink outline-none placeholder:text-muted"
+              />
+              <button type="submit" className="inline-flex min-h-12 items-center gap-2 rounded-ui border-(length:--bw) border-deep bg-deep px-5 font-bold text-surface hover:bg-leaf">
+                <Search aria-hidden="true" className="size-5" />
+                Szukaj
+              </button>
+            </form>
+            <p className="mt-4 text-sm text-muted">Naciśnij Escape, aby zamknąć.</p>
+          </div>
+        </div>
+      )}
+      <AccessibilitySettings />
     </header>
   );
 }

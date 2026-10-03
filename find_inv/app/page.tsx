@@ -1,4 +1,4 @@
-import { ArrowRight, MessageSquareText, ScanSearch, Smile, type LucideIcon } from "lucide-react";
+import { ArrowRight, Frown, Meh, MessageSquareText, ScanSearch, Smile, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 
 import { InnovationCard } from "@/components/innovation-card";
@@ -23,27 +23,51 @@ const STEPS: Array<{ icon: LucideIcon; title: string; text: string }> = [
   },
 ];
 
+type RegionCondition = "happy" | "mid" | "sad";
+
+const REGION_CONDITION: RegionCondition = "mid";
+
+const CONDITION_LABELS: Record<RegionCondition, { icon: LucideIcon; status: string; detail: string }> = {
+  happy: { icon: Smile, status: "Dobra kondycja", detail: "Wskaźniki społeczne są stabilne." },
+  mid: { icon: Meh, status: "Wymaga uwagi", detail: "Część obszarów potrzebuje dodatkowego wsparcia." },
+  sad: { icon: Frown, status: "Trudna sytuacja", detail: "Dane pokazują pilną potrzebę działania." },
+};
+
 export default function HomePage() {
+  const condition = CONDITION_LABELS[REGION_CONDITION];
+  const ConditionIcon = condition.icon;
+
   return (
     <>
       {/* Hero */}
       <section aria-labelledby="hero-tytul" className="relative overflow-hidden">
-        <div className="relative mx-auto grid max-w-content gap-6 px-4 pt-20 pb-16 sm:px-6 lg:grid-cols-[minmax(0,40rem)_1fr] lg:gap-0 lg:pt-20 lg:pb-24">
+        <div className="relative mx-auto max-w-content px-4 pt-20 pb-16 sm:px-6 lg:pt-20 lg:pb-24">
           <div>
             <h1 id="hero-tytul" className="text-hero font-medium text-deep">Z czym masz kłopot?</h1>
             <p className="mt-6 max-w-[38ch] text-lg">
               Opisz to własnymi słowami. Znajdziemy rozwiązania, które już działają w Małopolsce.
             </p>
             <SearchForm />
-            <a href="#artykul-dnia" className="mt-6 inline-flex min-h-12 items-center gap-2 font-medium text-leaf underline underline-offset-4 hover:text-deep">
-              Sprawdź artykuł dnia
-              <ArrowRight aria-hidden="true" className="size-5" />
-            </a>
+            <nav aria-label="Szybki dostęp" className="mt-6 flex flex-wrap gap-x-6 gap-y-1">
+              <a href="#artykul-dnia" className="inline-flex min-h-12 items-center gap-2 font-medium text-leaf underline underline-offset-4 hover:text-deep">
+                Sprawdź artykuł dnia
+                <ArrowRight aria-hidden="true" className="size-5" />
+              </a>
+              <a href="#co-juz-dziala" className="inline-flex min-h-12 items-center gap-2 font-medium text-leaf underline underline-offset-4 hover:text-deep">
+                Popularne innowacje
+                <ArrowRight aria-hidden="true" className="size-5" />
+              </a>
+              <a href="#kondycja-malopolski" className="inline-flex min-h-12 items-center gap-2 font-medium text-leaf underline underline-offset-4 hover:text-deep">
+                Kondycja Małopolski
+                <ArrowRight aria-hidden="true" className="size-5" />
+              </a>
+              <a href="#jak-to-dziala" className="inline-flex min-h-12 items-center gap-2 font-medium text-leaf underline underline-offset-4 hover:text-deep">
+                Jak to działa
+                <ArrowRight aria-hidden="true" className="size-5" />
+              </a>
+            </nav>
           </div>
 
-          <div className="relative hidden lg:block">
-            <Smile aria-hidden="true" strokeWidth={1.25} className="absolute top-12 left-1/2 size-72 -translate-x-1/2 text-leaf" />
-          </div>
         </div>
       </section>
 
@@ -70,6 +94,24 @@ export default function HomePage() {
               );
             })}
           </ol>
+        </div>
+      </section>
+
+      {/* Kondycja regionu */}
+      <section id="kondycja-malopolski" aria-labelledby="kondycja-tytul" className="scroll-mt-6 border-b-(length:--bw) border-deep bg-paper">
+        <div className="mx-auto max-w-content px-4 py-8 sm:px-6">
+          <div className="grid max-w-3xl items-center gap-4 rounded-ui border-(length:--bw) border-deep bg-surface p-5 md:grid-cols-[auto_1fr_auto]">
+            <ConditionIcon aria-hidden="true" strokeWidth={1.5} className="size-16 text-leaf" />
+            <span>
+              <span id="kondycja-tytul" className="block text-sm font-semibold uppercase tracking-[0.12em] text-leaf">Kondycja Małopolski</span>
+              <span id="kondycja-status" className="mt-1 block text-xl font-bold text-deep">{condition.status}</span>
+              <span className="mt-1 block">{condition.detail}</span>
+            </span>
+            <Link href="/wyzwania" className="inline-flex min-h-12 items-center gap-2 font-semibold text-leaf underline underline-offset-4 hover:text-deep">
+              Zobacz badania i wyzwania
+              <ArrowRight aria-hidden="true" className="size-5" />
+            </Link>
+          </div>
         </div>
       </section>
 

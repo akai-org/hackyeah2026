@@ -180,6 +180,7 @@ html[data-font-size="large"] {
 
 html[data-contrast="high"] {
   --bw: 3px;
+  color-scheme: dark;
 }
 
 html[data-contrast="high"] body,
@@ -187,26 +188,42 @@ html[data-contrast="high"] .bg-paper,
 html[data-contrast="high"] .bg-surface,
 html[data-contrast="high"] .bg-sage,
 html[data-contrast="high"] .bg-mint,
-html[data-contrast="high"] .bg-butter {
-  background-color: #fff !important;
+html[data-contrast="high"] .bg-butter,
+html[data-contrast="high"] .bg-deep,
+html[data-contrast="high"] .bg-leaf {
+  background-color: #000 !important;
   background-image: none !important;
 }
 
-html[data-contrast="high"] body,
-html[data-contrast="high"] .text-ink,
-html[data-contrast="high"] .text-deep,
-html[data-contrast="high"] .text-muted,
-html[data-contrast="high"] .text-leaf {
+html[data-contrast="high"] :where(body, body *) {
+  color: #fff500 !important;
+}
+
+html[data-contrast="high"] .bg-deep,
+html[data-contrast="high"] .bg-leaf {
+  background-color: #fff500 !important;
+}
+
+html[data-contrast="high"] .bg-deep.text-surface,
+html[data-contrast="high"] .bg-leaf.text-surface {
   color: #000 !important;
 }
 
-html[data-contrast="high"] .border-deep,
-html[data-contrast="high"] .border-sage,
-html[data-contrast="high"] .border-leaf {
-  border-color: #000 !important;
+html[data-contrast="high"] :where(.border-deep, .border-sage, .border-leaf) {
+  border-color: #fff500 !important;
+}
+
+html[data-contrast="high"] input::placeholder,
+html[data-contrast="high"] textarea::placeholder {
+  color: #fff500 !important;
 }
 
 html[data-contrast="high"] :focus-visible {
-  outline: 4px solid #000;
+  outline: 4px solid #fff500;
   outline-offset: 4px;
+}
+
+html[data-contrast="high"] ::selection {
+  background-color: #fff500;
+  color: #000;
 }

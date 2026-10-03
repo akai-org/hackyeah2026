@@ -14,7 +14,7 @@ import {
 
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import { Settings2 } from "lucide-react";
+import { Accessibility } from "lucide-react";
 
 // Tryb prosty (DESIGN.md, sekcja 10). Stan żyje w atrybucie <html data-simple="true">,
 // dzięki temu CSS wyłącza kolaż, liście i animacje bez czekania na React.
@@ -185,7 +185,7 @@ export function AccessibilitySettings({ className }: { className?: string }) {
   }, [open]);
 
   return (
-    <div ref={containerRef} className={cn("relative", className)}>
+    <div ref={containerRef} className={cn("fixed right-4 bottom-4 z-50", className)}>
       <button
         ref={buttonRef}
         type="button"
@@ -193,10 +193,11 @@ export function AccessibilitySettings({ className }: { className?: string }) {
         aria-controls={panelId}
         aria-haspopup="dialog"
         onClick={() => setOpen((value) => !value)}
-        className="inline-flex min-h-12 items-center gap-2 rounded-ui border-(length:--bw) border-deep bg-surface px-4 text-base font-semibold text-deep hover:bg-sage"
+        title="Ustawienia dostępności"
+        className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-full border-(length:--bw) border-deep bg-deep text-surface shadow-paper hover:bg-leaf"
       >
-        <Settings2 aria-hidden="true" className="size-5" />
-        Dostępność
+        <Accessibility aria-hidden="true" className="size-7" />
+        <span className="sr-only">Dostępność</span>
       </button>
 
       {open && (
@@ -204,7 +205,7 @@ export function AccessibilitySettings({ className }: { className?: string }) {
           id={panelId}
           role="dialog"
           aria-label="Ustawienia dostępności"
-          className="absolute top-full right-0 z-30 mt-2 w-[min(22rem,calc(100vw-2rem))] rounded-ui border-(length:--bw) border-deep bg-surface p-4 shadow-paper"
+          className="fixed right-4 bottom-20 z-30 w-[min(22rem,calc(100vw-2rem))] rounded-ui border-(length:--bw) border-deep bg-surface p-4 shadow-paper"
         >
           <p className="text-lg font-semibold text-deep">Ustawienia dostępności</p>
           <div className="mt-3 grid gap-2">
