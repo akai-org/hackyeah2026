@@ -183,9 +183,31 @@ def _log_search_zasobnik(query: str, results: int) -> None:
         log.exception("zasobnik search log failed")
 
 
+HIDDEN_STATUSES = {"archived", "pending"}
+
+
+def _admin_statuses() -> dict[int, str]:
+    """Statusy ustawione w panelu admina (A5): archiwizacja ma od razu zniknąć z wyników."""
+    try:
+        from app import admin_store
+    except ImportError:
+        return {}
+    try:
+        return {i["id"]: i["status"] for i in admin_store.list_innovations()}
+    except Exception:
+        log.exception("admin_store statuses failed")
+        return {}
+
+
 def _catalog() -> list[dict]:
     """Innowacje ROPS z data/parsed_innovations.json (A3); bez pliku knowledge_store zwraca mocki."""
-    return [knowledge_store.public(i, full=True) for i in knowledge_store.load_innovations() if i.get("status") != "archived"]
+    statuses = _admin_statuses()
+    catalog = []
+    for innov in knowledge_store.load_innovations():
+        status = statuses.get(innov["id"], innov.get("status"))
+        if status not in HIDDEN_STATUSES:
+            catalog.append(knowledge_store.public({**innov, "status": status}, full=True))
+    return catalog
 
 
 def _local_match(text: str, tags: list[str], limit: int = TOP_N) -> dict:
