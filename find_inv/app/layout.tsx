@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 
+import { LoginDialog } from "@/components/login-dialog";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SIMPLE_MODE_SCRIPT, SimpleModeProvider } from "@/components/simple-mode";
+import { AuthProvider } from "@/lib/auth";
 import { fontVariables } from "./fonts";
 import "./globals.css";
 
@@ -24,11 +26,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="flex min-h-screen flex-col font-body antialiased">
         <SimpleModeProvider>
-          <SiteHeader />
-          <main id="tresc" tabIndex={-1} className="flex-1 focus:outline-none">
-            {children}
-          </main>
-          <SiteFooter />
+          <AuthProvider>
+            <SiteHeader />
+            <main id="tresc" tabIndex={-1} className="flex-1 focus:outline-none">
+              {children}
+            </main>
+            <SiteFooter />
+            <LoginDialog />
+          </AuthProvider>
         </SimpleModeProvider>
       </body>
     </html>
