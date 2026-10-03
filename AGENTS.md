@@ -64,12 +64,23 @@ find_inv_server/
 └── .env.example      # zaktualizuj
 ```
 
-`models.py` — tylko te tabele (reszta to mockowane w Next.js):
+`models.py` — wszystkie tabele:
 ```python
+# users  ← potrzebne do ról między modułami
+id, name, role,          # "admin" | "tester" | "consultant" | "user"
+session_token,           # UUID — trzymany w cookie przez frontend
+created_at
+
+# testers  ← profil testera powiązany z userem
+id, user_id,             # FK users.id
+name, email, organization, expertise,
+approved,                # bool, admin zatwierdza
+created_at
+
 # innovations
 id, title, short_desc, full_desc, category, area, target_group,
-location, status,  # "active" | "archived" | "unmaintained"
-cost_level,        # "low" | "medium" | "high"
+location, status,        # "active" | "archived" | "unmaintained"
+cost_level,              # "low" | "medium" | "high"
 implementation_time_months, testers_count, where_implemented,
 source_url, embedding_id, tags,  # JSON str
 created_at, updated_at
@@ -81,7 +92,7 @@ source, data_year, powiat
 # innovation_gap_index
 id, powiat, challenge_area, innovations_count, gap_score, updated_at
 
-# search_logs  (do trendów — zbieraj w tle)
+# search_logs  (trendy dla admina)
 id, query, tags, results_count, created_at
 ```
 
@@ -157,12 +168,37 @@ DATABASE_URL=sqlite+aiosqlite:///./findinv.db
 CHROMA_PATH=./chroma_db
 ```
 
+**`app/auth.py`** + router `/api/auth/*` — dodaj w Push 2:
+```python
+# POST /api/auth/session
+#   Body: { "name": "Jan", "role": "user" }  ← user sam wybiera rolę, brak weryfikacji
+#   INSERT users(name, role, session_token=uuid4())
+#   Return: { "data": { "session_token": "uuid", "role": "user" } }
+#   Frontend zapisuje token w cookie "session"
+
+# POST /api/auth/set-role
+#   Body: { "role": "admin" }  ← hackathon: bez hasła
+#   UPDATE users SET role=? WHERE session_token=?
+#   Return: { "data": { "role": "admin" } }
+
+# GET /api/auth/me
+#   Return: { "data": { "id", "name", "role" } } lub 401
+
+# Middleware — dokłada do każdego requestu:
+def get_current_user(request: Request) -> User | None:
+    token = request.cookies.get("session") or request.headers.get("X-Session-Token")
+    # SELECT users WHERE session_token=token
+    # return User lub None
+
+def require_role(*roles):
+    # Depends factory — raises 403 jeśli user.role not in roles
+```
+
 → **Merge Push 2. Napisz [DONE] Push 2 w COMMS.md.**
 
 ### Nie robisz
 - Żadnych endpointów domenowych
 - Seedowania danych (A3)
-- Auth — na hackathonie nie ma sensu
 
 ---
 
@@ -319,12 +355,12 @@ GET /api/innovation-gap       # [{ powiat, gap_score, top_area }]
 
 ---
 
-## 🟩 Agent 4 — Frontend: Kreator + Tester + Forum + Admin
+## 🟩 Agent 4 — Frontend: Kreator + Tester + Forum
 
 **Pracujesz w:** `find_inv/` (Next.js)
 
 > Kreator, Tester, Forum — mock w Next.js.
-> Admin panel — **jury się zaloguje i będzie klikać**, musi działać i wyglądać.
+> Admin panel robi Agent 5 (backend + frontend) — potrzebne ze względu na role.
 
 ### Strony mock (hardkodowane dane)
 
@@ -377,11 +413,23 @@ Panel admina musi mieć działające widoki (dane hardkodowane ale klikalne):
 Utwórz `find_inv/data/mock.ts` z danymi dla tych stron.
 Możesz przepisać z `find_inv_server/data/mock_data.py` na TypeScript.
 
+### Auth w Next.js (wspólne dla wszystkich stron)
+```typescript
+// find_inv/lib/auth.ts
+// Pobiera /api/auth/me przy starcie — trzyma usera w context
+// Przycisk "Zaloguj się" na navbar → modal z wyborem roli:
+//   [Mieszkaniec]  [Tester]  [Konsultant]  [Admin]
+// POST /api/auth/session → zapisuje token w cookie → refresh user context
+// Rola admina/testera widoczna jako badge w navbar
+```
+
 ---
 
-## 🟦 Agent 5 — Middleman AI + Frontend integracja
+## 🟦 Agent 5 — Middleman AI + Admin Panel
 
-**Pracujesz w:** `find_inv_server/app/routers/middleman.py` i pomagasz przy integracji Next.js
+**Pracujesz w:** `find_inv_server/app/routers/middleman.py`, `find_inv_server/app/routers/admin.py`, `find_inv/app/admin/`
+
+> Admin wymaga backendu — role są w SQLite, jury zaloguje się i będzie klikać po panelu.
 
 ### Od t=0 — mock Middlemana
 
@@ -414,6 +462,50 @@ async def answer(body: dict):
             yield f"data: {json.dumps(plan)}\n\n"
         yield "data: [DONE]\n\n"
     return StreamingResponse(gen(), media_type="text/event-stream")
+```
+
+### Admin backend (zacznij od t=0, mock auth do czasu Push 2)
+
+**`find_inv_server/app/routers/admin.py`**
+
+Auth tymczasowy przed Push 2: sprawdzaj `X-Dev-Admin: true` w headerze.
+Po Push 2: zamień na `Depends(require_role("admin"))`.
+
+```python
+# Wszystkie endpointy wymagają roli "admin"
+
+GET  /api/admin/innovations?status=&tags=&search=
+POST /api/admin/innovations/{id}/approve          → status="active"
+POST /api/admin/innovations/{id}/archive          → status="archived"
+POST /api/admin/innovations/{id}/flag-unmaintained → status="unmaintained"
+
+GET  /api/admin/users
+POST /api/admin/users/{id}/set-role   body: { "role": "tester"|"consultant"|"user" }
+
+GET  /api/admin/testers?approved=false
+POST /api/admin/testers/{id}/approve
+  → UPDATE testers SET approved=true
+  → UPDATE users SET role="tester" WHERE id=tester.user_id
+
+GET  /api/admin/trends
+  → {
+      "top_tags":    [{ "tag": "seniorzy", "count": 45 }],   ← z search_logs
+      "top_queries": [{ "query": "...", "count": 12 }],
+      "by_day":      [{ "date": "2026-10-03", "count": 7 }]
+    }
+
+GET  /api/admin/stats
+  → { "innovations": 87, "users": 34, "testers": 12,
+      "pending_testers": 3, "searches": 156 }
+```
+
+**Admin frontend `find_inv/app/admin/`** — woła te endpointy z headerem sesji:
+```
+/admin                → redirect do /admin/statystyki
+/admin/innowacje      → tabela + przyciski Zatwierdź/Archiwizuj/Nieaktywna
+/admin/uzytkownicy    → lista + zmiana roli + zatwierdzanie testerów
+/admin/trendy         → wykresy (recharts) z danych z /api/admin/trends
+/admin/statystyki     → liczniki z /api/admin/stats
 ```
 
 ### Po [DONE] Push 2 od A1 — podmień na real LLM
