@@ -6,14 +6,35 @@ import type { IdeaDraft } from "@/lib/ideas";
 
 export type GrantSection = { id: string; label: string; hint: string; max_chars: number };
 
+export type CallStatus = "upcoming" | "open" | "closed";
+
+/** Nabór: konkretny konkurs z terminami. Wniosek można złożyć tylko, gdy `status === "open"`. */
 export type Grant = {
   id: string;
   name: string;
   organizer: string;
-  description: string;
-  source_url: string | null;
+  opens_at: string;
+  closes_at: string;
+  status: CallStatus;
+  /** Dane przykładowe na demo, nie prawdziwy konkurs. */
+  demo: boolean;
+  template: { id: string; name: string; description: string; source_url: string | null };
   sections: GrantSection[];
 };
+
+export type Applicant = { applicant_name: string; applicant_email: string; organization: string };
+
+export function submitApplication(grantId: string, applicant: Applicant, sections: Record<string, string>) {
+  return apiPost<{ id: number; grant_id: string; submitted_at: string }>(
+    `/api/grants/${encodeURIComponent(grantId)}/applications`,
+    { ...applicant, sections },
+  );
+}
+
+/** „31 października 2026” — terminy naboru w czasie polskim. */
+export function formatCallDate(iso: string) {
+  return new Date(iso).toLocaleDateString("pl-PL", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Warsaw" });
+}
 
 export type GrantFill = {
   grant_id: string;

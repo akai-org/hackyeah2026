@@ -106,6 +106,11 @@ Middleman zadaje pytania z kontekstem innowacji i gminy.
   `POST /api/grants/fill` { grant_id, idea: tekst | fiszka } → { sections: {id: tekst}, missing[], source: "llm"|"rules" }.
   Front `/wnioski`, przycisk „Napisz wniosek o grant” na fiszce w kreatorze (fiszka przez sessionStorage `hubmi:fiszka`).
   Nowy wspólny komponent `components/ai-disclaimer.tsx` (ostrzeżenie o błędach AI).
+[03:45] [DONE] Generator wniosków — nabory z terminami: wniosek można złożyć TYLKO w okresie naboru.
+  `GET /api/grants` zwraca nabory (`opens_at`, `closes_at`, `status: upcoming|open|closed`, `demo`, `template`, `sections`);
+  `POST /api/grants/{id}/applications` { applicant_name, applicant_email, organization?, sections } → zapis w SQLite,
+  poza terminem / niekompletny → `error`. Uzupełnianie z fiszki: otwarte i nadchodzące (przygotowanie wniosku), zakończone — nie.
+  Nabory są PRZYKŁADOWE (oznaczone w UI jako dane demonstracyjne). [FYI A4] panel admina może listować `grant_applications`.
 [03:15] [DONE] runda 2 (A2, `agent-2/kreator-ai`): 7/7 zadań. Build OK, pytest 57/57. Sprawdzone w przeglądarce (Edge):
   kreator → podobne innowacje → fiszka → /wnioski → druk; Middleman w oknie (Esc zamyka, focus na pierwszym polu), plan + druk.
   Uwagi: `gh` niezainstalowany → PR do założenia ręcznie z linku. Klucz OpenRouter w moim .env zwraca 401 — LLM w /api/grants/fill
@@ -390,6 +395,7 @@ oraz modeli `Innovation`, `SearchLog` — jeśli nazwiecie inaczej, dajcie znać
 |---|---|---|---|---|
 | — | — | — | — | — |
 | 2026-10-03 | A5 | `models.py`, `database.py` | Nowa tabela `events` (analityka: wyświetlenia, kliki, Middleman) + kolumna `forum_posts.innovation_id` (komentarze pod kartą). `init_db` dopisuje brakującą kolumnę przez ALTER TABLE — lokalnych baz nie trzeba kasować | do OK |
+| 2026-10-04 | A2 | `models.py` | Nowa tabela `grant_applications` (wnioski złożone w naborach, routers/grants.py). Tylko nowa tabela — create_all, bez migracji | gotowe |
 
 ---
 

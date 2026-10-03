@@ -1,7 +1,12 @@
-"""Generator wniosków grantowych: wzory wniosków (sekcje jako dane) i wypełnianie ich z fiszki pomysłu.
+"""Generator wniosków grantowych: nabory z terminami, wypełnianie wniosku z fiszki i składanie wniosku.
 
-GET  /api/grants       → lista wzorów z sekcjami
-POST /api/grants/fill  { grant_id, idea } → { grant_id, sections: {id: tekst}, missing: [id], source }
+GET  /api/grants                         → nabory (status upcoming|open|closed, terminy) z sekcjami wzoru wniosku
+POST /api/grants/fill                    { grant_id, idea } → { grant_id, sections: {id: tekst}, missing: [id], source }
+POST /api/grants/{grant_id}/applications { applicant_name, applicant_email, organization?, sections }
+                                         → { id, grant_id, submitted_at } — TYLKO gdy nabór jest otwarty
+
+Wniosek można złożyć wyłącznie w okresie naboru (opens_at ≤ teraz ≤ closes_at, pilnuje tego backend).
+Przed otwarciem naboru wniosek da się przygotować i wydrukować, po zamknięciu — ani uzupełnić, ani złożyć.
 
 `idea` to tekst opisu albo fiszka z kreatora ({title, short_desc, essence, problem, for_whom, place, stage,
 budget, partners, tags}). Z kluczem OpenRouter sekcje pisze LLM (JSON mode), bez klucza albo przy błędzie —
@@ -10,12 +15,17 @@ szablon z pól fiszki. Wzory są uproszczone: przed złożeniem trzeba sprawdzi�
 
 import json
 import logging
+import re
+from datetime import datetime, timezone
 
-from fastapi import APIRouter
-from pydantic import BaseModel
+from fastapi import APIRouter, Request
+from pydantic import BaseModel, Field
 
+from app.auth import get_current_user
 from app.config import settings
+from app.database import get_db
 from app.idea_analysis import analyze_locally
+from app.models import GrantApplication
 
 log = logging.getLogger(__name__)
 
@@ -23,8 +33,8 @@ router = APIRouter(prefix="/api/grants", tags=["grants"])
 
 MAX_IDEA_TEXT = 6000
 
-# Każda sekcja: id, nazwa z formularza, podpowiedź dla piszącego, limit znaków, pola fiszki do szablonu bez LLM.
-GRANTS: list[dict] = [
+# Wzory wniosków. Każda sekcja: id, nazwa z formularza, podpowiedź, limit znaków, pola fiszki do szablonu bez LLM.
+TEMPLATES: list[dict] = [
     {
         "id": "oferta-zadania-publicznego",
         "name": "Oferta realizacji zadania publicznego (otwarty konkurs ofert gminy lub powiatu)",
@@ -84,7 +94,65 @@ GRANTS: list[dict] = [
     },
 ]
 
-_GRANTS_BY_ID = {grant["id"]: grant for grant in GRANTS}
+_TEMPLATES_BY_ID = {template["id"]: template for template in TEMPLATES}
+
+# Nabory: konkretne konkursy z terminami, każdy korzysta z jednego wzoru wniosku. To DANE PRZYKŁADOWE na demo
+# (`demo: True` — front pokazuje to wprost); prawdziwe nabory dodawałby pracownik ROPS w panelu admina.
+# Terminy z jawną strefą czasową (czas polski), koniec naboru = ostatnia sekunda dnia.
+CALLS: list[dict] = [
+    {
+        "id": "konkurs-seniorzy-2027",
+        "template": "oferta-zadania-publicznego",
+        "name": "Otwarty konkurs ofert: aktywizacja i wsparcie seniorów w 2027 r.",
+        "organizer": "Przykładowa gmina w Małopolsce",
+        "opens_at": "2026-09-15T00:00:00+02:00",
+        "closes_at": "2026-10-31T23:59:59+01:00",
+        "demo": True,
+    },
+    {
+        "id": "mikrogranty-jesien-2026",
+        "template": "mikrogrant-lokalny",
+        "name": "Mikrogranty na inicjatywy sąsiedzkie — edycja jesienna 2026",
+        "organizer": "Przykładowy fundusz lokalny",
+        "opens_at": "2026-09-01T00:00:00+02:00",
+        "closes_at": "2026-10-20T23:59:59+02:00",
+        "demo": True,
+    },
+    {
+        "id": "konkurs-cyfrowe-wlaczenie-2027",
+        "template": "oferta-zadania-publicznego",
+        "name": "Otwarty konkurs ofert: przeciwdziałanie wykluczeniu cyfrowemu w 2027 r.",
+        "organizer": "Przykładowy powiat w Małopolsce",
+        "opens_at": "2026-11-16T00:00:00+01:00",
+        "closes_at": "2026-12-14T23:59:59+01:00",
+        "demo": True,
+    },
+    {
+        "id": "mikrogranty-wiosna-2026",
+        "template": "mikrogrant-lokalny",
+        "name": "Mikrogranty na inicjatywy sąsiedzkie — edycja wiosenna 2026",
+        "organizer": "Przykładowy fundusz lokalny",
+        "opens_at": "2026-03-01T00:00:00+01:00",
+        "closes_at": "2026-04-30T23:59:59+02:00",
+        "demo": True,
+    },
+]
+
+_CALLS_BY_ID = {call["id"]: call for call in CALLS}
+
+
+def call_status(call: dict, now: datetime | None = None) -> str:
+    """upcoming — przed otwarciem, open — przyjmuje wnioski, closed — po terminie."""
+    now = now or datetime.now(timezone.utc)
+    if now < datetime.fromisoformat(call["opens_at"]):
+        return "upcoming"
+    if now > datetime.fromisoformat(call["closes_at"]):
+        return "closed"
+    return "open"
+
+
+def _template(call: dict) -> dict:
+    return _TEMPLATES_BY_ID[call["template"]]
 
 _FIELD_LABELS = {
     "title": "", "short_desc": "", "essence": "", "problem": "Problem", "for_whom": "Grupa docelowa",
@@ -107,13 +175,30 @@ class FillRequest(BaseModel):
     idea: str | dict
 
 
-def _summary(grant: dict) -> dict:
-    return {key: grant[key] for key in ("id", "name", "organizer", "description", "source_url", "sections")}
+def _summary(call: dict, now: datetime) -> dict:
+    template = _template(call)
+    return {
+        "id": call["id"],
+        "name": call["name"],
+        "organizer": call["organizer"],
+        "opens_at": call["opens_at"],
+        "closes_at": call["closes_at"],
+        "status": call_status(call, now),
+        "demo": call["demo"],
+        "template": {key: template[key] for key in ("id", "name", "description", "source_url")},
+        "sections": template["sections"],
+    }
+
+
+_STATUS_ORDER = {"open": 0, "upcoming": 1, "closed": 2}
 
 
 @router.get("")
 async def list_grants():
-    return {"data": [_summary(grant) for grant in GRANTS], "error": None}
+    """Najpierw otwarte (najbliższy termin na górze), potem nadchodzące, na końcu zakończone."""
+    now = datetime.now(timezone.utc)
+    calls = sorted(CALLS, key=lambda c: (_STATUS_ORDER[call_status(c, now)], datetime.fromisoformat(c["closes_at"])))
+    return {"data": [_summary(call, now) for call in calls], "error": None}
 
 
 def _idea_fields(idea: str | dict) -> tuple[dict, str]:
@@ -183,9 +268,12 @@ async def fill_with_llm(grant: dict, idea_text: str) -> dict[str, str]:
 
 @router.post("/fill")
 async def fill(body: FillRequest):
-    grant = _GRANTS_BY_ID.get(body.grant_id)
-    if grant is None:
+    call = _CALLS_BY_ID.get(body.grant_id)
+    if call is None:
         return {"data": None, "error": "Nie znaleziono takiego naboru"}
+    if call_status(call) == "closed":
+        return {"data": None, "error": "Ten nabór jest już zakończony — wybierz otwarty albo nadchodzący nabór"}
+    grant = _template(call)
     fields, idea_text = _idea_fields(body.idea)
     if len(idea_text.strip()) < 10:
         return {"data": None, "error": "Opisz pomysł w co najmniej jednym zdaniu albo uzupełnij fiszkę"}
@@ -202,4 +290,68 @@ async def fill(body: FillRequest):
             log.exception("grant fill via LLM failed, using template")
 
     missing = [s["id"] for s in grant["sections"] if not sections[s["id"]] or "[do uzupełnienia" in sections[s["id"]]]
-    return {"data": {"grant_id": grant["id"], "sections": sections, "missing": missing, "source": source}, "error": None}
+    return {"data": {"grant_id": call["id"], "sections": sections, "missing": missing, "source": source}, "error": None}
+
+
+class ApplicationRequest(BaseModel):
+    applicant_name: str = Field(max_length=256)
+    applicant_email: str = Field(max_length=256)
+    organization: str | None = Field(default=None, max_length=256)
+    sections: dict[str, str]
+
+
+_EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+def _format_date(value: str) -> str:
+    return datetime.fromisoformat(value).strftime("%d.%m.%Y")
+
+
+@router.post("/{grant_id}/applications")
+async def submit_application(grant_id: str, body: ApplicationRequest, request: Request):
+    """Złożenie wniosku — tylko w okresie naboru. Termin sprawdzamy tutaj, nie tylko na froncie."""
+    call = _CALLS_BY_ID.get(grant_id)
+    if call is None:
+        return {"data": None, "error": "Nie znaleziono takiego naboru"}
+    status = call_status(call)
+    if status == "upcoming":
+        return {"data": None, "error": f"Nabór jeszcze się nie rozpoczął — wnioski przyjmujemy od {_format_date(call['opens_at'])}"}
+    if status == "closed":
+        return {"data": None, "error": f"Nabór zakończył się {_format_date(call['closes_at'])} — wniosku nie można już złożyć"}
+
+    name = body.applicant_name.strip()
+    email = body.applicant_email.strip()
+    if not name:
+        return {"data": None, "error": "Podaj imię i nazwisko albo nazwę wnioskodawcy"}
+    if not _EMAIL.match(email):
+        return {"data": None, "error": "Podaj poprawny adres e-mail do kontaktu w sprawie wniosku"}
+
+    problems = []
+    sections = {}
+    for section in _template(call)["sections"]:
+        text = (body.sections.get(section["id"]) or "").strip()
+        if not text or "[do uzupełnienia" in text:
+            problems.append(f"{section['label']}: do uzupełnienia")
+        elif len(text) > section["max_chars"]:
+            problems.append(f"{section['label']}: za długo (limit {section['max_chars']} znaków)")
+        sections[section["id"]] = text
+    if problems:
+        return {"data": None, "error": "Wniosek jest niekompletny. " + "; ".join(problems)}
+
+    user = await get_current_user(request)
+    async with get_db() as db:
+        application = GrantApplication(
+            grant_id=call["id"],
+            user_id=user.id if user else None,
+            applicant_name=name,
+            applicant_email=email,
+            organization=(body.organization or "").strip() or None,
+            sections=json.dumps(sections, ensure_ascii=False),
+        )
+        db.add(application)
+        await db.commit()
+        await db.refresh(application)
+    return {
+        "data": {"id": application.id, "grant_id": call["id"], "submitted_at": application.submitted_at.isoformat()},
+        "error": None,
+    }
