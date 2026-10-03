@@ -47,9 +47,14 @@ function ResultsContent() {
   useEffect(() => {
     if (!query) return;
     setTagsLoading(true);
+    setMatchLoading(false);
+    setInnovations([]);
+    setTagResult(null);
+
     apiPost<TagResult>("/api/tag", { text: query })
       .then((result) => {
         setTagResult(result);
+        setTagsLoading(false);
         setMatchLoading(true);
         return apiPost<{ innovations: BackendInnovation[]; total_found: number }>("/api/match", {
           text: query,
@@ -57,8 +62,8 @@ function ResultsContent() {
         });
       })
       .then((match) => setInnovations(match.innovations))
-      .catch(() => {})
-      .finally(() => { setTagsLoading(false); setMatchLoading(false); });
+      .catch(() => setTagsLoading(false))
+      .finally(() => setMatchLoading(false));
   }, [query]);
 
   useEffect(() => {

@@ -9,33 +9,32 @@ import { SearchForm } from "@/components/search-form";
 import { buttonVariants } from "@/components/ui/button";
 import { innovations } from "@/data/innovations.mock";
 
-async function getShowcaseInnovations(): Promise<BackendInnovation[] | null> {
+const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
+async function apiFetch<T>(path: string): Promise<T | null> {
   try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}/api/innovations?limit=3&status=active`,
-      { next: { revalidate: 120 } },
-    );
+    const res = await fetch(`${API}${path}`, { next: { revalidate: 120 } });
     if (!res.ok) return null;
     const json = await res.json();
-    return (json.data ?? []).slice(0, 3) as BackendInnovation[];
+    return json.data as T ?? null;
   } catch {
     return null;
   }
 }
 
-const STATS = [
+const STATS_FALLBACK = [
   { value: "22,4%", label: "osób 65+ w Małopolsce", source: "GUS 2024" },
   { value: "31%", label: "seniorów bez umiejętności cyfrowych", source: "GUS 2023" },
   { value: "18%", label: "gospodarstw z samotnością", source: "NSP 2021" },
   { value: "187 tys.", label: "osób z niepełnosprawnością", source: "ROPS 2024" },
 ];
 
-const GAP_DATA = [
-  { powiat: "limanowski", gap: 5.9, area: "dostęp do usług" },
-  { powiat: "nowosądecki", gap: 4.7, area: "wykluczenie cyfrowe" },
-  { powiat: "tarnowski", gap: 3.1, area: "samotność" },
-  { powiat: "myślenicki", gap: 2.4, area: "zdrowie psychiczne" },
-  { powiat: "krakowski", gap: 1.2, area: "starzenie" },
+const GAP_FALLBACK = [
+  { powiat: "limanowski", gap_score: 5.9, top_area: "dostęp do usług" },
+  { powiat: "nowosądecki", gap_score: 4.7, top_area: "wykluczenie cyfrowe" },
+  { powiat: "tarnowski", gap_score: 3.1, top_area: "samotność" },
+  { powiat: "myślenicki", gap_score: 2.4, top_area: "zdrowie psychiczne" },
+  { powiat: "krakowski", gap_score: 1.2, top_area: "starzenie" },
 ];
 
 const STEPS: Array<{ icon: LucideIcon; title: string; text: string }> = [
@@ -75,8 +74,40 @@ const AUDIENCES = [
   },
 ];
 
+interface MalopolskaStats {
+  aging_pct: number;
+  loneliness_pct: number;
+  digital_exclusion_pct: number;
+  poverty_per_10k: number;
+  disability_count: number;
+  source_year: number;
+  source: string;
+}
+
+interface GapEntry {
+  powiat: string;
+  gap_score: number;
+  top_area: string;
+  innovations_count: number;
+}
+
 export default async function HomePage() {
-  const liveInnovations = await getShowcaseInnovations();
+  const [liveInnovations, statsData, gapData] = await Promise.all([
+    apiFetch<BackendInnovation[]>("/api/innovations?limit=3&status=active"),
+    apiFetch<MalopolskaStats>("/api/stats/malopolska"),
+    apiFetch<GapEntry[]>("/api/innovation-gap"),
+  ]);
+
+  const liveStats = statsData ? [
+    { value: `${statsData.aging_pct}%`, label: "osób 65+ w Małopolsce", source: `GUS ${statsData.source_year}` },
+    { value: `${statsData.digital_exclusion_pct}%`, label: "seniorów bez umiejętności cyfrowych", source: "GUS 2023" },
+    { value: `${statsData.loneliness_pct}%`, label: "gospodarstw z samotnością", source: "NSP 2021" },
+    { value: `${(statsData.disability_count / 1000).toFixed(0)} tys.`, label: "osób z niepełnosprawnością", source: "ROPS 2024" },
+  ] : STATS_FALLBACK;
+
+  const liveGap = gapData
+    ? [...gapData].sort((a, b) => b.gap_score - a.gap_score).slice(0, 5)
+    : GAP_FALLBACK;
   return (
     <>
       {/* Hero */}
@@ -179,7 +210,7 @@ export default async function HomePage() {
             Dane społeczne, które stoją za innowacjami w naszej Bibliotece.
           </p>
           <ul className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {STATS.map(({ value, label, source }) => (
+            {liveStats.map(({ value, label, source }) => (
               <li key={label} className="border-(length:--bw) border-deep bg-surface p-6 shadow-paper">
                 <p className="text-3xl font-bold text-deep tabular-nums">{value}</p>
                 <p className="mt-2">{label}</p>
@@ -207,24 +238,24 @@ export default async function HomePage() {
             </div>
           </div>
           <ul className="mt-10 space-y-3" aria-label="Indeks luki innowacyjnej per powiat">
-            {GAP_DATA.map(({ powiat, gap, area }) => (
+            {liveGap.map(({ powiat, gap_score, top_area }) => (
               <li key={powiat} className="flex items-center gap-4 border-(length:--bw) border-deep bg-surface px-5 py-4 shadow-paper">
                 <div className="w-32 shrink-0">
                   <p className="font-bold text-deep capitalize">{powiat}</p>
-                  <p className="text-sm text-muted">{area}</p>
+                  <p className="text-sm text-muted">{top_area}</p>
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-3">
                     <div
                       className="h-4 rounded-ui bg-leaf"
-                      style={{ width: `${(gap / 6) * 100}%` }}
+                      style={{ width: `${(gap_score / 6) * 100}%` }}
                       role="presentation"
                       aria-hidden="true"
                     />
-                    <span className="text-sm font-bold tabular-nums text-deep">{gap.toFixed(1)}</span>
+                    <span className="text-sm font-bold tabular-nums text-deep">{gap_score.toFixed(1)}</span>
                   </div>
                 </div>
-                {gap > 4 && (
+                {gap_score > 4 && (
                   <AlertTriangle className="size-5 shrink-0 text-alert" aria-label="Wysoki priorytet" />
                 )}
               </li>
