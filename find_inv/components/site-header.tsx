@@ -2,16 +2,19 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Menu, X } from "lucide-react";
+import { LogIn, LogOut, Menu, X } from "lucide-react";
 
 import { CutoutText } from "@/components/cutout-text";
 import { SimpleModeToggle } from "@/components/simple-mode";
+import { useAuth, ROLE_BADGE } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
 
 const NAV_LINKS = [
   { href: "/biblioteka", label: "Biblioteka innowacji" },
+  { href: "/forum", label: "Forum" },
+  { href: "/kreator", label: "Kreator" },
+  { href: "/testerzy", label: "Testerzy" },
   { href: "/#jak-to-dziala", label: "Jak to działa" },
-  { href: "/#dla-kogo", label: "Dla kogo" },
-  { href: "/#kontakt", label: "Kontakt" },
 ];
 
 const linkClass =
@@ -20,8 +23,8 @@ const linkClass =
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const { user, openLogin, logout } = useAuth();
 
-  // Escape zamyka menu i oddaje focus przyciskowi. Menu nie więzi focusa.
   useEffect(() => {
     if (!open) return;
     function onKeyDown(event: KeyboardEvent) {
@@ -33,6 +36,8 @@ export function SiteHeader() {
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [open]);
+
+  const roleBadge = user ? ROLE_BADGE[user.role] : null;
 
   return (
     <header className="relative z-10 border-b-(length:--bw) border-deep bg-paper">
@@ -57,10 +62,41 @@ export function SiteHeader() {
                 </Link>
               </li>
             ))}
+            {user?.role === "admin" && (
+              <li>
+                <Link href="/admin" className={`${linkClass} text-leaf`}>
+                  Panel admina
+                </Link>
+              </li>
+            )}
           </ul>
         </nav>
 
-        <SimpleModeToggle className="hidden lg:flex" />
+        <div className="hidden items-center gap-2 lg:flex">
+          <SimpleModeToggle />
+          {user ? (
+            <div className="flex items-center gap-2">
+              <span
+                className={`inline-flex items-center rounded-ui border-2 border-deep px-3 py-1 text-sm font-bold ${roleBadge?.className}`}
+              >
+                {roleBadge?.label}
+              </span>
+              <button
+                onClick={logout}
+                aria-label="Wyloguj"
+                className="inline-flex min-h-10 items-center gap-2 rounded-ui px-3 text-sm font-bold text-muted hover:bg-sage"
+              >
+                <LogOut className="size-4" aria-hidden="true" />
+                Wyloguj
+              </button>
+            </div>
+          ) : (
+            <Button variant="secondary" onClick={openLogin} className="gap-2">
+              <LogIn className="size-4" aria-hidden="true" />
+              Zaloguj się
+            </Button>
+          )}
+        </div>
 
         <button
           ref={buttonRef}
@@ -85,8 +121,26 @@ export function SiteHeader() {
                 </Link>
               </li>
             ))}
+            {user?.role === "admin" && (
+              <li>
+                <Link href="/admin" className={`${linkClass} w-full text-leaf`} onClick={() => setOpen(false)}>
+                  Panel admina
+                </Link>
+              </li>
+            )}
           </ul>
-          <SimpleModeToggle className="mt-2 border-t-2 border-sage px-3 pt-2" />
+          <div className="mt-2 border-t-2 border-sage pt-2 px-3 flex items-center gap-3">
+            <SimpleModeToggle />
+            {user ? (
+              <button onClick={logout} className="text-sm font-bold text-muted underline">
+                Wyloguj ({roleBadge?.label})
+              </button>
+            ) : (
+              <button onClick={openLogin} className="text-sm font-bold text-deep underline">
+                Zaloguj się
+              </button>
+            )}
+          </div>
         </nav>
       </div>
     </header>

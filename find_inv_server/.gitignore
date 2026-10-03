@@ -9,6 +9,8 @@ __pycache__/
 
 # sekrety
 .env
-rops_raw/
+
+# lokalna baza SQLite i ChromaDB
 *.db
 chroma_db/
+rops_raw/

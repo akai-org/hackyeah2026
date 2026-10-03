@@ -1,30 +1,51 @@
-from fastapi.testclient import TestClient
+import asyncio
+import os
+import tempfile
 
-from app.main import app
+# Osobna baza i ChromaDB dla testów – ustawione przed importem app.
+_tmp = tempfile.mkdtemp()
+os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{_tmp}/test.db"
+os.environ["CHROMA_PATH"] = f"{_tmp}/chroma"
+os.environ["OPENROUTER_API_KEY"] = ""
 
-client = TestClient(app)
+from fastapi.testclient import TestClient  # noqa: E402
 
-
-def test_innovations_list_and_search():
-    r = client.get("/api/innovations?limit=5")
-    d = r.json()
-    assert d["error"] is None and len(d["data"]["innovations"]) == 5 and d["data"]["total"] > 50
-    s = client.get("/api/innovations?tags=seniorzy").json()["data"]
-    assert all("seniorzy" in i["tags"] for i in s["innovations"])
+from app.main import app  # noqa: E402
 
 
-def test_innovation_detail():
-    first = client.get("/api/innovations?limit=1").json()["data"]["innovations"][0]
-    r = client.get(f"/api/innovations/{first['id']}")
-    assert r.status_code == 200 and "full_desc" in r.json()["data"]
-    assert client.get("/api/innovations/99999").status_code == 404
+def _check_contract(c: TestClient) -> None:
+    items = c.get("/api/innovations?limit=5").json()["data"]
+    assert isinstance(items, list) and len(items) == 5
+    seniors = c.get("/api/innovations?tags=seniorzy&limit=50").json()["data"]
+    assert seniors and all("seniorzy" in i["tags"] for i in seniors)
+    assert c.get("/api/innovations?search=BaWita").json()["data"][0]["title"] == "BaWita"
+
+    detail = c.get(f"/api/innovations/{items[0]['id']}").json()["data"]
+    assert detail["full_desc"] and "who_can_use" in detail
+    assert c.get("/api/innovations/99999").status_code == 404
+
+
+def test_fallback_without_seed():
+    with TestClient(app) as c:  # pusta baza -> dane z parsed_innovations.json
+        _check_contract(c)
+
+
+def test_after_seed():
+    from data.seed_innovations import seed
+
+    asyncio.run(seed())
+    with TestClient(app) as c:
+        _check_contract(c)
+        assert len(c.get("/api/innovations?limit=200").json()["data"]) == 114
 
 
 def test_challenges_map_gap_pulse():
-    assert len(client.get("/api/challenges/map").json()["data"]) >= 20
-    gap = client.get("/api/innovation-gap").json()["data"]
-    assert gap[0]["gap_score"] >= gap[-1]["gap_score"]
-    p = client.get("/api/gmina-pulse/limanowski").json()["data"]
-    assert len(p["top_challenges"]) == 3 and len(p["innovations"]) == 3
-    assert client.get("/api/gmina-pulse/xyz").status_code == 404
-    assert client.get("/api/challenges?powiat=miechowski").json()["data"]["total"] == 3
+    with TestClient(app) as c:
+        m = c.get("/api/challenges/map").json()["data"]
+        assert len(m) >= 20 and "gap_score" in m[0]["gap_index"]
+        gap = c.get("/api/innovation-gap").json()["data"]
+        assert gap[0]["gap_score"] >= gap[-1]["gap_score"]
+        p = c.get("/api/gmina-pulse/limanowski").json()["data"]
+        assert len(p["top_challenges"]) == 3 and len(p["matching_innovations"]) == 3
+        assert c.get("/api/gmina-pulse/xyz").status_code == 404
+        assert len(c.get("/api/challenges?powiat=miechowski").json()["data"]) == 3

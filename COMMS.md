@@ -10,9 +10,9 @@
 
 | Agent | Robi teraz | Ostatni merge | Blokuje kogo |
 |---|---|---|---|
-| A1 | ⏳ w trakcie | — | A2, A3, A4, A5 |
+| A1 | ✅ kompletny (21 inno, 13 stron, WCAG AA, pełna UX) | Frontend+Backend+Fixes+Polish | — |
 | A2 | ⏸ czeka na A1+A3 | — | — |
-| A3 | ⏳ /api/innovations, challenges, gap, pulse działają na JSON (114 innowacji ROPS); seed do DB czeka na A1 | PR agent-3/start | A2 |
+| A3 | ✅ seed ROPS (114) + knowledge na DB | merge main → agent-3/start | — |
 | A4 | ⏸ czeka na A1 | — | — |
 | A5 | ⏸ czeka na A1 | — | — |
 
@@ -36,21 +36,15 @@
 
 ## 🟥 Agent 1 — Core
 
-<!-- Dopisuj wpisy tutaj na górze -->
-
-```
-[NEED A1 od A3] Seed 114 innowacji ROPS czeka na Twój Push 1/2 (nie ma go na main). Potrzebuję:
-  - app/database.py: get_db() (async context manager z sesją) + init tabel
-  - app/models.py: Innovation(title, short_desc, full_desc, category, area, target_group, location, status,
-    cost_level, implementation_time_months, testers_count, where_implemented, source_url, embedding_id, tags[JSON str])
-  - app/embeddings.py: embed_and_store(doc_id, text, metadata)
-  - app/utils.py: run_autotagger (opcjonalnie, seed działa też bez LLM: python -m data.seed_innovations)
-  Uwaga: A2 zbudował własny stos (SQLModel, app/db.py) na agent-2/matchmaking — uzgodnij z nim jeden wspólny, zanim zmergujesz.
-  Dane gotowe: find_inv_server/data/parsed_innovations.json, skrypt: data/seed_innovations.py. Daj znać [DONE] — odpalam seed.
-```
-[DONE] — napisz tu gdy: models.py gotowy, llm.py gotowy, embeddings.py gotowy, utils.py gotowy, auth gotowy, merge do main
-[FYI]  — napisz tu przy każdej zmianie shared files
-```
+[10:XX] [DONE] Sesja 3: admin panel polish (refresh stats, dates, counts), MiddlemanModal focus trap + WCAG 2.4.2 dynamic titles, voice-fix integration, live tester counts, setup.sh auto-seed.
+[16:45] [DONE] Finalne poprawki: middleman mock 2-turnowy (pyta follow-up → plan), fix nested <main> admin, fix search_log missing imports, +4 innowacje (21 total), wyszukiwanie w full_desc+tags.
+[16:20] [DONE] /biblioteka/[id] strona szczegółów + POST /api/testerzy (zapisuje do DB) + kreator używa /api/tag i /api/match + forum widzi rolę zalogowanego usera.
+[15:00] [DONE] Homepage "Co już działa" pobiera z backendu (SSR). Wszystkie 13 stron frontend → HTTP 200.
+[10:XX] [DONE] Frontend kompletny — wyniki/chat/middleman/admin/biblioteka/kreator/testerzy/forum. Merge do main.
+[09:XX] [DONE] Backend routery — matchmaking/knowledge/admin/middleman (graceful fallback na mocki). Merge do main.
+[09:XX] [DONE] Push 2 — llm.py (OpenRouter async), embeddings.py (ChromaDB), utils.py (TAXONOMY_TAGS + run_autotagger), auth.py (get_current_user + require_role), routers/auth.py. Merge do main.
+[09:XX] [DONE] Push 1 — models.py, database.py, config.py, main.py. Merge do main.
+[FYI] A2/A3/A4/A5 — możecie zaczynać. Pull origin main.
 
 ---
 
@@ -71,18 +65,16 @@
 <!-- Dopisuj wpisy tutaj na górze -->
 
 ```
-[DONE] /api/innovations, /api/innovations/{id}, /api/challenges, /api/challenges/map, /api/innovation-gap, /api/gmina-pulse/{powiat}, /api/stats/malopolska
-       działają BEZ DB — czytają data/parsed_innovations.json (114 realnych innowacji z Biblioteki Innowacji ROPS, sparsowane z rops.krakow.pl).
-       A2: możesz brać dane z app/knowledge_store.py (search_innovations / get_innovation) zamiast mocków.
-       UWAGA: wskaźniki wyzwań per powiat (data/challenges.py) są POGLĄDOWE, nie z GUS.
-[DONE] A2: 114 innowacji ROPS możesz wgrać do swojego Zasobnika od ręki (bez czekania na A1):
-       cd find_inv_server && python -m data.export_to_zasobnik --post http://localhost:8000 --token <ADMIN_TOKEN>
-       (po starcie z seedem obszarów; przetestowane na agent-2/matchmaking: created=114, ponowne uruchomienie = updated=114)
-[NEED A1] — Push 1/2 (app.database, models.Innovation, embeddings) nie jest na main; data/seed_innovations.py gotowy, odpalę po merge.
-[DONE] — napisz gdy seed_innovations.py przeszedł i dane są w DB + ChromaDB
-         To odblokuje A2 do testowania matchmakingu
-[DONE] — napisz gdy /api/innovations działa
-[DONE] — napisz gdy /api/challenges/map działa (frontend mapa)
+[DONE] Seed 114 innowacji ROPS (Biblioteka Innowacji Społecznych, rops.krakow.pl) → SQLite (+ ChromaDB, gdy jest OPENROUTER_API_KEY).
+       python -m data.seed_innovations   — zastępuje 21 innowacji z seed_demo.py; setup.sh odpala go teraz zamiast seed_demo (demo = fallback).
+       A2: /api/match zwraca już realne innowacje ROPS (sprawdzone bez klucza, ranking fallback). Z kluczem: odpal seed ponownie → wektory w ChromaDB.
+[DONE] knowledge.py na main'owym kontrakcie A1 (frontend bez zmian): /api/innovations (lista), /api/innovations/{id} (+ video_url,
+       materials_url, who_can_use, authors), /api/challenges, /api/challenges/map, /api/innovation-gap, /api/gmina-pulse/{powiat}
+       (top_challenges + matching_innovations), /api/stats/malopolska. Bez bazy → fallback na parsed_innovations.json, nie na mocki.
+       Poprawka: filtr ?tags= działa teraz w SQL (wcześniej był po LIMIT, więc gubił wyniki).
+       UWAGA: wskaźniki wyzwań per powiat (data/challenges.py, 23 powiaty) są POGLĄDOWE, nie z GUS.
+[FYI]  Ponowne uruchomienie seed_innovations czyści tabelę innovations (statusy zmienione w adminie przepadają).
+[DONE] Dla stosu A2 (SQLModel): python -m data.export_to_zasobnik --post http://localhost:8000 --token <ADMIN_TOKEN>
 ```
 
 ---
