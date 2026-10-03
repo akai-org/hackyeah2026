@@ -240,6 +240,14 @@ oraz modeli `Innovation`, `SearchLog` — jeśli nazwiecie inaczej, dajcie znać
 
 <!-- Dopisuj wpisy tutaj na górze -->
 
+[04.10] A4 start runda 2: branch agent-4/admin-cms (admin, CMS, deploy).
+[DONE] A4 zad. 1, 5, 6: panel admina (`routers/admin_panel.py`) czyta i zapisuje SQLite zamiast `admin_store` w pamięci —
+  innowacje (archiwizacja/zatwierdzenie/nieaktualna → znika z Biblioteki i /api/match), użytkownicy i role, testerzy
+  (zatwierdzenie = testers.approved=true + users.role="tester"), trendy (search_logs), liczniki. Kształt odpowiedzi bez zmian,
+  frontend admina działa jak był. `admin_store` zostaje jako zapas, gdy bazy nie da się otworzyć.
+[FYI A2] Minimalna zmiana w `routers/matchmaking.py::_catalog`: statusy z `admin_store` (pamięć) liczą się tylko przy zapasowym
+  katalogu z JSON-a. Przy katalogu z bazy źródłem prawdy jest SQLite — inaczej po restarcie serwera pamięć odarchiwizowywała innowacje.
+
 [20:20] [FYI A5] Middleman zostaje TWÓJ — usunąłem swoje /wdrozenie/[id]. Przyciski „Jak to wdrożyć?” (wyniki, Biblioteka,
         karta /innowacje/[id], puls powiatu) prowadzą do `/wdrozenie?innowacja={id}&problem={opis}`. Id innowacji są liczbowe (ROPS).
         Twój Middleman importuje `data/innovations.mock` — plik zostaje, ale realne karty są w `data/innovations.ts` / GET /api/innovations.

@@ -7,12 +7,20 @@ Auth: dopóki A1 nie wystawi app.auth.get_current_user, wpuszczamy nagłówek X-
 Gdy get_current_user jest dostępny, wystarczy też sesja z rolą "admin" (cookie/X-Session-Token).
 """
 
+import json
+import logging
+from datetime import datetime, timedelta
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from pydantic import BaseModel
+from sqlalchemy import func, or_, select
 
 from app import admin_store
+from app.database import get_db
+from app.models import Innovation, SearchLog, Tester, User
+
+log = logging.getLogger(__name__)
 
 try:  # A1 Push 2
     from app.auth import get_current_user
@@ -56,40 +64,86 @@ def _not_found(what: str):
     raise HTTPException(status.HTTP_404_NOT_FOUND, f"Nie znaleziono: {what}")
 
 
+# Źródło prawdy to SQLite (te same tabele czytają Biblioteka, matchmaking i karta innowacji). admin_store
+# w pamięci zostaje tylko jako zapas, gdy bazy nie da się otworzyć — wtedy panel nadal da się pokazać.
+
+
+def _iso(value) -> str | None:
+    return value.isoformat(timespec="seconds") if value else None
+
+
+def _innovation_row(innov) -> dict:
+    return {
+        "id": innov.id,
+        "title": innov.title,
+        "short_desc": innov.short_desc,
+        "category": innov.category,
+        "target_group": innov.target_group,
+        "location": innov.location,
+        "status": innov.status,
+        "cost_level": innov.cost_level,
+        "where_implemented": innov.where_implemented,
+        "tags": innov.tags_list(),
+        "created_at": _iso(innov.created_at),
+        "updated_at": _iso(innov.updated_at),
+    }
+
+
 # ── Innowacje ────────────────────────────────────────────
 
 
 @router.get("/innovations")
-def list_innovations(
+async def list_innovations(
     status_: Annotated[str | None, Query(alias="status")] = None,
     tags: str | None = None,
     search: str | None = None,
 ):
     tag_list = [t for t in (tags or "").split(",") if t]
-    items = admin_store.list_innovations(status=status_ or None, tags=tag_list, search=search or None)
+    try:
+        query = select(Innovation)
+        if status_:
+            query = query.where(Innovation.status == status_)
+        if search:
+            needle = f"%{search}%"
+            query = query.where(
+                or_(Innovation.title.ilike(needle), Innovation.short_desc.ilike(needle),
+                    Innovation.where_implemented.ilike(needle))
+            )
+        for tag in tag_list:  # tagi trzymane jako JSON — cudzysłowy, żeby „OPS” nie trafiał w „DOPS”
+            query = query.where(Innovation.tags.ilike(f'%"{tag}"%'))
+        async with get_db() as db:
+            rows = (await db.execute(query)).scalars().all()
+    except Exception:
+        log.exception("admin innovations from SQLite failed, using memory store")
+        items = admin_store.list_innovations(status=status_ or None, tags=tag_list, search=search or None)
+        return _ok({"items": items, "total": len(items)})
+    items = [_innovation_row(row) for row in rows]
+    # Najpierw oczekujące na weryfikację, potem od najnowszych.
+    items.sort(key=lambda i: i["updated_at"] or "", reverse=True)
+    items.sort(key=lambda i: i["status"] != "pending")
     return _ok({"items": items, "total": len(items)})
 
 
-def _set_status(innovation_id: int, new_status: str):
-    item = admin_store.set_innovation_status(innovation_id, new_status)
+async def _set_status(innovation_id: int, new_status: str):
+    item = await admin_store.set_innovation_status_persisted(innovation_id, new_status)
     if item is None:
         _not_found(f"innowacja {innovation_id}")
     return _ok(item)
 
 
 @router.post("/innovations/{innovation_id}/approve")
-def approve_innovation(innovation_id: int):
-    return _set_status(innovation_id, "active")
+async def approve_innovation(innovation_id: int):
+    return await _set_status(innovation_id, "active")
 
 
 @router.post("/innovations/{innovation_id}/archive")
-def archive_innovation(innovation_id: int):
-    return _set_status(innovation_id, "archived")
+async def archive_innovation(innovation_id: int):
+    return await _set_status(innovation_id, "archived")
 
 
 @router.post("/innovations/{innovation_id}/flag-unmaintained")
-def flag_unmaintained(innovation_id: int):
-    return _set_status(innovation_id, "unmaintained")
+async def flag_unmaintained(innovation_id: int):
+    return await _set_status(innovation_id, "unmaintained")
 
 
 # ── Użytkownicy ──────────────────────────────────────────
@@ -99,48 +153,126 @@ class SetRoleBody(BaseModel):
     role: Literal["user", "tester", "consultant"]
 
 
+def _user_row(user, pending: set[int]) -> dict:
+    return {"id": user.id, "name": user.name, "role": user.role, "created_at": _iso(user.created_at),
+            "tester_pending": user.id in pending}
+
+
 @router.get("/users")
-def list_users():
-    return _ok(admin_store.list_users())
+async def list_users():
+    try:
+        async with get_db() as db:
+            users = (await db.execute(select(User).order_by(User.id))).scalars().all()
+            pending = set((await db.execute(select(Tester.user_id).where(Tester.approved.is_(False)))).scalars())
+    except Exception:
+        log.exception("admin users from SQLite failed, using memory store")
+        return _ok(admin_store.list_users())
+    return _ok([_user_row(user, pending) for user in users])
 
 
 @router.post("/users/{user_id}/set-role")
-def set_role(user_id: int, body: SetRoleBody):
-    user = admin_store.get_user(user_id)
-    if user is None:
-        _not_found(f"użytkownik {user_id}")
-    if user["role"] == "admin":
-        raise HTTPException(status.HTTP_409_CONFLICT, "Roli administratora nie zmienia się z panelu")
-    return _ok(admin_store.set_user_role(user_id, body.role))
+async def set_role(user_id: int, body: SetRoleBody):
+    async with get_db() as db:
+        user = await db.get(User, user_id)
+        if user is None:
+            _not_found(f"użytkownik {user_id}")
+        if user.role == "admin":
+            raise HTTPException(status.HTTP_409_CONFLICT, "Roli administratora nie zmienia się z panelu")
+        user.role = body.role
+        await db.commit()
+        pending = set((await db.execute(select(Tester.user_id).where(Tester.approved.is_(False)))).scalars())
+        return _ok(_user_row(user, pending))
 
 
 # ── Testerzy ─────────────────────────────────────────────
 
 
+def _tester_row(tester) -> dict:
+    return {
+        "id": tester.id,
+        "user_id": tester.user_id,
+        "name": tester.name,
+        "email": tester.email,
+        "organization": tester.organization or "",
+        "expertise": tester.expertise or "",
+        "approved": bool(tester.approved),
+        "created_at": _iso(tester.created_at),
+    }
+
+
 @router.get("/testers")
-def list_testers(approved: bool | None = None):
-    return _ok(admin_store.list_testers(approved))
+async def list_testers(approved: bool | None = None):
+    try:
+        query = select(Tester).order_by(Tester.created_at.desc())
+        if approved is not None:
+            query = query.where(Tester.approved.is_(approved))
+        async with get_db() as db:
+            testers = (await db.execute(query)).scalars().all()
+    except Exception:
+        log.exception("admin testers from SQLite failed, using memory store")
+        return _ok(admin_store.list_testers(approved))
+    return _ok([_tester_row(tester) for tester in testers])
 
 
 @router.post("/testers/{tester_id}/approve")
-def approve_tester(tester_id: int):
-    tester = admin_store.approve_tester(tester_id)
-    if tester is None:
-        _not_found(f"tester {tester_id}")
-    return _ok(tester)
+async def approve_tester(tester_id: int):
+    """Zatwierdzenie = testers.approved=true ORAZ users.role="tester" (admin zostaje adminem)."""
+    async with get_db() as db:
+        tester = await db.get(Tester, tester_id)
+        if tester is None:
+            _not_found(f"tester {tester_id}")
+        tester.approved = True
+        user = await db.get(User, tester.user_id)
+        if user is not None and user.role != "admin":
+            user.role = "tester"
+        await db.commit()
+        return _ok(_tester_row(tester))
 
 
 # ── Trendy i liczniki ────────────────────────────────────
 
 
 @router.get("/search-trends")
-def search_trends(days: Annotated[int, Query(ge=1, le=90)] = 14):
-    return _ok(admin_store.trends(days))
+async def search_trends(days: Annotated[int, Query(ge=1, le=90)] = 14):
+    first_day = (datetime.now() - timedelta(days=days - 1)).date()
+    try:
+        async with get_db() as db:
+            rows = (
+                await db.execute(select(SearchLog).where(SearchLog.created_at >= datetime.combine(first_day, datetime.min.time())))
+            ).scalars().all()
+    except Exception:
+        log.exception("admin trends from SQLite failed, using memory store")
+        return _ok(admin_store.trends(days))
+    logs = [
+        {"query": row.query, "tags": json.loads(row.tags or "[]"), "results_count": row.results_count,
+         "created_at": _iso(row.created_at) or ""}
+        for row in rows
+    ]
+    return _ok(admin_store.summarize_trends(logs, days))
 
 
 @router.get("/stats")
-def stats():
-    return _ok(admin_store.stats())
+async def stats():
+    try:
+        async with get_db() as db:
+            async def count(query) -> int:
+                return (await db.execute(query)).scalar_one()
+
+            by_status = dict((await db.execute(select(Innovation.status, func.count()).group_by(Innovation.status))).all())
+            today = datetime.combine(datetime.now().date(), datetime.min.time())
+            data = {
+                "innovations": sum(by_status.values()),
+                "innovations_by_status": {s: by_status.get(s, 0) for s in admin_store.INNOVATION_STATUSES},
+                "users": await count(select(func.count()).select_from(User)),
+                "testers": await count(select(func.count()).select_from(Tester).where(Tester.approved.is_(True))),
+                "pending_testers": await count(select(func.count()).select_from(Tester).where(Tester.approved.is_(False))),
+                "searches": await count(select(func.count()).select_from(SearchLog)),
+                "searches_today": await count(select(func.count()).select_from(SearchLog).where(SearchLog.created_at >= today)),
+            }
+    except Exception:
+        log.exception("admin stats from SQLite failed, using memory store")
+        return _ok(admin_store.stats())
+    return _ok(data)
 
 
 @router.post("/demo-reset")
