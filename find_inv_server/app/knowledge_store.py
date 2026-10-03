@@ -66,7 +66,7 @@ def get_innovation(innovation_id: int) -> dict | None:
     return next((i for i in load_innovations() if i.get("id") == innovation_id), None)
 
 
-def innovations_for_area(area: str, tag_hints: list[str], limit: int | None = None) -> list[dict]:
+def innovations_for_area(tag_hints: list[str], limit: int | None = None) -> list[dict]:
     wanted = set(tag_hints)
     scored = [(len(wanted & set(i.get("tags", []))), i) for i in load_innovations()]
     scored = [s for s in scored if s[0] > 0 and s[1].get("status") != "archived"]
@@ -76,10 +76,6 @@ def innovations_for_area(area: str, tag_hints: list[str], limit: int | None = No
 
 
 # ---------- wyzwania i indeks luki ----------
-
-def _norm(s: str) -> str:
-    return s.lower().replace(" ", "")
-
 
 def all_challenges() -> list[dict]:
     out: list[dict] = []
@@ -94,26 +90,23 @@ def all_challenges() -> list[dict]:
     return out
 
 
-def local_innovations_count(powiat: str) -> int:
-    """Innowacje, których opis wdrożeń wspomina o danym powiecie/mieście."""
-    stem = ch.POWIATY[powiat][0].lower()
-    return sum(
-        1 for i in load_innovations()
-        if stem in f"{i.get('where_implemented', '')} {i.get('location', '')}".lower()
-    )
-
-
 def powiat_gap(powiat: str) -> dict:
-    """gap_score = suma (waga wyzwania) / (1 + liczba innowacji pasujących do wyzwania w ostatecznym zasobie)."""
+    """Indeks luki: wyzwania o dużej wadze, na które w Bibliotece ROPS jest mało pasujących innowacji.
+
+    Dla każdego wyzwania: waga / (1 + liczba_pasujących_innowacji / 10); gap_score = średnia * 2.
+    innovations_count = liczba różnych innowacji pasujących do wyzwań powiatu (po tagach).
+    """
     entries = ch.POWIATY[powiat][1]
     parts = []
+    matched_ids: set[int] = set()
     for area, _, weight in entries:
-        n_match = len(innovations_for_area(area, ch.AREAS[area][3]))
-        parts.append((area, weight, n_match, weight / (1 + n_match / 10)))
-    top = max(parts, key=lambda p: p[3])
+        matching = innovations_for_area(ch.AREAS[area][3])
+        matched_ids.update(i["id"] for i in matching)
+        parts.append((area, weight / (1 + len(matching) / 10)))
+    top = max(parts, key=lambda p: p[1])
     return {
         "powiat": powiat,
-        "gap_score": round(sum(p[3] for p in parts) / len(parts) * 2, 1),
+        "gap_score": round(sum(p[1] for p in parts) / len(parts) * 2, 1),
         "top_area": top[0],
-        "innovations_count": local_innovations_count(powiat) + sum(p[2] for p in parts) // len(parts),
+        "innovations_count": len(matched_ids),
     }
