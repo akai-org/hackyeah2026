@@ -91,6 +91,23 @@ export function PowiatMap() {
   );
 
   const shape = POWIAT_SHAPES.find((item) => item.id === selectedId)!;
+  const entry = byShape.get(shape.id);
+  const powiat = entry?.powiat;
+  const topArea = entry?.top_area ?? "";
+
+  // Panel pokazuje poprzedni powiat, dopóki nie przyjdą dane nowego. Szkielet (krótszy) w trakcie zmiany
+  // skracał sekcję, a przyklejona (lg:sticky) mapa na moment podskakiwała do jej góry.
+  const [panel, setPanel] = useState<{ shape: PowiatShape; entry: GapEntry; pulse: GminaPulse } | null>(null);
+  useEffect(() => {
+    if (!powiat || !entry) return;
+    let live = true;
+    getPulse(powiat, topArea).then((pulse) => live && setPanel({ shape, entry, pulse }));
+    return () => {
+      live = false;
+    };
+  }, [shape, entry, powiat, topArea]);
+  const pending = Boolean(entry) && panel?.shape.id !== shape.id;
+
   const hoverShape = hovered ? POWIAT_SHAPES.find((item) => item.id === hovered) : null;
   const hoverEntry = hoverShape ? byShape.get(hoverShape.id) : undefined;
 
@@ -113,15 +130,19 @@ export function PowiatMap() {
               ))}
             </select>
           </label>
+          {/* Stałe miejsce na podpis (flex-1 z zerową bazą + truncate): treść nie może zmienić wysokości karty,
+              bo przy lg:sticky wyższa karta przesuwa mapę pod kursorem i hover zaczyna skakać. */}
           <p
             aria-hidden="true"
             className={cn(
-              "min-h-8 rounded-ui bg-deep px-3 py-1 text-sm font-bold text-surface transition-opacity duration-150",
+              "flex min-h-8 min-w-0 basis-full justify-end transition-opacity duration-150 sm:flex-1",
               hoverShape ? "opacity-100" : "opacity-0",
             )}
           >
-            {hoverShape &&
-              `${fullName(hoverShape)} · ${hoverEntry ? `indeks ${formatNumber(hoverEntry.gap_score)}` : "brak danych"}`}
+            <span className="max-w-full truncate rounded-ui bg-deep px-3 py-1 text-sm font-bold text-surface">
+              {hoverShape &&
+                `${fullName(hoverShape)} · ${hoverEntry ? `indeks ${formatNumber(hoverEntry.gap_score)}` : "brak danych"}`}
+            </span>
           </p>
         </div>
 
@@ -210,38 +231,40 @@ export function PowiatMap() {
       </div>
 
       {/* Panel powiatu */}
-      <div aria-live="polite" className="border-(length:--bw) border-deep bg-surface p-5 shadow-paper sm:p-6">
-        <PowiatPanel key={shape.id} shape={shape} entry={byShape.get(shape.id)} scaleMax={scaleMax} />
+      <div
+        aria-live="polite"
+        aria-busy={pending}
+        className={cn(
+          "border-(length:--bw) border-deep bg-surface p-5 shadow-paper transition-opacity duration-150 sm:p-6",
+          pending && panel && "opacity-60",
+        )}
+      >
+        {!entry ? (
+          <div key={shape.id} className="appear">
+            <h3 className="text-2xl font-bold text-deep">{fullName(shape)}</h3>
+            <p className="mt-3 text-muted">Brak danych o tym powiecie.</p>
+          </div>
+        ) : panel ? (
+          <PowiatPanel key={panel.shape.id} {...panel} scaleMax={scaleMax} />
+        ) : (
+          <PanelSkeleton />
+        )}
       </div>
     </div>
   );
 }
 
-function PowiatPanel({ shape, entry, scaleMax }: { shape: PowiatShape; entry?: GapEntry; scaleMax: number }) {
-  const [pulse, setPulse] = useState<GminaPulse | null>(null);
-  const powiat = entry?.powiat;
-  const topArea = entry?.top_area ?? "";
-
-  useEffect(() => {
-    if (!powiat) return;
-    let live = true;
-    getPulse(powiat, topArea).then((result) => live && setPulse(result));
-    return () => {
-      live = false;
-    };
-  }, [powiat, topArea]);
-
-  if (!entry) {
-    return (
-      <div className="appear">
-        <h3 className="text-2xl font-bold text-deep">{fullName(shape)}</h3>
-        <p className="mt-3 text-muted">Brak danych o tym powiecie.</p>
-      </div>
-    );
-  }
-
-  if (!pulse) return <PanelSkeleton />;
-
+function PowiatPanel({
+  shape,
+  entry,
+  pulse,
+  scaleMax,
+}: {
+  shape: PowiatShape;
+  entry: GapEntry;
+  pulse: GminaPulse;
+  scaleMax: number;
+}) {
   const query = `${fullName(shape)}: ${pulse.top_challenges.map((challenge) => challenge.title.toLowerCase()).join(", ")}`;
 
   return (
