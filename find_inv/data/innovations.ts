@@ -215,3 +215,85 @@ export const MOCK_INNOVATIONS: Array<InnovationCard & { tags: Tag[] }> = [
     is_unmaintained: false,
   },
 ];
+
+// ---------- Zasobnik wiedzy: statystyki, wyzwania, Indeks Luki Innowacyjnej ----------
+
+export type Challenge = {
+  id: number;
+  title: string;
+  area: string;
+  description: string;
+  indicator_value: number;
+  indicator_unit: string;
+  source: string;
+  data_year: number;
+  powiat: string;
+};
+
+export type GapEntry = { powiat: string; gap_score: number; top_area: string; innovations_count: number };
+
+export type MalopolskaStats = {
+  aging_pct: number;
+  loneliness_pct: number;
+  digital_exclusion_pct: number;
+  poverty_per_10k: number;
+  mental_health_facilities: number;
+  disability_count?: number;
+  source_year: number;
+  source?: string;
+};
+
+export const MOCK_CHALLENGES: Challenge[] = [
+  {
+    id: 1,
+    title: "Starzenie się społeczeństwa",
+    area: "starzenie",
+    description: "Rosnący odsetek osób 65+ przy malejącej liczbie opiekunów",
+    indicator_value: 22.4,
+    indicator_unit: "% osób 65+ w populacji",
+    source: "GUS 2024",
+    data_year: 2024,
+    powiat: "krakowski",
+  },
+  {
+    id: 2,
+    title: "Wykluczenie cyfrowe seniorów",
+    area: "wykluczenie cyfrowe",
+    description: "Brak kompetencji cyfrowych wśród osób starszych",
+    indicator_value: 68.0,
+    indicator_unit: "% osób 65+ bez umiejętności cyfrowych",
+    source: "GUS Społeczeństwo informacyjne 2023",
+    data_year: 2023,
+    powiat: "krakowski",
+  },
+  {
+    id: 3,
+    title: "Samotność osób starszych",
+    area: "samotność",
+    description: "Wzrost liczby jednoosobowych gospodarstw domowych osób 65+",
+    indicator_value: 31.2,
+    indicator_unit: "% jednoosobowych gosp. wśród 65+",
+    source: "NSP 2021",
+    data_year: 2021,
+    powiat: "nowosądecki",
+  },
+];
+
+export const MOCK_GAP_INDEX: GapEntry[] = [
+  { powiat: "krakowski", gap_score: 1.2, top_area: "starzenie", innovations_count: 8 },
+  { powiat: "nowosądecki", gap_score: 4.7, top_area: "wykluczenie cyfrowe", innovations_count: 2 },
+  { powiat: "tarnowski", gap_score: 3.1, top_area: "samotność", innovations_count: 3 },
+  { powiat: "limanowski", gap_score: 5.9, top_area: "dostęp do usług", innovations_count: 1 },
+  { powiat: "myślenicki", gap_score: 2.4, top_area: "zdrowie psychiczne", innovations_count: 4 },
+];
+
+export const MOCK_STATS_MALOPOLSKA: MalopolskaStats = {
+  aging_pct: 22.4,
+  loneliness_pct: 18.1,
+  digital_exclusion_pct: 31.0,
+  poverty_per_10k: 145,
+  mental_health_facilities: 23,
+  disability_count: 187400,
+  source_year: 2024,
+  source: "GUS BDL, NSP 2021, ROPS Kraków",
+};

@@ -21,7 +21,7 @@ type MatchCardProps = {
   query?: string;
   /** Miejsce w wynikach; bez niego karta nie pokazuje numeru ani dopasowania (np. w Bibliotece). */
   rank?: number;
-  headingLevel?: "h2" | "h3";
+  headingLevel?: "h2" | "h3" | "h4" | "h5";
 };
 
 export function MatchCard({

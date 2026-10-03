@@ -1,5 +1,14 @@
 import { apiFetch } from "@/lib/api";
-import { MOCK_INNOVATIONS, type InnovationCard } from "@/data/innovations";
+import {
+  MOCK_CHALLENGES,
+  MOCK_GAP_INDEX,
+  MOCK_INNOVATIONS,
+  MOCK_STATS_MALOPOLSKA,
+  type Challenge,
+  type GapEntry,
+  type InnovationCard,
+  type MalopolskaStats,
+} from "@/data/innovations";
 
 // Zasobnik wiedzy (Agent 3): GET /api/innovations z wyszukiwaniem i filtrami.
 // Bez backendu filtrujemy dane mock tak samo: tekst w tytule i opisie, wszystkie wybrane tagi.
@@ -45,5 +54,45 @@ export async function listInnovations(query: InnovationQuery = {}): Promise<Inno
     return { innovations: result.innovations ?? [], total: result.total ?? result.innovations?.length ?? 0 };
   } catch {
     return localList(query);
+  }
+}
+
+// ---------- Kondycja Małopolski i Indeks Luki Innowacyjnej ----------
+
+export async function getStats(): Promise<MalopolskaStats> {
+  try {
+    return await apiFetch<MalopolskaStats>("/api/stats/malopolska");
+  } catch {
+    return MOCK_STATS_MALOPOLSKA;
+  }
+}
+
+export async function getGapIndex(): Promise<GapEntry[]> {
+  try {
+    const result = await apiFetch<GapEntry[]>("/api/innovation-gap");
+    return Array.isArray(result) && result.length ? result : MOCK_GAP_INDEX;
+  } catch {
+    return MOCK_GAP_INDEX;
+  }
+}
+
+export type GminaPulse = { powiat: string; top_challenges: Challenge[]; matching_innovations: InnovationCard[] };
+
+/** „Puls powiatu”: najważniejsze wyzwania i pasujące innowacje (GET /api/gmina-pulse/{powiat}). */
+export async function getPulse(powiat: string, topArea: string): Promise<GminaPulse> {
+  try {
+    return await apiFetch<GminaPulse>(`/api/gmina-pulse/${encodeURIComponent(powiat)}`);
+  } catch {
+    const area = topArea.toLowerCase();
+    const matching = MOCK_INNOVATIONS.filter(
+      (innovation) =>
+        `${innovation.category} ${innovation.area} ${innovation.short_desc}`.toLowerCase().includes(area) ||
+        innovation.tags.some((tag) => area.includes(tag.replace(/_/g, " "))),
+    );
+    return {
+      powiat,
+      top_challenges: MOCK_CHALLENGES.filter((challenge) => challenge.powiat === powiat).slice(0, 3),
+      matching_innovations: (matching.length ? matching : MOCK_INNOVATIONS).slice(0, 3),
+    };
   }
 }

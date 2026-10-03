@@ -3,6 +3,8 @@ import { MessageSquareText, Puzzle, ScanSearch, type LucideIcon } from "lucide-r
 
 import { CutoutText } from "@/components/cutout-text";
 import { FeaturedInnovations } from "@/components/featured-innovations";
+import { GapIndex } from "@/components/gap-index";
+import { MalopolskaStatsTiles } from "@/components/malopolska-stats";
 import { Monstera } from "@/components/monstera";
 import { SearchForm } from "@/components/search-form";
 import { buttonVariants } from "@/components/ui/button";
@@ -100,6 +102,24 @@ export default function HomePage() {
               );
             })}
           </ol>
+        </div>
+      </section>
+
+      {/* Kondycja Małopolski + Indeks Luki Innowacyjnej (Zasobnik wiedzy) */}
+      <section id="kondycja" aria-labelledby="kondycja-tytul" className="scroll-mt-6">
+        <div className="mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
+          <CutoutText id="kondycja-tytul" text="Kondycja Małopolski" />
+          <p className="mt-4 max-w-[60ch] text-lg">
+            Z czym mierzą się mieszkańcy regionu. Te liczby pomagają zdecydować, od czego zacząć.
+          </p>
+          <div className="mt-10">
+            <MalopolskaStatsTiles />
+          </div>
+
+          <h3 className="mt-14 text-xl font-bold text-deep">Gdzie najbardziej brakuje rozwiązań</h3>
+          <div className="mt-4">
+            <GapIndex limit={3} />
+          </div>
         </div>
       </section>
 
