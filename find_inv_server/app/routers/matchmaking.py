@@ -1,8 +1,10 @@
 """Matchmaking społeczny — autotagger, dopasowanie innowacji, voice-fix, RAG chat.
 
-Do czasu Push 2 od A1 (llm.py / embeddings.py / utils.py) i seedu od A3 endpointy
-zwracają mocki z data/mock_data.py. Gdy moduły pojawią się na main, router sam
-przełącza się na realne wywołania — interfejs odpowiedzi zostaje ten sam.
+Każda funkcja ma warstwy, od najlepszej do zawsze działającej:
+  LLM: rdzeń A1 (app.llm / app.utils) → prywatny klient OpenRouter (app.matchmaking_llm,
+       gdy jest OPENROUTER_API_KEY) → lokalne reguły (app.local_matching).
+  Dopasowanie: ChromaDB A1 + baza od A3 → ranking leksykalny na mockach.
+Interfejs odpowiedzi jest ten sam niezależnie od warstwy.
 """
 
 import asyncio
@@ -16,7 +18,8 @@ from fastapi import APIRouter, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from app.local_matching import local_chat_answer, local_tag_result, rank_locally
+from app import matchmaking_llm
+from app.local_matching import TAXONOMY_TAGS, local_chat_answer, local_tag_result, rank_locally
 from data.mock_data import MOCK_INNOVATIONS
 
 log = logging.getLogger(__name__)
@@ -24,13 +27,32 @@ log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api", tags=["matchmaking"])
 
 try:
-    from app import llm
-    from app.embeddings import similarity_search
-    from app.utils import TAXONOMY_TAGS, run_autotagger
-
-    REAL_BACKEND = True
+    from app import llm as core_llm
+    from app.utils import run_autotagger as core_autotagger
 except ImportError:
-    REAL_BACKEND = False
+    core_llm = core_autotagger = None
+
+try:
+    from app.embeddings import similarity_search
+except ImportError:
+    similarity_search = None
+
+
+def _llm_chat():
+    """Funkcja chat(messages, stream) z najlepszej dostępnej warstwy albo None."""
+    if core_llm is not None:
+        return core_llm.chat
+    if matchmaking_llm.enabled():
+        return matchmaking_llm.chat
+    return None
+
+
+async def _autotag(text: str) -> dict:
+    if core_autotagger is not None:
+        return await core_autotagger(text)
+    if matchmaking_llm.enabled():
+        return await matchmaking_llm.autotag(text)
+    return local_tag_result(text)
 
 TOP_N = 5
 TAG_BOOST = 0.1
@@ -171,11 +193,8 @@ async def tag(body: TagRequest, background: BackgroundTasks):
     text = body.text.strip()[:MAX_TEXT]
     if not text:
         return _err("Pusty opis problemu")
-    if not REAL_BACKEND:
-        return _ok(local_tag_result(text))
-
     try:
-        result = await run_autotagger(text)
+        result = await _autotag(text)
         result["tags"] = [t for t in result.get("tags", []) if t in TAXONOMY_TAGS]
     except Exception:
         log.exception("autotagger failed, using local tagger")
@@ -189,21 +208,18 @@ async def match(body: MatchRequest, background: BackgroundTasks):
     text = body.text.strip()[:MAX_TEXT]
     if not text:
         return _err("Pusty opis problemu")
-    if not REAL_BACKEND:
+    innovations = []
+    if similarity_search is not None:
+        try:
+            results = await similarity_search(text, n_results=50)
+            score_map = {r["id"]: r["score"] for r in results}
+            innovations = await _fetch_innovations(lambda I: I.embedding_id.in_(list(score_map)))
+        except Exception:
+            log.exception("similarity_search failed, using local ranking")
+    if not innovations:  # brak ChromaDB albo seedu od A3 → ranking lokalny, żeby demo działało
         result = _local_match(text, body.tags)
         background.add_task(_log_search_zasobnik, text, result["total_found"])
         return _ok(result)
-
-    try:
-        results = await similarity_search(text, n_results=50)
-    except Exception:
-        log.exception("similarity_search failed, using local ranking")
-        return _ok(_local_match(text, body.tags))
-
-    score_map = {r["id"]: r["score"] for r in results}
-    innovations = await _fetch_innovations(lambda I: I.embedding_id.in_(list(score_map)))
-    if not innovations:  # brak seedu od A3 → mocki, żeby demo działało
-        return _ok(_local_match(text, body.tags))
 
     query_tags = set(body.tags)
     for innov in innovations:
@@ -223,17 +239,18 @@ VOICE_FIX_PROMPT = (
 @router.post("/voice-fix")
 async def voice_fix(body: VoiceFixRequest):
     transcript = body.transcript.strip()[:MAX_TEXT]
-    if not REAL_BACKEND or not transcript:
+    llm_chat = _llm_chat()
+    if llm_chat is None or not transcript:
         return _ok({"corrected": transcript, "confidence": 1.0})
 
     try:
-        raw = await llm.chat(
+        raw = await llm_chat(
             [
                 {"role": "system", "content": VOICE_FIX_PROMPT},
                 {"role": "user", "content": transcript},
             ]
         )
-        parsed = json.loads(raw[raw.find("{") : raw.rfind("}") + 1])
+        parsed = matchmaking_llm.parse_json_object(raw)
         return _ok(
             {
                 "corrected": parsed.get("corrected") or transcript,
@@ -273,36 +290,45 @@ def _rag_context(innovations: list[dict]) -> str:
 @router.post("/chat")
 async def chat(body: ChatRequest):
     async def gen() -> AsyncIterator[str]:
-        if not REAL_BACKEND:
-            question = next((m.content for m in reversed(body.messages) if m.role == "user"), "")
-            question = question.split("Pytanie:")[-1]  # pierwsza wiadomość niesie też opis problemu
-            innovations = [i for i in MOCK_INNOVATIONS if i["id"] in body.innovation_ids]
-            answer = local_chat_answer(question, innovations)
-            # Słowo po słowie, żeby frontend dostał ten sam efekt pisania co z LLM.
-            for word in re.split(r"(?<=\s)", answer):
-                yield _sse(word)
-                await asyncio.sleep(0.02)
-            yield "data: [DONE]\n\n"
-            return
-
         ids = body.innovation_ids
         innovations = await _fetch_innovations(lambda I: I.id.in_(ids)) if ids else []
         if not innovations and ids:
             innovations = [i for i in MOCK_INNOVATIONS if i["id"] in ids]
 
+        async def local_answer() -> AsyncIterator[str]:
+            question = next((m.content for m in reversed(body.messages) if m.role == "user"), "")
+            question = question.split("Pytanie:")[-1]  # pierwsza wiadomość niesie też opis problemu
+            # Słowo po słowie, żeby frontend dostał ten sam efekt pisania co z LLM.
+            for word in re.split(r"(?<=\s)", local_chat_answer(question, innovations)):
+                yield _sse(word)
+                await asyncio.sleep(0.02)
+
+        llm_chat = _llm_chat()
+        if llm_chat is None:
+            async for event in local_answer():
+                yield event
+            yield "data: [DONE]\n\n"
+            return
+
         messages = [{"role": "system", "content": CHAT_SYSTEM_PROMPT.format(context=_rag_context(innovations))}]
         history = [m for m in body.messages if m.role in ("user", "assistant")][-MAX_CHAT_MESSAGES:]
         messages += [{"role": m.role, "content": m.content[:MAX_TEXT]} for m in history]
+        sent = False
         try:
-            stream = llm.chat(messages, stream=True)
+            stream = llm_chat(messages, stream=True)
             if inspect.isawaitable(stream):
                 stream = await stream
             async for chunk in stream:
                 if chunk:
+                    sent = True
                     yield _sse(chunk)
         except Exception:
             log.exception("chat stream failed")
-            yield _sse("Przepraszam, asystent jest chwilowo niedostępny.")
+            if sent:  # urwane w połowie — nie mieszamy dwóch odpowiedzi
+                yield _sse("\n(Odpowiedź przerwana. Zapytaj jeszcze raz.)")
+            else:
+                async for event in local_answer():
+                    yield event
         yield "data: [DONE]\n\n"
 
     return StreamingResponse(
