@@ -5,6 +5,7 @@ import { CircleAlert, ListChecks, Loader2, PenLine, Sparkles } from "lucide-reac
 
 import { DictationButton, DictationNotice, DictationStatus, useDictation } from "@/components/dictation";
 import { IdeaCardEditor } from "@/components/idea-card-editor";
+import { IdeaMatches } from "@/components/idea-matches";
 import { IdeaWizard, type WizardAnswers } from "@/components/idea-wizard";
 import { Button } from "@/components/ui/button";
 import { TAG_GROUPS, TAG_LABELS, type Tag } from "@/data/mock";
@@ -218,6 +219,9 @@ export function IdeaCreator() {
           </>
         )}
       </p>
+
+      {/* Zanim powstanie fiszka, podobne innowacje podpowiadamy już z samego opisu. */}
+      {!card && !analyzing && mode === "free" && <IdeaMatches text={text} tags={chosen} />}
 
       {card && <IdeaCardEditor key={card.key} initial={card.draft} searchText={card.searchText} onEdit={editIdea} />}
     </>

@@ -106,6 +106,9 @@ Middleman zadaje pytania z kontekstem innowacji i gminy.
   `POST /api/grants/fill` { grant_id, idea: tekst | fiszka } → { sections: {id: tekst}, missing[], source: "llm"|"rules" }.
   Front `/wnioski`, przycisk „Napisz wniosek o grant” na fiszce w kreatorze (fiszka przez sessionStorage `hubmi:fiszka`).
   Nowy wspólny komponent `components/ai-disclaimer.tsx` (ostrzeżenie o błędach AI).
+[01:50] [DONE] Kreator: podobne innowacje pod fiszką na żywo (debounce 800 ms, `POST /api/match`, 3 karty MatchCard).
+[FYI A3] `routers/matchmaking.py`: `MatchRequest.log: bool = True` — przy `log: false` /api/match nie zapisuje search_logs
+  ani impressions (podpowiedzi na żywo nie śmiecą trendów). `lib/matchmaking.ts` → `matchInnovations(..., { log })`. Domyślnie bez zmian.
 [FYI A1] Dopisałem 1 linię w `site-header.tsx` → NAV_LINKS: `{ href: "/wnioski", label: "Wnioski" }`. Przy konflikcie zachowaj ją.
 
 [FYI A1] (branch a2-bug-fixes) models.py: dwie NOWE tabele `idea_details` (krótki opis, gdzie, etap, budżet, partnerzy,

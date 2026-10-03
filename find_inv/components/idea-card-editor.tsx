@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 
+import { IdeaMatches } from "@/components/idea-matches";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { TAG_LABELS } from "@/data/mock";
 import { useAuth } from "@/lib/auth";
@@ -179,8 +180,8 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
   const sending = uploads.some((upload) => upload.status === "sending");
 
   return (
-    <section aria-labelledby={`${ids}-fiszka`} className="appear mt-12 max-w-3xl">
-      <article className="relative border-(length:--bw) border-deep bg-surface p-6 shadow-paper sm:p-8">
+    <section aria-labelledby={`${ids}-fiszka`} className="appear mt-12">
+      <article className="relative max-w-3xl border-(length:--bw) border-deep bg-surface p-6 shadow-paper sm:p-8">
         {/* Kawałek taśmy przyklejający fiszkę do tablicy (DESIGN.md 8, karta innowacji). */}
         <span aria-hidden="true" className="simple-hidden absolute -top-3 right-10 h-6 w-24 rotate-[4deg] bg-butter/90" />
 
@@ -457,6 +458,12 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
           </p>
         )}
       </article>
+
+      {/* Pasujące innowacje dokładają się POD fiszką i odświeżają przy jej edycji. */}
+      <IdeaMatches
+        text={[draft.title, draft.shortDesc, draft.essence, draft.problem, draft.forWhom].join(". ")}
+        tags={draft.tags}
+      />
     </section>
   );
 }
