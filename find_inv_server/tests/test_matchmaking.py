@@ -1,3 +1,5 @@
+import json
+
 from fastapi.testclient import TestClient
 
 from app.main import app
@@ -34,7 +36,7 @@ def test_chat_streams_sse_until_done():
         json={"messages": [{"role": "user", "content": "co polecasz?"}], "innovation_ids": [1]},
     )
     assert response.headers["content-type"].startswith("text/event-stream")
-    assert response.text.startswith("data: ")
+    assert response.text.startswith('data: {"content": ')
     assert response.text.endswith("data: [DONE]\n\n")
 
 
@@ -72,6 +74,23 @@ def test_local_chat_answers_cost_question():
         "/api/chat",
         json={"messages": [{"role": "user", "content": "Która jest najtańsza?"}], "innovation_ids": ids},
     )
-    events = response.text.split("\n\n")
-    text = "".join("\n".join(line[6:] for line in e.split("\n")) for e in events if e and e != "data: [DONE]")
+    events = [e[6:] for e in response.text.split("\n\n") if e and e != "data: [DONE]"]
+    text = "".join(json.loads(e)["content"] for e in events)
     assert "Najtańsza" in text and cheapest in text
+
+
+def test_match_respects_limit():
+    body = client.post("/api/match", json={"text": "seniorzy internet smartfon", "tags": ["seniorzy"], "limit": 2}).json()
+    assert len(body["data"]["innovations"]) == 2
+
+
+def test_chat_accepts_a4_field_names():
+    from app.knowledge_store import load_innovations
+
+    innovation = load_innovations()[0]
+    response = client.post(
+        "/api/chat",
+        json={"messages": [{"role": "user", "content": "co to?"}], "tags": [], "context_innovation_ids": [innovation["id"]]},
+    )
+    events = [e[6:] for e in response.text.split("\n\n") if e and e != "data: [DONE]"]
+    assert innovation["title"] in "".join(json.loads(e)["content"] for e in events)

@@ -58,6 +58,10 @@
 
 <!-- Dopisuj wpisy tutaj na górze -->
 
+[DONE dla A4] Backend przyjmuje Twoje kontrakty: /api/match {text, tags, limit} (limit 1–20, domyślnie 5);
+  /api/chat {messages, tags, context_innovation_ids} (stare `innovation_ids` też działa); chunki SSE jako
+  `data: {"content": "..."}`, koniec `data: [DONE]`. /api/tag zwraca {tags, area, target_group, location, type, is_relevant}.
+
 [DONE] /biblioteka na realnych danych (GET /api/innovations od A3): wyszukiwarka, filtr tematów (?tags=a,b — tu prowadzi
   „Zobacz więcej” z /wyniki), stronicowanie po 12, axe bez błędów. Strona główna „Co już działa” pokazuje 3 realne innowacje ROPS.
   Wspólna karta: `components/rops-innovation-card.tsx` (`<RopsInnovationCard innovation query? headingLevel? />`) — użyjcie jej

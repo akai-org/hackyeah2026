@@ -16,7 +16,7 @@ from typing import AsyncIterator
 
 from fastapi import APIRouter, BackgroundTasks
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app import knowledge_store, matchmaking_llm
 from app.local_matching import TAXONOMY_TAGS, local_chat_answer, local_tag_result, rank_locally
@@ -70,6 +70,7 @@ class TagRequest(BaseModel):
 class MatchRequest(BaseModel):
     text: str
     tags: list[str] = Field(default_factory=list)
+    limit: int = Field(default=TOP_N, ge=1, le=20)
 
 
 class VoiceFixRequest(BaseModel):
@@ -82,8 +83,12 @@ class ChatMessage(BaseModel):
 
 
 class ChatRequest(BaseModel):
+    # A4 wysyła context_innovation_ids — przyjmujemy obie nazwy.
+    model_config = ConfigDict(populate_by_name=True)
+
     messages: list[ChatMessage]
-    innovation_ids: list[int] = Field(default_factory=list)
+    innovation_ids: list[int] = Field(default_factory=list, alias="context_innovation_ids")
+    tags: list[str] = Field(default_factory=list)
 
 
 # ── Pomocnicze ───────────────────────────────────────────
@@ -98,8 +103,8 @@ def _err(msg: str):
 
 
 def _sse(chunk: str) -> str:
-    # Wieloliniowy chunk → kilka linii "data:" (zgodnie ze specyfikacją SSE klient skleja je "\n").
-    return "".join(f"data: {line}\n" for line in chunk.split("\n")) + "\n"
+    # Chunk jako JSON {"content": ...}: znaki nowej linii nie łamią ramek SSE (ustalone z A4).
+    return f"data: {json.dumps({'content': chunk}, ensure_ascii=False)}\n\n"
 
 
 def _innovation_to_dict(innov) -> dict:
@@ -183,10 +188,10 @@ def _catalog() -> list[dict]:
     return [knowledge_store.public(i, full=True) for i in knowledge_store.load_innovations() if i.get("status") != "archived"]
 
 
-def _local_match(text: str, tags: list[str]) -> dict:
+def _local_match(text: str, tags: list[str], limit: int = TOP_N) -> dict:
     """Ranking bez embeddingów na katalogu ROPS, dopóki A1/A3 nie wystawią ChromaDB i bazy."""
     ranked = rank_locally(text, tags, _catalog())
-    return {"innovations": ranked[:TOP_N], "total_found": len(ranked)}
+    return {"innovations": ranked[:limit], "total_found": len(ranked)}
 
 
 # ── Endpointy ────────────────────────────────────────────
@@ -221,7 +226,7 @@ async def match(body: MatchRequest, background: BackgroundTasks):
         except Exception:
             log.exception("similarity_search failed, using local ranking")
     if not innovations:  # brak ChromaDB albo seedu od A3 → ranking lokalny, żeby demo działało
-        result = _local_match(text, body.tags)
+        result = _local_match(text, body.tags, body.limit)
         background.add_task(_log_search_zasobnik, text, result["total_found"])
         return _ok(result)
 
@@ -230,7 +235,7 @@ async def match(body: MatchRequest, background: BackgroundTasks):
         cosine = score_map.get(innov["embedding_id"], 0.0)
         innov["match_score"] = round(cosine + TAG_BOOST * len(set(innov["tags"]) & query_tags), 4)
     innovations.sort(key=lambda i: i["match_score"], reverse=True)
-    return _ok({"innovations": innovations[:TOP_N], "total_found": len(innovations)})
+    return _ok({"innovations": innovations[: body.limit], "total_found": len(innovations)})
 
 
 VOICE_FIX_PROMPT = (

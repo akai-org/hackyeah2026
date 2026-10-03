@@ -147,7 +147,20 @@ export async function streamChat(
         .map((line) => line.slice(line.startsWith("data: ") ? 6 : 5))
         .join("\n");
       if (payload === "[DONE]") return;
-      onChunk(payload);
+      onChunk(chunkText(payload));
     }
   }
+}
+
+/** Backend wysyła `{"content": "..."}`; goły tekst też przyjmujemy. */
+function chunkText(payload: string): string {
+  try {
+    const parsed: unknown = JSON.parse(payload);
+    if (parsed && typeof parsed === "object" && typeof (parsed as { content?: unknown }).content === "string") {
+      return (parsed as { content: string }).content;
+    }
+  } catch {
+    // Zwykły tekst, nie JSON.
+  }
+  return payload;
 }
