@@ -10,7 +10,7 @@ engine = create_engine(settings.zasobnik_database_url, connect_args=connect_args
 
 
 def init_db() -> None:
-    from app import models  # noqa: F401 – rejestruje tabele w metadanych
+    from app.zasobnik import models  # noqa: F401 – rejestruje tabele w metadanych
 
     SQLModel.metadata.create_all(engine)
 

@@ -1,219 +1,109 @@
-"""Modele danych modułu „Zasobnik wiedzy”.
+import json
+from datetime import datetime
 
-Tabele (table=True) trzymają dane w bazie, pozostałe klasy to schematy
-wejścia/wyjścia API (to one pojawiają się w Swaggerze).
-"""
-
-from datetime import UTC, datetime
-from enum import StrEnum
-
-from pydantic import BaseModel
-from sqlmodel import JSON, Field, Relationship, SQLModel
-
-
-def utcnow() -> datetime:
-    return datetime.now(UTC)
-
-
-class ResourceType(StrEnum):
-    challenge = "challenge"  # wyzwanie społeczne: raporty, Mapa Wyzwań Społecznych
-    innovation = "innovation"  # Biblioteka Innowacji Społecznych
-    education = "education"  # materiały edukacyjne
-
-
-class ReporterType(StrEnum):
-    resident = "resident"  # mieszkaniec
-    ngo = "ngo"  # organizacja pozarządowa
-    institution = "institution"  # instytucja pomocy społecznej, szkoła itp.
-    local_government = "local_government"  # JST – gmina, powiat
-    other = "other"
-
-
-# ---------- obszary (kwestie społeczne) ----------
-
-
-class ResourceAreaLink(SQLModel, table=True):
-    resource_id: int | None = Field(default=None, foreign_key="resource.id", primary_key=True)
-    area_id: int | None = Field(default=None, foreign_key="area.id", primary_key=True)
-
-
-class AreaBase(SQLModel):
-    slug: str = Field(index=True, unique=True, min_length=2, max_length=60, regex=r"^[a-z0-9-]+$")
-    name: str = Field(min_length=2, max_length=120)
-    description: str = ""
-    icon: str | None = None  # nazwa ikony dla frontendu, np. "elderly"
-
-
-class Area(AreaBase, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    resources: list["Resource"] = Relationship(back_populates="areas", link_model=ResourceAreaLink)
-
-
-class AreaCreate(AreaBase):
-    pass
-
-
-class AreaUpdate(SQLModel):
-    name: str | None = None
-    description: str | None = None
-    icon: str | None = None
-
-
-class AreaRead(AreaBase):
-    id: int
-
-
-class AreaSummary(AreaRead):
-    """Obszar z liczbą opublikowanych zasobów każdego typu."""
-
-    counts: dict[ResourceType, int]
-
-
-# ---------- zasoby: wyzwania, innowacje, materiały ----------
-
-
-class ResourceBase(SQLModel):
-    type: ResourceType = Field(index=True)
-    title: str = Field(min_length=2, max_length=300)
-    summary: str = Field(default="", max_length=1000)  # krótki opis na kartę/listę
-    content: str = ""  # pełna treść (markdown)
-    # Kluczowe liczby do wyróżnienia, np. [{"label": "Seniorzy 65+", "value": "19%"}]
-    facts: list[dict[str, str]] = Field(default_factory=list, sa_type=JSON)
-    tags: list[str] = Field(default_factory=list, sa_type=JSON)
-    url: str | None = None  # link do źródła / pełnego opisu
-    video_url: str | None = None  # film o innowacji (YouTube, Vimeo…)
-    image_url: str | None = None
-    attachment_url: str | None = None  # PDF z raportem / materiałem
-    source: str | None = None  # np. „Raport o kondycji Małopolski 2025”
-    region: str | None = None  # powiat/gmina; None = cała Małopolska
-    published: bool = True
-
-
-class Resource(ResourceBase, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    views: int = 0
-    created_at: datetime = Field(default_factory=utcnow)
-    updated_at: datetime = Field(default_factory=utcnow)
-    areas: list[Area] = Relationship(back_populates="resources", link_model=ResourceAreaLink)
-
-
-class ResourceCreate(ResourceBase):
-    area_slugs: list[str] = []
-
-
-class ResourceUpdate(SQLModel):
-    type: ResourceType | None = None
-    title: str | None = None
-    summary: str | None = None
-    content: str | None = None
-    facts: list[dict[str, str]] | None = None
-    tags: list[str] | None = None
-    url: str | None = None
-    video_url: str | None = None
-    image_url: str | None = None
-    attachment_url: str | None = None
-    source: str | None = None
-    region: str | None = None
-    published: bool | None = None
-    area_slugs: list[str] | None = None
-
-
-class ResourceRead(ResourceBase):
-    id: int
-    views: int
-    created_at: datetime
-    updated_at: datetime
-    areas: list[AreaRead]
-
-
-class ResourcePage(BaseModel):
-    items: list[ResourceRead]
-    total: int
-
-
-class AreaDetail(AreaRead):
-    """Wszystko o jednej kwestii społecznej w jednym miejscu."""
-
-    challenges: list[ResourceRead]
-    innovations: list[ResourceRead]
-    education: list[ResourceRead]
-    related_areas: list[AreaRead]
-
-
-class ImportResult(BaseModel):
-    created: int
-    updated: int
-
-
-# ---------- potrzeby i sygnały do analizy trendów ----------
-
-
-class NeedBase(SQLModel):
-    description: str = Field(min_length=3, max_length=2000)
-    region: str | None = Field(default=None, max_length=120)
-    reporter_type: ReporterType = ReporterType.resident
-
-
-class Need(NeedBase, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    area_id: int | None = Field(default=None, foreign_key="area.id", index=True)
-    created_at: datetime = Field(default_factory=utcnow, index=True)
-
-
-class NeedCreate(NeedBase):
-    area_slug: str | None = None  # użytkownik może nie wiedzieć, do jakiego obszaru to należy
-
-
-class NeedUpdate(SQLModel):
-    area_slug: str | None = None  # admin przypisuje/zmienia obszar
-
-
-class NeedRead(NeedBase):
-    id: int
-    area: AreaRead | None
-    created_at: datetime
-
-
-class SearchLog(SQLModel, table=True):
-    """Każde wyszukiwanie to sygnał, czego ludzie szukają (i czego nie znajdują)."""
-
-    id: int | None = Field(default=None, primary_key=True)
-    query: str = Field(index=True)
-    area_id: int | None = Field(default=None, foreign_key="area.id")
-    results: int
-    created_at: datetime = Field(default_factory=utcnow, index=True)
-
-
-class MonthPoint(BaseModel):
-    month: str  # "2026-09"
-    needs: int
-    searches: int
-
-
-class AreaTrend(BaseModel):
-    area: AreaRead | None  # None = potrzeby bez przypisanego obszaru
-    needs: int
-    searches: int
-    resource_views: int
-    needs_last_30d: int
-    needs_prev_30d: int
-    change_pct: float | None  # None, gdy w poprzednim okresie było 0
-    trend: str  # "up" | "down" | "flat" | "new"
-    monthly: list[MonthPoint]
-
-
-class CountItem(BaseModel):
-    key: str
-    count: int
-
-
-class TrendsReport(BaseModel):
-    since: datetime
-    until: datetime
-    total_needs: int
-    total_searches: int
-    areas: list[AreaTrend]
-    by_region: list[CountItem]
-    by_reporter_type: list[CountItem]
-    top_queries: list[CountItem]
-    zero_result_queries: list[CountItem]  # czego szukano, a nie ma w zasobniku
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.database import Base
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(128))
+    role: Mapped[str] = mapped_column(String(32), default="user")  # user|tester|admin|consultant
+    session_token: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+    tester: Mapped["Tester | None"] = relationship("Tester", back_populates="user", uselist=False)
+
+
+class Tester(Base):
+    __tablename__ = "testers"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"))
+    name: Mapped[str] = mapped_column(String(128))
+    email: Mapped[str] = mapped_column(String(256))
+    organization: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    expertise: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    approved: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+    user: Mapped["User"] = relationship("User", back_populates="tester")
+
+
+class Innovation(Base):
+    __tablename__ = "innovations"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    title: Mapped[str] = mapped_column(String(256))
+    short_desc: Mapped[str] = mapped_column(Text)
+    full_desc: Mapped[str | None] = mapped_column(Text, nullable=True)
+    category: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    area: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    target_group: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    location: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    status: Mapped[str] = mapped_column(String(32), default="active")  # active|archived|unmaintained
+    cost_level: Mapped[str | None] = mapped_column(String(16), nullable=True)  # low|medium|high
+    implementation_time_months: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    testers_count: Mapped[int] = mapped_column(Integer, default=0)
+    where_implemented: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    source_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    embedding_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    tags: Mapped[str] = mapped_column(Text, default="[]")  # JSON list
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    def tags_list(self) -> list[str]:
+        return json.loads(self.tags) if self.tags else []
+
+
+class Challenge(Base):
+    __tablename__ = "challenges"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    title: Mapped[str] = mapped_column(String(256))
+    area: Mapped[str] = mapped_column(String(128))
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    indicator_value: Mapped[float | None] = mapped_column(Float, nullable=True)
+    indicator_unit: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    source: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    data_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    powiat: Mapped[str | None] = mapped_column(String(128), nullable=True)
+
+
+class InnovationGapIndex(Base):
+    __tablename__ = "innovation_gap_index"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    powiat: Mapped[str] = mapped_column(String(128))
+    challenge_area: Mapped[str] = mapped_column(String(128))
+    innovations_count: Mapped[int] = mapped_column(Integer, default=0)
+    gap_score: Mapped[float] = mapped_column(Float, default=0.0)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+
+
+class SearchLog(Base):
+    __tablename__ = "search_logs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    query: Mapped[str] = mapped_column(Text)
+    tags: Mapped[str] = mapped_column(Text, default="[]")  # JSON list
+    results_count: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class Idea(Base):
+    __tablename__ = "ideas"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    title: Mapped[str] = mapped_column(String(256))
+    essence: Mapped[str] = mapped_column(Text)
+    for_whom: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    tags: Mapped[str] = mapped_column(Text, default="[]")  # JSON list
+    author_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    author_email: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    status: Mapped[str] = mapped_column(String(32), default="pending")  # pending|reviewed|rejected
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())

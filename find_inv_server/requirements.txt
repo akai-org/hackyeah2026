@@ -2,5 +2,8 @@ fastapi[standard]==0.142.2
 pydantic-settings==2.15.0
 pytest==9.1.1
 httpx2==2.13.1
-sqlmodel==0.0.47
+sqlalchemy[asyncio]>=2.0
+aiosqlite>=0.20
+chromadb>=0.5
 openai>=1.0
+sqlmodel==0.0.47

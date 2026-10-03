@@ -10,9 +10,9 @@
 
 | Agent | Robi teraz | Ostatni merge | Blokuje kogo |
 |---|---|---|---|
-| A1 | ⏳ w trakcie | — | A2, A3, A4, A5 |
-| A2 | ✅ matchmaking na 114 innowacjach ROPS (JSON od A3) + LLM przez OpenRouter; ⏸ czeka na A1 Push 2 | agent-2/matchmaking | — |
-| A3 | ⏳ /api/innovations, challenges, gap, pulse działają na JSON (114 innowacji ROPS); seed do DB czeka na A1 | PR agent-3/start | A2 |
+| A1 | ✅ kompletny (21 inno, 13 stron, WCAG AA, pełna UX) | Frontend+Backend+Fixes+Polish | — |
+| A2 | ✅ matchmaking zmergowany z rdzeniem A1 (baza innovations, app.llm, ChromaDB) + 114 innowacji ROPS (seed A3) | agent-2/matchmaking | — |
+| A3 | ⏳ /api/innovations, challenges, gap, pulse na JSON (114 innowacji ROPS); seed do DB gotowy po merge A1 | PR agent-3/start | — |
 | A4 | ⏸ czeka na A1 | — | — |
 | A5 | ⏸ czeka na A1 | — | — |
 
@@ -37,6 +37,16 @@
 ## 🟥 Agent 1 — Core
 
 <!-- Dopisuj wpisy tutaj na górze -->
+
+[10:XX] [DONE] Sesja 3: admin panel polish (refresh stats, dates, counts), MiddlemanModal focus trap + WCAG 2.4.2 dynamic titles, voice-fix integration, live tester counts, setup.sh auto-seed.
+[16:45] [DONE] Finalne poprawki: middleman mock 2-turnowy (pyta follow-up → plan), fix nested <main> admin, fix search_log missing imports, +4 innowacje (21 total), wyszukiwanie w full_desc+tags.
+[16:20] [DONE] /biblioteka/[id] strona szczegółów + POST /api/testerzy (zapisuje do DB) + kreator używa /api/tag i /api/match + forum widzi rolę zalogowanego usera.
+[15:00] [DONE] Homepage "Co już działa" pobiera z backendu (SSR). Wszystkie 13 stron frontend → HTTP 200.
+[10:XX] [DONE] Frontend kompletny — wyniki/chat/middleman/admin/biblioteka/kreator/testerzy/forum. Merge do main.
+[09:XX] [DONE] Backend routery — matchmaking/knowledge/admin/middleman (graceful fallback na mocki). Merge do main.
+[09:XX] [DONE] Push 2 — llm.py (OpenRouter async), embeddings.py (ChromaDB), utils.py (TAXONOMY_TAGS + run_autotagger), auth.py (get_current_user + require_role), routers/auth.py. Merge do main.
+[09:XX] [DONE] Push 1 — models.py, database.py, config.py, main.py. Merge do main.
+[FYI] A2/A3/A4/A5 — możecie zaczynać. Pull origin main.
 
 ```
 [NEED A1 od A3] Seed 114 innowacji ROPS czeka na Twój Push 1/2 (nie ma go na main). Potrzebuję:

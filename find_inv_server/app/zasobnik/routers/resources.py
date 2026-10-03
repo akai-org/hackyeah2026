@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import String, cast, func, or_
 from sqlmodel import Session, select
 
-from app.db import get_session
-from app.models import (
+from app.zasobnik.db import get_session
+from app.zasobnik.models import (
     Resource,
     ResourceAreaLink,
     ResourcePage,
@@ -13,7 +13,7 @@ from app.models import (
     ResourceType,
     SearchLog,
 )
-from app.services import area_by_slug, resource_read
+from app.zasobnik.services import area_by_slug, resource_read
 
 router = APIRouter(prefix="/resources", tags=["zasoby"])
 

@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import func
 from sqlmodel import Session, select
 
-from app.db import get_session
-from app.models import (
+from app.zasobnik.db import get_session
+from app.zasobnik.models import (
     Area,
     AreaDetail,
     AreaRead,
@@ -14,7 +14,7 @@ from app.models import (
     ResourceAreaLink,
     ResourceType,
 )
-from app.services import area_by_slug, resource_read
+from app.zasobnik.services import area_by_slug, resource_read
 
 router = APIRouter(prefix="/areas", tags=["obszary"])
 

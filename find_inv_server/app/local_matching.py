@@ -1,7 +1,7 @@
 """Lokalny (bez LLM) autotagger i ranking innowacji.
 
-Używany, gdy rdzeń z LLM/ChromaDB nie jest dostępny (brak Push 2, brak klucza OpenRouter)
-albo gdy wywołanie LLM się nie uda. Dzięki temu chipy tagów i kolejność kart zawsze
+Używany, gdy nie ma klucza OpenRouter (LLM i embeddingi niedostępne), ChromaDB jest pusta
+albo wywołanie LLM się nie uda. Dzięki temu chipy tagów i kolejność kart zawsze
 zależą od tego, co wpisał użytkownik, a nie są stałym mockiem.
 """
 
@@ -9,14 +9,7 @@ import math
 import re
 from collections import Counter
 
-# Musi zgadzać się z TAXONOMY_TAGS w app/utils.py (A1).
-TAXONOMY_TAGS = [
-    "seniorzy", "wykluczenie_cyfrowe", "samotność", "zdrowie_psychiczne",
-    "niepełnosprawność", "ubóstwo", "dzieci", "młodzież", "rodzina",
-    "bezdomność", "uzależnienia", "migranci", "wolontariat", "edukacja",
-    "rynek_pracy", "dostępność", "transport", "gmina_wiejska", "gmina_miejska",
-    "NGO", "samorząd", "DPS", "OPS", "CUS", "inkubator",
-]  # fmt: skip
+from app.utils import TAXONOMY_TAGS  # zamknięta taksonomia z rdzenia (A1)
 
 # Rdzenie słów po zdjęciu polskich znaków. Rdzeń ze spacją dopasowujemy jako frazę.
 TAG_KEYWORDS: dict[str, list[str]] = {

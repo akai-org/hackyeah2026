@@ -9,8 +9,8 @@ from datetime import timedelta
 
 from sqlmodel import Session, select
 
-from app.models import Area, Need, ReporterType, ResourceCreate, ResourceType, SearchLog, utcnow
-from app.services import create_resource
+from app.zasobnik.models import Area, Need, ReporterType, ResourceCreate, ResourceType, SearchLog, utcnow
+from app.zasobnik.services import create_resource
 
 DEMO_SOURCE = "Dane przykładowe – do podmiany"
 

@@ -11,6 +11,6 @@ __pycache__/
 .env
 rops_raw/
 
-# lokalne bazy danych
+# lokalne bazy (SQLite: findinv.db, zasobnik.db) i ChromaDB
 *.db
 chroma_db/

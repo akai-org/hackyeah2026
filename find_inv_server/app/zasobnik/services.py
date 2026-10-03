@@ -3,7 +3,7 @@
 from fastapi import HTTPException, status
 from sqlmodel import Session, select
 
-from app.models import (
+from app.zasobnik.models import (
     Area,
     AreaRead,
     Need,

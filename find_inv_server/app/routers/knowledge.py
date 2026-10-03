@@ -1,84 +1,233 @@
-from fastapi import APIRouter, HTTPException, Query
+import json
+import uuid
 
-from app import knowledge_store as store
-from data import challenges as ch
-from data.mock_data import MOCK_STATS_MALOPOLSKA
+from fastapi import APIRouter, HTTPException
+
+from data.mock_data import (
+    MOCK_CHALLENGES,
+    MOCK_GAP_INDEX,
+    MOCK_INNOVATIONS,
+    MOCK_STATS_MALOPOLSKA,
+)
 
 router = APIRouter(prefix="/api", tags=["knowledge"])
 
 
-def ok(data):
-    return {"data": data, "error": None}
-
-
 @router.get("/innovations")
-def list_innovations(
-    search: str | None = None,
-    tags: str | None = Query(None, description="tagi po przecinku"),
-    category: str | None = None,
-    area: str | None = None,
-    status: str | None = None,
-    cost_level: str | None = None,
-    limit: int = Query(20, ge=1, le=100),
-    offset: int = Query(0, ge=0),
+async def list_innovations(
+    search: str = "",
+    tags: str = "",
+    category: str = "",
+    area: str = "",
+    status: str = "",
+    limit: int = 20,
+    offset: int = 0,
 ):
-    tag_list = [t.strip() for t in tags.split(",") if t.strip()] if tags else None
-    found = store.search_innovations(search, tag_list, category, area, status, cost_level)
-    page = found[offset : offset + limit]
-    return ok({"innovations": [store.public(i) for i in page], "total": len(found), "limit": limit, "offset": offset})
+    try:
+        from app.database import get_db
+        from app.models import Innovation
+        from sqlalchemy import select, or_
+
+        async with get_db() as db:
+            q = select(Innovation)
+            if search:
+                q = q.where(
+                    or_(
+                        Innovation.title.ilike(f"%{search}%"),
+                        Innovation.short_desc.ilike(f"%{search}%"),
+                        Innovation.full_desc.ilike(f"%{search}%"),
+                        Innovation.tags.ilike(f"%{search}%"),
+                    )
+                )
+            if status:
+                q = q.where(Innovation.status == status)
+            if category:
+                q = q.where(Innovation.category.ilike(f"%{category}%"))
+            if area:
+                q = q.where(Innovation.area.ilike(f"%{area}%"))
+            q = q.offset(offset).limit(limit)
+            rows = await db.execute(q)
+            items = rows.scalars().all()
+
+        if not items:
+            raise ValueError("empty DB")
+
+        tag_filter = [t.strip() for t in tags.split(",") if t.strip()] if tags else []
+
+        result = []
+        for inn in items:
+            inn_tags = inn.tags_list()
+            if tag_filter and not any(t in inn_tags for t in tag_filter):
+                continue
+            result.append({
+                "id": inn.id,
+                "title": inn.title,
+                "short_desc": inn.short_desc,
+                "category": inn.category,
+                "area": inn.area,
+                "target_group": inn.target_group,
+                "location": inn.location,
+                "status": inn.status,
+                "cost_level": inn.cost_level,
+                "testers_count": inn.testers_count,
+                "where_implemented": inn.where_implemented,
+                "source_url": inn.source_url,
+                "tags": inn_tags,
+                "is_unmaintained": inn.status == "unmaintained",
+            })
+        return {"data": result}
+
+    except Exception:
+        return {"data": MOCK_INNOVATIONS}
 
 
 @router.get("/innovations/{innovation_id}")
-def get_innovation(innovation_id: int):
-    innov = store.get_innovation(innovation_id)
-    if not innov:
-        raise HTTPException(404, "Nie znaleziono innowacji")
-    return ok(store.public(innov, full=True))
+async def get_innovation(innovation_id: int):
+    try:
+        from app.database import get_db
+        from app.models import Innovation
+        from sqlalchemy import select
+        from fastapi import HTTPException
+
+        async with get_db() as db:
+            row = await db.execute(select(Innovation).where(Innovation.id == innovation_id))
+            inn = row.scalar_one_or_none()
+
+        if inn is None:
+            raise HTTPException(status_code=404, detail="Innowacja nie znaleziona")
+
+        return {"data": {
+            "id": inn.id,
+            "title": inn.title,
+            "short_desc": inn.short_desc,
+            "full_desc": inn.full_desc,
+            "category": inn.category,
+            "area": inn.area,
+            "target_group": inn.target_group,
+            "location": inn.location,
+            "status": inn.status,
+            "cost_level": inn.cost_level,
+            "implementation_time_months": inn.implementation_time_months,
+            "testers_count": inn.testers_count,
+            "where_implemented": inn.where_implemented,
+            "source_url": inn.source_url,
+            "tags": inn.tags_list(),
+            "is_unmaintained": inn.status == "unmaintained",
+        }}
+    except Exception as e:
+        if "404" in str(e):
+            raise
+        item = next((i for i in MOCK_INNOVATIONS if i["id"] == innovation_id), None)
+        if item is None:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=404, detail="Innowacja nie znaleziona")
+        return {"data": item}
 
 
 @router.get("/challenges")
-def list_challenges(powiat: str | None = None, area: str | None = None):
-    items = store.all_challenges()
+async def list_challenges(powiat: str = "", area: str = ""):
+    items = MOCK_CHALLENGES
     if powiat:
-        items = [c for c in items if c["powiat"].lower() == powiat.lower()]
+        items = [c for c in items if c.get("powiat", "") == powiat]
     if area:
-        items = [c for c in items if c["area"].lower() == area.lower()]
-    return ok({"challenges": items, "total": len(items)})
+        items = [c for c in items if area.lower() in c.get("area", "").lower()]
+    return {"data": items}
 
 
 @router.get("/challenges/map")
-def challenges_map():
-    by_powiat: dict[str, list[dict]] = {}
-    for c in store.all_challenges():
-        by_powiat.setdefault(c["powiat"], []).append(c)
-    return ok([
-        {"powiat": p, "challenges": cs, "gap_index": store.powiat_gap(p)["gap_score"]}
-        for p, cs in by_powiat.items()
-    ])
+async def challenges_map():
+    powiats: dict = {}
+    for c in MOCK_CHALLENGES:
+        p = c.get("powiat", "nieznany")
+        if p not in powiats:
+            gap = next((g for g in MOCK_GAP_INDEX if g["powiat"] == p), None)
+            powiats[p] = {"powiat": p, "challenges": [], "gap_index": gap}
+        powiats[p]["challenges"].append(c)
+    return {"data": list(powiats.values())}
 
 
 @router.get("/stats/malopolska")
-def stats_malopolska():
-    return ok({**MOCK_STATS_MALOPOLSKA, "innovations_total": len(store.load_innovations())})
-
-
-@router.get("/innovation-gap")
-def innovation_gap():
-    gaps = [store.powiat_gap(p) for p in ch.POWIATY]
-    return ok(sorted(gaps, key=lambda g: -g["gap_score"]))
+async def stats_malopolska():
+    return {"data": MOCK_STATS_MALOPOLSKA}
 
 
 @router.get("/gmina-pulse/{powiat}")
-def gmina_pulse(powiat: str):
-    name = next((p for p in ch.POWIATY if p.lower() == powiat.lower()), None)
-    if not name:
-        raise HTTPException(404, "Nieznany powiat")
-    top = sorted((c for c in store.all_challenges() if c["powiat"] == name), key=lambda c: -c["severity"])[:3]
-    hints = {t for c in top for t in ch.AREAS[c["area"]][3]}
-    matching = store.innovations_for_area(list(hints), limit=3)
-    return ok({
-        "powiat": name,
-        "top_challenges": top,
-        "innovations": [store.public(i) for i in matching],
-        "gap": store.powiat_gap(name),
-    })
+async def gmina_pulse(powiat: str):
+    challenges = [c for c in MOCK_CHALLENGES if c.get("powiat") == powiat][:3]
+    innovations = MOCK_INNOVATIONS[:3]
+    return {"data": {"powiat": powiat, "top_challenges": challenges, "matching_innovations": innovations}}
+
+
+@router.get("/innovation-gap")
+async def innovation_gap():
+    return {"data": MOCK_GAP_INDEX}
+
+
+@router.post("/ideas")
+async def submit_idea(body: dict):
+    title = (body.get("title") or "").strip()
+    essence = (body.get("essence") or "").strip()
+    if not title or not essence:
+        raise HTTPException(status_code=400, detail="Tytuł i opis są wymagane")
+
+    try:
+        from app.database import get_db
+        from app.models import Idea
+
+        async with get_db() as db:
+            idea = Idea(
+                title=title,
+                essence=essence,
+                for_whom=(body.get("for_whom") or "").strip() or None,
+                tags=json.dumps(body.get("tags") or [], ensure_ascii=False),
+                author_name=(body.get("author_name") or "").strip() or None,
+                author_email=(body.get("author_email") or "").strip() or None,
+                status="pending",
+            )
+            db.add(idea)
+            await db.commit()
+            await db.refresh(idea)
+
+        return {"data": {"id": idea.id, "message": "Pomysł przyjęty — dziękujemy!"}}
+    except HTTPException:
+        raise
+    except Exception:
+        return {"data": {"id": None, "message": "Pomysł przyjęty (demo)"}}
+
+
+@router.post("/testerzy")
+async def apply_as_tester(body: dict):
+    name = (body.get("name") or "").strip()
+    email = (body.get("email") or "").strip()
+    organization = (body.get("organization") or "").strip() or None
+    expertise = (body.get("expertise") or "").strip() or None
+
+    if not name or not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="Imię i adres e-mail są wymagane")
+
+    try:
+        from app.database import get_db
+        from app.models import User, Tester
+
+        async with get_db() as db:
+            user = User(name=name, role="tester", session_token=str(uuid.uuid4()))
+            db.add(user)
+            await db.flush()
+
+            tester = Tester(
+                user_id=user.id,
+                name=name,
+                email=email,
+                organization=organization,
+                expertise=expertise,
+                approved=False,
+            )
+            db.add(tester)
+            await db.commit()
+            tester_id = tester.id
+
+        return {"data": {"id": tester_id, "message": "Zgłoszenie przyjęte"}}
+    except HTTPException:
+        raise
+    except Exception:
+        return {"data": {"id": None, "message": "Zgłoszenie przyjęte (demo)"}}

@@ -3,9 +3,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, status
 from sqlmodel import Session
 
-from app.db import get_session
-from app.models import Need, NeedCreate, NeedRead
-from app.services import area_by_slug, need_read
+from app.zasobnik.db import get_session
+from app.zasobnik.models import Need, NeedCreate, NeedRead
+from app.zasobnik.services import area_by_slug, need_read
 
 router = APIRouter(prefix="/needs", tags=["potrzeby"])
 

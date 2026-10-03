@@ -1,0 +1,137 @@
+import asyncio
+import json
+import uuid
+
+from fastapi import APIRouter
+from fastapi.responses import StreamingResponse
+
+router = APIRouter(prefix="/api/middleman", tags=["middleman"])
+
+MOCK_PLAN = {
+    "type": "plan",
+    "content": {
+        "staff_needed": "1 koordynator (0.5 etatu) + 3-5 wolontariuszy",
+        "estimated_cost": "5–10 tys. zł rocznie",
+        "location_suggestions": "Dom Kultury, biblioteka gminna lub świetlica wiejska",
+        "steps": [
+            "Rekrutacja i szkolenie koordynatora (tydzień 1-2)",
+            "Rekrutacja wolontariuszy z lokalnej społeczności (tydzień 3-4)",
+            "Kampania informacyjna w gminie (tydzień 5-6)",
+            "Pilotaż z pierwszą grupą beneficjentów (miesiąc 2-3)",
+            "Ewaluacja i rozszerzenie programu (miesiąc 3-4)",
+        ],
+        "timeline": "3-4 miesiące do pełnego uruchomienia",
+        "funding_hints": "PFRON (niepełnosprawność), FIO (NGO), EFS+ (aktywizacja), budżet gminy",
+    },
+}
+
+
+@router.post("/start")
+async def start(body: dict):
+    try:
+        from app.database import get_db
+        from app.models import Innovation
+        from sqlalchemy import select
+        from app.llm import chat
+
+        innovation_id = body.get("innovation_id")
+        problem_desc = body.get("problem_desc", "")
+        session_id = str(uuid.uuid4())
+
+        async with get_db() as db:
+            row = await db.execute(select(Innovation).where(Innovation.id == int(innovation_id)))
+            inn = row.scalar_one_or_none()
+
+        if inn is None:
+            raise ValueError("not found")
+
+        system = (
+            "Jesteś ekspertem od wdrażania innowacji społecznych w Polsce. "
+            "Znasz realia małych gmin, OPS i NGO. "
+            "Zadajesz MAX 3 krótkie, praktyczne pytania zanim dajesz konkretny plan. "
+            "Bądź konkretny — podaj realne koszty i źródła finansowania."
+        )
+        first_q = await chat([
+            {"role": "system", "content": system},
+            {
+                "role": "user",
+                "content": (
+                    f"Innowacja: {inn.title}\n{inn.full_desc or inn.short_desc}\n\n"
+                    f"Problem instytucji: {problem_desc}\n\n"
+                    "Zadaj pierwsze pytanie, żeby lepiej dopasować plan wdrożenia."
+                ),
+            },
+        ])
+        return {"data": {"session_id": session_id, "first_question": first_q}}
+
+    except Exception:
+        return {"data": {
+            "session_id": str(uuid.uuid4()),
+            "first_question": "Ile osób zatrudnia Wasza instytucja i jakim budżetem rocznym dysponujecie na nowe projekty?",
+        }}
+
+
+@router.post("/answer")
+async def answer(body: dict):
+    messages = body.get("messages", [])
+    user_turns = sum(1 for m in messages if m.get("role") == "user")
+
+    async def mock_gen():
+        await asyncio.sleep(0.15)
+        if user_turns < 2:
+            # Ask a follow-up after first answer
+            parts = [
+                "Dziękuję. ",
+                "Jeszcze jedno pytanie — ",
+                "czy macie już lokale lub pomieszczenia do dyspozycji, ",
+                "czy szukacie ich od zera?",
+            ]
+            for part in parts:
+                yield f"data: {part}\n\n"
+                await asyncio.sleep(0.12)
+            yield "data: [DONE]\n\n"
+        else:
+            # Enough context — return the structured plan
+            yield f"data: {json.dumps(MOCK_PLAN, ensure_ascii=False)}\n\n"
+            yield "data: [DONE]\n\n"
+
+    try:
+        from app.llm import chat
+        from app.config import settings
+
+        if not settings.openrouter_api_key:
+            raise ValueError("no API key — use mock")
+
+        answer_text = body.get("answer", "")
+        msgs = list(messages)
+        if answer_text:
+            msgs = msgs + [{"role": "user", "content": answer_text}]
+
+        if not msgs:
+            raise ValueError("no messages")
+
+        system = (
+            "Jesteś ekspertem od wdrażania innowacji społecznych w Polsce. "
+            "Na podstawie rozmowy zadajesz MAX 3 krótkie pytania. "
+            "Gdy masz wystarczająco informacji (po 1-3 wymianach), odpowiedz TYLKO obiektem JSON:\n"
+            '{"type":"plan","content":{"staff_needed":"...","estimated_cost":"...","location_suggestions":"...",'
+            '"steps":["..."],"timeline":"...","funding_hints":"..."}}\n'
+            "Jeśli potrzebujesz jeszcze informacji, zadaj kolejne pytanie jako zwykły tekst."
+        )
+
+        all_messages = [{"role": "system", "content": system}] + msgs
+
+        async def real_gen():
+            try:
+                gen_obj = await chat(all_messages, stream=True)
+                async for chunk in gen_obj:
+                    yield f"data: {chunk}\n\n"
+                yield "data: [DONE]\n\n"
+            except Exception:
+                async for evt in mock_gen():
+                    yield evt
+
+        return StreamingResponse(real_gen(), media_type="text/event-stream")
+
+    except Exception:
+        return StreamingResponse(mock_gen(), media_type="text/event-stream")
