@@ -2,15 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, Search, X } from "lucide-react";
 
-import { CutoutText } from "@/components/cutout-text";
-import { SimpleModeToggle } from "@/components/simple-mode";
+import { AccessibilitySettings } from "@/components/simple-mode";
 
 const NAV_LINKS = [
-  { href: "/biblioteka", label: "Biblioteka innowacji" },
-  { href: "/#jak-to-dziala", label: "Jak to działa" },
-  { href: "/#dla-kogo", label: "Dla kogo" },
   { href: "/#kontakt", label: "Kontakt" },
 ];
 
@@ -43,12 +39,29 @@ export function SiteHeader() {
         Przejdź do treści
       </a>
 
-      <div className="mx-auto flex max-w-content items-center justify-between gap-4 px-4 py-3 sm:px-6">
+      <div className="relative mx-auto flex max-w-content items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <Link href="/" aria-label="HubMI, strona główna" className="inline-flex min-h-12 items-center rounded-ui py-1">
-          <CutoutText text="HubMI" as="span" size="logo" labelled={false} />
+          <span className="text-xl font-bold text-deep">HubMI</span>
         </Link>
 
-        <nav aria-label="Główna" className="hidden lg:block">
+        <div className="ml-auto flex items-center gap-3">
+          <form action="/wyniki" method="get" role="search" className="absolute left-1/2 hidden -translate-x-1/2 sm:flex">
+            <label htmlFor="header-search" className="sr-only">
+              Szukaj rozwiązania
+            </label>
+            <div className="flex min-h-12 items-center rounded-ui border-(length:--bw) border-deep bg-surface">
+              <Search aria-hidden="true" className="ml-3 size-5 text-leaf" />
+              <input
+                id="header-search"
+                name="q"
+                type="search"
+                placeholder="Szukaj rozwiązania"
+                className="min-w-0 bg-transparent px-3 text-base text-ink outline-none placeholder:text-muted sm:w-44 lg:w-56"
+              />
+            </div>
+          </form>
+
+          <nav aria-label="Główna" className="hidden lg:block">
           <ul className="flex items-center gap-1">
             {NAV_LINKS.map((link) => (
               <li key={link.href}>
@@ -58,9 +71,10 @@ export function SiteHeader() {
               </li>
             ))}
           </ul>
-        </nav>
+          </nav>
 
-        <SimpleModeToggle className="hidden lg:flex" />
+          <AccessibilitySettings className="hidden lg:block" />
+        </div>
 
         <button
           ref={buttonRef}
@@ -77,6 +91,21 @@ export function SiteHeader() {
 
       <div id="menu-mobilne" hidden={!open} className="border-t-(length:--bw) border-deep bg-surface lg:hidden">
         <nav aria-label="Główna, wersja mobilna" className="mx-auto max-w-content px-4 py-3 sm:px-6">
+          <form action="/wyniki" method="get" role="search" className="mb-3 flex sm:hidden">
+            <label htmlFor="mobile-header-search" className="sr-only">
+              Szukaj rozwiązania
+            </label>
+            <div className="flex min-h-12 w-full items-center rounded-ui border-(length:--bw) border-deep bg-paper">
+              <Search aria-hidden="true" className="ml-3 size-5 text-leaf" />
+              <input
+                id="mobile-header-search"
+                name="q"
+                type="search"
+                placeholder="Szukaj rozwiązania"
+                className="min-w-0 flex-1 bg-transparent px-3 text-base text-ink outline-none placeholder:text-muted"
+              />
+            </div>
+          </form>
           <ul className="flex flex-col">
             {NAV_LINKS.map((link) => (
               <li key={link.href}>
@@ -86,7 +115,7 @@ export function SiteHeader() {
               </li>
             ))}
           </ul>
-          <SimpleModeToggle className="mt-2 border-t-2 border-sage px-3 pt-2" />
+          <AccessibilitySettings className="mt-2 border-t-2 border-sage px-3 pt-2" />
         </nav>
       </div>
     </header>

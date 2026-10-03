@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Smile } from "lucide-react";
 
-import { CutoutText } from "@/components/cutout-text";
-import { Monstera } from "@/components/monstera";
 import { buttonVariants } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Wyniki" };
@@ -13,8 +12,8 @@ export default async function ResultsPage({ searchParams }: PageProps<"/wyniki">
 
   return (
     <div className="mx-auto max-w-content px-4 py-16 sm:px-6">
-      <CutoutText as="h1" size="section" text="Tu pojawią się wyniki" />
-      <Monstera size="small" color="sage" className="simple-hidden mt-4 w-24 rotate-[160deg]" />
+      <h1 className="text-2xl font-bold text-deep">Tu pojawią się wyniki</h1>
+      <Smile aria-hidden="true" className="simple-hidden mt-4 size-20 text-leaf" />
 
       {query ? (
         <div className="mt-6 max-w-[65ch]">

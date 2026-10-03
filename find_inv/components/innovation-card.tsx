@@ -35,7 +35,7 @@ export function InnovationCard({ innovation, headingLevel: Heading = "h3", showL
         className="simple-hidden absolute -top-3 right-6 h-6 w-20 rotate-[4deg] bg-butter [clip-path:polygon(0_8%,6%_0,100%_4%,95%_50%,100%_96%,4%_100%,0_55%)]"
       />
 
-      <Heading id={titleId} className="pr-16 text-xl font-bold text-deep">
+      <Heading id={titleId} className="pr-16 text-xl font-semibold text-deep">
         {innovation.title}
       </Heading>
 
@@ -44,14 +44,14 @@ export function InnovationCard({ innovation, headingLevel: Heading = "h3", showL
       <dl className="mt-4 space-y-3">
         <div>
           <dt className="text-sm text-muted">Dla kogo</dt>
-          <dd className="font-bold">{innovation.targetGroup}</dd>
+          <dd className="font-semibold">{innovation.targetGroup}</dd>
         </div>
         <div>
           <dt className="text-sm text-muted">Dowód skuteczności</dt>
           <dd className="mt-1">
             <span
               className={cn(
-                "inline-flex items-center gap-2 rounded-ui border-2 border-deep px-3 py-1 font-bold text-ink",
+                "inline-flex items-center gap-2 rounded-ui border-2 border-deep px-3 py-1 font-semibold text-ink",
                 evidence.className,
               )}
             >

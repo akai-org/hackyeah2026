@@ -8,10 +8,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const EXAMPLES = [
-  "Samotny senior na wsi",
-  "Brak transportu do lekarza",
-  "Seniorzy nie radzą sobie z internetem",
-  "Młodzież w kryzysie psychicznym",
+  "Samotny senior na wsi potrzebuje regularnego kontaktu i kogoś, kto zareaguje, gdy nie odbierze telefonu",
+  "Starsza osoba nie ma własnego samochodu i trudno jej dojechać na wizytę u lekarza albo zrobić zakupy",
 ];
 
 // Web Speech API nie ma typów w lib.dom, więc opisujemy tylko to, czego używamy.
@@ -114,7 +112,11 @@ export function SearchForm() {
     }
 
     const RecognitionImpl = getRecognition();
-    if (!RecognitionImpl) return;
+    if (!RecognitionImpl) {
+      setDictation("error");
+      setDictationMessage("Dyktowanie nie jest obsługiwane w tej przeglądarce. Wpisz tekst ręcznie.");
+      return;
+    }
 
     const recognition = new RecognitionImpl();
     recognition.lang = "pl-PL";
@@ -172,7 +174,7 @@ export function SearchForm() {
 
   return (
     <form action="/wyniki" method="get" role="search" noValidate onSubmit={handleSubmit} className="mt-8">
-      <label htmlFor={fieldId} className="block text-lg font-bold text-deep">
+      <label htmlFor={fieldId} className="block text-lg font-semibold text-deep">
         Opisz swój problem
       </label>
 
@@ -193,26 +195,24 @@ export function SearchForm() {
           )}
         />
 
-        <div className="flex flex-col gap-3 sm:flex-row md:w-44 md:flex-col">
-          <Button type="submit" className="sm:flex-1 md:flex-none">
+        <div className="flex flex-col gap-3 md:w-44">
+          <Button type="submit" className="w-full">
             <Search aria-hidden="true" />
             Szukaj
           </Button>
-          {supported && (
-            <Button type="button" variant="secondary" onClick={toggleDictation} className="sm:flex-1 md:flex-none">
-              {dictation === "recording" ? (
-                <>
-                  <Square aria-hidden="true" className="fill-current" />
-                  Zatrzymaj
-                </>
-              ) : (
-                <>
-                  <Mic aria-hidden="true" />
-                  Podyktuj
-                </>
-              )}
-            </Button>
-          )}
+          <Button type="button" variant="secondary" onClick={toggleDictation} className="w-full">
+            {dictation === "recording" ? (
+              <>
+                <Square aria-hidden="true" className="fill-current" />
+                Zatrzymaj
+              </>
+            ) : (
+              <>
+                <Mic aria-hidden="true" />
+                Podyktuj
+              </>
+            )}
+          </Button>
         </div>
       </div>
 
@@ -221,7 +221,7 @@ export function SearchForm() {
           key={errorKey}
           id={errorId}
           role="alert"
-          className="mt-3 flex items-start gap-2 rounded-ui border-2 border-alert bg-surface px-4 py-3 font-bold text-alert"
+          className="mt-3 flex items-start gap-2 rounded-ui border-2 border-alert bg-surface px-4 py-3 font-semibold text-alert"
         >
           <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
           Wpisz kilka słów o problemie, żeby zacząć szukać.
@@ -233,7 +233,7 @@ export function SearchForm() {
         role="status"
         aria-live="polite"
         className={cn(
-          "flex items-start gap-2 font-bold",
+          "flex items-start gap-2 font-semibold",
           dictationMessage && "mt-3",
           dictation === "error" ? "text-alert" : "text-deep",
         )}
@@ -251,12 +251,12 @@ export function SearchForm() {
       )}
 
       <div role="group" aria-labelledby={examplesId} className="mt-6">
-        <p id={examplesId} className="font-bold text-deep">
+        <p id={examplesId} className="font-semibold text-deep">
           Przykłady
         </p>
         <ul className="mt-2 flex flex-wrap gap-3">
-          {EXAMPLES.map((example, index) => (
-            <li key={example} className={index >= 3 ? "simple-hidden" : undefined}>
+          {EXAMPLES.map((example) => (
+            <li key={example}>
               <button
                 type="button"
                 onClick={() => applyExample(example)}
