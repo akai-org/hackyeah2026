@@ -4,6 +4,9 @@ Zapis samej fiszki to POST /api/ideas (routers/knowledge.py) — zwraca upload_t
 wgrywa tu pliki. Pobieranie załączników jest tylko dla admina (routers/admin.py).
 """
 
+import io
+import logging
+import re
 import secrets
 import uuid
 from pathlib import Path
@@ -16,6 +19,8 @@ from app.config import settings
 from app.database import get_db
 from app.idea_analysis import STAGES, analyze_idea
 from app.models import Idea, IdeaAttachment, IdeaDetails
+
+log = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/ideas", tags=["ideas"])
 
@@ -41,6 +46,46 @@ async def analyze(body: AnalyzeRequest):
     if len(text) < 10:
         return {"data": None, "error": "Opisz pomysł w co najmniej jednym zdaniu"}
     return {"data": {**await analyze_idea(text, body.tags), "stages": STAGES}, "error": None}
+
+
+MAX_PDF_BYTES = 10 * 1024 * 1024
+MAX_PDF_PAGES = 30
+
+
+@router.post("/extract-pdf")
+async def extract_pdf(file: UploadFile = File(...)):
+    """Tekst z PDF-u dla kreatora (bez zapisu pliku). Front wkleja go do opisu i puszcza przez analizę fiszki."""
+    from pypdf import PdfReader
+
+    if Path(file.filename or "").suffix.lower() != ".pdf":
+        return {"data": None, "error": "Wybierz plik PDF"}
+    content = await file.read(MAX_PDF_BYTES + 1)
+    if len(content) > MAX_PDF_BYTES:
+        return {"data": None, "error": "Plik jest większy niż 10 MB"}
+    if not content.startswith(b"%PDF"):
+        return {"data": None, "error": "To nie jest poprawny plik PDF"}
+
+    try:
+        reader = PdfReader(io.BytesIO(content))
+        if reader.is_encrypted:
+            return {"data": None, "error": "PDF jest zabezpieczony hasłem — zapisz go bez hasła i spróbuj ponownie"}
+        pages = reader.pages[:MAX_PDF_PAGES]
+        text = "\n".join(page.extract_text() or "" for page in pages)
+    except Exception:  # pypdf rzuca różne wyjątki przy uszkodzonych plikach
+        log.exception("pdf extraction failed")
+        return {"data": None, "error": "Nie udało się odczytać tego PDF-a — plik może być uszkodzony"}
+
+    # Łączymy słowa przerwane dywizem na końcu linii i zbędne białe znaki.
+    text = re.sub(r"-\n(?=\w)", "", text)
+    text = re.sub(r"[ \t]+", " ", text)
+    text = re.sub(r"\n{3,}", "\n\n", text).strip()
+    if len(text) < 10:
+        return {"data": None, "error": "W tym PDF-ie nie ma tekstu do odczytania (to chyba skan). Wklej opis ręcznie"}
+    truncated = len(text) > MAX_TEXT or len(reader.pages) > MAX_PDF_PAGES
+    return {
+        "data": {"text": text[:MAX_TEXT], "pages": len(reader.pages), "truncated": truncated},
+        "error": None,
+    }
 
 
 def uploads_dir(idea_id: int) -> Path:

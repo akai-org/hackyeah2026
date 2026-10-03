@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useRef, useState } from "react";
-import { CircleAlert, ListChecks, Loader2, PenLine, Sparkles } from "lucide-react";
+import { CircleAlert, FileUp, ListChecks, Loader2, PenLine, Sparkles } from "lucide-react";
 
 import { DictationButton, DictationNotice, DictationStatus, useDictation } from "@/components/dictation";
 import { IdeaCardEditor } from "@/components/idea-card-editor";
@@ -9,8 +9,8 @@ import { IdeaMatches } from "@/components/idea-matches";
 import { IdeaWizard, type WizardAnswers } from "@/components/idea-wizard";
 import { Button } from "@/components/ui/button";
 import { TAG_GROUPS, TAG_LABELS, type Tag } from "@/data/mock";
-import { analyzeIdea, type IdeaDraft } from "@/lib/ideas";
-import { cn } from "@/lib/utils";
+import { analyzeIdea, extractPdfText, type IdeaDraft } from "@/lib/ideas";
+import { cn, plural } from "@/lib/utils";
 
 // Kreator pomysłów: opis swobodny albo asystent krok po kroku → AI rozpisuje pomysł na pola fiszki
 // (POST /api/ideas/analyze) → użytkownik poprawia fiszkę, dodaje pliki i zapisuje ją dla ROPS.
@@ -35,8 +35,10 @@ export function IdeaCreator() {
   const [error, setError] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [card, setCard] = useState<{ draft: IdeaDraft; searchText: string; key: number } | null>(null);
+  const [pdf, setPdf] = useState<{ status: "reading" | "done" | "error"; message: string } | null>(null);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
   const startRef = useRef<HTMLDivElement>(null);
   const dictation = useDictation(setText, () => setError(false));
 
@@ -63,6 +65,27 @@ export function IdeaCreator() {
     setError(false);
     dictation.abort();
     void showCard(analyzeIdea(idea, chosen), idea);
+  }
+
+  // PDF → tekst (backend) → pole opisu → ta sama analiza co przy wpisanym opisie.
+  async function readPdf(file: File | undefined) {
+    if (pdfInputRef.current) pdfInputRef.current.value = "";
+    if (!file) return;
+    dictation.abort();
+    setPdf({ status: "reading", message: `Czytam plik ${file.name}…` });
+    try {
+      const result = await extractPdfText(file);
+      setText(result.text);
+      setError(false);
+      const pages = `${result.pages} ${plural(result.pages, "strona", "strony", "stron")}`;
+      setPdf({
+        status: "done",
+        message: `Wczytano tekst z pliku ${file.name} (${pages})${result.truncated ? " — długi plik, wzięto tylko początek" : ""}. Możesz go poprawić w polu opisu.`,
+      });
+      void showCard(analyzeIdea(result.text, chosen), result.text);
+    } catch (problem) {
+      setPdf({ status: "error", message: (problem as Error).message });
+    }
   }
 
   function finishWizard(answers: WizardAnswers) {
@@ -157,7 +180,39 @@ export function IdeaCreator() {
               error ? "border-alert" : "border-deep",
             )}
           />
-          <DictationButton dictation={dictation} className="mt-3" />
+          <div className="mt-3 flex flex-wrap items-start gap-3">
+            <DictationButton dictation={dictation} />
+            <label
+              className={cn(
+                "inline-flex min-h-12 cursor-pointer items-center gap-2 rounded-ui border-(length:--bw) border-deep bg-surface px-5 py-2 text-base font-bold text-deep hover:bg-sage has-focus-visible:outline-3 has-focus-visible:outline-offset-3 has-focus-visible:outline-deep",
+                (analyzing || pdf?.status === "reading") && "pointer-events-none opacity-60",
+              )}
+            >
+              {pdf?.status === "reading" ? <Loader2 aria-hidden="true" className="size-5 animate-spin" /> : <FileUp aria-hidden="true" className="size-5" />}
+              Wczytaj opis z PDF
+              <input
+                ref={pdfInputRef}
+                type="file"
+                accept=".pdf,application/pdf"
+                disabled={analyzing || pdf?.status === "reading"}
+                aria-describedby={`${ids}-pdf-opis`}
+                onChange={(event) => void readPdf(event.target.files?.[0])}
+                className="sr-only"
+              />
+            </label>
+          </div>
+          <p id={`${ids}-pdf-opis`} className="mt-1 text-sm text-muted">
+            PDF do 10 MB z tekstem (np. opis projektu). Skanu bez warstwy tekstowej nie odczytamy.
+          </p>
+          <p role="status" aria-live="polite" className={cn(pdf && pdf.status !== "error" && "mt-2 text-deep")}>
+            {pdf && pdf.status !== "error" && pdf.message}
+          </p>
+          {pdf?.status === "error" && (
+            <p role="alert" className="mt-2 flex items-start gap-2 rounded-ui border-2 border-alert bg-surface px-4 py-3 font-bold text-alert">
+              <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
+              {pdf.message}
+            </p>
+          )}
           <DictationStatus dictation={dictation} />
           <DictationNotice dictation={dictation} id={dictationHintId} />
           {error && (

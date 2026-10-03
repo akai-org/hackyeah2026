@@ -106,6 +106,9 @@ Middleman zadaje pytania z kontekstem innowacji i gminy.
   `POST /api/grants/fill` { grant_id, idea: tekst | fiszka } → { sections: {id: tekst}, missing[], source: "llm"|"rules" }.
   Front `/wnioski`, przycisk „Napisz wniosek o grant” na fiszce w kreatorze (fiszka przez sessionStorage `hubmi:fiszka`).
   Nowy wspólny komponent `components/ai-disclaimer.tsx` (ostrzeżenie o błędach AI).
+[02:05] [DONE] Kreator: „Wczytaj opis z PDF” → `POST /api/ideas/extract-pdf` (multipart `file`, do 10 MB, 30 stron, pypdf)
+  → { text, pages, truncated }; skan bez tekstu / hasło / uszkodzony plik → `error` z komunikatem. Nowa zależność: `pypdf`
+  w requirements.txt — **zrób `pip install -r requirements.txt`**.
 [01:50] [DONE] Kreator: podobne innowacje pod fiszką na żywo (debounce 800 ms, `POST /api/match`, 3 karty MatchCard).
 [FYI A3] `routers/matchmaking.py`: `MatchRequest.log: bool = True` — przy `log: false` /api/match nie zapisuje search_logs
   ani impressions (podpowiedzi na żywo nie śmiecą trendów). `lib/matchmaking.ts` → `matchInnovations(..., { log })`. Domyślnie bez zmian.

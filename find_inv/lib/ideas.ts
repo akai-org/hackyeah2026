@@ -141,3 +141,26 @@ export async function uploadAttachment(ideaId: number, uploadToken: string, file
     throw new Error(detail ?? `HTTP ${response.status}`);
   }
 }
+
+// ---------- Opis z PDF-u ----------
+
+export const MAX_PDF_BYTES = 10 * 1024 * 1024;
+
+export type PdfText = { text: string; pages: number; truncated: boolean };
+
+/** Tekst z PDF-u (POST /api/ideas/extract-pdf). Rzuca Error z komunikatem do pokazania użytkownikowi. */
+export async function extractPdfText(file: File): Promise<PdfText> {
+  if (!file.name.toLowerCase().endsWith(".pdf")) throw new Error("Wybierz plik PDF.");
+  if (file.size > MAX_PDF_BYTES) throw new Error("Plik jest większy niż 10 MB.");
+  const body = new FormData();
+  body.append("file", file);
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}/api/ideas/extract-pdf`, { method: "POST", body });
+  } catch {
+    throw new Error("Brak połączenia z serwerem. Spróbuj ponownie albo wklej opis ręcznie.");
+  }
+  const json = (await response.json().catch(() => null)) as { data: PdfText | null; error: string | null } | null;
+  if (!response.ok || !json?.data) throw new Error(json?.error ?? "Nie udało się odczytać pliku.");
+  return json.data;
+}
