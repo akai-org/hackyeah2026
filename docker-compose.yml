@@ -1,0 +1,42 @@
+# HubMI — cała aplikacja jednym poleceniem:  docker compose up -d --build
+#
+# Zmienne (w pliku .env obok tego pliku albo w środowisku):
+#   PUBLIC_API_URL   publiczny adres backendu, który zobaczy przeglądarka  (domyślnie http://localhost:8000)
+#   PUBLIC_APP_URL   publiczny adres frontendu — dopuszczany przez CORS     (domyślnie http://localhost:3000)
+#   API_PORT, APP_PORT  porty na hoście                                      (domyślnie 8000 i 3000)
+# Klucz OpenRouter i token admina Zasobnika: find_inv_server/.env (OPENROUTER_API_KEY, ADMIN_TOKEN) — plik nie trafia do gita.
+
+services:
+  backend:
+    build: ./find_inv_server
+    restart: unless-stopped
+    env_file:
+      - path: ./find_inv_server/.env
+        required: false
+    environment:
+      CORS_ORIGINS: '["${PUBLIC_APP_URL:-http://localhost:3000}"]'
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - hubmi-data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  frontend:
+    build:
+      context: ./find_inv
+      args:
+        NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL:-http://localhost:8000}
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  hubmi-data:

@@ -1,8 +1,9 @@
 "use client";
 
 import { useId, useState } from "react";
-import { Archive, CircleAlert, CircleCheck, Loader2, MapPin, RotateCcw, Search } from "lucide-react";
+import { Archive, CircleAlert, CircleCheck, Loader2, MapPin, Pencil, Plus, RotateCcw, Search, Trash2 } from "lucide-react";
 
+import { ConfirmDeleteDialog, InnovationFormDialog, fieldClass } from "@/components/admin/dialogs";
 import { CutoutText } from "@/components/cutout-text";
 import {
   ErrorNote,
@@ -19,11 +20,18 @@ import { Toast, useToast } from "@/components/toast";
 import { Button } from "@/components/ui/button";
 import type { AdminInnovation, InnovationStatus } from "@/data/admin.mock";
 import { TAXONOMY_TAGS } from "@/data/mock";
-import { getInnovations, setInnovationStatus, type InnovationAction, type InnovationFilters } from "@/lib/admin-api";
+import {
+  deleteInnovation,
+  getInnovation,
+  getInnovations,
+  saveInnovation,
+  setInnovationStatus,
+  type AdminInnovationFull,
+  type InnovationAction,
+  type InnovationFilters,
+  type InnovationInput,
+} from "@/lib/admin-api";
 import { cn } from "@/lib/utils";
-
-const fieldClass =
-  "mt-2 min-h-12 w-full rounded-ui border-(length:--bw) border-deep bg-surface px-4 text-base text-ink placeholder:text-muted";
 
 const ACTIONS: Array<{ action: InnovationAction; label: string; done: string; icon: typeof CircleCheck; hideFor: InnovationStatus }> = [
   { action: "approve", label: "Zatwierdź", done: "zatwierdzona", icon: CircleCheck, hideFor: "active" },
@@ -35,10 +43,14 @@ function Actions({
   item,
   busy,
   onAction,
+  onEdit,
+  onDelete,
 }: {
   item: AdminInnovation;
   busy: string | null;
   onAction: (item: AdminInnovation, action: InnovationAction) => void;
+  onEdit: (item: AdminInnovation) => void;
+  onDelete: (item: AdminInnovation) => void;
 }) {
   return (
     <div className="flex flex-wrap gap-2">
@@ -59,9 +71,33 @@ function Actions({
           </Button>
         );
       })}
+      <Button
+        type="button"
+        variant="secondary"
+        disabled={busy !== null}
+        onClick={() => onEdit(item)}
+        className="min-h-12 px-3 text-base"
+      >
+        {busy === `${item.id}:edit` ? <Loader2 aria-hidden="true" className="animate-spin" /> : <Pencil aria-hidden="true" />}
+        Edytuj
+        <span className="sr-only">: {item.title}</span>
+      </Button>
+      <Button
+        type="button"
+        variant="secondary"
+        disabled={busy !== null}
+        onClick={() => onDelete(item)}
+        className="min-h-12 px-3 text-base text-alert"
+      >
+        <Trash2 aria-hidden="true" />
+        Usuń
+        <span className="sr-only">: {item.title}</span>
+      </Button>
     </div>
   );
 }
+
+type Editing = { item: AdminInnovationFull | null } | null;
 
 export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: string }) {
   const ids = useId();
@@ -69,6 +105,8 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
   const [draftSearch, setDraftSearch] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [editing, setEditing] = useState<Editing>(null);
+  const [deleting, setDeleting] = useState<AdminInnovation | null>(null);
   const toast = useToast();
 
   const { data, offline, error, loading, update } = useAdminData(() => getInnovations(filters), JSON.stringify(filters));
@@ -94,15 +132,54 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
     }
   }
 
+  async function openEditor(item: AdminInnovation) {
+    setBusy(`${item.id}:edit`);
+    setActionError(null);
+    try {
+      const { data: full } = await getInnovation(item.id);
+      setEditing({ item: full });
+    } catch (err) {
+      setActionError(errorMessage(err));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function handleSave(input: InnovationInput) {
+    const id = editing?.item?.id;
+    const { data: saved } = await saveInnovation(input, id);
+    update((current) =>
+      id === undefined
+        ? { items: [saved, ...current.items], total: current.total + 1 }
+        : { ...current, items: current.items.map((row) => (row.id === saved.id ? { ...row, ...saved } : row)) },
+    );
+    setEditing(null);
+    const index = saved.embedding === "skipped" ? " Wyszukiwanie semantyczne uwzględni ją po dodaniu klucza OpenRouter." : "";
+    toast.show(`„${saved.title}” ${id === undefined ? "dodana" : "zapisana"}.${index}`);
+  }
+
+  async function handleDelete(item: AdminInnovation) {
+    await deleteInnovation(item.id);
+    update((current) => ({ items: current.items.filter((row) => row.id !== item.id), total: current.total - 1 }));
+    setDeleting(null);
+    toast.show(`„${item.title}” usunięta.`);
+  }
+
   const items = data?.items ?? [];
   const hasFilters = Boolean(filters.status || filters.tags || filters.search);
 
   return (
     <section aria-labelledby={`${ids}-tytul`}>
       <CutoutText as="h1" size="section" text="Innowacje" id={`${ids}-tytul`} />
-      <p className="mt-3 mb-8 max-w-[60ch] text-lg">
-        Zatwierdzaj nowe zgłoszenia, oznaczaj nieaktualne opisy i archiwizuj zakończone projekty.
-      </p>
+      <div className="mt-3 mb-8 flex flex-wrap items-end justify-between gap-4">
+        <p className="max-w-[60ch] text-lg">
+          Dodawaj i edytuj karty, zatwierdzaj nowe zgłoszenia, oznaczaj nieaktualne opisy i archiwizuj zakończone projekty.
+        </p>
+        <Button type="button" onClick={() => setEditing({ item: null })} disabled={busy !== null}>
+          <Plus aria-hidden="true" />
+          Dodaj innowację
+        </Button>
+      </div>
 
       <form
         role="search"
@@ -234,7 +311,7 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap tabular-nums">{formatDate(item.created_at)}</td>
                     <td className="px-4 py-4">
-                      <Actions item={item} busy={busy} onAction={handleAction} />
+                      <Actions item={item} busy={busy} onAction={handleAction} onEdit={openEditor} onDelete={setDeleting} />
                     </td>
                   </tr>
                 ))}
@@ -256,7 +333,7 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
                   {item.where_implemented || "brak danych"} · dodano {formatDate(item.created_at)}
                 </p>
                 <div className="mt-4">
-                  <Actions item={item} busy={busy} onAction={handleAction} />
+                  <Actions item={item} busy={busy} onAction={handleAction} onEdit={openEditor} onDelete={setDeleting} />
                 </div>
               </li>
             ))}
@@ -264,6 +341,16 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
         </>
       )}
 
+      {editing && <InnovationFormDialog item={editing.item} onSave={handleSave} onClose={() => setEditing(null)} />}
+      {deleting && (
+        <ConfirmDeleteDialog
+          title="Usunąć innowację?"
+          what={deleting.title}
+          consequences="Karta zniknie z Biblioteki i wyszukiwania razem z komentarzami i zgłoszeniami testerów. Jeśli chcesz ją tylko ukryć, użyj „Archiwizuj”."
+          onConfirm={() => handleDelete(deleting)}
+          onClose={() => setDeleting(null)}
+        />
+      )}
       <Toast message={toast.message} onClose={toast.hide} />
     </section>
   );

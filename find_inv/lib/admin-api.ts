@@ -77,6 +77,102 @@ export function setInnovationStatus(id: number, action: InnovationAction) {
   );
 }
 
+// ---------- CMS innowacji: dodawanie, edycja, usuwanie ----------
+
+/** Wszystkie pola karty, które edytuje admin (POST/PUT /api/admin/innovations). */
+export type InnovationInput = {
+  title: string;
+  short_desc: string;
+  full_desc: string | null;
+  category: string | null;
+  area: string | null;
+  target_group: string | null;
+  location: string | null;
+  status: InnovationStatus;
+  cost_level: "low" | "medium" | "high" | null;
+  implementation_time_months: number | null;
+  where_implemented: string | null;
+  source_url: string | null;
+  tags: string[];
+};
+
+export type AdminInnovationFull = AdminInnovation &
+  Pick<InnovationInput, "full_desc" | "area" | "implementation_time_months" | "source_url"> & {
+    /** Wektor w ChromaDB: przeliczony, pominięty (brak klucza OpenRouter) albo błąd. */
+    embedding?: "updated" | "skipped" | "failed";
+  };
+
+function localFull(item: AdminInnovation): AdminInnovationFull {
+  return { full_desc: null, area: null, implementation_time_months: null, source_url: null, ...item };
+}
+
+export function getInnovation(id: number) {
+  return call<AdminInnovationFull>(`/api/admin/innovations/${id}`, () =>
+    localFull(local.innovations.find((row) => row.id === id)!),
+  );
+}
+
+export function saveInnovation(input: InnovationInput, id?: number) {
+  return call<AdminInnovationFull>(
+    id === undefined ? "/api/admin/innovations" : `/api/admin/innovations/${id}`,
+    () => {
+      const now = new Date().toISOString().slice(0, 19);
+      const base = {
+        ...input,
+        category: input.category ?? "",
+        target_group: input.target_group ?? "",
+        cost_level: input.cost_level ?? "low",
+        where_implemented: input.where_implemented ?? "",
+      };
+      if (id === undefined) {
+        const row = { ...base, id: Math.max(0, ...local.innovations.map((r) => r.id)) + 1, created_at: now, updated_at: now };
+        local.innovations.unshift(row);
+        return localFull(row);
+      }
+      const row = local.innovations.find((r) => r.id === id)!;
+      Object.assign(row, base, { updated_at: now });
+      return localFull(row);
+    },
+    { method: id === undefined ? "POST" : "PUT", body: JSON.stringify(input) },
+  );
+}
+
+export function deleteInnovation(id: number) {
+  return call<{ id: number; deleted: boolean }>(
+    `/api/admin/innovations/${id}`,
+    () => {
+      local.innovations = local.innovations.filter((row) => row.id !== id);
+      return { id, deleted: true };
+    },
+    { method: "DELETE" },
+  );
+}
+
+// ---------- Moderacja forum ----------
+
+export type AdminForumPost = {
+  id: number;
+  parent_id: number | null;
+  innovation_id: number | null;
+  innovation_title: string | null;
+  author_name: string;
+  badge: string;
+  content: string;
+  created_at: string;
+};
+
+export function getForumPosts() {
+  return call<AdminForumPost[]>("/api/admin/forum", () => []);
+}
+
+export function deleteForumPost(id: number) {
+  return call<{ id: number; deleted: boolean; replies_deleted: number }>(
+    `/api/admin/forum/${id}`,
+    () => ({ id, deleted: true, replies_deleted: 0 }),
+    { method: "DELETE" },
+  );
+}
+
 export function getUsers() {
   return call<AdminUser[]>("/api/admin/users", () => local.users.map((user) => ({ ...user })));
 }
@@ -90,6 +186,18 @@ export function setUserRole(id: number, role: Exclude<Role, "admin">) {
       return { ...user };
     },
     { method: "POST", body: JSON.stringify({ role }) },
+  );
+}
+
+export function deleteUser(id: number) {
+  return call<{ id: number; deleted: boolean }>(
+    `/api/admin/users/${id}`,
+    () => {
+      local.users = local.users.filter((row) => row.id !== id);
+      local.testers = local.testers.filter((row) => row.user_id !== id);
+      return { id, deleted: true };
+    },
+    { method: "DELETE" },
   );
 }
 
@@ -214,4 +322,63 @@ export async function getEngagement(days: number): Promise<Result<Engagement>> {
     return { data: seedEngagement(days), offline: false };
   }
   return { data, offline: false };
+}
+
+// ---------- Zgłoszone potrzeby (Zasobnik wiedzy) ----------
+// Bez backendu nie ma czego pokazać — potrzeby zgłaszają mieszkańcy, więc nie podstawiamy danych demo.
+
+export type ReporterType = "resident" | "ngo" | "institution" | "local_government" | "other";
+
+export type NeedArea = { id: number; slug: string; name: string };
+
+export type ReportedNeed = {
+  id: number;
+  description: string;
+  region: string | null;
+  reporter_type: ReporterType;
+  area: NeedArea | null;
+  created_at: string;
+};
+
+export type CountItem = { key: string; count: number };
+
+export type NeedsTrends = {
+  since: string;
+  until: string;
+  total_needs: number;
+  total_searches: number;
+  areas: Array<{
+    area: NeedArea | null;
+    needs: number;
+    searches: number;
+    needs_last_30d: number;
+    needs_prev_30d: number;
+    change_pct: number | null;
+    trend: "up" | "down" | "flat" | "new";
+    monthly: Array<{ month: string; needs: number; searches: number }>;
+  }>;
+  by_region: CountItem[];
+  by_reporter_type: CountItem[];
+  top_queries: CountItem[];
+  zero_result_queries: CountItem[];
+};
+
+const EMPTY_TRENDS: NeedsTrends = {
+  since: "",
+  until: "",
+  total_needs: 0,
+  total_searches: 0,
+  areas: [],
+  by_region: [],
+  by_reporter_type: [],
+  top_queries: [],
+  zero_result_queries: [],
+};
+
+export async function getReportedNeeds(months: number) {
+  const [needs, trends] = await Promise.all([
+    call<ReportedNeed[]>("/api/admin/needs?limit=200", () => []),
+    call<NeedsTrends>(`/api/admin/needs/trends?months=${months}`, () => EMPTY_TRENDS),
+  ]);
+  return { data: { needs: needs.data, trends: trends.data }, offline: needs.offline || trends.offline };
 }

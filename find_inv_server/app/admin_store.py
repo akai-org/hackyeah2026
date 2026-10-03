@@ -306,6 +306,41 @@ def set_innovation_status(innovation_id: int, status: str) -> dict | None:
         return item
 
 
+async def set_innovation_status_persisted(innovation_id: int, status: str) -> dict | None:
+    """Zmiana statusu w SQLite — tej samej tabeli, z której czytają Biblioteka, wyniki i karta innowacji.
+
+    Zarchiwizowana innowacja znika więc z Biblioteki i z /api/match. Kopię w pamięci aktualizujemy, żeby
+    zapasowy tryb panelu (bez bazy) pokazywał to samo. Zwraca wiersz w kształcie AdminInnovation albo None.
+    """
+    from app.database import get_db
+    from app.models import Innovation
+
+    async with get_db() as db:
+        innovation = await db.get(Innovation, innovation_id)
+        if innovation is None:
+            return None
+        innovation.status = status
+        innovation.updated_at = _now().replace(tzinfo=None)
+        await db.commit()
+        await db.refresh(innovation)
+        row = {
+            "id": innovation.id,
+            "title": innovation.title,
+            "short_desc": innovation.short_desc,
+            "category": innovation.category,
+            "target_group": innovation.target_group,
+            "location": innovation.location,
+            "status": innovation.status,
+            "cost_level": innovation.cost_level,
+            "where_implemented": innovation.where_implemented,
+            "tags": innovation.tags_list(),
+            "created_at": innovation.created_at.isoformat(timespec="seconds") if innovation.created_at else None,
+            "updated_at": innovation.updated_at.isoformat(timespec="seconds") if innovation.updated_at else None,
+        }
+    set_innovation_status(innovation_id, status)
+    return row
+
+
 # ── Użytkownicy i testerzy ───────────────────────────────
 
 
@@ -373,8 +408,13 @@ def log_search(query: str, tags: list[str], results_count: int) -> None:
 
 
 def trends(days: int = 14) -> dict:
+    return summarize_trends(_db["search_logs"], days)
+
+
+def summarize_trends(logs: list[dict], days: int = 14) -> dict:
+    """Top tagi i zapytania, zapytania bez wyników, wyszukiwania per dzień — z logów w kształcie search_logs."""
     first_day = (_now() - timedelta(days=days - 1)).date()
-    logs = [log for log in _db["search_logs"] if log["created_at"][:10] >= first_day.isoformat()]
+    logs = [log for log in logs if log["created_at"][:10] >= first_day.isoformat()]
 
     tag_counts = Counter(tag for log in logs for tag in log["tags"])
     query_counts = Counter(log["query"] for log in logs)

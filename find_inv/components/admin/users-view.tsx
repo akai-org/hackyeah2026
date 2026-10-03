@@ -1,8 +1,9 @@
 "use client";
 
 import { useId, useState } from "react";
-import { Building2, CircleCheck, Loader2, Mail, Sparkles } from "lucide-react";
+import { Building2, CircleCheck, Loader2, Mail, Sparkles, Trash2 } from "lucide-react";
 
+import { ConfirmDeleteDialog } from "@/components/admin/dialogs";
 import { CutoutText } from "@/components/cutout-text";
 import { ErrorNote, LoadingRows, OfflineNote, errorMessage, formatDate, useAdminData } from "@/components/admin/shared";
 import { RoleBadge } from "@/components/role-badge";
@@ -10,7 +11,7 @@ import { Toast, useToast } from "@/components/toast";
 import { Button } from "@/components/ui/button";
 import type { AdminTester, AdminUser } from "@/data/admin.mock";
 import { ROLE_LABELS, type Role } from "@/data/mock";
-import { approveTester, getTesters, getUsers, setUserRole } from "@/lib/admin-api";
+import { approveTester, deleteUser, getTesters, getUsers, setUserRole } from "@/lib/admin-api";
 
 const ASSIGNABLE: Array<Exclude<Role, "admin">> = ["user", "tester", "consultant"];
 
@@ -24,6 +25,7 @@ export function AdminUsersView() {
   const { data, offline, error, loading, update } = useAdminData(loadAll);
   const [busy, setBusy] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<AdminUser | null>(null);
   const toast = useToast();
 
   async function changeRole(user: AdminUser, role: Exclude<Role, "admin">) {
@@ -59,12 +61,22 @@ export function AdminUsersView() {
     }
   }
 
+  async function remove(user: AdminUser) {
+    await deleteUser(user.id);
+    update((current) => ({
+      users: current.users.filter((u) => u.id !== user.id),
+      testers: current.testers.filter((t) => t.user_id !== user.id),
+    }));
+    setDeleting(null);
+    toast.show(`Konto ${user.name} usunięte.`);
+  }
+
   const pending = data?.testers.filter((t) => !t.approved) ?? [];
 
   return (
     <div>
       <CutoutText as="h1" size="section" text="Użytkownicy" />
-      <p className="mt-3 mb-8 max-w-[60ch] text-lg">Zatwierdzaj zgłoszenia testerów i nadawaj role konsultantom.</p>
+      <p className="mt-3 mb-8 max-w-[60ch] text-lg">Zatwierdzaj zgłoszenia testerów, nadawaj role konsultantom i usuwaj konta.</p>
 
       <OfflineNote offline={offline} />
       <ErrorNote message={error ?? actionError} />
@@ -132,13 +144,16 @@ export function AdminUsersView() {
               Wszyscy użytkownicy <span className="tabular-nums">({data.users.length})</span>
             </h2>
             <div className="mt-4 overflow-x-auto border-(length:--bw) border-deep bg-surface">
-              <table className="w-full min-w-[36rem] border-collapse text-left">
+              <table className="w-full min-w-[44rem] border-collapse text-left">
                 <caption className="sr-only">Użytkownicy platformy i ich role</caption>
                 <thead className="bg-sage">
                   <tr>
                     <th scope="col" className="px-4 py-3 font-bold text-deep">Osoba lub instytucja</th>
                     <th scope="col" className="px-4 py-3 font-bold text-deep">Rola</th>
                     <th scope="col" className="px-4 py-3 font-bold text-deep">Zmień rolę</th>
+                    <th scope="col" className="px-4 py-3 font-bold text-deep">
+                      <span className="sr-only">Usuń konto</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -187,6 +202,20 @@ export function AdminUsersView() {
                             </>
                           )}
                         </td>
+                        <td className="px-4 py-3 text-right">
+                          {user.role !== "admin" && (
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              disabled={busy !== null}
+                              onClick={() => setDeleting(user)}
+                              className="px-3 text-alert"
+                            >
+                              <Trash2 aria-hidden="true" />
+                              Usuń<span className="sr-only"> konto: {user.name}</span>
+                            </Button>
+                          )}
+                        </td>
                       </tr>
                     );
                   })}
@@ -197,6 +226,15 @@ export function AdminUsersView() {
         </>
       ) : null}
 
+      {deleting && (
+        <ConfirmDeleteDialog
+          title="Usunąć konto?"
+          what={deleting.name}
+          consequences="Konto zostanie usunięte razem ze zgłoszeniem testera i zgłoszeniami do testów innowacji. Wpisy na forum zostają (są podpisane imieniem)."
+          onConfirm={() => remove(deleting)}
+          onClose={() => setDeleting(null)}
+        />
+      )}
       <Toast message={toast.message} onClose={toast.hide} />
     </div>
   );
