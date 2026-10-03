@@ -1,17 +1,12 @@
 import Link from "next/link";
-
-import { Monstera } from "@/components/monstera";
+import { Smile } from "lucide-react";
 
 const linkClass = "inline-flex min-h-12 items-center font-bold text-leaf underline underline-offset-4 hover:text-deep";
 
 export function SiteFooter() {
   return (
     <footer className="relative overflow-hidden border-t-(length:--bw) border-deep bg-sage">
-      <Monstera
-        size="small"
-        color="mint"
-        className="simple-hidden absolute -bottom-12 -left-16 hidden -rotate-[30deg] xl:block"
-      />
+      <Smile aria-hidden="true" className="simple-hidden absolute -bottom-10 -left-10 size-32 text-leaf opacity-60" />
 
       <div className="relative mx-auto grid max-w-content gap-10 px-4 py-12 sm:px-6 md:grid-cols-3">
         <div>

@@ -86,7 +86,11 @@ export function useDictation(
     }
 
     const RecognitionImpl = getRecognition();
-    if (!RecognitionImpl) return;
+    if (!RecognitionImpl) {
+      setState("error");
+      setMessage("Dyktowanie nie jest obsługiwane w tej przeglądarce. Wpisz tekst ręcznie.");
+      return;
+    }
 
     const recognition = new RecognitionImpl();
     recognition.lang = "pl-PL";
@@ -149,9 +153,8 @@ export function useDictation(
 
 type Dictation = ReturnType<typeof useDictation>;
 
-/** Przycisk „Podyktuj” / „Zatrzymaj”. Nie renderuje się, gdy przeglądarka nie obsługuje dyktowania. */
+/** Przycisk „Podyktuj” / „Zatrzymaj”. Bez wsparcia przeglądarki kliknięcie pokazuje komunikat w DictationStatus. */
 export function DictationButton({ dictation, className }: { dictation: Dictation; className?: string }) {
-  if (!dictation.supported) return null;
   return (
     <Button type="button" variant="secondary" onClick={dictation.toggle} className={className}>
       {dictation.state === "recording" ? (
@@ -176,7 +179,7 @@ export function DictationStatus({ dictation }: { dictation: Dictation }) {
       role="status"
       aria-live="polite"
       className={cn(
-        "flex items-start gap-2 font-bold",
+        "flex items-start gap-2 font-semibold",
         dictation.message && "mt-3",
         dictation.state === "error" ? "text-alert" : "text-deep",
       )}

@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 
-import { CutoutText } from "@/components/cutout-text";
-
-// Strona robocza: sprawdzenie polskich znaków we wszystkich krojach (DESIGN.md 4.1, 4.2 i 14).
+// Strona robocza: sprawdzenie polskich znaków w kroju podstawowym.
 
 export const metadata: Metadata = { title: "Test krojów", robots: { index: false } };
 
@@ -13,11 +11,6 @@ const PANGRAM = "Zażółć gęślą jaźń. Pchnąć w tę łódź jeża lub o�
 const FONTS = [
   { name: "Atkinson Hyperlegible 400", className: "font-body font-normal" },
   { name: "Atkinson Hyperlegible 700", className: "font-body font-bold" },
-  { name: "Abril Fatface 400", className: "font-cut1" },
-  { name: "Alfa Slab One 400", className: "font-cut2" },
-  { name: "Playfair Display 900", className: "font-cut3 font-black" },
-  { name: "Courier Prime 700", className: "font-cut4 font-bold" },
-  { name: "Bitter 700", className: "font-cut5 font-bold" },
 ];
 
 export default function FontTestPage() {
@@ -34,13 +27,6 @@ export default function FontTestPage() {
           </li>
         ))}
       </ul>
-
-      <h2 className="mt-12 text-xl font-bold text-deep">Kolaż z polskimi znakami</h2>
-      <div className="mt-6 space-y-6">
-        <CutoutText as="p" text="Zażółć gęślą jaźń" />
-        <CutoutText as="p" text="Źdźbło łąki, ćma, ńó" />
-        <CutoutText as="p" size="hero" text="Z czym masz kłopot?" />
-      </div>
     </div>
   );
 }

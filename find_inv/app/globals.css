@@ -18,8 +18,6 @@
 
   body {
     background-color: theme(colors.paper);
-    /* Delikatna tekstura papieru (≤ 4%), wyłączana w trybie prostym. */
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.08 0 0 0 0 0.15 0 0 0 0 0.11 0 0 0 0.035 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     color: theme(colors.ink);
     font-size: 1.125rem;
     line-height: 1.6;
@@ -173,6 +171,74 @@ html[data-simple="true"] *::after {
 
 html[data-simple="true"] .simple-hidden {
   display: none !important;
+}
+
+/* Ustawienia dostępności z panelu w nagłówku. */
+html[data-spacing="large"] body {
+  line-height: 2;
+  word-spacing: 0.08em;
+}
+
+html[data-spacing="large"] :where(p, li, dd, dt, label, textarea, input, button, blockquote) {
+  letter-spacing: 0.04em;
+}
+
+html[data-font-size="small"] {
+  font-size: 88.8889%;
+}
+
+html[data-font-size="large"] {
+  font-size: 125%;
+}
+
+html[data-contrast="high"] {
+  --bw: 3px;
+  color-scheme: dark;
+}
+
+html[data-contrast="high"] body,
+html[data-contrast="high"] .bg-paper,
+html[data-contrast="high"] .bg-surface,
+html[data-contrast="high"] .bg-sage,
+html[data-contrast="high"] .bg-mint,
+html[data-contrast="high"] .bg-butter,
+html[data-contrast="high"] .bg-deep,
+html[data-contrast="high"] .bg-leaf {
+  background-color: #000 !important;
+  background-image: none !important;
+}
+
+html[data-contrast="high"] :where(body, body *) {
+  color: #fff500 !important;
+}
+
+html[data-contrast="high"] .bg-deep,
+html[data-contrast="high"] .bg-leaf {
+  background-color: #fff500 !important;
+}
+
+html[data-contrast="high"] .bg-deep.text-surface,
+html[data-contrast="high"] .bg-leaf.text-surface {
+  color: #000 !important;
+}
+
+html[data-contrast="high"] :where(.border-deep, .border-sage, .border-leaf) {
+  border-color: #fff500 !important;
+}
+
+html[data-contrast="high"] input::placeholder,
+html[data-contrast="high"] textarea::placeholder {
+  color: #fff500 !important;
+}
+
+html[data-contrast="high"] :focus-visible {
+  outline: 4px solid #fff500;
+  outline-offset: 4px;
+}
+
+html[data-contrast="high"] ::selection {
+  background-color: #fff500;
+  color: #000;
 }
 
 /* ---------- Ruch w odpowiedzi na akcję (DESIGN.md, sekcja 9) ---------- */
