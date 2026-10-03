@@ -41,6 +41,7 @@ async def admin_innovations(
                 q = q.where(or_(
                     Innovation.title.ilike(f"%{search}%"),
                     Innovation.short_desc.ilike(f"%{search}%"),
+                    Innovation.tags.ilike(f"%{search}%"),
                 ))
             rows = await db.execute(q)
             items = rows.scalars().all()

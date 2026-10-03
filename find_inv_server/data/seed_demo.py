@@ -376,6 +376,90 @@ INNOVATIONS = [
         "tags": json.dumps(["NGO", "inkubator", "samorząd", "rynek_pracy"]),
         "embedding_id": "17",
     },
+    {
+        "title": "Klub Młodych Aktywistów",
+        "short_desc": "Program wolontariatu i liderstwa dla młodzieży 14–25 lat",
+        "full_desc": (
+            "Roczny program łączący szkolenia liderskie, projekty społeczne i mentoring od lokalnych "
+            "przedsiębiorców i NGO. Uczestnicy realizują własne mikro-projekty na rzecz społeczności. "
+            "Poprawia kompetencje miękkie i zapobiega wykluczeniu społecznemu."
+        ),
+        "category": "aktywizacja młodzieży",
+        "area": "edukacja",
+        "target_group": "młodzież 14–25 lat, w tym zagrożona wykluczeniem",
+        "location": None,
+        "status": "active",
+        "cost_level": "low",
+        "implementation_time_months": 2,
+        "testers_count": 7,
+        "where_implemented": "Kraków, Myślenice, Wieliczka",
+        "source_url": "https://rops.krakow.pl",
+        "tags": json.dumps(["młodzież", "wolontariat", "edukacja", "inkubator"]),
+        "embedding_id": "18",
+    },
+    {
+        "title": "Eko-Praca dla Wykluczonych",
+        "short_desc": "Aktywizacja zawodowa przez pracę w ogrodach społecznych i recyklingu",
+        "full_desc": (
+            "Program łączący rehabilitację zawodową z ekologią. Bezrobotni i osoby z grup zagrożonych "
+            "wykluczeniem uczą się zawodów zielonej gospodarki: ogrodnictwa, kompostowania, naprawy. "
+            "Współfinansowany z EFS+."
+        ),
+        "category": "aktywizacja zawodowa",
+        "area": "rynek pracy",
+        "target_group": "osoby długotrwale bezrobotne 25–55 lat",
+        "location": None,
+        "status": "active",
+        "cost_level": "medium",
+        "implementation_time_months": 6,
+        "testers_count": 4,
+        "where_implemented": "Nowy Sącz, Limanowa",
+        "source_url": "https://rops.krakow.pl",
+        "tags": json.dumps(["rynek_pracy", "ubóstwo", "gmina_wiejska", "NGO"]),
+        "embedding_id": "19",
+    },
+    {
+        "title": "Dom Dziennego Pobytu dla Seniorów",
+        "short_desc": "Dzienny ośrodek aktywizacji dla osób starszych wymagających opieki",
+        "full_desc": (
+            "Ośrodek przyjmujący do 30 seniorów dziennie, oferujący opiekę medyczną, rehabilitację, "
+            "zajęcia kulturalne i wyżywienie. Pozwala rodzinom pracować, nie rezygnując z opieki nad "
+            "seniorem. Finansowany przez gminę z dopłatą podopiecznych 5–15 zł/dzień."
+        ),
+        "category": "opieka dzienna",
+        "area": "wsparcie seniorów",
+        "target_group": "seniorzy 70+, w tym z demencją, wymagający stałej opieki",
+        "location": None,
+        "status": "active",
+        "cost_level": "medium",
+        "implementation_time_months": 4,
+        "testers_count": 11,
+        "where_implemented": "Gorlice, Bochnia, Proszowice",
+        "source_url": "https://rops.krakow.pl",
+        "tags": json.dumps(["seniorzy", "DPS", "samorząd", "dostępność"]),
+        "embedding_id": "20",
+    },
+    {
+        "title": "Bezpieczna Rodzina — Centrum Pomocy",
+        "short_desc": "Kompleksowe wsparcie rodzin dotkniętych przemocą domową",
+        "full_desc": (
+            "Centrum łączące schronisko, terapię psychologiczną, pomoc prawną i wsparcie w usamodzielnieniu "
+            "dla ofiar przemocy w rodzinie. Działa całą dobę, przyjmuje z dziećmi. W centrum pracuje "
+            "psycholog, prawnik i asystent rodziny."
+        ),
+        "category": "przemoc domowa",
+        "area": "ochrona rodziny",
+        "target_group": "ofiary przemocy domowej, głównie kobiety z dziećmi",
+        "location": None,
+        "status": "active",
+        "cost_level": "high",
+        "implementation_time_months": 3,
+        "testers_count": 3,
+        "where_implemented": "Kraków, Tarnów",
+        "source_url": "https://rops.krakow.pl",
+        "tags": json.dumps(["rodzina", "dzieci", "zdrowie_psychiczne", "OPS"]),
+        "embedding_id": "21",
+    },
 ]
 
 CHALLENGES = [

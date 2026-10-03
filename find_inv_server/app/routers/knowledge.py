@@ -34,6 +34,8 @@ async def list_innovations(
                     or_(
                         Innovation.title.ilike(f"%{search}%"),
                         Innovation.short_desc.ilike(f"%{search}%"),
+                        Innovation.full_desc.ilike(f"%{search}%"),
+                        Innovation.tags.ilike(f"%{search}%"),
                     )
                 )
             if status:
