@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Send, X } from "lucide-react";
+import { Clipboard, ClipboardCheck, Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiPost, apiStream } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -22,6 +22,7 @@ export function MiddlemanModal({ innovationId, innovationTitle, onClose }: Props
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [plan, setPlan] = useState<Record<string, unknown> | null>(null);
+  const [copied, setCopied] = useState(false);
   const stopRef = useRef<(() => void) | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -124,7 +125,33 @@ export function MiddlemanModal({ innovationId, innovationTitle, onClose }: Props
 
         {plan ? (
           <div className="mt-6 space-y-4 text-sm">
-            <p className="font-bold text-leaf">Plan wdrożenia gotowy</p>
+            <div className="flex items-center justify-between gap-3">
+              <p className="font-bold text-leaf">Plan wdrożenia gotowy</p>
+              <button
+                onClick={() => {
+                  const lines = [
+                    `Plan wdrożenia: ${innovationTitle}`,
+                    "",
+                    plan.staff_needed ? `Personel: ${plan.staff_needed}` : "",
+                    plan.estimated_cost ? `Koszt: ${plan.estimated_cost}` : "",
+                    plan.location_suggestions ? `Lokalizacja: ${plan.location_suggestions}` : "",
+                    plan.timeline ? `Harmonogram: ${plan.timeline}` : "",
+                    plan.funding_hints ? `Finansowanie: ${plan.funding_hints}` : "",
+                    Array.isArray(plan.steps) ? `\nKroki:\n${(plan.steps as string[]).map((s, i) => `${i + 1}. ${s}`).join("\n")}` : "",
+                  ].filter(Boolean).join("\n");
+                  navigator.clipboard?.writeText(lines).then(() => {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }).catch(() => {});
+                }}
+                aria-label="Kopiuj plan do schowka"
+                title="Kopiuj do schowka"
+                className="inline-flex items-center gap-1.5 rounded-ui border-(length:--bw) border-deep bg-paper px-3 py-1.5 text-xs font-bold hover:bg-sage"
+              >
+                {copied ? <ClipboardCheck className="size-3.5 text-leaf" aria-hidden="true" /> : <Clipboard className="size-3.5" aria-hidden="true" />}
+                {copied ? "Skopiowano!" : "Kopiuj"}
+              </button>
+            </div>
             {([
               ["Potrzebny personel", plan.staff_needed],
               ["Szacowany koszt", plan.estimated_cost],
