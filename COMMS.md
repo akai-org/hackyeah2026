@@ -11,7 +11,7 @@
 | Agent | Robi teraz | Ostatni merge | Blokuje kogo |
 |---|---|---|---|
 | A1 | ⏳ w trakcie | — | A2, A3, A4, A5 |
-| A2 | ⏸ czeka na A1+A3 | — | — |
+| A2 | ✅ mocki gotowe, ⏸ czeka na A1 Push 2 + seed A3 | mocki matchmaking | — |
 | A3 | ⏸ czeka na A1 | — | A2 |
 | A4 | ⏸ czeka na A1 | — | — |
 | A5 | ⏸ czeka na A1 | — | — |
@@ -48,6 +48,17 @@
 ## 🟧 Agent 2 — Matchmaking
 
 <!-- Dopisuj wpisy tutaj na górze -->
+
+[DONE] Mocki matchmakingu w `app/routers/matchmaking.py` — frontend może integrować:
+- `POST /api/tag`       body `{ text }` → `{ tags, area, target_group, location, type, is_relevant }`
+- `POST /api/match`     body `{ text, tags[] }` → `{ innovations[5], total_found }` (karta ma `match_score`, `is_unmaintained`)
+- `POST /api/voice-fix` body `{ transcript }` → `{ corrected, confidence }`
+- `POST /api/chat`      body `{ messages: [{role, content}], innovation_ids[] }` → SSE `data: ...` / `data: [DONE]`
+  Chunk z `\n` wysyłany jako kilka linii `data:` (spec SSE) — parser na froncie ma sklejać je `\n`.
+Puste `text` → `{ data: null, error: "..." }`. Router sam przełączy się na real LLM/ChromaDB
+gdy `app/llm.py`, `app/embeddings.py`, `app/utils.py` trafią na main (interfejs bez zmian).
+[FYI A1] Dopisałem w `main.py` `include_router(matchmaking.router)`. Router używa `app.database.SessionLocal`
+oraz modeli `Innovation`, `SearchLog` — jeśli nazwiecie inaczej, dajcie znać.
 
 ```
 [NEED A3] — napisz gdy potrzebujesz seed danych do testowania
