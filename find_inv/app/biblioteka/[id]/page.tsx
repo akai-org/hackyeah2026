@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   CircleHelp,
   Clock,
+  Link2,
   MapPin,
   Tag,
   TrendingUp,
@@ -41,6 +42,7 @@ export default function InnovationDetailPage() {
   const [error, setError] = useState(false);
   const [middlemanOpen, setMiddlemanOpen] = useState(false);
   const [similar, setSimilar] = useState<BackendInnovation[]>([]);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -148,6 +150,20 @@ export default function InnovationDetailPage() {
                   <ExternalLink className="size-4" aria-hidden="true" />
                 </Link>
               )}
+
+              <button
+                onClick={() => {
+                  navigator.clipboard?.writeText(window.location.href).then(() => {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }).catch(() => {});
+                }}
+                className={buttonVariants({ variant: "secondary", className: "gap-2 print:hidden" })}
+                aria-label="Skopiuj link do innowacji"
+              >
+                <Link2 className="size-4" aria-hidden="true" />
+                {copied ? "Skopiowano!" : "Kopiuj link"}
+              </button>
 
               <button
                 onClick={() => window.print()}
