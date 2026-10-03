@@ -185,6 +185,82 @@ async def submit_idea(body: dict):
         return {"data": {"id": None, "message": "Pomysł przyjęty (demo)"}}
 
 
+@router.get("/forum")
+async def list_forum_posts():
+    try:
+        from app.database import get_db
+        from app.models import ForumPost
+        from sqlalchemy import select
+
+        async with get_db() as db:
+            rows = await db.execute(select(ForumPost).order_by(ForumPost.created_at.asc()))
+            posts = rows.scalars().all()
+
+        return {"data": [
+            {
+                "id": p.id,
+                "parentId": p.parent_id,
+                "content": p.content,
+                "authorName": p.author_name,
+                "badge": p.badge,
+                "createdAt": p.created_at.isoformat() if p.created_at else None,
+            }
+            for p in posts
+        ]}
+    except Exception:
+        from data.mock_data import MOCK_FORUM_POSTS
+        return {"data": MOCK_FORUM_POSTS}
+
+
+@router.post("/forum")
+async def create_forum_post(body: dict):
+    content = (body.get("content") or "").strip()
+    if not content or len(content) > 2000:
+        raise HTTPException(status_code=400, detail="Treść jest wymagana (max 2000 znaków)")
+
+    author_name = (body.get("authorName") or "Gość").strip()[:128]
+    badge = body.get("badge", "user")
+    if badge not in {"user", "tester", "admin", "consultant"}:
+        badge = "user"
+    parent_id = body.get("parentId") or None
+
+    try:
+        from app.database import get_db
+        from app.models import ForumPost
+
+        async with get_db() as db:
+            post = ForumPost(
+                parent_id=parent_id,
+                content=content,
+                author_name=author_name,
+                badge=badge,
+            )
+            db.add(post)
+            await db.commit()
+            await db.refresh(post)
+
+        return {"data": {
+            "id": post.id,
+            "parentId": post.parent_id,
+            "content": post.content,
+            "authorName": post.author_name,
+            "badge": post.badge,
+            "createdAt": post.created_at.isoformat() if post.created_at else None,
+        }}
+    except HTTPException:
+        raise
+    except Exception:
+        import time
+        return {"data": {
+            "id": int(time.time() * 1000),
+            "parentId": parent_id,
+            "content": content,
+            "authorName": author_name,
+            "badge": badge,
+            "createdAt": None,
+        }}
+
+
 @router.post("/testerzy")
 async def apply_as_tester(body: dict):
     name = (body.get("name") or "").strip()
