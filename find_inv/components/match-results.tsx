@@ -8,7 +8,6 @@ import { CrisisPanel, isCrisis } from "@/components/crisis-panel";
 import { MatchCard } from "@/components/match-card";
 import { MatchChat } from "@/components/match-chat";
 import { ReportNeed } from "@/components/report-need";
-import { useSimpleMode } from "@/components/simple-mode";
 import { Button, buttonVariants } from "@/components/ui/button";
 import type { InnovationCard } from "@/data/innovations";
 import { TAG_LABELS, TAXONOMY_TAGS, type Tag } from "@/data/mock";
@@ -32,7 +31,6 @@ function sameTags(a: string[], b: string[]) {
 
 export function MatchResults({ query }: { query: string }) {
   const ids = useId();
-  const { simple } = useSimpleMode();
 
   const [crisis, setCrisis] = useState(() => isCrisis(query));
   const [phase, setPhase] = useState<Phase>("tagging");
@@ -134,7 +132,7 @@ export function MatchResults({ query }: { query: string }) {
     );
   }
 
-  const visible = innovations.slice(0, simple ? 3 : 5);
+  const visible = innovations.slice(0, 5);
   const tagsChanged = phase === "done" && !sameTags(tags, appliedTags);
   const remaining = TAXONOMY_TAGS.filter((tag) => !tags.includes(tag));
   const moreHref = `/biblioteka?tags=${encodeURIComponent(tags.join(","))}`;

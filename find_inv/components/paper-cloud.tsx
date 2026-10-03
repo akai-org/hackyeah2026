@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 
 // Dekoracyjna chmurka wycięta z papieru: płaska, jednokolorowa, z tym samym
 // twardym cieniem co kartki (DESIGN.md, sekcja 5). Stoi w miejscu, bez ruchu
-// (sekcja 9). Zawsze aria-hidden, nigdy pod tekstem, znika w trybie prostym.
+// (sekcja 9). Zawsze aria-hidden, nigdy pod tekstem, znika w druku.
 
 // Kształt to suma kół i zaokrąglonego prostokąta. Cień liczy się po całości,
 // bo filter siedzi na <svg>, a nie na poszczególnych kształtach.

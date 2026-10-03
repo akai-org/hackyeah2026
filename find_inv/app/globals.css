@@ -6,14 +6,8 @@
 @layer base {
   :root {
     color-scheme: light;
-    /* Grubość ramek pól, przycisków i kart. W trybie prostym 3 px. */
+    /* Grubość ramek pól, przycisków i kart. */
     --bw: 2px;
-  }
-
-  html[data-simple="true"] {
-    --bw: 3px;
-    /* Bazowe 18 px rośnie do 20 px, cała skala rem razem z nim. */
-    font-size: 111.111%;
   }
 
   body {
@@ -22,15 +16,6 @@
     font-size: 1.125rem;
     line-height: 1.6;
     overflow-x: clip;
-  }
-
-  html[data-simple="true"] body {
-    background-image: none;
-    line-height: 1.7;
-  }
-
-  html[data-simple="true"] :where(p, li, dd, dt, label, textarea, blockquote) {
-    line-height: 1.7;
   }
 
   ::selection {
@@ -60,26 +45,6 @@
     animation: none !important;
     transition: none !important;
     scroll-behavior: auto !important;
-  }
-}
-
-html[data-simple="true"] *,
-html[data-simple="true"] *::before,
-html[data-simple="true"] *::after {
-  animation: none !important;
-  transition: none !important;
-}
-
-/* Tryb prosty: tekst 20 px nie mieści pełnej nawigacji w jednym rzędzie, więc menu mobilne zostaje do 1536 px. */
-@media (min-width: 80rem) and (max-width: 95.99rem) {
-  html[data-simple="true"] .nav-desktop {
-    display: none;
-  }
-  html[data-simple="true"] button.nav-mobile {
-    display: inline-flex;
-  }
-  html[data-simple="true"] div.nav-mobile:not([hidden]) {
-    display: block;
   }
 }
 
@@ -149,14 +114,7 @@ html[data-simple="true"] *::after {
     }
   }
 
-  /* Tryb prosty i ograniczony ruch: zwykły nagłówek Atkinson 700 w kolorze `deep`. */
-  html[data-simple="true"] .cutout-letters {
-    display: none;
-  }
-  html[data-simple="true"] .cutout-plain {
-    display: inline;
-  }
-
+  /* Ograniczony ruch: zwykły nagłówek Atkinson 700 w kolorze `deep`. */
   @media (prefers-reduced-motion: reduce) {
     .cutout-letters {
       display: none;
@@ -165,12 +123,6 @@ html[data-simple="true"] *::after {
       display: inline;
     }
   }
-}
-
-/* ---------- Tryb prosty: co znika ---------- */
-
-html[data-simple="true"] .simple-hidden {
-  display: none !important;
 }
 
 /* Ustawienia dostępności z panelu w nagłówku. */

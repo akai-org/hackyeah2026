@@ -29,7 +29,6 @@ export default function AccessibilityStatementPage() {
           <li>Widoczne obrysy focusa (min. 3 px)</li>
           <li>Odpowiedni kontrast kolorów (min. 4,5:1)</li>
           <li>Etykiety ARIA na wszystkich interaktywnych elementach</li>
-          <li>Tryb prosty — większa czcionka, brak animacji, uproszczony layout</li>
           <li>Wsparcie dla dyktowania (Web Speech API w Chrome/Edge)</li>
           <li>Pominięcie do głównej treści (link „Przejdź do treści")</li>
           <li>Semantyczny HTML z nagłówkami h1-h3 w prawidłowej kolejności</li>
