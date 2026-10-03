@@ -48,6 +48,8 @@ export function PowiatMap() {
   const [entries, setEntries] = useState<GapEntry[]>(MOCK_GAP_INDEX);
   const [selected, setSelected] = useState<string | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
+  // Powiat z fokusem z klawiatury — rysujemy mu osobny dwukolorowy pierścień (widoczny na każdym wypełnieniu).
+  const [focused, setFocused] = useState<string | null>(null);
 
   useEffect(() => {
     getGapIndex().then(setEntries);
@@ -178,13 +180,36 @@ export function PowiatMap() {
                   onClick={() => setSelected(item.id)}
                   onKeyDown={(event) => onKey(event, item.id)}
                   onMouseEnter={() => setHovered(item.id)}
-                  onFocus={() => setHovered(item.id)}
-                  onBlur={() => setHovered(null)}
-                  className="cursor-pointer outline-none transition-[stroke-width,fill] duration-150 focus-visible:stroke-[#F2E2A0] focus-visible:stroke-[6]"
+                  onFocus={(event) => {
+                    setHovered(item.id);
+                    if (event.currentTarget.matches(":focus-visible")) setFocused(item.id);
+                  }}
+                  onBlur={() => {
+                    setHovered(null);
+                    setFocused(null);
+                  }}
+                  className="cursor-pointer outline-none transition-[stroke-width,fill] duration-150"
                 />
               </g>
             );
           })}
+
+          {/* Pierścień fokusu: biały pod spodem + ciemny na wierzchu, kontrast ≥ 3:1 na jasnych i ciemnych powiatach. */}
+          {focused && (
+            <g aria-hidden="true" className="pointer-events-none">
+              {(() => {
+                const item = POWIAT_SHAPES.find((shape) => shape.id === focused);
+                if (!item) return null;
+                const lift = item.id === selectedId ? "translate(-3 -3)" : undefined;
+                return (
+                  <>
+                    <path d={item.d} transform={lift} fill="none" stroke="#FFFFFF" strokeWidth={11} strokeLinejoin="round" />
+                    <path d={item.d} transform={lift} fill="none" stroke="#123229" strokeWidth={5} strokeLinejoin="round" />
+                  </>
+                );
+              })()}
+            </g>
+          )}
 
           {/* Etykiety osobno, żeby żaden kształt ich nie zasłonił. */}
           <g aria-hidden="true" className="pointer-events-none select-none">
