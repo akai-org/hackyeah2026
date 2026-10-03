@@ -107,27 +107,23 @@ export function BackendInnovationCard({ innovation, headingLevel: Heading = "h3"
         </ul>
       )}
 
-      <div className="mt-auto flex gap-3 pt-6">
+      <div className="mt-auto flex flex-wrap gap-3 pt-6">
         {onMiddleman && (
           <button
             onClick={() => onMiddleman(innovation.id, innovation.title)}
-            className={buttonVariants({ variant: "primary", className: "flex-1 gap-2 text-sm" })}
+            className={buttonVariants({ variant: "primary", className: "gap-2 text-sm" })}
           >
             <TrendingUp className="size-4" aria-hidden="true" />
             Jak to wdrożyć?
           </button>
         )}
-        {innovation.source_url && (
-          <Link
-            href={innovation.source_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={buttonVariants({ variant: "secondary", className: "gap-2 text-sm" })}
-          >
-            Źródło
-            <ChevronRight className="size-4" aria-hidden="true" />
-          </Link>
-        )}
+        <Link
+          href={`/biblioteka/${innovation.id}`}
+          className={buttonVariants({ variant: "secondary", className: "gap-2 text-sm" })}
+        >
+          Szczegóły
+          <ChevronRight className="size-4" aria-hidden="true" />
+        </Link>
       </div>
     </article>
   );

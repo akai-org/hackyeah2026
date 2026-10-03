@@ -102,10 +102,18 @@ async def match(body: dict):
             if not all_items:
                 raise ValueError("empty DB")
 
+            text_lower = text.lower()
+            words = [w for w in text_lower.split() if len(w) > 2]
+
             ranked = []
             for innov in all_items:
                 innov_tags = set(innov.tags_list())
-                tag_score = len(innov_tags & query_tags) * 0.1
+                tag_score = len(innov_tags & query_tags) * 0.15
+
+                haystack = f"{innov.title} {innov.short_desc or ''} {innov.full_desc or ''}".lower()
+                text_hits = sum(1 for w in words if w in haystack)
+                text_score = min(text_hits * 0.08, 0.4)
+
                 ranked.append({
                     "id": innov.id, "title": innov.title, "short_desc": innov.short_desc,
                     "full_desc": innov.full_desc, "category": innov.category, "area": innov.area,
@@ -113,7 +121,7 @@ async def match(body: dict):
                     "cost_level": innov.cost_level, "implementation_time_months": innov.implementation_time_months,
                     "testers_count": innov.testers_count, "where_implemented": innov.where_implemented,
                     "source_url": innov.source_url, "tags": innov.tags_list(),
-                    "match_score": round(0.5 + tag_score, 4),
+                    "match_score": round(0.4 + tag_score + text_score, 4),
                     "is_unmaintained": innov.status == "unmaintained",
                 })
 

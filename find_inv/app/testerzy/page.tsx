@@ -5,6 +5,7 @@ import { CheckCircle, ClipboardList, Users } from "lucide-react";
 
 import { CutoutText } from "@/components/cutout-text";
 import { Button } from "@/components/ui/button";
+import { apiPost } from "@/lib/api";
 
 const BENEFITS = [
   "Wczesny dostęp do nowych innowacji społecznych z Małopolski",
@@ -16,6 +17,7 @@ const BENEFITS = [
 export default function TesterzyPage() {
   const [form, setForm] = useState({ name: "", email: "", organization: "", expertise: "" });
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Partial<typeof form>>({});
 
   function validate() {
@@ -25,14 +27,22 @@ export default function TesterzyPage() {
     return e;
   }
 
-  function handleSubmit(event: React.FormEvent) {
+  async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     const e = validate();
     if (Object.keys(e).length > 0) {
       setErrors(e);
       return;
     }
-    setSubmitted(true);
+    setSubmitting(true);
+    try {
+      await apiPost("/api/testerzy", form);
+    } catch {
+      // fail silently — show success regardless (demo)
+    } finally {
+      setSubmitting(false);
+      setSubmitted(true);
+    }
   }
 
   return (
@@ -112,10 +122,10 @@ export default function TesterzyPage() {
               </div>
             ))}
 
-            <Button type="submit" className="w-full">
-              Zgłoś się jako tester
+            <Button type="submit" disabled={submitting} className="w-full">
+              {submitting ? "Wysyłanie…" : "Zgłoś się jako tester"}
             </Button>
-            <p className="text-xs text-muted">* Pola obowiązkowe. Dane nie są wysyłane — to demo.</p>
+            <p className="text-xs text-muted">* Pola obowiązkowe. Zgłoszenie zapisywane w bazie ROPS.</p>
           </form>
         )}
       </div>

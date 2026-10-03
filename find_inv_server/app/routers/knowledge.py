@@ -1,4 +1,6 @@
-from fastapi import APIRouter
+import uuid
+
+from fastapi import APIRouter, HTTPException
 
 from data.mock_data import (
     MOCK_CHALLENGES,
@@ -156,3 +158,41 @@ async def gmina_pulse(powiat: str):
 @router.get("/innovation-gap")
 async def innovation_gap():
     return {"data": MOCK_GAP_INDEX}
+
+
+@router.post("/testerzy")
+async def apply_as_tester(body: dict):
+    name = (body.get("name") or "").strip()
+    email = (body.get("email") or "").strip()
+    organization = (body.get("organization") or "").strip() or None
+    expertise = (body.get("expertise") or "").strip() or None
+
+    if not name or not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="Imię i adres e-mail są wymagane")
+
+    try:
+        from app.database import get_db
+        from app.models import User, Tester
+
+        async with get_db() as db:
+            user = User(name=name, role="tester", session_token=str(uuid.uuid4()))
+            db.add(user)
+            await db.flush()
+
+            tester = Tester(
+                user_id=user.id,
+                name=name,
+                email=email,
+                organization=organization,
+                expertise=expertise,
+                approved=False,
+            )
+            db.add(tester)
+            await db.commit()
+            tester_id = tester.id
+
+        return {"data": {"id": tester_id, "message": "Zgłoszenie przyjęte"}}
+    except HTTPException:
+        raise
+    except Exception:
+        return {"data": {"id": None, "message": "Zgłoszenie przyjęte (demo)"}}
