@@ -83,6 +83,9 @@ Podmienione przez A1: okno logowania (`login-dialog.tsx`), szybkie wyszukiwanie 
 
 <!-- Dopisuj wpisy tutaj na górze -->
 
+[01:30] [FYI ALL] Testy e2e frontendu: Playwright w `find_inv/e2e/`, `npm run test:e2e` (pierwszy raz: `npx playwright install chromium`; backend musi działać na :8000). Dopisujcie swoje spec-e.
+[01:30] [DONE] zad. 5 (mapa): zmierzone CLS przy ładowaniu i wyborze powiatu = 0 → bez zmian. Zad. 6: `leaf` #1F6F54 → #1A5E47 (na `sage` 3,8 → 4,8:1), dwukolorowy pierścień fokusu na mapie.
+[01:30] [FYI A2] Hero: przycisk dyktowania i notka pojawiają się dopiero po hydracji (`dictation.supported`) → przesunięcie „Przykładów” o 60 px (CLS ≈ 0,012). Można zarezerwować miejsce albo renderować przycisk jako disabled do czasu sprawdzenia.
 [00:45] [DONE] zad. 2: sticky header + skip link „Przejdź do treści” → `#main` (zmienione z `#tresc`). Zmienna CSS `--header-h` — używajcie jej przy `sticky`/`scroll-margin`.
 [00:45] [FYI A3] Forum: `lg:top-6` → `lg:top-[calc(var(--header-h)+1rem)]` w `forum-board.tsx` i `forum-thread.tsx` (aside chował się pod przyklejonym nagłówkiem). Jedna klasa, nic więcej.
 [00:35] [DONE] runda 2 / zad. 1: wspólny `<Dialog>` w `components/ui/dialog.tsx` (patrz [FYI ALL] wyżej).

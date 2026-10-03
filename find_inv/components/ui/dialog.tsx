@@ -99,8 +99,13 @@ export function Dialog({
 
   function trapFocus(event: React.KeyboardEvent<HTMLDialogElement>) {
     if (event.key !== "Tab") return;
+    // checkVisibility() pomija też elementy w zwiniętym <details> (offsetParent ich nie wyklucza).
     const focusable = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []).filter(
-      (element) => element.offsetParent !== null || element === document.activeElement,
+      (element) =>
+        element === document.activeElement ||
+        (typeof element.checkVisibility === "function"
+          ? element.checkVisibility({ visibilityProperty: true })
+          : element.offsetParent !== null),
     );
     if (!focusable.length) return;
     const first = focusable[0];
