@@ -378,29 +378,30 @@ function ResultCard({ innovation, query }: { innovation: MatchedInnovation; quer
             <dd className="font-bold">{innovation.where_implemented}</dd>
           </div>
         )}
-        {(innovation.cost_level || innovation.implementation_time_months) && (
-          <div className="flex flex-wrap gap-x-8 gap-y-3">
-            {innovation.cost_level && (
-              <div>
-                <dt className="flex items-center gap-1 text-sm text-muted">
-                  <Coins aria-hidden="true" className="size-4" />
-                  Koszt
-                </dt>
-                <dd className="font-bold">{COST_LABEL[innovation.cost_level]}</dd>
-              </div>
-            )}
-            {innovation.implementation_time_months && (
-              <div>
-                <dt className="flex items-center gap-1 text-sm text-muted">
-                  <Clock aria-hidden="true" className="size-4" />
-                  Czas wdrożenia
-                </dt>
-                <dd className="font-bold">{formatMonths(innovation.implementation_time_months)}</dd>
-              </div>
-            )}
-          </div>
-        )}
       </dl>
+
+      {(innovation.cost_level || innovation.implementation_time_months) && (
+        <dl className="mt-3 flex flex-wrap gap-x-8 gap-y-3">
+          {innovation.cost_level && (
+            <div>
+              <dt className="flex items-center gap-1 text-sm text-muted">
+                <Coins aria-hidden="true" className="size-4" />
+                Koszt
+              </dt>
+              <dd className="font-bold">{COST_LABEL[innovation.cost_level]}</dd>
+            </div>
+          )}
+          {innovation.implementation_time_months && (
+            <div>
+              <dt className="flex items-center gap-1 text-sm text-muted">
+                <Clock aria-hidden="true" className="size-4" />
+                Czas wdrożenia
+              </dt>
+              <dd className="font-bold">{formatMonths(innovation.implementation_time_months)}</dd>
+            </div>
+          )}
+        </dl>
+      )}
 
       {innovation.tags.length > 0 && (
         <ul aria-label="Tagi" className="mt-4 flex flex-wrap gap-2">
@@ -496,9 +497,9 @@ function ProblemChat({ query, innovations }: { query: string; innovations: Match
       </p>
 
       {messages.length > 0 && (
-        <ol role="log" aria-live="polite" aria-busy={streaming} className="mt-6 space-y-4">
+        <div role="log" aria-live="polite" aria-busy={streaming} className="mt-6 space-y-4">
           {messages.map((message, index) => (
-            <li
+            <div
               key={index}
               className={cn(
                 "rounded-ui border-2 px-5 py-4",
@@ -510,9 +511,9 @@ function ProblemChat({ query, innovations }: { query: string; innovations: Match
                 {message.content}
                 {streaming && index === messages.length - 1 && !message.content && "Piszę odpowiedź…"}
               </p>
-            </li>
+            </div>
           ))}
-        </ol>
+        </div>
       )}
 
       {failed && (
