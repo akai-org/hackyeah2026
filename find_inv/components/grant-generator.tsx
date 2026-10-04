@@ -10,6 +10,7 @@ import {
   CircleHelp,
   ExternalLink,
   FileText,
+  FileUp,
   Loader2,
   Printer,
   Send,
@@ -29,7 +30,8 @@ import {
   type Applicant,
   type Grant,
 } from "@/lib/grants";
-import { cn } from "@/lib/utils";
+import { extractPdfText } from "@/lib/ideas";
+import { cn, plural } from "@/lib/utils";
 
 // Generator wniosków: wybór naboru → „Uzupełnij z fiszki” (z kreatora albo z wklejonego opisu) →
 // AI wypełnia sekcje wniosku → użytkownik poprawia pola → druk / PDF → złożenie wniosku.
@@ -112,6 +114,8 @@ export function GrantGenerator() {
   const [submitted, setSubmitted] = useState<{ id: number; at: string } | null>(null);
   const formHeadingRef = useRef<HTMLHeadingElement>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
+  const [pdf, setPdf] = useState<{ status: "reading" | "done" | "error"; message: string } | null>(null);
   const confirmationRef = useRef<HTMLDivElement>(null);
 
   const storedRaw = useSyncExternalStore(noSubscribe, readStoredRaw, () => null);
@@ -137,9 +141,10 @@ export function GrantGenerator() {
   const hasContent = Object.values(values).some((value) => value.trim());
   const locked = Boolean(submitted) || submitting;
 
-  async function fill(source: "card" | "text") {
+  /** `text` — opis podany wprost (np. świeżo odczytany z PDF-u), zanim stan pola zdąży się zaktualizować. */
+  async function fill(source: "card" | "text", text?: string) {
     if (!grant) return;
-    const idea = source === "card" ? storedIdea : ideaText.trim();
+    const idea = source === "card" ? storedIdea : (text ?? ideaText).trim();
     if (!idea || (typeof idea === "string" && idea.length < 10)) {
       setFillError("Wklej opis pomysłu (co najmniej jedno zdanie) albo utwórz fiszkę w Kreatorze.");
       textRef.current?.focus();
@@ -161,6 +166,25 @@ export function GrantGenerator() {
       );
     } finally {
       setFilling(false);
+    }
+  }
+
+  // PDF → tekst (backend, ten sam endpoint co w Kreatorze) → pole opisu → od razu uzupełnienie wniosku.
+  async function readPdf(file: File | undefined) {
+    if (pdfInputRef.current) pdfInputRef.current.value = "";
+    if (!file) return;
+    setPdf({ status: "reading", message: `Czytam plik ${file.name}…` });
+    try {
+      const result = await extractPdfText(file);
+      setIdeaText(result.text);
+      const pages = `${result.pages} ${plural(result.pages, "strona", "strony", "stron")}`;
+      setPdf({
+        status: "done",
+        message: `Wczytano opis z pliku ${file.name} (${pages})${result.truncated ? " — długi plik, wzięto tylko początek" : ""}. Możesz go poprawić w polu opisu.`,
+      });
+      await fill("text", result.text);
+    } catch (problem) {
+      setPdf({ status: "error", message: (problem as Error).message });
     }
   }
 
@@ -288,12 +312,12 @@ export function GrantGenerator() {
                 <Link href="/kreator" className="font-bold text-foreground underline">
                   Utwórz ją w Kreatorze pomysłów
                 </Link>{" "}
-                albo wklej opis poniżej.
+                albo wklej opis poniżej lub wczytaj go z pliku PDF.
               </p>
             )}
 
             <label htmlFor={`${ids}-opis`} className="mt-6 block font-bold text-foreground">
-              {storedIdea ? "albo wklej inny opis pomysłu" : "Opis pomysłu"}
+              {storedIdea ? "albo wklej inny opis pomysłu lub wczytaj go z PDF" : "Opis pomysłu (wpisz albo wczytaj z PDF)"}
             </label>
             <textarea
               ref={textRef}
@@ -304,10 +328,46 @@ export function GrantGenerator() {
               placeholder="Co chcecie zrobić, dla kogo, gdzie, z kim i za ile"
               className={cn(FIELD_CLASS, "mt-2 resize-y")}
             />
-            <Button type="button" variant="secondary" onClick={() => fill("text")} disabled={filling || locked} className="mt-3">
-              {filling ? <Loader2 aria-hidden="true" className="animate-spin" /> : <Sparkles aria-hidden="true" />}
-              Uzupełnij z opisu
-            </Button>
+            <div className="mt-3 flex flex-wrap items-start gap-3">
+              <Button type="button" variant="secondary" onClick={() => fill("text")} disabled={filling || locked}>
+                {filling ? <Loader2 aria-hidden="true" className="animate-spin" /> : <Sparkles aria-hidden="true" />}
+                Uzupełnij z opisu
+              </Button>
+              <label
+                className={cn(
+                  "inline-flex min-h-12 cursor-pointer items-center gap-2 rounded-ui border-(length:--bw) border-border bg-surface px-5 py-2 text-base font-bold text-foreground hover:bg-primary/10 has-focus-visible:outline-3 has-focus-visible:outline-offset-3 has-focus-visible:outline-focus",
+                  (filling || locked || pdf?.status === "reading") && "pointer-events-none opacity-60",
+                )}
+              >
+                {pdf?.status === "reading" ? (
+                  <Loader2 aria-hidden="true" className="size-5 animate-spin" />
+                ) : (
+                  <FileUp aria-hidden="true" className="size-5" />
+                )}
+                Wczytaj opis z PDF
+                <input
+                  ref={pdfInputRef}
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  disabled={filling || locked || pdf?.status === "reading"}
+                  aria-describedby={`${ids}-pdf-opis`}
+                  onChange={(event) => void readPdf(event.target.files?.[0])}
+                  className="sr-only"
+                />
+              </label>
+            </div>
+            <p id={`${ids}-pdf-opis`} className="mt-1 text-sm text-muted">
+              PDF do 10 MB z tekstem (np. opis projektu, notatka). Skanu bez warstwy tekstowej nie odczytamy.
+            </p>
+            <p role="status" aria-live="polite" className={cn(pdf && pdf.status !== "error" && "mt-2 text-foreground")}>
+              {pdf && pdf.status !== "error" && pdf.message}
+            </p>
+            {pdf?.status === "error" && (
+              <p role="alert" className="mt-2 flex items-start gap-2 rounded-ui border-2 border-destructive bg-surface px-4 py-3 font-bold text-destructive">
+                <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
+                {pdf.message}
+              </p>
+            )}
 
             <div role="status" aria-live="polite">
               {filling && <p className="mt-3 font-bold text-foreground">AI pisze sekcje wniosku…</p>}

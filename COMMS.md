@@ -131,6 +131,8 @@ Podmienione przez A1: okno logowania (`login-dialog.tsx`), szybkie wyszukiwanie 
   `POST /api/grants/fill` { grant_id, idea: tekst | fiszka } → { sections: {id: tekst}, missing[], source: "llm"|"rules" }.
   Front `/wnioski`, przycisk „Napisz wniosek o grant” na fiszce w kreatorze (fiszka przez sessionStorage `hubmi:fiszka`).
   Nowy wspólny komponent `components/ai-disclaimer.tsx` (ostrzeżenie o błędach AI).
+[04:00] [DONE] /wnioski: opis pomysłu także z PDF-u („Wczytaj opis z PDF” → `POST /api/ideas/extract-pdf` → pole opisu
+  → od razu uzupełnienie sekcji wniosku). Te same limity i komunikaty co w Kreatorze (10 MB, skan bez tekstu).
 [03:45] [DONE] Generator wniosków — nabory z terminami: wniosek można złożyć TYLKO w okresie naboru.
   `GET /api/grants` zwraca nabory (`opens_at`, `closes_at`, `status: upcoming|open|closed`, `demo`, `template`, `sections`);
   `POST /api/grants/{id}/applications` { applicant_name, applicant_email, organization?, sections } → zapis w SQLite,
