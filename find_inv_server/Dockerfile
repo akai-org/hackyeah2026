@@ -14,7 +14,8 @@ RUN chmod +x docker-entrypoint.sh
 ENV DATABASE_URL=sqlite+aiosqlite:////data/findinv.db \
     ZASOBNIK_DATABASE_URL=sqlite:////data/zasobnik.db \
     CHROMA_PATH=/data/chroma_db \
-    UPLOADS_PATH=/data/uploads
+    UPLOADS_PATH=/data/uploads \
+    DATA_REFRESH_STATE_PATH=/data/data_refresh.json
 VOLUME ["/data"]
 EXPOSE 8000
 

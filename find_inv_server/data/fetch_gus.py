@@ -47,7 +47,7 @@ def fetch_powiaty(var_id: int) -> list[dict]:
     return get(url)["results"]
 
 
-def main() -> None:
+def main(out: Path = OUT) -> None:
     powiaty: dict[str, dict] = {}
     region: dict[str, dict] = {}
     meta: dict[str, dict] = {}
@@ -67,13 +67,13 @@ def main() -> None:
         time.sleep(1.2)
         print(f"{key}: rok {year}, {len(res)} powiatów")
 
-    OUT.write_text(json.dumps({
+    out.write_text(json.dumps({
         "source": "GUS, Bank Danych Lokalnych (bdl.stat.gov.pl)",
         "variables": meta,
         "region": region,
         "powiaty": powiaty,
     }, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"Zapisano {len(powiaty)} powiatów -> {OUT}")
+    print(f"Zapisano {len(powiaty)} powiatów -> {out}")
 
 
 if __name__ == "__main__":

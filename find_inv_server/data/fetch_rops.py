@@ -1,6 +1,7 @@
 """Pobiera surowe strony Biblioteki Innowacji Społecznych ROPS do data/rops_raw/.
 
 Użycie: python -m data.fetch_rops   (cache: istniejące pliki nie są pobierane ponownie)
+Comiesięczne odświeżenie (app/data_refresh.py) pobiera wszystko od nowa do katalogu tymczasowego.
 """
 
 import re
@@ -24,8 +25,8 @@ CATEGORIES = [
 LIB = "/innowacje-spoleczne/biblioteka-innowacji-spolecznych"
 
 
-def get(path: str, name: str) -> str:
-    target = RAW / name
+def get(path: str, name: str, raw: Path = RAW) -> str:
+    target = raw / name
     if target.exists():
         return target.read_text(encoding="utf-8")
     req = urllib.request.Request(BASE + path, headers={"User-Agent": "findinv-hackyeah/1.0"})
@@ -36,15 +37,15 @@ def get(path: str, name: str) -> str:
     return html
 
 
-def main() -> None:
-    RAW.mkdir(exist_ok=True)
+def main(raw: Path = RAW) -> None:
+    raw.mkdir(exist_ok=True)
     for cat in CATEGORIES:
-        html = get(f"{LIB}/{cat}", f"cat__{cat}.html")
+        html = get(f"{LIB}/{cat}", f"cat__{cat}.html", raw)
         links = sorted(set(re.findall(rf'href="({LIB}/{cat},[^"]+)"', html)))
         print(cat, len(links))
         for link in links:
             slug = link.rsplit(",", 1)[1]
-            get(link, f"item__{cat}__{slug}.html")
+            get(link, f"item__{cat}__{slug}.html", raw)
 
 
 if __name__ == "__main__":

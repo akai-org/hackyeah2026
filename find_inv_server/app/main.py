@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 
 import json
@@ -8,6 +9,7 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session
 
+from app import data_refresh
 from app.config import settings
 from app.database import init_db
 from app.i18n import current_lang, normalize_lang
@@ -29,7 +31,11 @@ async def lifespan(app: FastAPI):
     if settings.seed_demo_data:
         with Session(zasobnik_engine) as session:
             seed_zasobnik(session)
+    # Raz w miesiącu scrapujemy od nowa Bibliotekę Innowacji ROPS i wskaźniki GUS (app/data_refresh.py).
+    refresh_task = asyncio.create_task(data_refresh.scheduler()) if settings.data_refresh_enabled else None
     yield
+    if refresh_task:
+        refresh_task.cancel()
 
 
 app = FastAPI(title=settings.app_name, lifespan=lifespan)
