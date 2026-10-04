@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from "react";
 import { Archive, ArrowDown, ExternalLink, FileText, MessageSquareText, MessageSquarePlus, Pause, Play, Video } from "lucide-react";
 
 import { ForumThread } from "@/components/forum-thread";
-import { StarRating } from "@/components/star-rating";
 import { TesterApplyModal } from "@/components/tester-apply-modal";
 import { Toast, useToast } from "@/components/toast";
 import { TestRequestBox } from "@/components/test-request";
@@ -337,8 +336,6 @@ export function InnovationDetail({ id }: { id: number }) {
           </a>
         )}
       </div>
-
-      <StarRating innovationId={id} />
 
       <TestRequestBox innovation={innovation} />
 
