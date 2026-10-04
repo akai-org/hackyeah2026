@@ -11,7 +11,7 @@ type TrackEvent =
   | { type: "card_click"; innovationId: number; meta: { source: CardSource; position?: number } }
   | { type: "cta_click"; innovationId: number; meta: { button: CtaButton } };
 
-const ANON_KEY = "hubmi-anon-id";
+const ANON_KEY = "findinv-anon-id";
 
 /** Losowy identyfikator przeglądarki — do liczenia unikalnych osób, bez danych osobowych. */
 function anonId(): string | null {

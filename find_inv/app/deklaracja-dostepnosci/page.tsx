@@ -35,7 +35,7 @@ type Content = {
 
 const CONTENT: Record<Locale, Content> = {
   pl: {
-    heading: "Deklaracja dostępności HubMI.pl",
+    heading: "Deklaracja dostępności FindInv.pl",
     intro:
       "HubMI.pl to prototyp platformy przygotowany podczas hackathonu HackYeah 2026 w odpowiedzi na wyzwanie Regionalnego Ośrodka Polityki Społecznej w Krakowie. Docelowo serwis ma spełniać wymagania ustawy z dnia 4 kwietnia 2019 r. o dostępności cyfrowej stron internetowych i aplikacji mobilnych podmiotów publicznych. Ta deklaracja opisuje stan prototypu.",
     datesTitle: "Daty",
@@ -81,7 +81,7 @@ const CONTENT: Record<Locale, Content> = {
     back: "Wróć na stronę główną",
   },
   en: {
-    heading: "HubMI.pl accessibility statement",
+    heading: "FindInv.pl accessibility statement",
     intro:
       "HubMI.pl is a prototype platform built during the HackYeah 2026 hackathon in response to a challenge set by the Regional Social Policy Centre in Kraków (ROPS). The service is intended to meet the requirements of the Polish Act of 4 April 2019 on the digital accessibility of websites and mobile applications of public bodies. This statement describes the state of the prototype.",
     datesTitle: "Dates",
@@ -127,7 +127,7 @@ const CONTENT: Record<Locale, Content> = {
     back: "Back to the home page",
   },
   uk: {
-    heading: "Декларація доступності HubMI.pl",
+    heading: "Декларація доступності FindInv.pl",
     intro:
       "HubMI.pl — це прототип платформи, створений під час хакатону HackYeah 2026 у відповідь на завдання Регіонального центру соціальної політики в Кракові (ROPS). Сервіс має відповідати вимогам польського закону від 4 квітня 2019 р. про цифрову доступність вебсайтів і мобільних застосунків публічних органів. Ця декларація описує стан прототипу.",
     datesTitle: "Дати",

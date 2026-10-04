@@ -10,7 +10,7 @@ export async function SiteFooter() {
     <footer className="relative overflow-hidden border-t-(length:--bw) border-border/40">
       <div className="relative mx-auto grid max-w-content gap-10 px-4 py-12 sm:px-6 md:grid-cols-3">
         <div>
-          <p className="text-lg font-bold text-foreground">HubMI</p>
+          <p className="text-lg font-bold text-foreground">FindInv</p>
           <p className="mt-2 max-w-[38ch] text-muted">
             {t.footer.tagline}
           </p>

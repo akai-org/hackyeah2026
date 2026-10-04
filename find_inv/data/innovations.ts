@@ -6,7 +6,7 @@ import type { Tag } from "@/data/mock";
 export type CostLevel = "low" | "medium" | "high";
 export type InnovationStatus = "active" | "archived" | "unmaintained";
 
-/** Kształt InnovationCard z /api/match i /api/innovations (hubmi-backend-plan.md). */
+/** Kształt InnovationCard z /api/match i /api/innovations (findinv-backend-plan.md). */
 export type InnovationCard = {
   id: number;
   title: string;

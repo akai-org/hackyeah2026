@@ -71,7 +71,7 @@ export function fillGrant(grantId: string, idea: IdeaDraft | string) {
   return apiPost<GrantFill>("/api/grants/fill", { grant_id: grantId, idea: payload });
 }
 
-export const STORED_IDEA = "hubmi:fiszka";
+export const STORED_IDEA = "findinv:fiszka";
 
 export function storeIdea(draft: IdeaDraft) {
   try {

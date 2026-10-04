@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { cn } from "@/lib/utils";
 
 const SIZES = {
@@ -10,7 +11,7 @@ type CutoutTextProps = {
   text: string;
   as?: "h1" | "h2" | "h3" | "p" | "span";
   size?: keyof typeof SIZES;
-  /** Jednorazowe „przyklejanie" liter (tylko nagłówek strony głównej). */
+  /** Animacja słów (tylko nagłówek hero). */
   animate?: boolean;
   /**
    * Gdy false, element nie dostaje aria-label, bo nazwę daje rodzic
@@ -30,13 +31,31 @@ export function CutoutText({
   id,
   className,
 }: CutoutTextProps) {
+  const words = text.split(" ");
+
   return (
     <Tag
       id={id}
       aria-label={labelled ? text : undefined}
       className={cn(SIZES[size], "font-bold text-foreground", className)}
     >
-      {text}
+      {animate ? (
+        <span aria-hidden="true">
+          {words.map((word, i) => (
+            <Fragment key={i}>
+              <span
+                className="inline-block hero-word"
+                style={{ "--delay": `${i * 90}ms` } as React.CSSProperties}
+              >
+                {word}
+              </span>
+              {i < words.length - 1 ? " " : ""}
+            </Fragment>
+          ))}
+        </span>
+      ) : (
+        text
+      )}
     </Tag>
   );
 }

@@ -6,7 +6,7 @@ export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000
 
 // Inna nazwa niż cookie "session" z backendu: tamto jest HttpOnly, a na tym samym hoście (localhost, deploy
 // na jednej domenie) przeglądarka nie pozwala go nadpisać z JS — sesja znikała po odświeżeniu strony.
-export const SESSION_COOKIE = "hubmi_session";
+export const SESSION_COOKIE = "findinv_session";
 
 export type ApiResponse<T> = { data: T; error: null } | { data: null; error: string };
 

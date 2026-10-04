@@ -1,5 +1,5 @@
 ---
-name: findinv — HubMI.pl
+name: findinv — FindInv.pl
 description: Małopolska's civic almanac for social innovation discovery
 colors:
   primary: "#345995"
@@ -91,7 +91,7 @@ components:
     padding: "24px"
 ---
 
-# DESIGN.md – HubMI.pl (Małopolski Hub Innowacji Społecznych)
+# DESIGN.md – FindInv.pl (Małopolski Hub Innowacji Społecznych)
 
 Plik dla osób i narzędzi AI budujących interfejs. Czytaj go przed każdym nowym ekranem i trzymaj się go. Jeśli coś w kodzie łamie te zasady, popraw kod, nie plik.
 
@@ -224,7 +224,7 @@ Nagłówki zwykłe: Atkinson 700, kolor `foreground`. **Bez WIELKICH LITER w ety
 
 ```
 ┌────────────────────────────────────────────────────────┐
-│ [logo kolażowe: HubMI]        Biblioteka  Pomoc  [Prosty widok] │
+│ [logo kolażowe: FindInv]        Biblioteka  Pomoc  [Prosty widok] │
 ├────────────────────────────────────────────────────────┤
 │  ┌──────────────────────────┐      🌿 monstera           │
 │  │ Z cz̶y̶m̶ masz kłopot?       │      (ucięta, w tle)       │
@@ -288,7 +288,7 @@ Nie używaj `Math.random()` przy renderowaniu (błąd hydracji w Next.js i liter
 ### 6.5 Gdzie wolno / gdzie nie wolno
 | Wolno | Nie wolno |
 |---|---|
-| logo „HubMI", nagłówek strony głównej | akapity i opisy |
+| logo „FindInv", nagłówek strony głównej | akapity i opisy |
 | tytuły sekcji (krótkie) | etykiety pól i przycisków |
 | puste stany („Nic tu jeszcze nie ma") | komunikaty błędów |
 | nagłówek karty wdrożeniowej (PDF) | tytuły kart innowacji z długimi nazwami |

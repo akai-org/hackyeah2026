@@ -6,7 +6,7 @@ import { getT } from "@/lib/i18n/server";
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT();
   const panel = t.pages.titles.adminPanel;
-  return { title: { default: panel, template: `%s – ${panel} – HubMI` }, robots: { index: false } };
+  return { title: { default: panel, template: `%s – ${panel} – FindInv` }, robots: { index: false } };
 }
 
 export default function AdminLayout({ children }: LayoutProps<"/admin">) {

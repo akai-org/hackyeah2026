@@ -21,9 +21,9 @@ import { Accessibility } from "lucide-react";
 // Ustawienia dostępności. Stan żyje w atrybutach <html data-*>, dzięki temu CSS działa bez czekania na React.
 // Atrybuty ustawia przed hydracją skrypt SIMPLE_MODE_SCRIPT, a provider tylko je czyta i zmienia.
 
-const SPACING_STORAGE_KEY = "hubmi-duze-odstepy";
-const CONTRAST_STORAGE_KEY = "hubmi-wysoki-kontrast";
-const FONT_SIZE_STORAGE_KEY = "hubmi-rozmiar-czcionki";
+const SPACING_STORAGE_KEY = "findinv-duze-odstepy";
+const CONTRAST_STORAGE_KEY = "findinv-wysoki-kontrast";
+const FONT_SIZE_STORAGE_KEY = "findinv-rozmiar-czcionki";
 
 /** Skrypt w <head>: ustawia tryb przed pierwszym malowaniem, żeby strona nie mrugała. */
 export const SIMPLE_MODE_SCRIPT = `try{const r=document.documentElement;const f=localStorage.getItem("${FONT_SIZE_STORAGE_KEY}");if(localStorage.getItem("${SPACING_STORAGE_KEY}")==="1")r.dataset.spacing="large";if(localStorage.getItem("${CONTRAST_STORAGE_KEY}")==="1")r.dataset.contrast="high";if(f==="small"||f==="large")r.dataset.fontSize=f}catch(e){}`;

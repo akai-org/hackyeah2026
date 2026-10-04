@@ -17,7 +17,6 @@ const STEP_ICONS: LucideIcon[] = [MessageSquareText, ScanSearch, ClipboardCheck]
 
 export default async function HomePage() {
   const t = await getT();
-  // Sekcje strony głównej w kolejności, w jakiej leżą na stronie.
   const sections = [
     { id: "jak-to-dziala", label: t.home.sections.how },
     { id: "kondycja-malopolski", label: t.home.sections.condition },
@@ -27,18 +26,19 @@ export default async function HomePage() {
   return (
     <>
       <RevealOnScroll />
+
       {/* Hero */}
-      <section aria-labelledby="hero-tytul" className="relative overflow-hidden bg-dots">
-        <div className="relative mx-auto max-w-content px-4 pt-20 pb-16 sm:px-6 lg:pt-20 lg:pb-24">
-          <div>
-            <CutoutText id="hero-tytul" as="h1" size="hero" text={t.home.heroTitle} animate />
-            <p className="mt-6 max-w-[38ch] text-lg">
-              {t.home.heroLead}
-            </p>
-            <SearchForm />
+      <section aria-labelledby="hero-tytul" className="relative overflow-hidden bg-glow">
+        <div className="absolute inset-x-0 top-0 h-1 bg-primary" aria-hidden="true" />
+        <div className="relative mx-auto max-w-content px-4 pt-24 pb-16 sm:px-6 lg:pt-32 lg:pb-24">
+          <CutoutText id="hero-tytul" as="h1" size="hero" text={t.home.heroTitle} animate />
+          <p className="anim-hero-lead mt-5 max-w-[44ch] text-xl leading-relaxed">
+            {t.home.heroLead}
+          </p>
+          <SearchForm className="anim-hero-form" />
+          <div className="anim-hero-nav">
             <QuickNav sections={sections} label={t.home.quickNav} />
           </div>
-
         </div>
       </section>
 
@@ -47,21 +47,27 @@ export default async function HomePage() {
         id="jak-to-dziala"
         data-reveal
         aria-labelledby="jak-to-dziala-tytul"
-        className="relative"
+        className="relative bg-section-fade"
       >
-        <div className="relative mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
+        <div className="relative mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-24">
           <CutoutText id="jak-to-dziala-tytul" text={t.home.sections.how} />
-          <ol className="mt-10 grid gap-6 md:grid-cols-3">
+          <div className="mt-6 h-px bg-border" aria-hidden="true" />
+          <ol className="mt-12 grid gap-12 md:grid-cols-3 md:gap-10">
             {t.home.steps.map((step, index) => {
               const Icon = STEP_ICONS[index];
               return (
-                <li key={step.title} className="hover-lift border-(length:--bw) border-border bg-surface p-6 shadow-raised">
-                  <div className="flex items-center justify-between gap-4">
-                    <p className="font-medium text-muted">{t.home.step(index + 1)}</p>
-                    <Icon aria-hidden="true" className="size-8 text-primary" strokeWidth={1.75} />
+                <li key={step.title} className="flex flex-col">
+                  <div className="mb-5 flex items-center gap-3">
+                    <span
+                      aria-hidden="true"
+                      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-xl font-bold tabular-nums text-primary-foreground"
+                    >
+                      {index + 1}
+                    </span>
+                    <Icon aria-hidden="true" className="size-6 text-primary" strokeWidth={1.75} />
                   </div>
-                  <h3 className="mt-3 text-xl font-medium text-foreground">{step.title}</h3>
-                  <p className="mt-2">{step.text}</p>
+                  <h3 className="text-xl font-bold text-foreground">{step.title}</h3>
+                  <p className="mt-3 leading-relaxed text-muted">{step.text}</p>
                 </li>
               );
             })}
@@ -69,25 +75,25 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Kondycja Małopolski + Indeks Luki Innowacyjnej (Zasobnik wiedzy) */}
+      {/* Kondycja Małopolski + Indeks Luki Innowacyjnej */}
       <section id="kondycja-malopolski" data-reveal aria-labelledby="kondycja-tytul" className="bg-dots">
-        <div className="mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
+        <div className="mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-24">
           <CutoutText id="kondycja-tytul" text={t.home.sections.condition} />
           <p className="mt-4 max-w-[60ch] text-lg">
             {t.home.conditionLead}
           </p>
           <Link
             href="/wyzwania"
-            className="mt-4 inline-flex min-h-12 items-center gap-2 font-semibold text-primary underline underline-offset-4 hover:text-primary-hover"
+            className="mt-5 inline-flex min-h-12 items-center gap-2 font-semibold text-primary underline underline-offset-4 hover:text-primary-hover"
           >
             {t.home.seeChallenges}
             <ArrowRight aria-hidden="true" className="size-5" />
           </Link>
-          <div className="mt-10">
+          <div className="mt-12">
             <MalopolskaStatsTiles />
           </div>
 
-          <h3 className="mt-14 text-xl font-bold text-foreground">{t.home.mapTitle}</h3>
+          <h3 className="mt-16 text-xl font-bold text-foreground">{t.home.mapTitle}</h3>
           <p className="mt-2 max-w-[60ch]">
             {t.home.mapLead}
           </p>
@@ -95,8 +101,8 @@ export default async function HomePage() {
             <PowiatMap />
           </div>
 
-          <h3 className="mt-14 text-xl font-bold text-foreground">{t.home.gapTitle}</h3>
-          <div className="mt-4">
+          <h3 className="mt-16 text-xl font-bold text-foreground">{t.home.gapTitle}</h3>
+          <div className="mt-5">
             <GapIndex limit={3} />
           </div>
         </div>
@@ -104,7 +110,7 @@ export default async function HomePage() {
 
       {/* Co już działa */}
       <section id="co-juz-dziala" data-reveal aria-labelledby="co-juz-dziala-tytul">
-        <div className="relative mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
+        <div className="relative mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-24">
           <FeaturedInnovations headingId="co-juz-dziala-tytul">
             <p className="mt-4 max-w-[60ch] text-lg">
               {t.home.popularLead}
@@ -116,9 +122,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Artykuł dnia — każdego dnia inna innowacja z katalogu; bez danych sekcja się chowa. */}
+      {/* Artykuł dnia */}
       <InnovationOfTheDaySection id="artykul-dnia" />
-
     </>
   );
 }

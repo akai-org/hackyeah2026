@@ -58,6 +58,7 @@ const COLORS = {
 const SIZES = {
   hero: "w-[34rem]",
   small: "w-36",
+  icon: "w-6",
 } as const;
 
 type MonsteraProps = {

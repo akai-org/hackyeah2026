@@ -16,9 +16,9 @@ import { plPlural, ukPlural } from "./plural";
 
 const plCore = {
   meta: {
-    title: "HubMI – znajdź rozwiązanie, które już działa",
+    title: "FindInv – znajdź rozwiązanie, które już działa",
     description:
-      "Opisz problem społeczny własnymi słowami. HubMI pokaże innowacje społeczne, które już działają w Małopolsce.",
+      "Opisz problem społeczny własnymi słowami. FindInv pokaże innowacje społeczne, które już działają w Małopolsce.",
   },
   lang: {
     label: "Język",
@@ -36,7 +36,7 @@ const plCore = {
   },
   header: {
     skipToContent: "Przejdź do treści",
-    homeLabel: "HubMI, strona główna",
+    homeLabel: "FindInv, strona główna",
     mainNav: "Główna",
     mobileNav: "Główna, wersja mobilna",
     menu: "Menu",
@@ -303,9 +303,9 @@ type CoreMessages = typeof plCore;
 
 const enCore: CoreMessages = {
   meta: {
-    title: "HubMI – find a solution that already works",
+    title: "FindInv – find a solution that already works",
     description:
-      "Describe a social problem in your own words. HubMI will show social innovations that already work in Małopolska.",
+      "Describe a social problem in your own words. FindInv will show social innovations that already work in Małopolska.",
   },
   lang: {
     label: "Language",
@@ -323,7 +323,7 @@ const enCore: CoreMessages = {
   },
   header: {
     skipToContent: "Skip to content",
-    homeLabel: "HubMI, home page",
+    homeLabel: "FindInv, home page",
     mainNav: "Main",
     mobileNav: "Main, mobile version",
     menu: "Menu",
@@ -588,9 +588,9 @@ const enCore: CoreMessages = {
 
 const ukCore: CoreMessages = {
   meta: {
-    title: "HubMI – знайдіть рішення, яке вже працює",
+    title: "FindInv – знайдіть рішення, яке вже працює",
     description:
-      "Опишіть соціальну проблему своїми словами. HubMI покаже соціальні інновації, які вже працюють у Малопольщі.",
+      "Опишіть соціальну проблему своїми словами. FindInv покаже соціальні інновації, які вже працюють у Малопольщі.",
   },
   lang: {
     label: "Мова",
@@ -608,7 +608,7 @@ const ukCore: CoreMessages = {
   },
   header: {
     skipToContent: "Перейти до змісту",
-    homeLabel: "HubMI, головна сторінка",
+    homeLabel: "FindInv, головна сторінка",
     mainNav: "Головна",
     mobileNav: "Головна, мобільна версія",
     menu: "Меню",

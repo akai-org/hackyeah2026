@@ -209,7 +209,7 @@ export const pl = {
   trends: {
     searches: "Wyszukiwania",
     title: "Czego szukają ludzie",
-    lead: "Każde wyszukiwanie w HubMI to sygnał potrzeby. Tak widać, gdzie brakuje rozwiązań w Małopolsce.",
+    lead: "Każde wyszukiwanie w FindInv to sygnał potrzeby. Tak widać, gdzie brakuje rozwiązań w Małopolsce.",
     loading: "Wczytuję trendy",
     byDay: "Wyszukiwania dzień po dniu",
     last14: " w ostatnich 14 dniach",
@@ -547,7 +547,7 @@ export const en: AdminMessages = {
   trends: {
     searches: "Searches",
     title: "What people are looking for",
-    lead: "Every search on HubMI signals a need. This shows where solutions are missing in Małopolska.",
+    lead: "Every search on FindInv signals a need. This shows where solutions are missing in Małopolska.",
     loading: "Loading trends",
     byDay: "Searches day by day",
     last14: " in the last 14 days",
@@ -884,7 +884,7 @@ export const uk: AdminMessages = {
   trends: {
     searches: "Пошуки",
     title: "Що шукають люди",
-    lead: "Кожен пошук у HubMI — сигнал потреби. Так видно, де в Малопольщі бракує рішень.",
+    lead: "Кожен пошук у FindInv — сигнал потреби. Так видно, де в Малопольщі бракує рішень.",
     loading: "Завантажую тренди",
     byDay: "Пошуки день за днем",
     last14: " за останні 14 днів",

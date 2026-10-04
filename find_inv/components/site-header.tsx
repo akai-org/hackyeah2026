@@ -7,6 +7,7 @@ import { Menu, Search, X } from "lucide-react";
 import { AccessibilitySettings } from "@/components/simple-mode";
 import { CutoutText } from "@/components/cutout-text";
 import { Dialog } from "@/components/ui/dialog";
+import { Monstera } from "@/components/monstera";
 import { QuickSearch } from "@/components/quick-search";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { UserMenu } from "@/components/user-menu";
@@ -68,8 +69,9 @@ export function SiteHeader() {
       </a>
 
       <div className="relative mx-auto flex items-center gap-2 px-4 py-3 sm:gap-4 sm:px-6">
-        <Link href="/" aria-label={t.header.homeLabel} className="inline-flex min-h-12 shrink-0 items-center rounded-ui py-1">
-          <CutoutText text="HubMI" as="span" size="logo" labelled={false} />
+        <Link href="/" aria-label={t.header.homeLabel} className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-ui py-1">
+          <Monstera size="icon" color="primary" />
+          <CutoutText text="FindInv" as="span" size="logo" labelled={false} />
         </Link>
 
         <div className="hidden min-w-0 flex-1 justify-center px-4 sm:flex">

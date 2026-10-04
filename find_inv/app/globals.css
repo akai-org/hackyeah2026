@@ -519,6 +519,37 @@ html[data-contrast="high"] :is(.cutout-char, .shadow-cutout) {
   }
 }
 
+/* ---------- Animacje hero (strona główna) ---------- */
+
+@keyframes hero-word-in {
+  from {
+    opacity: 0;
+    translate: 0 28px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-word {
+    animation: hero-word-in 650ms cubic-bezier(0.16, 1, 0.3, 1) var(--delay, 0ms) both;
+  }
+
+  .anim-hero-lead {
+    animation: hero-word-in 700ms cubic-bezier(0.16, 1, 0.3, 1) 450ms both;
+  }
+
+  .anim-hero-form {
+    animation: hero-word-in 700ms cubic-bezier(0.16, 1, 0.3, 1) 600ms both;
+  }
+
+  .anim-hero-nav {
+    animation: hero-word-in 600ms cubic-bezier(0.16, 1, 0.3, 1) 750ms both;
+  }
+}
+
 /* ---------- Wejście sekcji w viewport i hover kart (components/reveal-on-scroll.tsx) ---------- */
 
 @media (prefers-reduced-motion: no-preference) {

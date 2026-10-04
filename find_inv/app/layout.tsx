@@ -14,7 +14,7 @@ import "./globals.css";
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT();
   return {
-    title: { default: t.meta.title, template: "%s – HubMI" },
+    title: { default: t.meta.title, template: "%s – FindInv" },
     description: t.meta.description,
   };
 }
