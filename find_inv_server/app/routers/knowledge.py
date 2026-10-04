@@ -3,7 +3,7 @@ import secrets
 import uuid
 from typing import Literal
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from sqlalchemy import and_, func, or_, select
 
 from app import knowledge_store as store
@@ -333,37 +333,57 @@ async def create_forum_post(body: dict):
 
 
 @router.post("/testerzy")
-async def apply_as_tester(body: dict):
+async def apply_as_tester(body: dict, request: Request):
+    """Zgłoszenie testera (imię + e-mail). Z `innovation_id` od razu tworzy zgłoszenie do testu tej
+    innowacji — trafia do admina w zakładce Testy, gdzie można je przypisać albo odrzucić."""
     name = (body.get("name") or "").strip()
     email = (body.get("email") or "").strip()
     organization = (body.get("organization") or "").strip() or None
     expertise = (body.get("expertise") or "").strip() or None
+    innovation_id = body.get("innovation_id")
 
     if not name or not email or "@" not in email:
         raise HTTPException(status_code=400, detail="Imię i adres e-mail są wymagane")
 
     try:
-        from app.database import get_db
-        from app.models import User, Tester
+        from app.auth import get_current_user
+        from app.models import TestReport, Tester, User
 
+        current = await get_current_user(request)
         async with get_db() as db:
-            user = User(name=name, role="tester", session_token=str(uuid.uuid4()))
-            db.add(user)
-            await db.flush()
+            # Zalogowany zgłasza się na swoje konto (żeby potem widział test w panelu testera).
+            user = await db.get(User, current.id) if current else None
+            if user is None:
+                user = User(name=name, role="tester", session_token=str(uuid.uuid4()))
+                db.add(user)
+                await db.flush()
 
-            tester = Tester(
-                user_id=user.id,
-                name=name,
-                email=email,
-                organization=organization,
-                expertise=expertise,
-                approved=False,
-            )
-            db.add(tester)
+            tester = (await db.execute(select(Tester).where(Tester.user_id == user.id))).scalar_one_or_none()
+            if tester is None:
+                tester = Tester(user_id=user.id, name=name, email=email, approved=False)
+                db.add(tester)
+            tester.name, tester.email = name, email
+            tester.organization = organization or tester.organization
+            tester.expertise = expertise or tester.expertise
+
+            report_id = None
+            if innovation_id is not None:
+                if await db.get(Innovation, innovation_id) is None:
+                    raise HTTPException(status_code=404, detail="Nie ma takiej innowacji")
+                existing = (await db.execute(select(TestReport).where(
+                    TestReport.user_id == user.id, TestReport.innovation_id == innovation_id
+                ))).scalar_one_or_none()
+                if existing is not None:
+                    raise HTTPException(status_code=409, detail="Już zgłosiłeś się do testu tej innowacji")
+                report = TestReport(user_id=user.id, innovation_id=innovation_id)
+                db.add(report)
+                await db.flush()
+                report_id = report.id
+
             await db.commit()
             tester_id = tester.id
 
-        return {"data": {"id": tester_id, "message": "Zgłoszenie przyjęte"}}
+        return {"data": {"id": tester_id, "test_request_id": report_id, "message": "Zgłoszenie przyjęte"}}
     except HTTPException:
         raise
     except Exception:

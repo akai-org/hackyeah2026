@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { CircleAlert, FlaskConical, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { apiPost } from "@/lib/api";
+import { ApiError, apiPost } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n/client";
@@ -31,6 +31,7 @@ export function TesterApplyModal({ innovationId, innovationTitle, onClose, onSuc
   const [email, setEmail] = useState("");
   const [errors, setErrors] = useState<{ name?: boolean; email?: boolean }>({});
   const [submitting, setSubmitting] = useState(false);
+  const [alreadyApplied, setAlreadyApplied] = useState(false);
 
   // Focus trap
   useEffect(() => {
@@ -71,12 +72,20 @@ export function TesterApplyModal({ innovationId, innovationTitle, onClose, onSuc
     e.preventDefault();
     if (!validate()) return;
     setSubmitting(true);
+    setAlreadyApplied(false);
     try {
+      // Z innovation_id backend od razu tworzy zgłoszenie do testu — admin widzi je w zakładce Testy.
       await apiPost<{ id: number | null; message: string }>("/api/testerzy", {
         name: name.trim(),
         email: email.trim(),
+        innovation_id: innovationId,
       });
-    } catch {
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 409) {
+        setAlreadyApplied(true);
+        setSubmitting(false);
+        return;
+      }
       // backend unavailable — silent, still show success (zapisaliśmy dane lokalnie)
     }
     setSubmitting(false);
@@ -162,6 +171,13 @@ export function TesterApplyModal({ innovationId, innovationTitle, onClose, onSuc
               </p>
             )}
           </div>
+
+          {alreadyApplied && (
+            <p role="alert" className="flex items-start gap-2 font-bold text-destructive">
+              <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
+              {t.library.test.already}
+            </p>
+          )}
 
           <div className="flex flex-wrap gap-3 pt-2">
             <Button type="submit" disabled={submitting} className="flex-1">

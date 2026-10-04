@@ -117,6 +117,7 @@ export function InnovationDetail({ id }: { id: number }) {
   const [innovation, setInnovation] = useState<InnovationCard | null | undefined>(undefined);
   const [testerModalOpen, setTesterModalOpen] = useState(false);
   const [testerStatus, setTesterStatus] = useState<"none" | "pending">("none");
+  const [testRefresh, setTestRefresh] = useState(0);
   const toast = useToast();
   const t = useT();
   const d = t.library.detail;
@@ -326,7 +327,7 @@ export function InnovationDetail({ id }: { id: number }) {
         )}
       </div>
 
-      <TestRequestBox innovation={innovation} />
+      <TestRequestBox innovation={innovation} refreshKey={testRefresh} />
 
       {/* Zgłoś się jako tester */}
       <div className="mt-8 rounded-ui border-(length:--bw) border-border bg-secondary/60 p-5 sm:p-6">
@@ -370,6 +371,7 @@ export function InnovationDetail({ id }: { id: number }) {
           onClose={() => setTesterModalOpen(false)}
           onSuccess={() => {
             setTesterStatus("pending");
+            setTestRefresh((n) => n + 1);
             toast.show(d.sentToast);
           }}
         />

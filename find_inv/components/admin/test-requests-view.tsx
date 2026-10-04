@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useId, useState } from "react";
-import { Building2, CircleCheck, Loader2, Mail, X } from "lucide-react";
+import { Building2, CircleCheck, Loader2, Mail, UserMinus, X } from "lucide-react";
 
 import { ErrorNote, LoadingRows, OfflineNote, useAdminData, useAdminI18n } from "@/components/admin/shared";
 import { CutoutText } from "@/components/cutout-text";
@@ -24,7 +24,7 @@ export function AdminTestRequestsView() {
   const ts = a.tests;
   const tp = t.tester;
 
-  async function decide(report: TestReport, decision: "assign" | "reject") {
+  async function decide(report: TestReport, decision: "assign" | "reject" | "unassign") {
     setBusy(`${decision}:${report.id}`);
     setActionError(null);
     try {
@@ -33,7 +33,9 @@ export function AdminTestRequestsView() {
       toast.show(
         decision === "assign"
           ? ts.assigned(report.tester_name ?? "", report.innovation_title ?? "")
-          : ts.rejected(report.tester_name ?? ""),
+          : decision === "unassign"
+            ? ts.unassigned(report.tester_name ?? "", report.innovation_title ?? "")
+            : ts.rejected(report.tester_name ?? ""),
       );
     } catch (err) {
       setActionError(errorMessage(err));
@@ -149,13 +151,14 @@ export function AdminTestRequestsView() {
               <p className="mt-4 text-muted">{ts.noneOngoing}</p>
             ) : (
               <div className="mt-4 overflow-x-auto border-(length:--bw) border-border bg-surface">
-                <table className="w-full min-w-[32rem] border-collapse text-left">
+                <table className="w-full min-w-[40rem] border-collapse text-left">
                   <caption className="sr-only">{ts.ongoingCaption}</caption>
                   <thead className="bg-secondary">
                     <tr>
                       <th scope="col" className="px-4 py-3 font-bold text-foreground">{ts.colTester}</th>
                       <th scope="col" className="px-4 py-3 font-bold text-foreground">{ts.colInnovation}</th>
                       <th scope="col" className="px-4 py-3 font-bold text-foreground">{ts.colStatus}</th>
+                      <th scope="col" className="px-4 py-3 font-bold text-foreground">{ts.colActions}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -167,6 +170,21 @@ export function AdminTestRequestsView() {
                         <td className="px-4 py-3">{innovationLink(report)}</td>
                         <td className="px-4 py-3">
                           <TestStatusBadge status={report.status} />
+                        </td>
+                        <td className="px-4 py-3">
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => decide(report, "unassign")}
+                            disabled={busy !== null}
+                          >
+                            {busy === `unassign:${report.id}` ? (
+                              <Loader2 aria-hidden="true" className="animate-spin" />
+                            ) : (
+                              <UserMinus aria-hidden="true" />
+                            )}
+                            {ts.unassign}<span className="sr-only">: {report.tester_name}</span>
+                          </Button>
                         </td>
                       </tr>
                     ))}
