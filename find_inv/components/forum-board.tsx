@@ -60,6 +60,11 @@ function PostBody({ post }: { post: ForumPost }) {
   );
 }
 
+function threadTitleFallback(content: string) {
+  const clean = content.replace(/\s+/g, " ").trim();
+  return clean.length <= 70 ? clean : `${clean.slice(0, clean.lastIndexOf(" ", 70)).replace(/[,;:.]$/, "")}…`;
+}
+
 export function ForumBoard() {
   const { user, openLogin } = useAuth();
   const { t } = useI18n();
@@ -274,7 +279,8 @@ export function ForumBoard() {
                   )}
                 >
                   <h3 id={`${ids}-wpis-${thread.id}`} tabIndex={-1} className="text-xl font-bold text-foreground">
-                    {thread.title}
+                    {/* Wątek bez tytułu (np. z danych przykładowych) — początek treści, żeby nagłówek nie był pusty. */}
+                    {thread.title?.trim() || threadTitleFallback(thread.content)}
                   </h3>
                   <div className="mt-3">
                     <PostBody post={thread} />

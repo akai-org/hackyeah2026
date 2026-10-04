@@ -197,6 +197,7 @@ function ResultsContent() {
               {innovations.map((inn) => (
                 <li key={inn.id} className="hover-lift flex">
                   <BackendInnovationCard
+                    headingLevel="h2"
                     innovation={inn}
                     onMiddleman={(id, title) => setMiddleman({ id, title })}
                     showScore
