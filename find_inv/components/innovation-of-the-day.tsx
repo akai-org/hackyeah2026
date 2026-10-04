@@ -2,21 +2,22 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowRight, MapPin, Users } from "lucide-react";
+import { ArrowRight, BookOpen } from "lucide-react";
 
-import type { InnovationCard } from "@/data/innovations";
-import { apiFetch } from "@/lib/api";
+import { API_URL } from "@/lib/api";
 import { useT } from "@/lib/i18n/client";
+import { readLocaleCookie } from "@/lib/i18n/config";
 
-// „Artykuł dnia”: jedna innowacja z Biblioteki ROPS, losowana według daty — przez cały dzień ta sama dla
-// wszystkich (nie skacze po odświeżeniu), następnego dnia inna. Archiwalne nie biorą udziału.
+// „Artykuł dnia”: jeden materiał z Edukacji (Zasobnik, GET /api/resources?type=education), losowany według
+// daty — przez cały dzień ten sam dla wszystkich (nie skacze po odświeżeniu), następnego dnia inny.
+// Link prowadzi do materiału na /edukacja (kotwica #material-{id}).
 
 /** Numer dnia w kalendarzu lokalnym — zmienia się o północy, nie o północy UTC. */
 function dayNumber(date: Date) {
   return Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86_400_000);
 }
 
-/** Rozrzuca kolejne dni po katalogu, żeby dzień po dniu nie trafiały sąsiednie karty. */
+/** Rozrzuca kolejne dni po katalogu, żeby dzień po dniu nie trafiały sąsiednie materiały. */
 function pickIndex(day: number, total: number) {
   return (day * 7919) % total;
 }
@@ -27,34 +28,46 @@ function shorten(text: string, max: number) {
   return `${clean.slice(0, clean.lastIndexOf(" ", max)).replace(/[,;:.]$/, "")}…`;
 }
 
-type Page = { innovations?: InnovationCard[]; total?: number };
+type EducationMaterial = {
+  id: number;
+  title: string;
+  summary: string;
+  tags: string[];
+  areas: Array<{ slug: string; name: string }>;
+};
 
-/** Prosto z API, bez zapasowych danych przykładowych — artykuł dnia ma być prawdziwą innowacją albo żadną. */
-function fetchPage(offset: number) {
-  return apiFetch<Page>(`/api/innovations?include_archived=false&limit=1&offset=${offset}`);
+type Page = { items?: EducationMaterial[]; total?: number };
+
+/** /api/resources zwraca { items, total } bez koperty { data } — dlatego zwykły fetch. X-Lang: tłumaczenie. */
+async function fetchPage(offset: number): Promise<Page> {
+  const response = await fetch(`${API_URL}/api/resources?type=education&limit=1&offset=${offset}`, {
+    headers: { "X-Lang": readLocaleCookie() },
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.json();
 }
 
-async function innovationOfTheDay(): Promise<InnovationCard | null> {
-  // Najpierw sama liczba innowacji, potem ta jedna — bez pobierania całego katalogu.
+async function materialOfTheDay(): Promise<EducationMaterial | null> {
+  // Najpierw sama liczba materiałów, potem ten jeden — bez pobierania całej listy.
   const { total } = await fetchPage(0);
   if (!total) return null;
-  const { innovations } = await fetchPage(pickIndex(dayNumber(new Date()), total));
-  return innovations?.[0] ?? null;
+  const { items } = await fetchPage(pickIndex(dayNumber(new Date()), total));
+  return items?.[0] ?? null;
 }
 
-/** Cała sekcja „Artykuł dnia”. Gdy API nie zwróci innowacji — sekcja się chowa (nic nie zmyślamy). */
+/** Cała sekcja „Artykuł dnia”. Gdy API nie zwróci materiału — sekcja się chowa (nic nie zmyślamy). */
 export function InnovationOfTheDaySection({ id }: { id: string }) {
   const t = useT();
   const headingId = `${id}-tytul`;
-  const [innovation, setInnovation] = useState<InnovationCard | null>(null);
+  const [material, setMaterial] = useState<EducationMaterial | null>(null);
   const [state, setState] = useState<"loading" | "ready" | "empty">("loading");
 
   useEffect(() => {
     let active = true;
-    innovationOfTheDay()
+    materialOfTheDay()
       .then((found) => {
         if (!active) return;
-        setInnovation(found);
+        setMaterial(found);
         setState(found ? "ready" : "empty");
       })
       .catch(() => active && setState("empty"));
@@ -70,7 +83,7 @@ export function InnovationOfTheDaySection({ id }: { id: string }) {
       <div className="mx-auto max-w-content px-4 py-10 sm:px-6 lg:py-12">
         <article className="mx-auto max-w-3xl border-(length:--bw) border-border bg-surface p-6 shadow-raised md:p-8">
           <p className="text-sm font-medium text-muted">{t.home.articleOfTheDay}</p>
-          {innovation ? <InnovationBody innovation={innovation} headingId={headingId} /> : <Skeleton headingId={headingId} />}
+          {material ? <MaterialBody material={material} headingId={headingId} /> : <Skeleton headingId={headingId} />}
         </article>
       </div>
     </section>
@@ -91,45 +104,36 @@ function Skeleton({ headingId }: { headingId: string }) {
   );
 }
 
-function InnovationBody({ innovation, headingId }: { innovation: InnovationCard; headingId: string }) {
+function MaterialBody({ material, headingId }: { material: EducationMaterial; headingId: string }) {
   const t = useT();
+  const area = material.areas[0]?.name;
   return (
     <>
-      <h2 id={headingId} className="mt-2 text-2xl font-bold text-foreground">
-        {innovation.title}
+      <h2 id={headingId} className="mt-2 flex items-start gap-3 text-2xl font-bold text-foreground">
+        <BookOpen aria-hidden="true" className="mt-1 size-7 shrink-0 text-primary" strokeWidth={1.75} />
+        {material.title}
       </h2>
-      {innovation.category && (
+      {area && (
         <p className="mt-2 inline-flex rounded-ui border-2 border-border bg-secondary/60 px-3 py-0.5 text-sm font-medium text-foreground">
-          {innovation.category}
+          {area}
         </p>
       )}
-      <p className="mt-3 max-w-[65ch] text-lg">{shorten(innovation.short_desc, 280)}</p>
-      <dl className="mt-4 space-y-2">
-        {innovation.target_group && (
-          <div className="flex items-start gap-2">
-            <dt>
-              <Users aria-hidden="true" className="mt-1 size-5 text-primary" />
-              <span className="sr-only">{t.card.forWhom}</span>
-            </dt>
-            <dd>{shorten(innovation.target_group, 140)}</dd>
-          </div>
-        )}
-        {innovation.where_implemented && (
-          <div className="flex items-start gap-2">
-            <dt>
-              <MapPin aria-hidden="true" className="mt-1 size-5 text-primary" />
-              <span className="sr-only">{t.card.where}</span>
-            </dt>
-            <dd>{shorten(innovation.where_implemented, 140)}</dd>
-          </div>
-        )}
-      </dl>
+      {material.summary && <p className="mt-3 max-w-[65ch] text-lg">{shorten(material.summary, 280)}</p>}
+      {material.tags.length > 0 && (
+        <ul aria-label={t.home.articleTags} className="mt-4 flex flex-wrap gap-2">
+          {material.tags.slice(0, 5).map((tag) => (
+            <li key={tag} className="rounded-full border-2 border-border px-3 py-0.5 text-sm text-foreground">
+              {tag}
+            </li>
+          ))}
+        </ul>
+      )}
       <Link
-        href={`/innowacje/${innovation.id}`}
+        href={`/edukacja#material-${material.id}`}
         className="mt-5 inline-flex min-h-12 items-center gap-2 font-medium text-primary underline underline-offset-4 hover:text-primary-hover"
       >
-        {t.home.readCard}
-        <span className="sr-only">: {innovation.title}</span>
+        {t.home.readMaterial}
+        <span className="sr-only">: {material.title}</span>
         <ArrowRight aria-hidden="true" className="size-5" />
       </Link>
     </>
