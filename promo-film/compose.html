@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
 <meta charset="utf-8">
-<title>HubMI — film</title>
+<title>FindInv — film</title>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=block" rel="stylesheet">
 <style>
   /* Tokeny 1:1 z find_inv/app/globals.css */
@@ -60,6 +60,8 @@
   /* ---------- plansza tytułowa i końcowa ---------- */
   .card { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; opacity: 0; }
   .logo { font-size: 220px; font-weight: 700; line-height: 1; letter-spacing: -0.02em; position: relative; }
+  .logo { display: inline-flex; align-items: center; gap: 30px; }
+  .leaf { width: 190px; height: 184px; color: var(--primary); flex: none; }
   .card .l1 { font-size: 46px; font-weight: 700; margin-top: 34px; }
   .card .l2 { font-size: 40px; margin-top: 14px; }
   .card .l3 { font-size: 24px; color: var(--muted); margin-top: 40px; }
@@ -70,14 +72,14 @@
 
   <!-- plansza tytułowa -->
   <div class="card" id="intro">
-    <div class="logo">HubMI</div>
+    <div class="logo"><svg class="leaf" viewBox="-20 -10 440 430"></svg>FindInv</div>
     <p class="l1">Małopolski Hub Innowacji Społecznych</p>
     <p class="l2">Znajdź rozwiązanie, które <span class="hl">już działa</span>.</p>
   </div>
 
   <!-- okno z nagraniem prawdziwej aplikacji -->
   <div id="win">
-    <div class="bar"><i></i><i></i><i></i><span>HubMI – znajdź rozwiązanie, które już działa</span></div>
+    <div class="bar"><i></i><i></i><i></i><span>FindInv – znajdź rozwiązanie, które już działa</span></div>
     <div id="view"><div id="cam"><img id="imgB" alt=""><img id="imgA" alt=""></div></div>
   </div>
 
@@ -126,10 +128,20 @@
     <p class="sub">AI rozpisze go na fiszkę i&nbsp;szkic wniosku o&nbsp;dofinansowanie.</p>
   </div>
 
-  <div class="cap" id="cAdm">
-    <div class="chapter"><b>06</b>Panel ROPS</div>
-    <h2 class="title">Wiedza dla ROPS</h2>
-    <p class="sub">Zgłoszone potrzeby i&nbsp;wyszukiwania mieszkańców w&nbsp;jednym miejscu.</p>
+  <div class="cap" id="cAdm1">
+    <div class="chapter"><b>06</b>Panel ROPS · Statystyki</div>
+    <h2 class="title">Stan Biblioteki od&nbsp;razu</h2>
+    <p class="sub">Innowacje, użytkownicy, testerzy i&nbsp;wyszukiwania na jednym ekranie.</p>
+  </div>
+  <div class="cap" id="cAdm2">
+    <div class="chapter"><b>06</b>Panel ROPS · Trendy</div>
+    <h2 class="title">Czego szukają ludzie</h2>
+    <p class="sub">Każde wyszukiwanie to sygnał potrzeby. Widać tematy i&nbsp;luki.</p>
+  </div>
+  <div class="cap" id="cAdm3">
+    <div class="chapter"><b>06</b>Panel ROPS · Zaangażowanie</div>
+    <h2 class="title">Od karty do wdrożenia</h2>
+    <p class="sub">Lejek, innowacje na fali i&nbsp;popyt zestawiony z&nbsp;podażą.</p>
   </div>
 
   <div class="cap" id="cA11y">
@@ -145,7 +157,7 @@
 
   <!-- plansza końcowa -->
   <div class="card" id="outro">
-    <div class="logo">HubMI</div>
+    <div class="logo"><svg class="leaf" viewBox="-20 -10 440 430"></svg>FindInv</div>
     <p class="l2" style="margin-top:34px">Znajdź rozwiązanie, które <span class="hl">już działa</span>.</p>
     <p class="l3">Prototyp stworzony podczas HackYeah 2026 · dane: Biblioteka innowacji ROPS Kraków, GUS</p>
   </div>
@@ -153,6 +165,7 @@
 
 <script src="node_modules/gsap/dist/gsap.min.js"></script>
 <script src="edl.js"></script>
+<script src="leaf.js"></script>
 <script src="compose.js"></script>
 </body>
 </html>

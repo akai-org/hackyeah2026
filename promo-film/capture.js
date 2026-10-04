@@ -296,28 +296,45 @@ const SCENES = {
     h.mark("end");
   },
 
-  // Logowanie jako ROPS i panel.
+  // Logowanie jako ROPS i panel: Statystyki -> Trendy -> Zaangażowanie.
   async admin(h) {
     const { page } = h;
     await page.goto(BASE + "/", { waitUntil: "networkidle" });
     await h.wait(800);
     await h.start();
     await h.wait(600);
-    await h.click(page.getByRole("button", { name: "Zaloguj się" }).first(), 800);
+    await h.click(page.locator("header").getByText("Zaloguj się").first(), 800);
     h.mark("login");
     await h.wait(1300);
     await h.click(page.locator("dialog[open]").getByRole("button", { name: /^Admin/ }), 700);
     h.mark("loggedIn");
-    await h.wait(1200);
-    await h.click(page.getByRole("link", { name: "Panel ROPS" }).first(), 700);
+    await h.wait(1000);
+    await h.click(page.locator("header").getByRole("link", { name: "Panel ROPS" }).first(), 700);
     await page.waitForURL(/admin/);
-    h.mark("panel");
-    await h.wait(1400);
-    await h.click(page.getByRole("link", { name: "Potrzeby" }).first(), 700);
-    h.mark("needs");
-    await h.wait(2200);
-    await h.moveTo(page.locator(".recharts-bar-rectangle").first(), 900, 0.7, 0.5).catch(() => {});
-    await h.wait(2500);
+    await page.getByRole("heading", { name: "Stan Biblioteki" }).waitFor();
+    h.mark("stats");
+    await h.wait(900);
+    await h.moveTo(page.getByText("Wyszukiwania").first(), 900);
+    await h.wait(2600);
+    await h.click(page.getByRole("link", { name: "Trendy" }).first(), 700);
+    await page.getByRole("heading", { name: "Czego szukają ludzie" }).waitFor();
+    h.mark("trends");
+    await h.wait(1200);
+    await h.moveTo(page.locator(".recharts-area-curve, .recharts-curve").first(), 900, 0.92, 0.3).catch(() => {});
+    await h.wait(1800);
+    await h.scrollToEl(page.getByRole("heading", { name: "Najczęstsze tematy" }), 90, 1500);
+    h.mark("topics");
+    await h.wait(3000);
+    await h.click(page.getByRole("link", { name: "Zaangażowanie" }).first(), 700);
+    await page.getByRole("heading", { name: "Zaangażowanie", exact: true }).waitFor();
+    h.mark("engage");
+    await h.wait(3000);
+    await h.scrollToEl(page.getByRole("heading", { name: "Od karty do wdrożenia" }), 90, 1500);
+    h.mark("funnel");
+    await h.wait(3000);
+    await h.scrollToEl(page.getByRole("heading", { name: "Popyt a podaż" }), 90, 1700);
+    h.mark("supply");
+    await h.wait(3500);
     h.mark("end");
   },
 

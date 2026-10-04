@@ -33,68 +33,72 @@
   gsap.set("#win", { y: 1000, rotation: 2 });
   tl.to("#win", { y: 0, rotation: 0, duration: 0.85, ease: "power3.out" }, 3.75);
 
-  // ---------- 4–10.5: problem ----------
+  // ---------- 4–9.5: problem ----------
   capIn("#cProb", 4.3);
   gsap.set("#cProb2", { opacity: 0, y: 14 });
-  tl.to("#cProb2", { opacity: 1, y: 0, duration: 0.45 }, 6.9);
+  tl.to("#cProb2", { opacity: 1, y: 0, duration: 0.45 }, 6.4);
   tickers.push((t) => {
     const p = clamp((t - 4.4) / 1.3), e = 1 - Math.pow(1 - p, 3);
     const s = String(Math.round(139 * e));
     if ($("#cnt").textContent !== s) $("#cnt").textContent = s;
   });
-  capOut("#cProb", 10.2);
+  capOut("#cProb", 9.2);
 
-  // ---------- 10.5–23: matchmaking ----------
-  capIn("#cMatch", 10.6);
-  stepOn("#st1", 10.7);
-  zoom(11.05, 14.05, 1.22, 400, 470, 0.55, 0.5);           // wpisywanie opisu
-  stepDone("#st1", 15.1); stepOn("#st2", 15.1);
-  zoom(15.25, 16.3, 1.5, 200, 365, 0.35, 0.45);          // rozpoznane tematy
-  stepDone("#st2", 16.5); stepOn("#st3", 16.5);
-  capOut("#cMatch", 22.75);
+  // ---------- 9.5–21: matchmaking ----------
+  capIn("#cMatch", 9.6);
+  stepOn("#st1", 9.7);
+  zoom(10.0, 12.6, 1.22, 400, 520, 0.5, 0.5);             // wpisywanie opisu
+  stepDone("#st1", 13.3); stepOn("#st2", 13.3);
+  zoom(13.35, 14.3, 1.5, 200, 365, 0.3, 0.4);             // rozpoznane tematy
+  stepDone("#st2", 14.5); stepOn("#st3", 14.5);
+  capOut("#cMatch", 20.75);
 
-  // ---------- 23–33: czat ----------
-  capIn("#cChat", 23.1);
-  zoom(31.0, 32.6, 1.12, 640, 400, 0.6, 0.4);
-  capOut("#cChat", 32.75);
+  // ---------- 21–29.5: czat ----------
+  capIn("#cChat", 21.1);
+  zoom(27.5, 29.3, 1.12, 640, 400, 0.6, 0.2);
+  capOut("#cChat", 29.25);
 
-  // ---------- 33–51: Middleman ----------
-  capIn("#cMM1", 33.1);
-  zoom(36.7, 41.6, 1.2, 230, 600, 0.45, 0.45);           // pytanie asystenta i odpowiedź
-  capOut("#cMM1", 44.45);
-  capIn("#cMM2", 44.8);
-  capOut("#cMM2", 50.75);
+  // ---------- 29.5–44.6: Middleman ----------
+  capIn("#cMM1", 29.6);
+  zoom(32.9, 37.2, 1.2, 230, 600, 0.45, 0.45);            // pytanie asystenta i odpowiedź
+  capOut("#cMM1", 39.25);
+  capIn("#cMM2", 39.6);
+  capOut("#cMM2", 44.35);
 
-  // ---------- 51–59.5: mapa ----------
-  capIn("#cMap", 51.1);
-  capOut("#cMap", 59.25);
+  // ---------- 44.6–51.3: mapa ----------
+  capIn("#cMap", 44.7);
+  capOut("#cMap", 51.05);
 
-  // ---------- 59.5–71: kreator ----------
-  capIn("#cKre", 59.6);
-  capOut("#cKre", 70.75);
+  // ---------- 51.3–61: kreator ----------
+  capIn("#cKre", 51.4);
+  capOut("#cKre", 60.75);
 
-  // ---------- 71–77.5: panel ROPS ----------
-  capIn("#cAdm", 71.1);
-  capOut("#cAdm", 77.25);
+  // ---------- 61–80: panel ROPS ----------
+  capIn("#cAdm1", 61.1);
+  capOut("#cAdm1", 67.0);
+  capIn("#cAdm2", 67.35);
+  capOut("#cAdm2", 72.85);
+  capIn("#cAdm3", 73.2);
+  capOut("#cAdm3", 79.75);
 
-  // ---------- 77.5–85: dostępność ----------
-  capIn("#cA11y", 77.6);
-  [["#tk1", 79.5], ["#tk2", 80.7], ["#tk3", 82.5]].forEach(([s, t]) => {
+  // ---------- 80–86.5: dostępność ----------
+  capIn("#cA11y", 80.1);
+  [["#tk1", 81.4], ["#tk2", 82.9], ["#tk3", 84.4]].forEach(([s, t]) => {
     gsap.set(s, { opacity: 0, x: -20 });
     tl.to(s, { opacity: 1, x: 0, duration: 0.35, ease: "power3.out" }, t);
   });
   gsap.set("#tkNote", { opacity: 0 });
-  tl.to("#tkNote", { opacity: 1, duration: 0.4 }, 83.2);
-  zoom(82.2, 84.7, 1.12, 640, 640, 0.6, 0.3);              // treść strony przy zmianie języka
-  capOut("#cA11y", 84.75);
+  tl.to("#tkNote", { opacity: 1, duration: 0.4 }, 84.9);
+  zoom(84.3, 86.3, 1.12, 640, 640, 0.6, 0.2);
+  capOut("#cA11y", 86.25);
 
-  // ---------- 85–90: plansza końcowa ----------
-  tl.to("#win", { y: 60, opacity: 0, scale: 0.96, duration: 0.5, ease: "power2.in" }, 84.8);
+  // ---------- 86.5–90: plansza końcowa ----------
+  tl.to("#win", { y: 60, opacity: 0, scale: 0.96, duration: 0.5, ease: "power2.in" }, 86.3);
   gsap.set("#outro", { opacity: 0, y: 20 });
-  tl.to("#outro", { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, 85.3);
+  tl.to("#outro", { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 86.75);
   gsap.set("#outro .l2, #outro .l3", { opacity: 0, y: 14 });
-  tl.to("#outro .l2", { opacity: 1, y: 0, duration: 0.5 }, 85.9);
-  tl.to("#outro .l3", { opacity: 1, y: 0, duration: 0.5 }, 86.4);
+  tl.to("#outro .l2", { opacity: 1, y: 0, duration: 0.45 }, 87.2);
+  tl.to("#outro .l3", { opacity: 1, y: 0, duration: 0.45 }, 87.6);
   tl.set({}, {}, DURATION);
 
   // ---------- obraz z nagrania ----------
