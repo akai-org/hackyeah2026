@@ -35,9 +35,7 @@ export default async function HomePage() {
             <p className="mt-6 max-w-[38ch] text-lg">
               {t.home.heroLead}
             </p>
-            <div className="rounded-ui p-4 sm:p-6">
-              <SearchForm className="mt-0" />
-            </div>
+            <SearchForm />
             <QuickNav sections={sections} label={t.home.quickNav} />
           </div>
 

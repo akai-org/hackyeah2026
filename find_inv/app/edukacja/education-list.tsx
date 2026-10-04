@@ -65,7 +65,7 @@ function MdContent({ content }: { content: string }) {
   );
 }
 
-function ResourceLink({ href, icon: Icon, children }: { href: string; icon: typeof ExternalLink; children: string }) {
+function ResourceLink({ href, icon: Icon, children, title }: { href: string; icon: typeof ExternalLink; children: string; title: string }) {
   const newTab = useI18n().t.region.newTab;
   return (
     <a
@@ -76,7 +76,7 @@ function ResourceLink({ href, icon: Icon, children }: { href: string; icon: type
     >
       <Icon aria-hidden="true" className="size-5 shrink-0" />
       {children}
-      <span className="sr-only">{newTab}</span>
+      <span className="sr-only">: {title} ({newTab})</span>
     </a>
   );
 }
@@ -194,7 +194,7 @@ export function EducationList({ initialQuery = "", initialTags = "" }: { initial
           <li key={item.id} className="hover-lift flex">
             <article
               aria-labelledby={`material-${item.id}`}
-              className="flex w-full flex-col border-(length:--bw) border-border bg-surface p-6 shadow-raised"
+              className="flex h-full w-full flex-col border-(length:--bw) border-border bg-surface p-6 shadow-raised"
             >
               <BookOpen aria-hidden="true" className="size-8 text-primary" strokeWidth={1.75} />
               <h3 id={`material-${item.id}`} className="mt-3 text-xl font-bold text-foreground">
@@ -203,11 +203,12 @@ export function EducationList({ initialQuery = "", initialTags = "" }: { initial
               {item.summary && <p className="mt-2">{item.summary}</p>}
 
               {item.content && (
-                <details className="mt-4 rounded-ui border-2 border-border/40">
+                <details className="mt-4 rounded-ui border-(length:--bw) border-border/40">
                   <summary className="flex min-h-12 cursor-pointer items-center px-4 font-semibold text-foreground">
                     {ed.readMore}
+                    <span className="sr-only">: {item.title}</span>
                   </summary>
-                  <div className="grid gap-3 border-t-2 border-border/40 p-4">
+                  <div className="grid gap-3 border-t-(length:--bw) border-border/40 p-4">
                     <MdContent content={item.content} />
                   </div>
                 </details>
@@ -216,12 +217,12 @@ export function EducationList({ initialQuery = "", initialTags = "" }: { initial
               {(item.areas.length > 0 || item.tags.length > 0) && (
                 <ul className="mt-4 flex flex-wrap gap-2" aria-label={ed.topics}>
                   {item.areas.map((entry) => (
-                    <li key={entry.slug} className="rounded-ui border-2 border-border bg-primary/10 px-2 py-0.5 text-sm font-semibold">
+                    <li key={entry.slug} className="rounded-ui border-(length:--bw) border-border bg-primary/10 px-2 py-0.5 text-sm font-semibold">
                       {entry.name}
                     </li>
                   ))}
                   {item.tags.map((tag) => (
-                    <li key={tag} className="rounded-ui bg-background px-2 py-0.5 text-sm">
+                    <li key={tag} className="rounded-ui border-(length:--bw) border-border/40 bg-background px-2 py-0.5 text-sm">
                       #{tag}
                     </li>
                   ))}
@@ -230,17 +231,17 @@ export function EducationList({ initialQuery = "", initialTags = "" }: { initial
 
               <div className="mt-auto flex flex-wrap gap-x-6 pt-4">
                 {item.url && (
-                  <ResourceLink href={item.url} icon={ExternalLink}>
+                  <ResourceLink href={item.url} icon={ExternalLink} title={item.title}>
                     {ed.open}
                   </ResourceLink>
                 )}
                 {item.attachment_url && (
-                  <ResourceLink href={item.attachment_url} icon={FileText}>
+                  <ResourceLink href={item.attachment_url} icon={FileText} title={item.title}>
                     {ed.pdf}
                   </ResourceLink>
                 )}
                 {item.video_url && (
-                  <ResourceLink href={item.video_url} icon={PlayCircle}>
+                  <ResourceLink href={item.video_url} icon={PlayCircle} title={item.title}>
                     {ed.video}
                   </ResourceLink>
                 )}

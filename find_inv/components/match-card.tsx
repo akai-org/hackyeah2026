@@ -82,9 +82,9 @@ export function MatchCard({
       <p className="mt-3 text-lg">{innovation.short_desc}</p>
 
       {shared.length > 0 && (
-        <blockquote className="mt-4 border-l-4 border-secondary pl-4">
+        <blockquote className="mt-4 rounded-ui bg-secondary/50 px-3 py-2.5">
           <p className="text-sm font-bold text-muted">{t.card.whyMatches}</p>
-          <p>{t.card.sharedTopics(shared.map(tagLabel).join(", ").toLowerCase())}</p>
+          <p className="mt-0.5 text-sm">{t.card.sharedTopics(shared.map(tagLabel).join(", ").toLowerCase())}</p>
         </blockquote>
       )}
 

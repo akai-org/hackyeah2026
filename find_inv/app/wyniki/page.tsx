@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, Suspense } from "react";
 import Link from "next/link";
-import { MessageCircle, Send, Tag } from "lucide-react";
+import { CircleAlert, MessageCircle, Send, Tag } from "lucide-react";
 
 import { CutoutText } from "@/components/cutout-text";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -37,6 +37,7 @@ function ResultsContent() {
   const [innovations, setInnovations] = useState<BackendInnovation[]>([]);
   const [tagsLoading, setTagsLoading] = useState(false);
   const [matchLoading, setMatchLoading] = useState(false);
+  const [searchError, setSearchError] = useState(false);
 
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
@@ -58,6 +59,7 @@ function ResultsContent() {
     setMatchLoading(false);
     setInnovations([]);
     setTagResult(null);
+    setSearchError(false);
 
     apiPost<TagResult>("/api/tag", { text: query })
       .then((result) => {
@@ -70,7 +72,7 @@ function ResultsContent() {
         });
       })
       .then((match) => setInnovations(match.innovations))
-      .catch(() => setTagsLoading(false))
+      .catch(() => { setTagsLoading(false); setSearchError(true); })
       .finally(() => setMatchLoading(false));
   }, [query]);
 
@@ -158,7 +160,12 @@ function ResultsContent() {
 
       {/* Innowacje */}
       <section aria-label={t.results.matching} className="mt-10">
-        {matchLoading ? (
+        {searchError ? (
+          <p role="alert" className="flex items-start gap-3 rounded-ui border-(length:--bw) border-destructive bg-surface px-5 py-4 font-bold text-destructive">
+            <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
+            {t.results.searchError ?? "Nie udało się połączyć z serwerem. Sprawdź połączenie i spróbuj ponownie."}
+          </p>
+        ) : matchLoading ? (
           <>
             <p className="text-xl font-bold text-muted" aria-live="polite">{t.results.searching}</p>
             <ul className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -173,7 +180,7 @@ function ResultsContent() {
             <p className="mt-2 text-muted">{t.results.found(innovations.length)}</p>
             <ul className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {innovations.map((inn) => (
-                <li key={inn.id} className="flex">
+                <li key={inn.id} className="hover-lift flex">
                   <BackendInnovationCard
                     innovation={inn}
                     onMiddleman={(id, title) => setMiddleman({ id, title })}
@@ -268,7 +275,7 @@ function ResultsContent() {
               onChange={(e) => setChatInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendChat()}
               placeholder={t.results.chatPlaceholder}
-              className="flex-1 rounded-ui border-(length:--bw) border-border bg-surface px-4 py-2"
+              className="min-h-12 flex-1 rounded-ui border-(length:--bw) border-border bg-surface px-4 py-2"
             />
             <Button onClick={sendChat} disabled={chatLoading || !chatInput.trim()}>
               <Send className="size-4" aria-hidden="true" />

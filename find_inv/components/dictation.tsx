@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
-import { Check, CircleAlert, Info, Loader2, Mic, Square, X } from "lucide-react";
+import { Check, CircleAlert, Loader2, Mic, Square, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { LOCALE_TAGS } from "@/lib/i18n/config";
@@ -306,17 +306,6 @@ export function DictationStatus({ dictation }: { dictation: Dictation }) {
   );
 }
 
-/** Informacja o przetwarzaniu mowy (DESIGN.md, sekcja 8). */
-export function DictationNotice({ dictation, id }: { dictation: Dictation; id?: string }) {
-  const t = useT().dictation;
-  if (!dictation.supported) return null;
-  return (
-    <p id={id} className="mt-3 flex max-w-[65ch] items-start gap-2 text-sm text-muted">
-      <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-      {t.privacy}
-    </p>
-  );
-}
 
 /**
  * Różnica słowo po słowie (najdłuższy wspólny podciąg): słowa poprawionego tekstu z oznaczeniem zmian

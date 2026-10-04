@@ -6,7 +6,6 @@ import { CircleAlert, FileUp, ListChecks, Loader2, PenLine, Sparkles } from "luc
 
 import {
   DictationButton,
-  DictationNotice,
   DictationStatus,
   DictationSuggestion,
   useDictation,
@@ -40,7 +39,6 @@ export function IdeaCreator() {
   const fieldId = `${ids}-pomysl`;
   const errorId = `${ids}-blad`;
   const hintId = `${ids}-podpowiedz`;
-  const dictationHintId = `${ids}-dyktowanie`;
 
   const [mode, setMode] = useState<Mode>("free");
   const [text, setText] = useState("");
@@ -223,9 +221,7 @@ export function IdeaCreator() {
                   if (event.target.value.trim().length >= 10) setError(false);
                 }}
                 aria-invalid={error || undefined}
-                aria-describedby={[hintId, dictation.supported ? dictationHintId : null, error ? errorId : null]
-                  .filter(Boolean)
-                  .join(" ")}
+                aria-describedby={[hintId, error ? errorId : null].filter(Boolean).join(" ")}
                 placeholder={c.describePlaceholder}
                 className={cn(
                   "mt-2 min-h-[160px] w-full resize-y rounded-ui border-(length:--bw) bg-surface p-4 text-base text-foreground placeholder:text-muted",
@@ -267,7 +263,6 @@ export function IdeaCreator() {
               )}
               <DictationStatus dictation={dictation} />
               <DictationSuggestion dictation={dictation} />
-              <DictationNotice dictation={dictation} id={dictationHintId} />
               {error && (
                 <p
                   id={errorId}

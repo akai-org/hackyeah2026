@@ -6,7 +6,6 @@ import { CircleAlert, Search } from "lucide-react";
 
 import {
   DictationButton,
-  DictationNotice,
   DictationStatus,
   DictationSuggestion,
   useDictation,
@@ -27,7 +26,6 @@ export function SearchForm({ initialText = "", showExamples = true, className }:
   const t = useT();
   const ids = useId();
   const fieldId = `${ids}-pole`;
-  const hintId = `${ids}-podpowiedz`;
   const errorId = `${ids}-blad`;
   const examplesId = `${ids}-przyklady`;
 
@@ -63,7 +61,7 @@ export function SearchForm({ initialText = "", showExamples = true, className }:
     textareaRef.current?.focus();
   }
 
-  const describedBy = [supported ? hintId : null, error ? errorId : null].filter(Boolean).join(" ") || undefined;
+  const describedBy = [error ? errorId : null].filter(Boolean).join(" ") || undefined;
 
   return (
     <form
@@ -118,7 +116,6 @@ export function SearchForm({ initialText = "", showExamples = true, className }:
 
       <DictationStatus dictation={dictation} />
       <DictationSuggestion dictation={dictation} />
-      <DictationNotice dictation={dictation} id={hintId} />
 
       {showExamples && (
         <div role="group" aria-labelledby={examplesId} className="mt-6">

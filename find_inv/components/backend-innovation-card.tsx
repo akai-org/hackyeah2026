@@ -39,7 +39,7 @@ export function BackendInnovationCard({ innovation, headingLevel: Heading = "h3"
     <article
       aria-label={innovation.title}
       className={cn(
-        "relative flex flex-col border-(length:--bw) border-border bg-surface p-6 shadow-raised",
+        "relative flex h-full min-w-0 flex-col overflow-hidden border-(length:--bw) border-border bg-surface p-6 shadow-raised",
         innovation.is_unmaintained && "opacity-80",
       )}
     >
@@ -82,9 +82,13 @@ export function BackendInnovationCard({ innovation, headingLevel: Heading = "h3"
           </div>
         )}
         {showScore && innovation.match_score !== undefined && (
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
             <dt className="text-muted shrink-0">{t.card.match}:</dt>
-            <dd className="font-bold">{Math.round(innovation.match_score * 100)}%</dd>
+            <dd>
+              <span className="inline-flex items-center rounded-ui border-(length:--bw) border-primary/40 bg-primary/10 px-2 py-0.5 text-sm font-bold text-primary">
+                {Math.round(innovation.match_score * 100)}%
+              </span>
+            </dd>
           </div>
         )}
       </dl>
@@ -94,7 +98,7 @@ export function BackendInnovationCard({ innovation, headingLevel: Heading = "h3"
           {innovation.tags.slice(0, 4).map((tag) => (
             <li
               key={tag}
-              className="inline-flex items-center gap-1 rounded-full border border-primary bg-background px-2.5 py-0.5 text-sm text-primary"
+              className="inline-flex items-center gap-1 rounded-ui border-(length:--bw) border-primary/40 bg-primary/10 px-2.5 py-0.5 text-sm font-bold text-primary"
             >
               <Tag className="size-3" aria-hidden="true" />
               {t.tags[tag] ?? tag}
