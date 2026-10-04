@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, type ReactNode, type RefObject } from "react"
 import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/client";
 
 // Wspólne okno modalne. Natywny <dialog> + showModal(): reszta strony jest nieaktywna (inert),
 // okno leży w top layer. Do tego jawnie:
@@ -48,12 +49,13 @@ export function Dialog({
   title,
   description,
   initialFocusRef,
-  closeLabel = "Zamknij",
+  closeLabel,
   size = "md",
   icon,
   className,
   children,
 }: DialogProps) {
+  const t = useT();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -191,9 +193,10 @@ export function Dialog({
           <button
             ref={closeRef}
             type="button"
+            data-dialog-close
             onClick={() => onCloseRef.current()}
-            aria-label={closeLabel}
-            title={closeLabel}
+            aria-label={closeLabel ?? t.common.close}
+            title={closeLabel ?? t.common.close}
             className="-mt-2 -mr-2 inline-flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-ui text-foreground hover:bg-primary/10"
           >
             <X aria-hidden="true" className="size-6" />

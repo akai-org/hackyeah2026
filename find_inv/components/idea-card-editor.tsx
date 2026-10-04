@@ -20,7 +20,6 @@ import {
 import { AiDisclaimer } from "@/components/ai-disclaimer";
 import { IdeaMatches } from "@/components/idea-matches";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { TAG_LABELS } from "@/data/mock";
 import { useAuth } from "@/lib/auth";
 import { storeIdea } from "@/lib/grants";
 import {
@@ -34,12 +33,14 @@ import {
   type IdeaDraft,
 } from "@/lib/ideas";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/client";
 
 function Missing() {
+  const label = useT().creator.card.missing;
   return (
     <span className="inline-flex items-center gap-1.5 text-muted">
       <CircleHelp aria-hidden="true" className="size-5 shrink-0" />
-      do uzupełnienia
+      {label}
     </span>
   );
 }
@@ -102,6 +103,8 @@ type IdeaCardEditorProps = {
 
 export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorProps) {
   const ids = useId();
+  const t = useT();
+  const c = t.creator.card;
   const { user } = useAuth();
   const [draft, setDraft] = useState<IdeaDraft>(initial);
   const [files, setFiles] = useState<File[]>([]);
@@ -129,8 +132,8 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
     const next = [...files];
     for (const file of Array.from(list)) {
       const problem = fileProblem(file);
-      if (problem) errors.push(`${file.name}: ${problem}`);
-      else if (next.length >= MAX_FILES) errors.push(`${file.name}: można dodać najwyżej ${MAX_FILES} plików`);
+      if (problem) errors.push(`${file.name}: ${c.fileErrors[problem]}`);
+      else if (next.length >= MAX_FILES) errors.push(`${file.name}: ${c.tooMany(MAX_FILES)}`);
       else if (!next.some((f) => f.name === file.name && f.size === file.size)) next.push(file);
     }
     setFiles(next);
@@ -186,19 +189,19 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
         {/* Kawałek taśmy przyklejający fiszkę do tablicy (DESIGN.md 8, karta innowacji). */}
         <span aria-hidden="true" className="simple-hidden absolute -top-3 right-10 h-6 w-24 rotate-[4deg] bg-accent/90" />
 
-        <p className="font-bold text-muted">Fiszka pomysłu</p>
+        <p className="font-bold text-muted">{c.label}</p>
         <h2 id={`${ids}-fiszka`} ref={headingRef} tabIndex={-1} className="mt-1 text-xl font-bold text-foreground">
-          {draft.title.trim() || "Bez tytułu"}
+          {draft.title.trim() || c.untitled}
         </h2>
         <p className="mt-2 flex items-start gap-1.5 text-sm text-muted">
           <Sparkles aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-          AI rozpisało Twój opis na pola. Sprawdź je i popraw przed zapisaniem.
+          {c.aiSplit}
         </p>
         <AiDisclaimer className="mt-3" />
 
         <dl className="mt-6 grid gap-5 sm:grid-cols-[12rem_1fr]">
           <dt className="font-bold text-foreground">
-            <label htmlFor={`${ids}-tytul`}>Tytuł</label>
+            <label htmlFor={`${ids}-tytul`}>{c.title}</label>
           </dt>
           <dd>
             <input
@@ -215,18 +218,18 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
 
           <Field
             id={`${ids}-krotki-opis`}
-            label="Krótki opis"
+            label={c.shortDesc}
             value={draft.shortDesc}
-            placeholder="Jedno zdanie, które zachęci do przeczytania fiszki"
+            placeholder={c.shortDescPlaceholder}
             multiline={2}
             readOnly={locked}
             onChange={set("shortDesc")}
           />
           <Field
             id={`${ids}-istota`}
-            label="Istota pomysłu"
+            label={c.essence}
             value={draft.essence}
-            placeholder="Na czym polega pomysł i jak będzie działał"
+            placeholder={c.essencePlaceholder}
             multiline={5}
             readOnly={locked}
             invalid={invalid && !draft.essence.trim()}
@@ -235,9 +238,9 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
           {initial.problem && (
             <Field
               id={`${ids}-problem`}
-              label="Jaki problem rozwiązuje"
+              label={c.problem}
               value={draft.problem}
-              placeholder="np. seniorzy w gminie nie umieją umówić się do lekarza przez internet"
+              placeholder={c.problemPlaceholder}
               multiline={2}
               readOnly={locked}
               onChange={set("problem")}
@@ -245,23 +248,23 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
           )}
           <Field
             id={`${ids}-dla-kogo`}
-            label="Dla kogo"
+            label={c.forWhom}
             value={draft.forWhom}
-            placeholder="np. seniorzy mieszkający samotnie"
+            placeholder={c.forWhomPlaceholder}
             readOnly={locked}
             onChange={set("forWhom")}
           />
           <Field
             id={`${ids}-gdzie`}
-            label="Gdzie"
+            label={c.place}
             value={draft.place}
-            placeholder="np. świetlica wiejska, gmina Racławice"
+            placeholder={c.placePlaceholder}
             readOnly={locked}
             onChange={set("place")}
           />
 
           <dt className="font-bold text-foreground">
-            <label htmlFor={`${ids}-etap`}>Etap realizacji</label>
+            <label htmlFor={`${ids}-etap`}>{c.stage}</label>
           </dt>
           <dd>
             <select
@@ -273,7 +276,7 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
             >
               {STAGES.map((stage) => (
                 <option key={stage} value={stage}>
-                  {stage}
+                  {t.creator.stages[STAGES.indexOf(stage)] ?? stage}
                 </option>
               ))}
             </select>
@@ -281,22 +284,22 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
 
           <Field
             id={`${ids}-budzet`}
-            label="Budżet"
+            label={c.budget}
             value={draft.budget}
-            placeholder="np. ok. 5 tys. zł rocznie"
+            placeholder={c.budgetPlaceholder}
             readOnly={locked}
             onChange={set("budget")}
           />
           <Field
             id={`${ids}-partnerzy`}
-            label="Partnerzy"
+            label={c.partners}
             value={draft.partners}
-            placeholder="np. GOPS, szkoła, koło gospodyń wiejskich"
+            placeholder={c.partnersPlaceholder}
             readOnly={locked}
             onChange={set("partners")}
           />
 
-          <dt className="font-bold text-foreground">Tagi</dt>
+          <dt className="font-bold text-foreground">{c.tags}</dt>
           <dd>
             {draft.tags.length ? (
               <ul className="flex flex-wrap gap-2">
@@ -306,8 +309,8 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
                     className="inline-flex min-h-10 items-center gap-1.5 rounded-ui border-2 border-border bg-secondary/60 px-3 text-base"
                   >
                     {draft.suggestedTags.includes(tag) && <Sparkles aria-hidden="true" className="size-4 text-foreground" />}
-                    {TAG_LABELS[tag]}
-                    {draft.suggestedTags.includes(tag) && <span className="sr-only">(propozycja AI)</span>}
+                    {t.tags[tag]}
+                    {draft.suggestedTags.includes(tag) && <span className="sr-only">{c.aiSuggestion}</span>}
                   </li>
                 ))}
               </ul>
@@ -317,18 +320,17 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
             {draft.suggestedTags.length > 0 && (
               <p className="mt-2 flex items-center gap-1.5 text-sm text-muted">
                 <Sparkles aria-hidden="true" className="size-4" />
-                oznacza tag zaproponowany przez AI
+                {c.aiTagHint}
               </p>
             )}
           </dd>
 
           <dt className="font-bold text-foreground">
-            <label htmlFor={`${ids}-pliki`}>Załączniki</label>
+            <label htmlFor={`${ids}-pliki`}>{c.attachments}</label>
           </dt>
           <dd>
             <p id={`${ids}-pliki-opis`} className="text-sm text-muted">
-              Nieobowiązkowe. Np. kosztorys, zdjęcia, list poparcia. Do {MAX_FILES} plików, każdy do 10 MB: PDF, Word,
-              Excel, PowerPoint, OpenDocument, TXT, JPG, PNG.
+              {c.attachmentsHint(MAX_FILES)}
             </p>
             {!saved && (
               <input
@@ -347,7 +349,7 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
               <div role="alert" className="mt-2 rounded-ui border-2 border-destructive bg-surface px-4 py-2 text-destructive">
                 <p className="flex items-center gap-2 font-bold">
                   <CircleAlert aria-hidden="true" className="size-5 shrink-0" />
-                  Nie dodano części plików
+                  {c.someNotAdded}
                 </p>
                 <ul className="mt-1 list-disc pl-6">
                   {fileErrors.map((message) => (
@@ -357,7 +359,7 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
               </div>
             )}
             {files.length > 0 && (
-              <ul aria-label="Wybrane pliki" className="mt-3 space-y-2">
+              <ul aria-label={c.selectedFiles} className="mt-3 space-y-2">
                 {files.map((file, index) => (
                   <li key={`${file.name}-${file.size}`} className="flex items-center gap-2 rounded-ui bg-background py-1 pr-1 pl-3">
                     <FileText aria-hidden="true" className="size-5 shrink-0 text-primary" />
@@ -368,7 +370,7 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
                         type="button"
                         onClick={() => setFiles((current) => current.filter((_, i) => i !== index))}
                         disabled={locked}
-                        aria-label={`Usuń plik ${file.name}`}
+                        aria-label={c.removeFile(file.name)}
                         className="inline-flex size-10 cursor-pointer items-center justify-center rounded-ui hover:bg-secondary/60"
                       >
                         <X aria-hidden="true" className="size-5" />
@@ -387,7 +389,7 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
             className="mt-6 flex items-start gap-2 rounded-ui border-2 border-destructive bg-surface px-4 py-3 font-bold text-destructive"
           >
             <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
-            Uzupełnij tytuł i istotę pomysłu, żeby zapisać fiszkę.
+            {c.required}
           </p>
         )}
 
@@ -395,25 +397,25 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
           {saved && !saving ? (
             <Button type="button" disabled>
               <CircleCheck aria-hidden="true" />
-              Zapisano
+              {c.saved}
             </Button>
           ) : (
             <Button type="button" onClick={save} disabled={saving}>
               {saving ? <Loader2 aria-hidden="true" className="animate-spin" /> : <Save aria-hidden="true" />}
-              {saving ? (sending ? "Wysyłam pliki…" : "Zapisuję…") : "Zapisz fiszkę"}
+              {saving ? (sending ? c.sendingFiles : c.saving) : c.save}
             </Button>
           )}
           <Link href={`/wyniki?q=${encodeURIComponent(searchText)}`} className={buttonVariants({ variant: "secondary" })}>
             <Search aria-hidden="true" />
-            Sprawdź, co już działa
+            {c.checkWhatWorks}
           </Link>
           <Link href="/wnioski" onClick={() => storeIdea(draft)} className={buttonVariants({ variant: "secondary" })}>
             <FilePen aria-hidden="true" />
-            Napisz wniosek o grant
+            {c.writeGrant}
           </Link>
           <Button type="button" variant="secondary" onClick={onEdit}>
             <Pencil aria-hidden="true" />
-            Popraw opis
+            {c.editDescription}
           </Button>
         </div>
 
@@ -423,13 +425,12 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
             <div className="mt-4 rounded-ui border-2 border-success bg-success/10 px-4 py-3 text-foreground">
               <p className="flex items-start gap-2 font-bold text-success">
                 <CircleCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
-                {saved.id ? `Fiszka zapisana (nr ${saved.id}).` : "Fiszka zapisana."} Ekspert ROPS przejrzy ją w ciągu
-                kilku dni.
+                {c.savedInfo(saved.id)}
               </p>
               {uploads.length > 0 && (
                 <p className="mt-1 flex items-start gap-2 pl-7">
                   <Paperclip aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-                  Załączniki: wysłano {sentCount} z {uploads.length}.
+                  {c.uploadsInfo(sentCount, uploads.length)}
                 </p>
               )}
             </div>
@@ -439,7 +440,7 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
           <div role="alert" className="mt-3 rounded-ui border-2 border-destructive bg-surface px-4 py-3 text-destructive">
             <p className="flex items-center gap-2 font-bold">
               <CircleAlert aria-hidden="true" className="size-5 shrink-0" />
-              Nie udało się wysłać części plików
+              {c.someNotSent}
             </p>
             <ul className="mt-1 list-disc pl-6">
               {failed.map((upload) => (
@@ -456,7 +457,7 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
             className="mt-4 flex items-start gap-2 rounded-ui border-2 border-destructive bg-surface px-4 py-3 font-bold text-destructive"
           >
             <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
-            Nie udało się zapisać fiszki. Sprawdź połączenie i spróbuj jeszcze raz.
+            {c.saveFailed}
           </p>
         )}
       </article>

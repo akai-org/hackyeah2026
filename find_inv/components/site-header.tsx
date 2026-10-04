@@ -8,15 +8,11 @@ import { AccessibilitySettings } from "@/components/simple-mode";
 import { CutoutText } from "@/components/cutout-text";
 import { Dialog } from "@/components/ui/dialog";
 import { QuickSearch } from "@/components/quick-search";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { UserMenu } from "@/components/user-menu";
 import { useAuth } from "@/lib/auth";
+import { useT } from "@/lib/i18n/client";
 
-const NAV_LINKS = [
-  { href: "/biblioteka", label: "Biblioteka" },
-  { href: "/kreator", label: "Kreator pomysłów" },
-  { href: "/wnioski", label: "Wnioski" },
-  { href: "/edukacja", label: "Edukacja" },
-];
 
 const linkClass =
   "inline-flex min-h-12 items-center whitespace-nowrap rounded-ui px-2.5 text-base font-bold text-foreground underline-offset-4 hover:text-primary hover:underline";
@@ -25,12 +21,19 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const { user } = useAuth();
+  const t = useT();
+  const NAV_LINKS = [
+    { href: "/biblioteka", label: t.header.nav.library },
+    { href: "/kreator", label: t.header.nav.creator },
+    { href: "/wnioski", label: t.header.nav.applications },
+    { href: "/edukacja", label: t.header.nav.education },
+  ];
   // Panel ROPS widać w menu tylko po zalogowaniu jako admin, panel testera — jako tester.
   const links =
     user?.role === "admin"
-      ? [...NAV_LINKS, { href: "/admin", label: "Panel ROPS" }]
+      ? [...NAV_LINKS, { href: "/admin", label: t.header.nav.adminPanel }]
       : user?.role === "tester"
-        ? [...NAV_LINKS, { href: "/testerzy/panel", label: "Panel testera" }]
+        ? [...NAV_LINKS, { href: "/testerzy/panel", label: t.header.nav.testerPanel }]
         : NAV_LINKS;
   const buttonRef = useRef<HTMLButtonElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -61,11 +64,11 @@ export function SiteHeader() {
         href="#main"
         className="focus-on-primary sr-only rounded-ui bg-primary px-5 py-3 font-bold text-primary-foreground focus:not-sr-only focus:absolute focus:top-3 focus:left-4 focus:z-50"
       >
-        Przejdź do treści
+        {t.header.skipToContent}
       </a>
 
       <div className="relative mx-auto flex items-center gap-4 px-4 py-3 sm:px-6">
-        <Link href="/" aria-label="HubMI, strona główna" className="inline-flex min-h-12 shrink-0 items-center rounded-ui py-1">
+        <Link href="/" aria-label={t.header.homeLabel} className="inline-flex min-h-12 shrink-0 items-center rounded-ui py-1">
           <CutoutText text="HubMI" as="span" size="logo" labelled={false} />
         </Link>
 
@@ -78,13 +81,13 @@ export function SiteHeader() {
             className="hidden min-h-12 w-full max-w-md cursor-pointer items-center rounded-ui border-(length:--bw) border-border bg-surface text-left hover:bg-background sm:flex"
           >
             <Search aria-hidden="true" className="ml-3 size-5 text-primary" />
-            <span className="min-w-0 flex-1 px-3 text-base text-muted">Szukaj</span>
+            <span className="min-w-0 flex-1 px-3 text-base text-muted">{t.common.search}</span>
             <kbd className="mr-3 rounded border border-border/40 px-2 py-1 text-sm font-semibold text-muted">Ctrl+K</kbd>
           </button>
         </div>
 
         <div className="ml-auto flex shrink-0 items-center gap-3">
-          <nav aria-label="Główna" className="nav-desktop hidden xl:block">
+          <nav aria-label={t.header.mainNav} className="nav-desktop hidden xl:block">
           <ul className="flex items-center gap-1">
             {links.map((link) => (
               <li key={link.href}>
@@ -95,6 +98,8 @@ export function SiteHeader() {
             ))}
           </ul>
           </nav>
+
+          <LanguageSwitcher />
 
           <UserMenu compact className="hidden sm:flex" />
 
@@ -107,7 +112,7 @@ export function SiteHeader() {
             className="inline-flex min-h-12 min-w-12 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-ui border-(length:--bw) border-border bg-surface px-4 font-bold text-primary hover:bg-primary/10 nav-mobile xl:hidden"
           >
             {open ? <X aria-hidden="true" className="size-5" /> : <Menu aria-hidden="true" className="size-5" />}
-            {open ? "Zamknij" : "Menu"}
+            {open ? t.common.close : t.header.menu}
           </button>
         </div>
       </div>
@@ -117,7 +122,7 @@ export function SiteHeader() {
         hidden={!open}
         className="nav-mobile max-h-[calc(100dvh-5rem)] overflow-y-auto border-t-(length:--bw) border-border bg-surface xl:hidden"
       >
-        <nav aria-label="Główna, wersja mobilna" className="mx-auto max-w-content px-4 py-3 sm:px-6">
+        <nav aria-label={t.header.mobileNav} className="mx-auto max-w-content px-4 py-3 sm:px-6">
           <button
             type="button"
             onClick={openSearch}
@@ -125,7 +130,7 @@ export function SiteHeader() {
             className="mb-3 flex min-h-12 w-full cursor-pointer items-center rounded-ui border-(length:--bw) border-border bg-background text-left sm:hidden"
           >
             <Search aria-hidden="true" className="ml-3 size-5 text-primary" />
-            <span className="min-w-0 flex-1 px-3 text-base text-muted">Szukaj</span>
+            <span className="min-w-0 flex-1 px-3 text-base text-muted">{t.common.search}</span>
           </button>
           <ul className="flex flex-col">
             {links.map((link) => (
@@ -142,13 +147,13 @@ export function SiteHeader() {
       <Dialog
         open={searchOpen}
         onClose={closeSearch}
-        title="Czego szukasz?"
-        closeLabel="Zamknij wyszukiwanie"
+        title={t.header.searchDialogTitle}
+        closeLabel={t.header.closeSearch}
         initialFocusRef={searchInputRef}
         size="lg"
       >
         <QuickSearch inputRef={searchInputRef} onNavigate={closeSearch} />
-        <p className="mt-4 text-sm text-muted">Naciśnij Escape, aby zamknąć.</p>
+        <p className="mt-4 text-sm text-muted">{t.header.escHint}</p>
       </Dialog>
       <AccessibilitySettings />
     </header>

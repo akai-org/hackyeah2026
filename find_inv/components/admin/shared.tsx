@@ -4,19 +4,38 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Archive, CircleAlert, CircleCheck, Clock, CloudOff, type LucideIcon } from "lucide-react";
 
 import type { InnovationStatus } from "@/data/admin.mock";
-import { TAG_LABELS, type Tag } from "@/data/mock";
 import type { Result } from "@/lib/admin-api";
 import { ApiError } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n/client";
+import { LOCALE_TAGS } from "@/lib/i18n/config";
+import type { AdminMessages } from "@/lib/i18n/ns/admin";
 
 // ---------- Ładowanie danych z panelu ----------
 
 type State<T> = { data: T | null; offline: boolean; error: string | null; loading: boolean };
 
-export function errorMessage(error: unknown): string {
-  if (error instanceof ApiError && error.status === 403) return "Brak uprawnień administratora. Zaloguj się ponownie jako admin.";
-  if (error instanceof ApiError) return `Serwer odrzucił żądanie (${error.message}). Spróbuj jeszcze raz.`;
-  return "Coś poszło nie tak. Odśwież stronę.";
+export function errorMessage(error: unknown, a: AdminMessages): string {
+  if (error instanceof ApiError && error.status === 403) return a.errors.forbidden;
+  if (error instanceof ApiError) return a.errors.rejected(error.message);
+  return a.errors.generic;
+}
+
+/** Słownik panelu i formatowanie w języku interfejsu — jedno wywołanie na komponent. */
+export function useAdminI18n() {
+  const { t, locale } = useI18n();
+  const a = t.admin;
+  return {
+    t,
+    a,
+    locale,
+    errorMessage: (error: unknown) => errorMessage(error, a),
+    tagLabel: (tag: string) => t.tags[tag] ?? tag.replaceAll("_", " "),
+    formatDate: (iso: string) =>
+      new Date(iso).toLocaleDateString(LOCALE_TAGS[locale], { day: "numeric", month: "short", year: "numeric" }),
+    shortDate: (iso: string) => new Date(iso).toLocaleDateString(LOCALE_TAGS[locale], { day: "numeric", month: "short" }),
+    number: (value: number) => value.toLocaleString(LOCALE_TAGS[locale]),
+  };
 }
 
 /**
@@ -27,6 +46,9 @@ export function useAdminData<T>(load: () => Promise<Result<T>>, key = "") {
   const [state, setState] = useState<State<T>>({ data: null, offline: false, error: null, loading: true });
   const loadRef = useRef(load);
   loadRef.current = load;
+  const messages = useI18n().t.admin;
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
 
   const reload = useCallback(async () => {
     setState((current) => ({ ...current, loading: true }));
@@ -34,7 +56,7 @@ export function useAdminData<T>(load: () => Promise<Result<T>>, key = "") {
       const result = await loadRef.current();
       setState({ data: result.data, offline: result.offline, error: null, loading: false });
     } catch (error) {
-      setState((current) => ({ ...current, error: errorMessage(error), loading: false }));
+      setState((current) => ({ ...current, error: errorMessage(error, messagesRef.current), loading: false }));
     }
   }, []);
 
@@ -52,11 +74,12 @@ export function useAdminData<T>(load: () => Promise<Result<T>>, key = "") {
 // ---------- Komunikaty ----------
 
 export function OfflineNote({ offline }: { offline: boolean }) {
+  const text = useI18n().t.admin.offline;
   if (!offline) return null;
   return (
     <p className="mb-6 flex items-start gap-3 rounded-ui border-2 border-warning bg-warning/10 px-4 py-3">
       <CloudOff aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-warning" />
-      Serwer nie odpowiada. Pokazuję kopię danych demo, zmiany znikną po odświeżeniu.
+      {text}
     </p>
   );
 }
@@ -83,15 +106,17 @@ export function LoadingRows({ label }: { label: string }) {
 
 // ---------- Status innowacji: ikona + słowo ----------
 
-export const STATUS_META: Record<InnovationStatus, { label: string; icon: LucideIcon; className: string }> = {
-  pending: { label: "Do weryfikacji", icon: Clock, className: "border-warning bg-warning/10 text-warning" },
-  active: { label: "Aktywna", icon: CircleCheck, className: "border-success bg-success/10 text-success" },
-  unmaintained: { label: "Nieaktualna", icon: CircleAlert, className: "border-border bg-background text-muted" },
-  archived: { label: "Zarchiwizowana", icon: Archive, className: "border-border bg-secondary text-foreground" },
+// Etykiety statusów są w słowniku (admin.status).
+export const STATUS_META: Record<InnovationStatus, { icon: LucideIcon; className: string }> = {
+  pending: { icon: Clock, className: "border-warning bg-warning/10 text-warning" },
+  active: { icon: CircleCheck, className: "border-success bg-success/10 text-success" },
+  unmaintained: { icon: CircleAlert, className: "border-border bg-background text-muted" },
+  archived: { icon: Archive, className: "border-border bg-secondary text-foreground" },
 };
 
 export function StatusBadge({ status, className }: { status: InnovationStatus; className?: string }) {
   const meta = STATUS_META[status];
+  const label = useI18n().t.admin.status[status];
   const Icon = meta.icon;
   return (
     <span
@@ -102,15 +127,8 @@ export function StatusBadge({ status, className }: { status: InnovationStatus; c
       )}
     >
       <Icon aria-hidden="true" className="size-4 shrink-0" strokeWidth={2.25} />
-      {meta.label}
+      {label}
     </span>
   );
 }
 
-export function tagLabel(tag: string): string {
-  return TAG_LABELS[tag as Tag] ?? tag.replaceAll("_", " ");
-}
-
-export function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("pl-PL", { day: "numeric", month: "short", year: "numeric" });
-}

@@ -10,23 +10,10 @@ import { TesterApplyModal } from "@/components/tester-apply-modal";
 import { Toast, useToast } from "@/components/toast";
 import { TestRequestBox } from "@/components/test-request";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { COST_LABELS, type InnovationCard } from "@/data/innovations";
-import { TAG_LABELS, type Tag } from "@/data/mock";
+import { type InnovationCard } from "@/data/innovations";
 import { getInnovation } from "@/lib/matchmaking";
 import { track, type CtaButton } from "@/lib/track";
-import { plural } from "@/lib/utils";
-
-const PLAIN_COST: Record<string, string> = {
-  low: "niski koszt — do 10 tys. zł",
-  medium: "średni koszt — 10–50 tys. zł",
-  high: "wysoki koszt — powyżej 50 tys. zł",
-};
-
-function plainTime(months: number): string {
-  if (months <= 1) return "ok. miesiąc";
-  if (months <= 3) return `ok. ${months} miesiące`;
-  return `ok. ${months} miesięcy`;
-}
+import { useT } from "@/lib/i18n/client";
 
 function Description({ text }: { text: string }) {
   const paragraphs = text
@@ -66,6 +53,7 @@ function extractVimeoId(url: string): string | null {
 }
 
 function VideoEmbed({ url }: { url: string }) {
+  const title = useT().library.detail.video;
   const ytId = extractYoutubeId(url);
   const vimeoId = extractVimeoId(url);
 
@@ -74,7 +62,7 @@ function VideoEmbed({ url }: { url: string }) {
       <div className="relative mt-6 w-full" style={{ paddingTop: "56.25%" }}>
         <iframe
           src={`https://www.youtube.com/embed/${ytId}`}
-          title="Film o innowacji"
+          title={title}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
           loading="lazy"
@@ -88,7 +76,7 @@ function VideoEmbed({ url }: { url: string }) {
       <div className="relative mt-6 w-full" style={{ paddingTop: "56.25%" }}>
         <iframe
           src={`https://player.vimeo.com/video/${vimeoId}`}
-          title="Film o innowacji"
+          title={title}
           allow="autoplay; fullscreen; picture-in-picture"
           allowFullScreen
           loading="lazy"
@@ -112,6 +100,7 @@ function useSpeech(text: string) {
       return;
     }
     const utterance = new SpeechSynthesisUtterance(text);
+    // Treść karty z ROPS jest po polsku niezależnie od języka interfejsu.
     utterance.lang = "pl-PL";
     utterance.onend = () => setSpeaking(false);
     utterance.onerror = () => setSpeaking(false);
@@ -130,6 +119,8 @@ export function InnovationDetail({ id }: { id: number }) {
   const [testerModalOpen, setTesterModalOpen] = useState(false);
   const [testerStatus, setTesterStatus] = useState<"none" | "pending">("none");
   const toast = useToast();
+  const t = useT();
+  const d = t.library.detail;
 
   useEffect(() => {
     getInnovation(id).then(setInnovation);
@@ -159,7 +150,7 @@ export function InnovationDetail({ id }: { id: number }) {
   if (innovation === undefined) {
     return (
       <p role="status" className="text-lg text-muted">
-        Wczytuję kartę innowacji…
+        {d.loading}
       </p>
     );
   }
@@ -167,34 +158,32 @@ export function InnovationDetail({ id }: { id: number }) {
   if (innovation === null) {
     return (
       <div className="max-w-3xl">
-        <h1 className="text-2xl font-bold text-foreground">Nie znalazłem tej innowacji</h1>
-        <p className="mt-3 text-lg">Mogła zostać usunięta z Biblioteki albo link jest niepełny.</p>
+        <h1 className="text-2xl font-bold text-foreground">{d.notFound}</h1>
+        <p className="mt-3 text-lg">{d.notFoundLead}</p>
         <Link href="/biblioteka" className={buttonVariants({ variant: "secondary", className: "mt-6" })}>
-          Przejdź do Biblioteki
+          {d.goLibrary}
         </Link>
       </div>
     );
   }
 
   const facts: Array<[string, string | undefined]> = [
-    ["Dla kogo", innovation.target_group],
-    ["Obszar", innovation.area ?? innovation.category],
-    ["Gdzie działa", innovation.where_implemented],
-    ["Autorzy", innovation.authors ?? undefined],
-    ["Projekt", innovation.project ?? undefined],
+    [d.facts.forWhom, innovation.target_group],
+    [d.facts.area, innovation.area ?? innovation.category],
+    [d.facts.where, innovation.where_implemented],
+    [d.facts.authors, innovation.authors ?? undefined],
+    [d.facts.project, innovation.project ?? undefined],
     [
-      "Koszt",
-      innovation.cost_level ? PLAIN_COST[innovation.cost_level] ?? COST_LABELS[innovation.cost_level] : undefined,
+      d.facts.cost,
+      innovation.cost_level ? d.plainCost[innovation.cost_level] ?? t.cost[innovation.cost_level] : undefined,
     ],
     [
-      "Czas wdrożenia",
-      innovation.implementation_time_months ? plainTime(innovation.implementation_time_months) : undefined,
+      d.facts.time,
+      innovation.implementation_time_months ? d.time(innovation.implementation_time_months) : undefined,
     ],
     [
-      "Testy w praktyce",
-      innovation.testers_count
-        ? `${innovation.testers_count} ${plural(innovation.testers_count, "tester", "testerzy", "testerów")}`
-        : undefined,
+      d.facts.tests,
+      innovation.testers_count ? d.testers(innovation.testers_count) : undefined,
     ],
   ];
 
@@ -205,7 +194,7 @@ export function InnovationDetail({ id }: { id: number }) {
   return (
     <article aria-labelledby="karta-tytul" className="max-w-4xl">
       <p className="font-bold text-muted">
-        {innovation.category ? `Karta innowacji · ${innovation.category}` : "Karta innowacji"}
+        {innovation.category ? `${d.card} · ${innovation.category}` : d.card}
       </p>
       <h1 id="karta-tytul" className="mt-1 text-2xl font-bold text-foreground">
         {innovation.title}
@@ -214,7 +203,7 @@ export function InnovationDetail({ id }: { id: number }) {
       {(innovation.is_unmaintained || innovation.status === "unmaintained") && (
         <p className="mt-4 inline-flex items-start gap-2 rounded-ui border-2 border-border bg-secondary/60 px-3 py-1.5 font-bold text-foreground">
           <Archive aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
-          Nieaktualna: nikt już jej nie prowadzi. Pomysł nadal może się przydać.
+          {d.unmaintained}
         </p>
       )}
 
@@ -232,12 +221,12 @@ export function InnovationDetail({ id }: { id: number }) {
         />
         {innovation.full_desc && (
           <>
-            <h2 className="text-xl font-bold text-foreground">Na czym polega</h2>
+            <h2 className="text-xl font-bold text-foreground">{d.howItWorks}</h2>
             <Description text={innovation.full_desc} />
           </>
         )}
 
-        <h2 className="mt-8 text-xl font-bold text-foreground">W skrócie</h2>
+        <h2 className="mt-8 text-xl font-bold text-foreground">{d.summary}</h2>
         <dl className="mt-3 grid gap-x-6 gap-y-3 sm:grid-cols-[12rem_1fr]">
           {facts
             .filter(([, value]) => value)
@@ -251,7 +240,7 @@ export function InnovationDetail({ id }: { id: number }) {
 
         {innovation.tags.length > 0 && (
           <>
-            <h2 className="mt-8 text-xl font-bold text-foreground">Tematy</h2>
+            <h2 className="mt-8 text-xl font-bold text-foreground">{d.topics}</h2>
             <ul className="mt-3 flex flex-wrap gap-2">
               {innovation.tags.map((tag) => (
                 <li key={tag}>
@@ -259,7 +248,7 @@ export function InnovationDetail({ id }: { id: number }) {
                     href={`/biblioteka?tags=${encodeURIComponent(tag)}`}
                     className="inline-flex min-h-12 items-center rounded-ui border-(length:--bw) border-border bg-surface px-4 text-base text-primary hover:bg-primary/10"
                   >
-                    {TAG_LABELS[tag as Tag] ?? tag}
+                    {t.tags[tag] ?? tag}
                   </Link>
                 </li>
               ))}
@@ -271,7 +260,7 @@ export function InnovationDetail({ id }: { id: number }) {
       <div className="mt-8 flex flex-wrap gap-3">
         <Link href={`/wdrozenie?innowacja=${innovation.id}`} onClick={cta("wdrozenie")} className={buttonVariants({ variant: "primary" })}>
           <MessageSquareText aria-hidden="true" />
-          Dostosuj do mojej instytucji
+          {d.adapt}
         </Link>
 
         {/* Zapytaj eksperta — otwiera forum z kontekstem tej innowacji */}
@@ -281,14 +270,14 @@ export function InnovationDetail({ id }: { id: number }) {
           className={buttonVariants({ variant: "secondary" })}
         >
           <MessageSquarePlus aria-hidden="true" />
-          Zapytaj eksperta
+          {d.askExpert}
         </Link>
 
         {/* Odsłuch TTS */}
         {speech.supported && (
-          <Button type="button" variant="secondary" onClick={speech.toggle} aria-label={speech.speaking ? "Zatrzymaj odsłuch" : "Odczytaj kartę na głos"}>
+          <Button type="button" variant="secondary" onClick={speech.toggle} aria-label={speech.speaking ? d.stopReading : d.readAloud}>
             {speech.speaking ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
-            {speech.speaking ? "Zatrzymaj" : "Odczytaj"}
+            {speech.speaking ? d.stop : d.read}
           </Button>
         )}
 
@@ -301,7 +290,7 @@ export function InnovationDetail({ id }: { id: number }) {
             className={buttonVariants({ variant: "secondary" })}
           >
             <FileText aria-hidden="true" />
-            Materiały do pobrania<span className="sr-only"> (otwiera się w nowej karcie)</span>
+            {d.materials}<span className="sr-only">{d.newTab}</span>
           </a>
         )}
         {innovation.video_url && !isYoutubeOrVimeo && (
@@ -313,7 +302,7 @@ export function InnovationDetail({ id }: { id: number }) {
             className={buttonVariants({ variant: "secondary" })}
           >
             <Video aria-hidden="true" />
-            Film o innowacji<span className="sr-only"> (otwiera się w nowej karcie)</span>
+            {d.video}<span className="sr-only">{d.newTab}</span>
           </a>
         )}
         {innovation.source_url && (
@@ -325,7 +314,7 @@ export function InnovationDetail({ id }: { id: number }) {
             className={buttonVariants({ variant: "secondary" })}
           >
             <ExternalLink aria-hidden="true" />
-            Źródło: Biblioteka ROPS<span className="sr-only"> (otwiera się w nowej karcie)</span>
+            {d.source}<span className="sr-only">{d.newTab}</span>
           </a>
         )}
       </div>
@@ -336,11 +325,11 @@ export function InnovationDetail({ id }: { id: number }) {
 
       {/* Zgłoś się jako tester */}
       <div className="mt-8 rounded-ui border-(length:--bw) border-border bg-secondary/60 p-5 sm:p-6">
-        <h2 className="text-xl font-bold text-foreground">Testowanie</h2>
-        <p className="mt-2 text-base">Masz doświadczenie z tym tematem? Zgłoś się jako tester i pomóż ocenić tę innowację w praktyce.</p>
+        <h2 className="text-xl font-bold text-foreground">{d.testing}</h2>
+        <p className="mt-2 text-base">{d.testingLead}</p>
         {testerStatus === "pending" ? (
           <p className="mt-4 inline-flex items-center gap-2 rounded-full border-2 border-success bg-success/10 px-4 py-2 text-sm font-bold text-success">
-            Zgłoszenie wysłane — czekamy na odpowiedź
+            {d.applicationSent}
           </p>
         ) : (
           <button
@@ -351,15 +340,15 @@ export function InnovationDetail({ id }: { id: number }) {
             }}
             className="mt-4 inline-flex min-h-12 items-center gap-2 rounded-ui border-(length:--bw) border-primary bg-primary px-5 font-bold text-primary-foreground hover:bg-primary-hover"
           >
-            Zgłoś się jako tester
+            {d.applyTester}
           </button>
         )}
       </div>
 
       {/* Forum dyskusji */}
       <section aria-labelledby="dyskusja-tytul" className="mt-12 border-t-2 border-border/40 pt-10">
-        <h2 id="dyskusja-tytul" className="text-2xl font-bold text-foreground">Dyskusja społeczności</h2>
-        <p className="mt-1 text-base text-muted">Komentarze mieszkańców, testerów i konsultantów dotyczące tej innowacji.</p>
+        <h2 id="dyskusja-tytul" className="text-2xl font-bold text-foreground">{d.discussion}</h2>
+        <p className="mt-1 text-base text-muted">{d.discussionLead}</p>
         <div className="mt-6">
           <ForumThread
             innovationId={id}
@@ -376,7 +365,7 @@ export function InnovationDetail({ id }: { id: number }) {
           onClose={() => setTesterModalOpen(false)}
           onSuccess={() => {
             setTesterStatus("pending");
-            toast.show("Zgłoszenie wysłane!");
+            toast.show(d.sentToast);
           }}
         />
       )}

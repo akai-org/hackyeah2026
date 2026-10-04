@@ -4,8 +4,12 @@ import { CutoutText } from "@/components/cutout-text";
 import { LibraryBrowser } from "@/components/library-browser";
 import { PageBackdrop } from "@/components/page-backdrop";
 import { TAXONOMY_TAGS, type Tag } from "@/data/mock";
+import { getT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = { title: "Biblioteka innowacji" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.pages.titles.library };
+}
 
 const KNOWN_TAGS = new Set<string>(TAXONOMY_TAGS);
 
@@ -15,6 +19,7 @@ function first(value: string | string[] | undefined): string {
 
 export default async function LibraryPage({ searchParams }: PageProps<"/biblioteka">) {
   const params = await searchParams;
+  const t = await getT();
   const tags = first(params.tags)
     .split(",")
     .filter((tag): tag is Tag => KNOWN_TAGS.has(tag));
@@ -29,10 +34,9 @@ export default async function LibraryPage({ searchParams }: PageProps<"/bibliote
   return (
     <PageBackdrop>
       <div className="mx-auto max-w-content px-4 py-16 sm:px-6">
-        <CutoutText as="h1" size="section" text="Biblioteka innowacji" />
+        <CutoutText as="h1" size="section" text={t.pages.library.heading} />
         <p className="mt-4 max-w-[60ch] text-lg">
-          Sprawdzone rozwiązania społeczne z Małopolski. Każda karta mówi, dla kogo jest rozwiązanie, ile kosztuje i gdzie
-          już działa.
+          {t.pages.library.lead}
         </p>
         {/* key: przejście na ten sam adres z innymi filtrami (np. link w nagłówku) zaczyna od nowa. */}
         <LibraryBrowser key={JSON.stringify(initial)} initial={initial} />

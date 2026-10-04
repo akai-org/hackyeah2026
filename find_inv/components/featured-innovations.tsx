@@ -8,6 +8,7 @@ import { MOCK_INNOVATIONS, type InnovationCard } from "@/data/innovations";
 import type { Tag } from "@/data/mock";
 import { listInnovations } from "@/lib/knowledge";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/client";
 
 // „Popularne innowacje dla: …” — napis i karty zmieniają się razem, jednym zegarem i jedną animacją
 // (łagodne wygaszenie i pojawienie się). Karty pasują do grupy: wyszukiwanie w Bibliotece po słowie kluczowym,
@@ -32,6 +33,7 @@ function mockFor(audience: Audience): InnovationCard[] {
 }
 
 export function FeaturedInnovations({ headingId, children }: { headingId: string; children?: ReactNode }) {
+  const t = useT();
   const [index, setIndex] = useState(0);
   const [visible, setVisible] = useState(true);
   const [paused, setPaused] = useState(false);
@@ -83,9 +85,9 @@ export function FeaturedInnovations({ headingId, children }: { headingId: string
     >
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h2 id={headingId} className="text-2xl font-medium text-foreground">
-          Popularne innowacje dla:{" "}
+          {t.home.popularFor}{" "}
           <span className={cn("inline-block font-bold text-primary", fade)} style={{ transitionDuration: `${FADE_MS}ms` }}>
-            {AUDIENCES[index].label}
+            {t.home.audiences[index] ?? AUDIENCES[index].label}
           </span>
         </h2>
         <button
@@ -95,7 +97,7 @@ export function FeaturedInnovations({ headingId, children }: { headingId: string
           className="inline-flex min-h-12 items-center gap-2 font-medium text-primary underline underline-offset-4 hover:text-primary-hover"
         >
           {paused ? <Play aria-hidden="true" className="size-5" /> : <Pause aria-hidden="true" className="size-5" />}
-          {paused ? "Wznów zmienianie" : "Zatrzymaj zmienianie"}
+          {paused ? t.home.resumeRotation : t.home.pauseRotation}
         </button>
       </div>
 

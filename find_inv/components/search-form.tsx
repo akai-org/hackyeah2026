@@ -12,12 +12,8 @@ import {
   useDictation,
 } from "@/components/dictation";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
-
-const EXAMPLES = [
-  "Samotny senior na wsi potrzebuje regularnego kontaktu i kogoś, kto zareaguje, gdy nie odbierze telefonu",
-  "Starsza osoba nie ma własnego samochodu i trudno jej dojechać na wizytę u lekarza albo zrobić zakupy",
-];
 
 type SearchFormProps = {
   /** Tekst startowy pola, np. poprzedni opis na stronie wyników. */
@@ -28,6 +24,7 @@ type SearchFormProps = {
 
 export function SearchForm({ initialText = "", showExamples = true, className }: SearchFormProps) {
   const router = useRouter();
+  const t = useT();
   const ids = useId();
   const fieldId = `${ids}-pole`;
   const hintId = `${ids}-podpowiedz`;
@@ -78,7 +75,7 @@ export function SearchForm({ initialText = "", showExamples = true, className }:
       className={cn("mt-8", className)}
     >
       <label htmlFor={fieldId} className="block text-lg font-semibold text-foreground">
-        Opisz swój problem
+        {t.searchForm.label}
       </label>
 
       <div className="mt-2 flex flex-col gap-3 md:flex-row md:items-start">
@@ -91,7 +88,7 @@ export function SearchForm({ initialText = "", showExamples = true, className }:
           onChange={(event) => updateText(event.target.value)}
           aria-invalid={error || undefined}
           aria-describedby={describedBy}
-          placeholder="Na przykład: mama mieszka sama na wsi i nie ma jak dojechać do lekarza"
+          placeholder={t.searchForm.placeholder}
           className={cn(
             "min-h-[120px] w-full resize-y rounded-ui border-(length:--bw) bg-surface p-4 text-base text-foreground placeholder:text-muted md:flex-1",
             error ? "border-destructive" : "border-border",
@@ -101,7 +98,7 @@ export function SearchForm({ initialText = "", showExamples = true, className }:
         <div className="flex flex-col gap-3 md:w-44">
           <Button type="submit" className="w-full">
             <Search aria-hidden="true" />
-            Szukaj
+            {t.common.search}
           </Button>
           <DictationButton dictation={dictation} className="w-full" />
         </div>
@@ -115,7 +112,7 @@ export function SearchForm({ initialText = "", showExamples = true, className }:
           className="mt-3 flex items-start gap-2 rounded-ui border-2 border-destructive bg-surface px-4 py-3 font-semibold text-destructive"
         >
           <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
-          Wpisz kilka słów o problemie, żeby zacząć szukać.
+          {t.searchForm.empty}
         </p>
       )}
 
@@ -126,10 +123,10 @@ export function SearchForm({ initialText = "", showExamples = true, className }:
       {showExamples && (
         <div role="group" aria-labelledby={examplesId} className="mt-6">
           <p id={examplesId} className="font-semibold text-foreground">
-            Przykłady
+            {t.searchForm.examples}
           </p>
           <ul className="mt-2 flex flex-wrap gap-3">
-            {EXAMPLES.map((example) => (
+            {t.searchForm.exampleList.map((example) => (
               <li key={example}>
                 <button
                   type="button"

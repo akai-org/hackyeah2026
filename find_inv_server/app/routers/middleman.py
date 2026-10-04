@@ -26,6 +26,8 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from app.analytics import as_int, log_event
+from app.i18n import current_lang
+from app.translation import translate_payload, translate_texts
 from data.mock_data import MOCK_INNOVATIONS
 
 log = logging.getLogger(__name__)
@@ -204,18 +206,50 @@ async def _type_out(text: str) -> AsyncIterator[str]:
 
 # ── Lokalny Middleman (bez LLM) ──────────────────────────
 
-_QUESTION_TEMPLATES = [
-    "Jaka instytucja chce wdrożyć „{title}” i ile osób z zespołu może się tym zająć (choćby na część etatu)?",
-    "Jakim budżetem dysponujecie na pierwszy rok i czy macie już partnera, np. NGO, bibliotekę albo szkołę?",
-    "Ile osób z grupy „{target}” chcecie objąć na start i czy macie salę albo inne miejsce na spotkania?",
-]
+# Gotowe teksty trybu bez LLM w każdym języku interfejsu (X-Lang).
+_QUESTION_TEMPLATES = {
+    "pl": [
+        "Jaka instytucja chce wdrożyć „{title}” i ile osób z zespołu może się tym zająć (choćby na część etatu)?",
+        "Jakim budżetem dysponujecie na pierwszy rok i czy macie już partnera, np. NGO, bibliotekę albo szkołę?",
+        "Ile osób z grupy „{target}” chcecie objąć na start i czy macie salę albo inne miejsce na spotkania?",
+    ],
+    "en": [
+        "Which institution wants to implement “{title}”, and how many team members can work on it (even part-time)?",
+        "What budget do you have for the first year, and do you already have a partner, e.g. an NGO, library or school?",
+        "How many people from the group “{target}” do you want to reach at the start, and do you have a room or other meeting place?",
+    ],
+    "uk": [
+        "Яка установа хоче впровадити «{title}» і скільки людей з команди може цим займатися (хоча б на частину ставки)?",
+        "Яким бюджетом ви розпоряджаєтеся на перший рік і чи маєте вже партнера, напр. НУО, бібліотеку чи школу?",
+        "Скільки людей із групи «{target}» ви хочете охопити на старті й чи маєте залу чи інше місце для зустрічей?",
+    ],
+}
+_TEXTS = {
+    "pl": {"audience": "odbiorców", "this": "tej innowacji", "expired": "Sesja wygasła. Zacznij od nowa.",
+           "intro": "Mam wszystko, czego potrzebuję. Oto szkic planu wdrożenia."},
+    "en": {"audience": "the recipients", "this": "this innovation", "expired": "The session has expired. Please start again.",
+           "intro": "I have everything I need. Here is a draft implementation plan."},
+    "uk": {"audience": "отримувачів", "this": "цієї інновації", "expired": "Сесія завершилася. Почніть спочатку.",
+           "intro": "Я маю все, що потрібно. Ось чернетка плану впровадження."},
+}
 
 
-def _local_question(session: dict, index: int) -> str:
+def _text(key: str) -> str:
+    return _TEXTS.get(current_lang.get(), _TEXTS["pl"])[key]
+
+
+async def _local_question(session: dict, index: int) -> str:
     innov = session["innovation"]
-    template = _QUESTION_TEMPLATES[min(index, len(_QUESTION_TEMPLATES)) - 1]
-    target = innov.get("target_group") or "odbiorców"
-    return template.format(title=innov.get("title", "tej innowacji"), target=target)
+    lang = current_lang.get()
+    templates = _QUESTION_TEMPLATES.get(lang, _QUESTION_TEMPLATES["pl"])
+    template = templates[min(index, len(templates)) - 1]
+    # Tytuł i grupa docelowa są z bazy (po polsku) — tłumaczymy je razem z resztą treści z cache.
+    title, target = innov.get("title"), innov.get("target_group")
+    names = await translate_texts([t for t in (title, target) if t]) if lang != "pl" else {}
+    return template.format(
+        title=names.get(title, title) if title else _text("this"),
+        target=names.get(target, target) if target else _text("audience"),
+    )
 
 
 _COST = {
@@ -385,7 +419,7 @@ async def _session_from_messages(body: AnswerRequest) -> dict:
         "plan": None,
     }
     if not session["questions"]:
-        session["questions"].append(_local_question(session, 1))
+        session["questions"].append(await _local_question(session, 1))
     _save_session(session)
     return session
 
@@ -408,7 +442,7 @@ async def start(body: StartRequest):
     }
 
     step = await _llm_step(session, force_plan=False)
-    question = step["content"] if step and step["type"] == "question" else _local_question(session, 1)
+    question = step["content"] if step and step["type"] == "question" else await _local_question(session, 1)
     session["questions"].append(question)
     _save_session(session)
     await log_event("middleman_start", as_int(innov.get("id")))
@@ -433,7 +467,7 @@ async def answer(body: AnswerRequest):
 
     async def gen() -> AsyncIterator[str]:
         if session is None:
-            yield _event({"type": "error", "content": "Sesja wygasła. Zacznij od nowa."})
+            yield _event({"type": "error", "content": _text("expired")})
             yield "data: [DONE]\n\n"
             return
 
@@ -443,10 +477,14 @@ async def answer(body: AnswerRequest):
 
         step = await _llm_step(session, force_plan)
         if step is None:
-            step = {"type": "plan", "content": _local_plan(session)} if force_plan else {
-                "type": "question",
-                "content": _local_question(session, len(session["questions"]) + 1),
-            }
+            if force_plan:
+                # Plan z reguł jest po polsku — dla en/uk przechodzi przez tłumacza (cache, błąd = oryginał).
+                plan = _local_plan(session)
+                if current_lang.get() != "pl":
+                    plan = await translate_payload(plan, keys=None)
+                step = {"type": "plan", "content": plan}
+            else:
+                step = {"type": "question", "content": await _local_question(session, len(session["questions"]) + 1)}
             await asyncio.sleep(0.4)  # lokalny tryb też „myśli” — spójny rytm z trybem LLM
 
         if step["type"] == "question":
@@ -461,7 +499,7 @@ async def answer(body: AnswerRequest):
             plan.setdefault("source", {"innovation_id": session["innovation"].get("id"), "title": session["innovation"].get("title")})
             session["plan"] = plan
             await log_event("middleman_plan", as_int(session["innovation"].get("id")))
-            intro = "Mam wszystko, czego potrzebuję. Oto szkic planu wdrożenia."
+            intro = _text("intro")
             async for chunk in _type_out(intro):
                 yield chunk
             yield _event({"type": "plan", "content": plan})

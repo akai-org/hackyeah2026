@@ -5,12 +5,12 @@ import { Building2, CircleCheck, Loader2, Mail, Sparkles, Trash2 } from "lucide-
 
 import { ConfirmDeleteDialog } from "@/components/admin/dialogs";
 import { CutoutText } from "@/components/cutout-text";
-import { ErrorNote, LoadingRows, OfflineNote, errorMessage, formatDate, useAdminData } from "@/components/admin/shared";
+import { ErrorNote, LoadingRows, OfflineNote, useAdminData, useAdminI18n } from "@/components/admin/shared";
 import { RoleBadge } from "@/components/role-badge";
 import { Toast, useToast } from "@/components/toast";
 import { Button } from "@/components/ui/button";
 import type { AdminTester, AdminUser } from "@/data/admin.mock";
-import { ROLE_LABELS, type Role } from "@/data/mock";
+import { type Role } from "@/data/mock";
 import { approveTester, deleteUser, getTesters, getUsers, setUserRole } from "@/lib/admin-api";
 
 const ASSIGNABLE: Array<Exclude<Role, "admin">> = ["user", "tester", "consultant"];
@@ -27,6 +27,8 @@ export function AdminUsersView() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<AdminUser | null>(null);
   const toast = useToast();
+  const { t, a, errorMessage, formatDate } = useAdminI18n();
+  const au = a.users;
 
   async function changeRole(user: AdminUser, role: Exclude<Role, "admin">) {
     setBusy(`role:${user.id}`);
@@ -34,7 +36,7 @@ export function AdminUsersView() {
     try {
       const { data: updated } = await setUserRole(user.id, role);
       update((current) => ({ ...current, users: current.users.map((u) => (u.id === updated.id ? { ...u, ...updated } : u)) }));
-      toast.show(`${user.name}: nowa rola ${ROLE_LABELS[role]}.`);
+      toast.show(au.newRole(user.name, t.roles[role]));
     } catch (err) {
       setActionError(errorMessage(err));
     } finally {
@@ -53,7 +55,7 @@ export function AdminUsersView() {
           u.id === tester.user_id ? { ...u, role: u.role === "admin" ? u.role : "tester", tester_pending: false } : u,
         ),
       }));
-      toast.show(`${tester.name} jest teraz testerem.`);
+      toast.show(au.nowTester(tester.name));
     } catch (err) {
       setActionError(errorMessage(err));
     } finally {
@@ -68,31 +70,31 @@ export function AdminUsersView() {
       testers: current.testers.filter((t) => t.user_id !== user.id),
     }));
     setDeleting(null);
-    toast.show(`Konto ${user.name} usunięte.`);
+    toast.show(au.deleted(user.name));
   }
 
   const pending = data?.testers.filter((t) => !t.approved) ?? [];
 
   return (
     <div>
-      <CutoutText as="h1" size="section" text="Użytkownicy" />
-      <p className="mt-3 mb-8 max-w-[60ch] text-lg">Zatwierdzaj zgłoszenia testerów, nadawaj role konsultantom i usuwaj konta.</p>
+      <CutoutText as="h1" size="section" text={au.title} />
+      <p className="mt-3 mb-8 max-w-[60ch] text-lg">{au.lead}</p>
 
       <OfflineNote offline={offline} />
       <ErrorNote message={error ?? actionError} />
 
       {loading && !data ? (
-        <LoadingRows label="Wczytuję użytkowników" />
+        <LoadingRows label={au.loading} />
       ) : data ? (
         <>
           <section aria-labelledby={`${ids}-testerzy`} className="mb-12">
             <h2 id={`${ids}-testerzy`} className="text-xl font-bold text-foreground">
-              Zgłoszenia testerów <span className="tabular-nums">({pending.length})</span>
+              {au.testerApplications} <span className="tabular-nums">({pending.length})</span>
             </h2>
             {pending.length === 0 ? (
               <p className="mt-4 flex items-center gap-2 rounded-ui border-2 border-success bg-success/10 px-4 py-3 font-bold text-success">
                 <CircleCheck aria-hidden="true" className="size-5" />
-                Wszystkie zgłoszenia rozpatrzone.
+                {au.allReviewed}
               </p>
             ) : (
               <ul className="mt-4 grid gap-4 md:grid-cols-2">
@@ -103,26 +105,26 @@ export function AdminUsersView() {
                       <div className="flex items-center gap-2">
                         <dt>
                           <Building2 aria-hidden="true" className="size-4 text-primary" />
-                          <span className="sr-only">Organizacja</span>
+                          <span className="sr-only">{au.organization}</span>
                         </dt>
                         <dd>{tester.organization}</dd>
                       </div>
                       <div className="flex items-center gap-2">
                         <dt>
                           <Sparkles aria-hidden="true" className="size-4 text-primary" />
-                          <span className="sr-only">Specjalizacja</span>
+                          <span className="sr-only">{au.expertise}</span>
                         </dt>
                         <dd>{tester.expertise}</dd>
                       </div>
                       <div className="flex items-center gap-2">
                         <dt>
                           <Mail aria-hidden="true" className="size-4 text-primary" />
-                          <span className="sr-only">E-mail</span>
+                          <span className="sr-only">{au.email}</span>
                         </dt>
                         <dd className="break-all">{tester.email}</dd>
                       </div>
                     </dl>
-                    <p className="mt-2 text-sm text-muted">Zgłoszenie z {formatDate(tester.created_at)}</p>
+                    <p className="mt-2 text-sm text-muted">{au.appliedOn(formatDate(tester.created_at))}</p>
                     <div className="mt-auto pt-4">
                       <Button type="button" onClick={() => approve(tester)} disabled={busy !== null}>
                         {busy === `tester:${tester.id}` ? (
@@ -130,7 +132,7 @@ export function AdminUsersView() {
                         ) : (
                           <CircleCheck aria-hidden="true" />
                         )}
-                        Zatwierdź testera<span className="sr-only">: {tester.name}</span>
+                        {au.approveTester}<span className="sr-only">: {tester.name}</span>
                       </Button>
                     </div>
                   </li>
@@ -141,18 +143,18 @@ export function AdminUsersView() {
 
           <section aria-labelledby={`${ids}-lista`}>
             <h2 id={`${ids}-lista`} className="text-xl font-bold text-foreground">
-              Wszyscy użytkownicy <span className="tabular-nums">({data.users.length})</span>
+              {au.allUsers} <span className="tabular-nums">({data.users.length})</span>
             </h2>
             <div className="mt-4 overflow-x-auto border-(length:--bw) border-border bg-surface">
               <table className="w-full min-w-[44rem] border-collapse text-left">
-                <caption className="sr-only">Użytkownicy platformy i ich role</caption>
+                <caption className="sr-only">{au.caption}</caption>
                 <thead className="bg-secondary">
                   <tr>
-                    <th scope="col" className="px-4 py-3 font-bold text-foreground">Osoba lub instytucja</th>
-                    <th scope="col" className="px-4 py-3 font-bold text-foreground">Rola</th>
-                    <th scope="col" className="px-4 py-3 font-bold text-foreground">Zmień rolę</th>
+                    <th scope="col" className="px-4 py-3 font-bold text-foreground">{au.colPerson}</th>
+                    <th scope="col" className="px-4 py-3 font-bold text-foreground">{au.colRole}</th>
+                    <th scope="col" className="px-4 py-3 font-bold text-foreground">{au.colChange}</th>
                     <th scope="col" className="px-4 py-3 font-bold text-foreground">
-                      <span className="sr-only">Usuń konto</span>
+                      <span className="sr-only">{au.colDelete}</span>
                     </th>
                   </tr>
                 </thead>
@@ -163,10 +165,10 @@ export function AdminUsersView() {
                       <tr key={user.id} className="border-t-2 border-border/40">
                         <th scope="row" className="px-4 py-3 text-left font-normal">
                           <span className="block font-bold text-foreground">{user.name}</span>
-                          <span className="text-sm text-muted">od {formatDate(user.created_at)}</span>
+                          <span className="text-sm text-muted">{au.since(formatDate(user.created_at))}</span>
                           {user.tester_pending && (
                             <span className="ml-2 rounded-full border border-accent bg-accent px-2 text-sm font-bold text-accent-foreground">
-                              chce zostać testerem
+                              {au.wantsTester}
                             </span>
                           )}
                         </th>
@@ -175,11 +177,11 @@ export function AdminUsersView() {
                         </td>
                         <td className="px-4 py-3">
                           {user.role === "admin" ? (
-                            <span className="text-muted">Bez zmian z panelu</span>
+                            <span className="text-muted">{au.noChange}</span>
                           ) : (
                             <>
                               <label htmlFor={selectId} className="sr-only">
-                                Rola dla: {user.name}
+                                {au.roleFor(user.name)}
                               </label>
                               <span className="flex items-center gap-2">
                                 <select
@@ -191,12 +193,12 @@ export function AdminUsersView() {
                                 >
                                   {ASSIGNABLE.map((role) => (
                                     <option key={role} value={role}>
-                                      {ROLE_LABELS[role]}
+                                      {t.roles[role]}
                                     </option>
                                   ))}
                                 </select>
                                 {busy === `role:${user.id}` && (
-                                  <Loader2 aria-label="Zapisuję" className="size-5 animate-spin text-primary" />
+                                  <Loader2 aria-label={au.saving} className="size-5 animate-spin text-primary" />
                                 )}
                               </span>
                             </>
@@ -212,7 +214,7 @@ export function AdminUsersView() {
                               className="px-3 text-destructive"
                             >
                               <Trash2 aria-hidden="true" />
-                              Usuń<span className="sr-only"> konto: {user.name}</span>
+                              {a.delete}<span className="sr-only">{au.deleteAccount(user.name)}</span>
                             </Button>
                           )}
                         </td>
@@ -228,9 +230,9 @@ export function AdminUsersView() {
 
       {deleting && (
         <ConfirmDeleteDialog
-          title="Usunąć konto?"
+          title={au.deleteTitle}
           what={deleting.name}
-          consequences="Konto zostanie usunięte razem ze zgłoszeniem testera i zgłoszeniami do testów innowacji. Wpisy na forum zostają (są podpisane imieniem)."
+          consequences={au.deleteConsequences}
           onConfirm={() => remove(deleting)}
           onClose={() => setDeleting(null)}
         />

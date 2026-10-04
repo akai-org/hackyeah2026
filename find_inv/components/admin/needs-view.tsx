@@ -5,9 +5,9 @@ import { Inbox, TrendingDown, TrendingUp } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { CutoutText } from "@/components/cutout-text";
-import { ErrorNote, LoadingRows, OfflineNote, formatDate, useAdminData } from "@/components/admin/shared";
+import { ErrorNote, LoadingRows, OfflineNote, useAdminData, useAdminI18n } from "@/components/admin/shared";
 import { DataTable } from "@/components/admin/trends-view";
-import { getReportedNeeds, type NeedsTrends, type ReporterType } from "@/lib/admin-api";
+import { getReportedNeeds } from "@/lib/admin-api";
 import { cn } from "@/lib/utils";
 
 // Kolory jak w trends-view; druga seria (wyszukiwania) w ciemniejszej zieleni marki.
@@ -20,25 +20,11 @@ const SURFACE = "#FAFCF7";
 
 const tooltipStyle = { background: SURFACE, border: `2px solid ${DEEP}`, borderRadius: 12, color: INK, fontSize: 16, padding: "8px 12px" };
 
-const REPORTER_LABELS: Record<ReporterType, string> = {
-  resident: "Mieszkaniec",
-  ngo: "Organizacja pozarządowa",
-  institution: "Instytucja",
-  local_government: "Samorząd",
-  other: "Inne",
-};
-
-const TREND_LABELS: Record<NeedsTrends["areas"][number]["trend"], string> = {
-  up: "rośnie",
-  down: "spada",
-  flat: "bez zmian",
-  new: "nowy temat",
-};
-
+// Etykiety zgłaszających i trendów są w słowniku (admin.needs).
 const PERIODS = [3, 6, 12];
 
-function areaName(area: { name: string } | null) {
-  return area?.name ?? "Bez obszaru";
+function areaName(area: { name: string } | null, fallback: string) {
+  return area?.name ?? fallback;
 }
 
 export function AdminNeedsView() {
@@ -46,42 +32,45 @@ export function AdminNeedsView() {
   const [months, setMonths] = useState(6);
   const [region, setRegion] = useState("");
   const { data, offline, error, loading } = useAdminData(() => getReportedNeeds(months), String(months));
+  const { a, formatDate, number } = useAdminI18n();
+  const n = a.needs;
 
   const trends = data?.trends;
-  const areas = (trends?.areas ?? []).filter((a) => a.needs + a.searches > 0);
-  const chart = areas.map((a) => ({ name: areaName(a.area), needs: a.needs, searches: a.searches }));
+  const areas = (trends?.areas ?? []).filter((row) => row.needs + row.searches > 0);
+  const chart = areas.map((row) => ({ name: areaName(row.area, n.noArea), needs: row.needs, searches: row.searches }));
   const regions = Array.from(new Set((data?.needs ?? []).map((n) => n.region).filter(Boolean) as string[])).sort();
   const needs = (data?.needs ?? []).filter((n) => !region || n.region === region);
 
   return (
     <div>
-      <CutoutText as="h1" size="section" text="Zgłoszone potrzeby" />
+      <CutoutText as="h1" size="section" text={n.title} />
       <p className="mt-3 mb-8 max-w-[60ch] text-lg">
-        Problemy opisane przez mieszkańców, organizacje i samorządy w Zasobniku wiedzy — z podziałem na obszary i trend
-        z ostatnich 30 dni.
+        {n.lead}
       </p>
 
       <OfflineNote offline={offline} />
       <ErrorNote message={error} />
 
       {loading && !data ? (
-        <LoadingRows label="Wczytuję zgłoszone potrzeby" />
+        <LoadingRows label={n.loading} />
       ) : data && trends ? (
         <div className="grid gap-6">
           <section aria-labelledby={`${ids}-obszary`} className="border-(length:--bw) border-border bg-surface p-6">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
                 <h2 id={`${ids}-obszary`} className="text-xl font-bold text-foreground">
-                  Potrzeby i wyszukiwania według obszaru
+                  {n.byArea}
                 </h2>
                 <p className="mt-1 text-muted">
-                  <span className="font-bold text-foreground tabular-nums">{trends.total_needs}</span> zgłoszeń i{" "}
-                  <span className="font-bold text-foreground tabular-nums">{trends.total_searches}</span> wyszukiwań w okresie
+                  <span className="font-bold text-foreground tabular-nums">{trends.total_needs}</span>
+                  {n.totals[1]}
+                  <span className="font-bold text-foreground tabular-nums">{trends.total_searches}</span>
+                  {n.totals[2]}
                 </p>
               </div>
               <div>
                 <label htmlFor={`${ids}-okres`} className="block font-bold text-foreground">
-                  Okres
+                  {n.period}
                 </label>
                 <select
                   id={`${ids}-okres`}
@@ -91,14 +80,14 @@ export function AdminNeedsView() {
                 >
                   {PERIODS.map((p) => (
                     <option key={p} value={p}>
-                      ostatnie {p} mies.
+                      {n.lastMonths(p)}
                     </option>
                   ))}
                 </select>
               </div>
             </div>
             {chart.length === 0 ? (
-              <p className="mt-6">W tym okresie nikt nie zgłosił potrzeby ani nie szukał w Zasobniku.</p>
+              <p className="mt-6">{n.noneInPeriod}</p>
             ) : (
               <>
                 <div aria-hidden="true" className="mt-6" style={{ height: Math.max(chart.length * 56, 160) }}>
@@ -109,29 +98,29 @@ export function AdminNeedsView() {
                       <YAxis type="category" dataKey="name" width={170} tick={{ fill: INK, fontSize: 15 }} tickLine={false} axisLine={false} />
                       <Tooltip contentStyle={tooltipStyle} cursor={{ fill: GRID, opacity: 0.6 }} />
                       <Legend wrapperStyle={{ color: INK, fontSize: 15 }} />
-                      <Bar dataKey="needs" name="Zgłoszone potrzeby" fill={LEAF} radius={[0, 4, 4, 0]} isAnimationActive={false} />
-                      <Bar dataKey="searches" name="Wyszukiwania" fill={DEEP} fillOpacity={0.45} radius={[0, 4, 4, 0]} isAnimationActive={false} />
+                      <Bar dataKey="needs" name={n.reported} fill={LEAF} radius={[0, 4, 4, 0]} isAnimationActive={false} />
+                      <Bar dataKey="searches" name={n.searches} fill={DEEP} fillOpacity={0.45} radius={[0, 4, 4, 0]} isAnimationActive={false} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
                 <DataTable
-                  caption="Zgłoszone potrzeby według obszaru"
-                  head={["Obszar", "Zgłoszenia"]}
+                  caption={n.byAreaCaption}
+                  head={[n.area, n.reports]}
                   rows={chart.map((row) => [row.name, row.needs])}
                 />
                 <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {areas.map((a) => (
-                    <li key={a.area?.slug ?? "brak"} className="rounded-ui border-2 border-border/40 p-4">
-                      <p className="font-bold text-foreground">{areaName(a.area)}</p>
+                  {areas.map((row) => (
+                    <li key={row.area?.slug ?? "brak"} className="rounded-ui border-2 border-border/40 p-4">
+                      <p className="font-bold text-foreground">{areaName(row.area, n.noArea)}</p>
                       <p className="mt-1 flex items-center gap-2 text-sm">
-                        {a.trend === "down" ? (
+                        {row.trend === "down" ? (
                           <TrendingDown aria-hidden="true" className="size-4 text-muted" />
                         ) : (
-                          <TrendingUp aria-hidden="true" className={cn("size-4", a.trend === "up" || a.trend === "new" ? "text-destructive" : "text-muted")} />
+                          <TrendingUp aria-hidden="true" className={cn("size-4", row.trend === "up" || row.trend === "new" ? "text-destructive" : "text-muted")} />
                         )}
                         <span>
-                          {a.needs_last_30d} w ostatnich 30 dniach (wcześniej {a.needs_prev_30d}) — {TREND_LABELS[a.trend]}
-                          {a.change_pct !== null && ` (${a.change_pct > 0 ? "+" : ""}${a.change_pct.toLocaleString("pl-PL")}%)`}
+                          {n.last30(row.needs_last_30d, row.needs_prev_30d, n.trend[row.trend])}
+                          {row.change_pct !== null && ` (${row.change_pct > 0 ? "+" : ""}${number(row.change_pct)}%)`}
                         </span>
                       </p>
                     </li>
@@ -144,12 +133,12 @@ export function AdminNeedsView() {
           <section aria-labelledby={`${ids}-lista`} className="border-(length:--bw) border-border bg-surface p-6">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <h2 id={`${ids}-lista`} className="text-xl font-bold text-foreground">
-                Ostatnie zgłoszenia <span className="tabular-nums">({needs.length})</span>
+                {n.recent} <span className="tabular-nums">({needs.length})</span>
               </h2>
               {regions.length > 0 && (
                 <div>
                   <label htmlFor={`${ids}-region`} className="block font-bold text-foreground">
-                    Region
+                    {n.region}
                   </label>
                   <select
                     id={`${ids}-region`}
@@ -157,7 +146,7 @@ export function AdminNeedsView() {
                     onChange={(event) => setRegion(event.target.value)}
                     className="mt-2 min-h-12 cursor-pointer rounded-ui border-(length:--bw) border-border bg-surface px-3 text-base"
                   >
-                    <option value="">Wszystkie</option>
+                    <option value="">{n.all}</option>
                     {regions.map((r) => (
                       <option key={r} value={r}>
                         {r}
@@ -170,28 +159,28 @@ export function AdminNeedsView() {
             {needs.length === 0 ? (
               <p className="mt-6 flex items-center gap-2">
                 <Inbox aria-hidden="true" className="size-5 text-muted" />
-                Brak zgłoszonych potrzeb. Pojawią się tu, gdy ktoś opisze problem w Zasobniku wiedzy.
+                {n.empty}
               </p>
             ) : (
               <div className="mt-4 overflow-x-auto">
                 <table className="w-full min-w-[40rem] border-collapse text-left">
-                  <caption className="sr-only">Zgłoszone potrzeby, od najnowszych</caption>
+                  <caption className="sr-only">{n.caption}</caption>
                   <thead className="bg-secondary">
                     <tr>
-                      <th scope="col" className="px-4 py-3 font-bold text-foreground">Opis potrzeby</th>
-                      <th scope="col" className="px-4 py-3 font-bold text-foreground">Obszar</th>
-                      <th scope="col" className="px-4 py-3 font-bold text-foreground">Kto zgłosił</th>
-                      <th scope="col" className="px-4 py-3 font-bold text-foreground">Region</th>
-                      <th scope="col" className="px-4 py-3 font-bold text-foreground">Data</th>
+                      <th scope="col" className="px-4 py-3 font-bold text-foreground">{n.colDescription}</th>
+                      <th scope="col" className="px-4 py-3 font-bold text-foreground">{n.colArea}</th>
+                      <th scope="col" className="px-4 py-3 font-bold text-foreground">{n.colReporter}</th>
+                      <th scope="col" className="px-4 py-3 font-bold text-foreground">{n.colRegion}</th>
+                      <th scope="col" className="px-4 py-3 font-bold text-foreground">{n.colDate}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {needs.map((need) => (
                       <tr key={need.id} className="border-t-2 border-border/40 align-top">
                         <td className="max-w-md px-4 py-3">{need.description}</td>
-                        <td className="px-4 py-3">{need.area ? need.area.name : <span className="text-muted">nieprzypisane</span>}</td>
-                        <td className="px-4 py-3">{REPORTER_LABELS[need.reporter_type] ?? need.reporter_type}</td>
-                        <td className="px-4 py-3">{need.region ?? <span className="text-muted">brak</span>}</td>
+                        <td className="px-4 py-3">{need.area ? need.area.name : <span className="text-muted">{n.unassigned}</span>}</td>
+                        <td className="px-4 py-3">{n.reporters[need.reporter_type] ?? need.reporter_type}</td>
+                        <td className="px-4 py-3">{need.region ?? <span className="text-muted">{n.none}</span>}</td>
                         <td className="px-4 py-3 whitespace-nowrap tabular-nums">{formatDate(need.created_at)}</td>
                       </tr>
                     ))}

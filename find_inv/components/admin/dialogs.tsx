@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { CircleAlert, Loader2, Save, Trash2, X } from "lucide-react";
 
-import { STATUS_META, errorMessage, tagLabel } from "@/components/admin/shared";
+import { STATUS_META, useAdminI18n } from "@/components/admin/shared";
 import { Button } from "@/components/ui/button";
 import type { InnovationStatus } from "@/data/admin.mock";
 import { TAXONOMY_TAGS } from "@/data/mock";
@@ -30,6 +30,7 @@ function AdminDialog({
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const ids = useId();
+  const { a } = useAdminI18n();
 
   useEffect(() => {
     const dialog = ref.current;
@@ -60,7 +61,7 @@ function AdminDialog({
           className="rounded-ui p-1 text-muted hover:text-primary-hover focus-visible:outline-2 focus-visible:outline-focus"
         >
           <X aria-hidden="true" className="size-5" />
-          <span className="sr-only">Zamknij</span>
+          <span className="sr-only">{a.dialog.close}</span>
         </button>
       </div>
       {description && <div className="mt-3">{description}</div>}
@@ -87,6 +88,7 @@ export function ConfirmDeleteDialog({
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { a, errorMessage } = useAdminI18n();
 
   async function confirm() {
     setBusy(true);
@@ -106,7 +108,10 @@ export function ConfirmDeleteDialog({
       description={
         <>
           <p className="font-bold text-foreground">{what}</p>
-          <p className="mt-2">{consequences} Tej operacji nie da się cofnąć.</p>
+          <p className="mt-2">
+            {consequences}
+            {a.dialog.irreversible}
+          </p>
         </>
       }
     >
@@ -118,11 +123,11 @@ export function ConfirmDeleteDialog({
       )}
       <div className="mt-6 flex flex-wrap gap-3">
         <Button type="button" variant="secondary" onClick={onClose} disabled={busy} autoFocus>
-          Anuluj
+          {a.dialog.cancel}
         </Button>
         <Button type="button" onClick={confirm} disabled={busy} className="border-destructive bg-destructive text-primary-foreground hover:border-foreground hover:bg-foreground">
           {busy ? <Loader2 aria-hidden="true" className="animate-spin" /> : <Trash2 aria-hidden="true" />}
-          Usuń na stałe
+          {a.dialog.deleteForever}
         </Button>
       </div>
     </AdminDialog>
@@ -131,7 +136,7 @@ export function ConfirmDeleteDialog({
 
 // ---------- Formularz karty innowacji (dodawanie i edycja) ----------
 
-const COST_LABELS = { low: "Niski", medium: "Średni", high: "Wysoki" } as const;
+const COST_LEVELS = ["low", "medium", "high"] as const;
 
 const EMPTY: InnovationInput = {
   title: "",
@@ -158,16 +163,17 @@ function toInput(item: AdminInnovationFull | null): InnovationInput {
 
 type TextField = Exclude<keyof InnovationInput, "status" | "cost_level" | "implementation_time_months" | "tags">;
 
-const TEXT_FIELDS: Array<{ key: TextField; label: string; hint?: string; multiline?: boolean; required?: boolean }> = [
-  { key: "title", label: "Nazwa", required: true },
-  { key: "short_desc", label: "Krótki opis", hint: "1–2 zdania na kartę w wynikach (min. 10 znaków).", multiline: true, required: true },
-  { key: "full_desc", label: "Pełny opis", hint: "Trafia do czatu o innowacji i wyszukiwania semantycznego.", multiline: true },
-  { key: "category", label: "Kategoria" },
-  { key: "area", label: "Obszar" },
-  { key: "target_group", label: "Grupa docelowa" },
-  { key: "location", label: "Lokalizacja" },
-  { key: "where_implemented", label: "Gdzie wdrożono" },
-  { key: "source_url", label: "Źródło (adres strony)" },
+// Etykiety i podpowiedzi pól są w słowniku (admin.dialog.fields).
+const TEXT_FIELDS: Array<{ key: TextField; hint?: "short_desc_hint" | "full_desc_hint"; multiline?: boolean; required?: boolean }> = [
+  { key: "title", required: true },
+  { key: "short_desc", hint: "short_desc_hint", multiline: true, required: true },
+  { key: "full_desc", hint: "full_desc_hint", multiline: true },
+  { key: "category" },
+  { key: "area" },
+  { key: "target_group" },
+  { key: "location" },
+  { key: "where_implemented" },
+  { key: "source_url" },
 ];
 
 export function InnovationFormDialog({
@@ -181,6 +187,8 @@ export function InnovationFormDialog({
   onClose: () => void;
 }) {
   const ids = useId();
+  const { a, errorMessage, tagLabel } = useAdminI18n();
+  const d = a.dialog;
   const [form, setForm] = useState<InnovationInput>(() => toInput(item));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -189,9 +197,9 @@ export function InnovationFormDialog({
     setForm((current) => ({ ...current, [key]: value }));
 
   function validate(): string | null {
-    if (form.title.trim().length < 3) return "Nazwa musi mieć co najmniej 3 znaki.";
-    if (form.short_desc.trim().length < 10) return "Krótki opis musi mieć co najmniej 10 znaków.";
-    if (form.source_url && !/^https?:\/\//.test(form.source_url.trim())) return "Źródło musi zaczynać się od http:// lub https://.";
+    if (form.title.trim().length < 3) return d.titleTooShort;
+    if (form.short_desc.trim().length < 10) return d.shortTooShort;
+    if (form.source_url && !/^https?:\/\//.test(form.source_url.trim())) return d.badUrl;
     return null;
   }
 
@@ -215,12 +223,12 @@ export function InnovationFormDialog({
   return (
     <AdminDialog
       wide
-      title={item ? "Edytuj innowację" : "Dodaj innowację"}
+      title={item ? d.editTitle : d.addTitle}
       onClose={onClose}
-      description={<p className="text-muted">Pola z gwiazdką są wymagane. Po zapisaniu karta od razu trafia do Biblioteki i wyszukiwania.</p>}
+      description={<p className="text-muted">{d.required}</p>}
     >
       <form onSubmit={submit} noValidate className="mt-6 grid gap-5 sm:grid-cols-2">
-        {TEXT_FIELDS.map(({ key, label, hint, multiline, required }) => {
+        {TEXT_FIELDS.map(({ key, hint, multiline, required }) => {
           const id = `${ids}-${key}`;
           const props = {
             id,
@@ -233,12 +241,12 @@ export function InnovationFormDialog({
           return (
             <div key={key} className={cn(multiline && "sm:col-span-2")}>
               <label htmlFor={id} className="block font-bold text-foreground">
-                {label}
+                {d.fields[key]}
                 {required && <span aria-hidden="true"> *</span>}
               </label>
               {hint && (
                 <p id={`${id}-podpowiedz`} className="mt-1 text-sm text-muted">
-                  {hint}
+                  {d.fields[hint]}
                 </p>
               )}
               {multiline ? (
@@ -252,7 +260,7 @@ export function InnovationFormDialog({
 
         <div>
           <label htmlFor={`${ids}-status`} className="block font-bold text-foreground">
-            Status
+            {d.status}
           </label>
           <select
             id={`${ids}-status`}
@@ -262,14 +270,14 @@ export function InnovationFormDialog({
           >
             {(Object.keys(STATUS_META) as InnovationStatus[]).map((status) => (
               <option key={status} value={status}>
-                {STATUS_META[status].label}
+                {a.status[status]}
               </option>
             ))}
           </select>
         </div>
         <div>
           <label htmlFor={`${ids}-koszt`} className="block font-bold text-foreground">
-            Koszt wdrożenia
+            {d.cost}
           </label>
           <select
             id={`${ids}-koszt`}
@@ -277,17 +285,17 @@ export function InnovationFormDialog({
             onChange={(event) => set("cost_level", (event.target.value || null) as InnovationInput["cost_level"])}
             className={cn(fieldClass, "cursor-pointer")}
           >
-            <option value="">Brak danych</option>
-            {(Object.keys(COST_LABELS) as Array<keyof typeof COST_LABELS>).map((level) => (
+            <option value="">{d.noCost}</option>
+            {COST_LEVELS.map((level) => (
               <option key={level} value={level}>
-                {COST_LABELS[level]}
+                {d.costs[level]}
               </option>
             ))}
           </select>
         </div>
         <div>
           <label htmlFor={`${ids}-czas`} className="block font-bold text-foreground">
-            Czas wdrożenia (miesiące)
+            {d.time}
           </label>
           <input
             id={`${ids}-czas`}
@@ -304,7 +312,7 @@ export function InnovationFormDialog({
         </div>
 
         <fieldset className="sm:col-span-2">
-          <legend className="font-bold text-foreground">Tagi</legend>
+          <legend className="font-bold text-foreground">{d.tags}</legend>
           <div className="mt-2 flex flex-wrap gap-2">
             {TAXONOMY_TAGS.map((tag) => {
               const checked = form.tags.includes(tag);
@@ -339,10 +347,10 @@ export function InnovationFormDialog({
         <div className="flex flex-wrap gap-3 sm:col-span-2">
           <Button type="submit" disabled={busy}>
             {busy ? <Loader2 aria-hidden="true" className="animate-spin" /> : <Save aria-hidden="true" />}
-            {item ? "Zapisz zmiany" : "Dodaj innowację"}
+            {item ? d.saveChanges : d.addTitle}
           </Button>
           <Button type="button" variant="secondary" onClick={onClose} disabled={busy}>
-            Anuluj
+            {d.cancel}
           </Button>
         </div>
       </form>

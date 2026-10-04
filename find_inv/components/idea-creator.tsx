@@ -15,9 +15,10 @@ import { IdeaCardEditor } from "@/components/idea-card-editor";
 import { IdeaMatches } from "@/components/idea-matches";
 import { IdeaWizard, type WizardAnswers } from "@/components/idea-wizard";
 import { Button } from "@/components/ui/button";
-import { TAG_GROUPS, TAG_LABELS, type Tag } from "@/data/mock";
+import { TAG_GROUPS, type Tag } from "@/data/mock";
 import { analyzeIdea, extractPdfText, type IdeaDraft } from "@/lib/ideas";
-import { cn, plural } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/client";
 
 // Kreator pomysłów: opis swobodny albo asystent krok po kroku → AI rozpisuje pomysł na pola fiszki
 // (POST /api/ideas/analyze) → użytkownik poprawia fiszkę, dodaje pliki i zapisuje ją dla ROPS.
@@ -27,13 +28,15 @@ type Mode = "free" | "wizard";
 /** Czas płynnej zmiany wysokości przy przełączeniu trybu. */
 const MODE_MS = 320;
 
-const MODES: Array<{ value: Mode; label: string; text: string; icon: typeof PenLine }> = [
-  { value: "free", label: "Opiszę pomysł sam", text: "Jeden opis własnymi słowami — AI rozpisze go na fiszkę.", icon: PenLine },
-  { value: "wizard", label: "Asystent krok po kroku", text: "Odpowiesz na 6 krótkich pytań, jedno po drugim.", icon: ListChecks },
+const MODES: Array<{ value: Mode; icon: typeof PenLine }> = [
+  { value: "free", icon: PenLine },
+  { value: "wizard", icon: ListChecks },
 ];
 
 export function IdeaCreator() {
   const ids = useId();
+  const t = useT();
+  const c = t.creator;
   const fieldId = `${ids}-pomysl`;
   const errorId = `${ids}-blad`;
   const hintId = `${ids}-podpowiedz`;
@@ -118,19 +121,16 @@ export function IdeaCreator() {
     if (pdfInputRef.current) pdfInputRef.current.value = "";
     if (!file) return;
     dictation.abort();
-    setPdf({ status: "reading", message: `Czytam plik ${file.name}…` });
+    setPdf({ status: "reading", message: c.readingPdf(file.name) });
     try {
       const result = await extractPdfText(file);
       setText(result.text);
       setError(false);
-      const pages = `${result.pages} ${plural(result.pages, "strona", "strony", "stron")}`;
-      setPdf({
-        status: "done",
-        message: `Wczytano tekst z pliku ${file.name} (${pages})${result.truncated ? " — długi plik, wzięto tylko początek" : ""}. Możesz go poprawić w polu opisu.`,
-      });
+      setPdf({ status: "done", message: c.pdfLoaded(file.name, result.pages, result.truncated) });
       void showCard(analyzeIdea(result.text, chosen), result.text);
     } catch (problem) {
-      setPdf({ status: "error", message: (problem as Error).message });
+      const code = (problem as Error).message;
+      setPdf({ status: "error", message: c.pdfErrors[code] ?? code });
     }
   }
 
@@ -161,9 +161,9 @@ export function IdeaCreator() {
     <>
       <div ref={startRef} tabIndex={-1} className="mt-8 max-w-3xl focus:outline-none">
         <fieldset>
-          <legend className="text-lg font-bold text-foreground">Jak chcesz zacząć?</legend>
+          <legend className="text-lg font-bold text-foreground">{c.howToStart}</legend>
           <div className="mt-2 grid gap-3 sm:grid-cols-2">
-            {MODES.map(({ value, label, text: description, icon: Icon }) => (
+            {MODES.map(({ value, icon: Icon }) => (
               <label
                 key={value}
                 className="flex cursor-pointer items-start gap-3 rounded-ui border-(length:--bw) border-border bg-surface p-4 hover:bg-background has-checked:border-primary has-checked:bg-primary/10"
@@ -180,9 +180,9 @@ export function IdeaCreator() {
                 <span>
                   <span className="flex items-center gap-2 font-bold text-foreground">
                     <Icon aria-hidden="true" className="size-5" />
-                    {label}
+                    {c.modes[value].label}
                   </span>
-                  <span className="mt-1 block text-muted">{description}</span>
+                  <span className="mt-1 block text-muted">{c.modes[value].text}</span>
                 </span>
               </label>
             ))}
@@ -208,11 +208,10 @@ export function IdeaCreator() {
           ) : (
             <form onSubmit={analyzeText} noValidate className="mt-8 max-w-3xl">
               <label htmlFor={fieldId} className="block text-lg font-bold text-foreground">
-                Opisz swój pomysł społeczny
+                {c.describe}
               </label>
               <p id={hintId} className="mt-1 text-muted">
-                Co chcesz zrobić, dla kogo i gdzie. Możesz dodać, na jakim etapie jest pomysł, ile może kosztować i kto
-                pomoże — AI rozpisze to na pola fiszki.
+                {c.describeHint}
               </p>
               <textarea
                 ref={textareaRef}
@@ -227,7 +226,7 @@ export function IdeaCreator() {
                 aria-describedby={[hintId, dictation.supported ? dictationHintId : null, error ? errorId : null]
                   .filter(Boolean)
                   .join(" ")}
-                placeholder="Na przykład: chcę zorganizować w świetlicy wiejskiej spotkania, na których młodzież uczy seniorów obsługi smartfona"
+                placeholder={c.describePlaceholder}
                 className={cn(
                   "mt-2 min-h-[160px] w-full resize-y rounded-ui border-(length:--bw) bg-surface p-4 text-base text-foreground placeholder:text-muted",
                   error ? "border-destructive" : "border-border",
@@ -242,7 +241,7 @@ export function IdeaCreator() {
                   )}
                 >
                   {pdf?.status === "reading" ? <Loader2 aria-hidden="true" className="size-5 animate-spin" /> : <FileUp aria-hidden="true" className="size-5" />}
-                  Wczytaj opis z PDF
+                  {c.loadPdf}
                   <input
                     ref={pdfInputRef}
                     type="file"
@@ -255,7 +254,7 @@ export function IdeaCreator() {
                 </label>
               </div>
               <p id={`${ids}-pdf-opis`} className="mt-1 text-sm text-muted">
-                PDF do 10 MB z tekstem (np. opis projektu). Skanu bez warstwy tekstowej nie odczytamy.
+                {c.pdfHint}
               </p>
               <p role="status" aria-live="polite" className={cn(pdf && pdf.status !== "error" && "mt-2 text-foreground")}>
                 {pdf && pdf.status !== "error" && pdf.message}
@@ -276,17 +275,17 @@ export function IdeaCreator() {
                   className="mt-3 flex items-start gap-2 rounded-ui border-2 border-destructive bg-surface px-4 py-3 font-bold text-destructive"
                 >
                   <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
-                  Opisz pomysł w co najmniej jednym zdaniu, żeby AI mogło go przeanalizować.
+                  {c.tooShort}
                 </p>
               )}
 
               <fieldset className="mt-8">
-                <legend className="text-lg font-bold text-foreground">Czego dotyczy pomysł?</legend>
-                <p className="mt-1 text-muted">Nieobowiązkowe. Resztę tagów zaproponuje AI.</p>
+                <legend className="text-lg font-bold text-foreground">{c.whatAbout}</legend>
+                <p className="mt-1 text-muted">{c.whatAboutHint}</p>
                 {TAG_GROUPS.map((group, groupIndex) => (
                   <div key={group.title} role="group" aria-labelledby={`${ids}-grupa-${groupIndex}`} className="mt-4">
                     <p id={`${ids}-grupa-${groupIndex}`} className="font-bold text-muted">
-                      {group.title}
+                      {c.tagGroups[groupIndex] ?? group.title}
                     </p>
                     <ul className="mt-2 flex flex-wrap gap-2">
                       {group.tags.map((tag) => {
@@ -303,7 +302,7 @@ export function IdeaCreator() {
                               )}
                             >
                               {active && <span aria-hidden="true">✓</span>}
-                              {TAG_LABELS[tag]}
+                              {t.tags[tag]}
                             </button>
                           </li>
                         );
@@ -315,7 +314,7 @@ export function IdeaCreator() {
 
               <Button type="submit" disabled={analyzing} className="mt-8">
                 {analyzing ? <Loader2 aria-hidden="true" className="animate-spin" /> : <Sparkles aria-hidden="true" />}
-                Analizuj pomysł
+                {c.analyze}
               </Button>
             </form>
           )}
@@ -325,8 +324,8 @@ export function IdeaCreator() {
       <p role="status" aria-live="polite" className={cn("flex items-center gap-2 font-bold text-foreground", analyzing && "mt-4")}>
         {analyzing && (
           <>
-            <span className="rounded-ui border-2 border-accent bg-accent px-3 py-1 text-accent-foreground">AI analizuje pomysł</span>
-            Rozpisuję opis na pola fiszki…
+            <span className="rounded-ui border-2 border-accent bg-accent px-3 py-1 text-accent-foreground">{c.aiAnalyzing}</span>
+            {c.splitting}
           </>
         )}
       </p>

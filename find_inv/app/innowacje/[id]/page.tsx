@@ -3,8 +3,12 @@ import { notFound } from "next/navigation";
 
 import { InnovationDetail } from "@/components/innovation-detail";
 import { PageBackdrop } from "@/components/page-backdrop";
+import { getT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = { title: "Karta innowacji" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.pages.titles.innovation };
+}
 
 export default async function InnovationPage({ params }: PageProps<"/innowacje/[id]">) {
   const { id } = await params;

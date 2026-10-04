@@ -31,18 +31,13 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { innovations as libraryInnovations } from "@/data/innovations.mock";
 import { cn } from "@/lib/utils";
 import { answerMiddleman, startMiddleman, type MiddlemanPlan, type StartResult } from "@/lib/middleman-api";
+import { useI18n, useT } from "@/lib/i18n/client";
+import { formatDate } from "@/lib/i18n/format";
+import type { MiddlemanMessages } from "@/lib/i18n/ns/middleman";
+import { useTranslatedTexts } from "@/lib/i18n/use-translated";
 
 // Middleman AI wg DESIGN.md (sekcja 8, „Plan wdrożenia”): rozmowa (maks. 3 pytania) → szkic planu.
 // Kolaż tylko w tytułach, cała reszta to zwykły, czytelny dokument.
-
-const INSTITUTIONS = [
-  "Ośrodek pomocy społecznej (OPS / GOPS / MOPS)",
-  "Centrum usług społecznych (CUS)",
-  "Urząd gminy lub starostwo",
-  "Organizacja pozarządowa (fundacja, stowarzyszenie, KGW)",
-  "Szkoła, biblioteka lub dom kultury",
-  "Inna instytucja",
-];
 
 const fieldClass =
   "mt-2 w-full rounded-ui border-(length:--bw) border-border bg-surface px-4 text-base text-foreground placeholder:text-muted";
@@ -60,10 +55,11 @@ type MiddlemanProps = {
 };
 
 function Missing() {
+  const label = useT().middleman.missing;
   return (
     <span className="inline-flex items-center gap-1.5 text-muted">
       <CircleHelp aria-hidden="true" className="size-5 shrink-0" />
-      do uzupełnienia
+      {label}
     </span>
   );
 }
@@ -81,28 +77,29 @@ function PlanSection({ icon: Icon, title, children }: { icon: LucideIcon; title:
 }
 
 /** Plan jako zwykły tekst — do wklejenia w maila, notatkę czy wniosek. */
-function planToText(plan: MiddlemanPlan, innovationTitle: string, institution: string): string {
-  const list = (items?: string[]) => (items?.length ? items.map((item) => `- ${item}`).join("\n") : "- do uzupełnienia");
+function planToText(plan: MiddlemanPlan, innovationTitle: string, institution: string, m: MiddlemanMessages): string {
+  const x = m.text;
+  const list = (items?: string[]) => (items?.length ? items.map((item) => `- ${item}`).join("\n") : `- ${m.missing}`);
   const lines = [
-    `PLAN WDROŻENIA: ${innovationTitle}`,
-    `Instytucja: ${institution}`,
+    x.header(innovationTitle),
+    `${x.institution}: ${institution}`,
     "",
-    `Cel: ${plan.goal || "do uzupełnienia"}`,
-    `Kto realizuje: ${plan.staff_needed || "do uzupełnienia"}`,
-    `Szacowany koszt: ${plan.estimated_cost || "do uzupełnienia"}`,
-    `Gdzie zorganizować: ${plan.location_suggestions || "do uzupełnienia"}`,
-    `Czas: ${plan.timeline || "do uzupełnienia"}`,
+    `${x.goal}: ${plan.goal || m.missing}`,
+    `${x.staff}: ${plan.staff_needed || m.missing}`,
+    `${x.cost}: ${plan.estimated_cost || m.missing}`,
+    `${x.where}: ${plan.location_suggestions || m.missing}`,
+    `${x.time}: ${plan.timeline || m.missing}`,
     "",
     ...(plan.phases ?? []).flatMap((phase) => [`${phase.label}:`, list(phase.items)]),
-    "Kolejne kroki:",
+    x.nextSteps,
     list(plan.steps),
     "",
-    "Skąd wziąć pieniądze:",
+    x.funding,
     list(plan.funding_hints ? plan.funding_hints.split(/;\s*/) : []),
-    ...(plan.risks?.length ? ["", "Ryzyka:", list(plan.risks)] : []),
-    ...(plan.missing?.length ? ["", "Do uzupełnienia:", list(plan.missing)] : []),
+    ...(plan.risks?.length ? ["", x.risks, list(plan.risks)] : []),
+    ...(plan.missing?.length ? ["", x.toFill, list(plan.missing)] : []),
     "",
-    "Szkic przygotowany przez AI w HubMI.pl — może zawierać błędy, zweryfikuj przed wdrożeniem.",
+    x.footer,
   ];
   return lines.join("\n");
 }
@@ -110,13 +107,16 @@ function planToText(plan: MiddlemanPlan, innovationTitle: string, institution: s
 type PlanDocumentProps = { plan: MiddlemanPlan; innovationTitle: string; institution: string; onRestart: () => void };
 
 function PlanDocument({ plan, innovationTitle, institution, onRestart }: PlanDocumentProps) {
+  const { t, locale } = useI18n();
+  const m = t.middleman;
+  const p = m.plan;
   const headingRef = useRef<HTMLHeadingElement>(null);
   const [copied, setCopied] = useState<"ok" | "error" | null>(null);
   useEffect(() => headingRef.current?.focus(), []);
 
   async function copy() {
     try {
-      await navigator.clipboard.writeText(planToText(plan, innovationTitle, institution));
+      await navigator.clipboard.writeText(planToText(plan, innovationTitle, institution, m));
       setCopied("ok");
     } catch {
       setCopied("error");
@@ -130,56 +130,56 @@ function PlanDocument({ plan, innovationTitle, institution, onRestart }: PlanDoc
     >
       {/* Nagłówek wydruku: skąd jest dokument i kiedy powstał. */}
       <p className="mb-4 hidden border-b-2 border-border pb-2 text-base print:flex print:justify-between">
-        <span className="font-bold">HubMI.pl · plan wdrożenia innowacji społecznej</span>
-        <span>{new Date().toLocaleDateString("pl-PL", { day: "numeric", month: "long", year: "numeric" })}</span>
+        <span className="font-bold">{p.printHeader}</span>
+        <span>{formatDate(new Date().toISOString(), locale)}</span>
       </p>
       <h2 id="plan-tytul" ref={headingRef} tabIndex={-1} className="focus:outline-none">
-        <CutoutText as="span" size="section" text="Twój plan wdrożenia" labelled={false} />
-        <span className="sr-only">Twój plan wdrożenia</span>
+        <CutoutText as="span" size="section" text={p.title} labelled={false} />
+        <span className="sr-only">{p.title}</span>
       </h2>
       <p className="mt-3 text-lg">
-        Innowacja: <strong className="text-foreground">{innovationTitle}</strong>
-        {plan.source?.where_implemented && <span className="text-muted"> · działa już w: {plan.source.where_implemented}</span>}
+        {p.innovation} <strong className="text-foreground">{innovationTitle}</strong>
+        {plan.source?.where_implemented && <span className="text-muted"> · {p.alreadyIn} {plan.source.where_implemented}</span>}
       </p>
       <p className="mt-1 text-lg">
-        Instytucja: <strong className="text-foreground">{institution}</strong>
+        {p.institution} <strong className="text-foreground">{institution}</strong>
       </p>
 
       <p className="mt-6 flex items-start gap-3 rounded-ui border-2 border-border bg-secondary/60 px-4 py-3">
         <Info aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-foreground" />
-        To jest szkic. Sprawdź koszty i przepisy przed wdrożeniem.
+        {p.draft}
       </p>
       <AiDisclaimer className="mt-3" />
 
       <div className="mt-8 space-y-8">
-        <PlanSection icon={Target} title="Cel">
+        <PlanSection icon={Target} title={p.goal}>
           {plan.goal ? <p>{plan.goal}</p> : <Missing />}
         </PlanSection>
 
-        <PlanSection icon={UsersRound} title="Kto realizuje">
+        <PlanSection icon={UsersRound} title={p.staff}>
           {plan.staff_needed ? <p>{plan.staff_needed}</p> : <Missing />}
         </PlanSection>
 
-        <PlanSection icon={ClipboardList} title="Czego potrzeba">
+        <PlanSection icon={ClipboardList} title={p.needs}>
           <dl className="grid gap-4 md:grid-cols-2">
             <div className="rounded-ui border-2 border-border bg-background p-4">
               <dt className="flex items-center gap-2 font-bold text-foreground">
                 <Banknote aria-hidden="true" className="size-5 text-primary" />
-                Szacowany koszt
+                {p.cost}
               </dt>
               <dd className="mt-1">{plan.estimated_cost || <Missing />}</dd>
             </div>
             <div className="rounded-ui border-2 border-border bg-background p-4">
               <dt className="flex items-center gap-2 font-bold text-foreground">
                 <MapPin aria-hidden="true" className="size-5 text-primary" />
-                Gdzie zorganizować
+                {p.where}
               </dt>
               <dd className="mt-1">{plan.location_suggestions || <Missing />}</dd>
             </div>
           </dl>
         </PlanSection>
 
-        <PlanSection icon={CalendarRange} title={plan.timeline ? `Etapy · ${plan.timeline}` : "Etapy"}>
+        <PlanSection icon={CalendarRange} title={plan.timeline ? `${p.phases} · ${plan.timeline}` : p.phases}>
           {plan.phases?.length ? (
             <ol className="grid gap-4 md:grid-cols-3">
               {plan.phases.map((phase) => (
@@ -196,7 +196,7 @@ function PlanDocument({ plan, innovationTitle, institution, onRestart }: PlanDoc
           ) : null}
           {plan.steps?.length ? (
             <>
-              <p className="mt-5 font-bold text-foreground">Kolejne kroki</p>
+              <p className="mt-5 font-bold text-foreground">{p.nextSteps}</p>
               <ol className="mt-2 list-decimal space-y-1.5 pl-6">
                 {plan.steps.map((step) => (
                   <li key={step}>{step}</li>
@@ -206,7 +206,7 @@ function PlanDocument({ plan, innovationTitle, institution, onRestart }: PlanDoc
           ) : null}
         </PlanSection>
 
-        <PlanSection icon={HandCoins} title="Skąd wziąć pieniądze">
+        <PlanSection icon={HandCoins} title={p.funding}>
           {plan.funding_hints ? (
             <ul className="list-disc space-y-1.5 pl-6">
               {plan.funding_hints.split(/;\s*/).map((hint) => (
@@ -219,7 +219,7 @@ function PlanDocument({ plan, innovationTitle, institution, onRestart }: PlanDoc
         </PlanSection>
 
         {plan.risks?.length ? (
-          <PlanSection icon={ShieldAlert} title="Ryzyka i jak im zapobiec">
+          <PlanSection icon={ShieldAlert} title={p.risks}>
             <ul className="list-disc space-y-1.5 pl-6">
               {plan.risks.map((risk) => (
                 <li key={risk}>{risk}</li>
@@ -228,7 +228,7 @@ function PlanDocument({ plan, innovationTitle, institution, onRestart }: PlanDoc
           </PlanSection>
         ) : null}
 
-        <PlanSection icon={CircleHelp} title="Do uzupełnienia">
+        <PlanSection icon={CircleHelp} title={p.toFill}>
           {plan.missing?.length ? (
             <ul className="space-y-2">
               {plan.missing.map((item) => (
@@ -239,7 +239,7 @@ function PlanDocument({ plan, innovationTitle, institution, onRestart }: PlanDoc
               ))}
             </ul>
           ) : (
-            <p>Nic — plan ma wszystkie dane.</p>
+            <p>{p.complete}</p>
           )}
         </PlanSection>
       </div>
@@ -247,27 +247,27 @@ function PlanDocument({ plan, innovationTitle, institution, onRestart }: PlanDoc
       <div className="print-hidden mt-10 flex flex-wrap gap-3 border-t-2 border-border/40 pt-6">
         <Button type="button" onClick={() => window.print()} aria-describedby="plan-druk-podpowiedz">
           <Download aria-hidden="true" />
-          Pobierz plan (PDF)
+          {p.download}
         </Button>
         <Button type="button" variant="secondary" onClick={copy}>
           {copied === "ok" ? <ClipboardCheck aria-hidden="true" /> : <Copy aria-hidden="true" />}
-          {copied === "ok" ? "Skopiowano" : "Kopiuj jako tekst"}
+          {copied === "ok" ? p.copied : p.copy}
         </Button>
         <Button type="button" variant="secondary" onClick={onRestart}>
           <RotateCcw aria-hidden="true" />
-          Zacznij od nowa
+          {p.restart}
         </Button>
         <Link href="/forum" className={buttonVariants({ variant: "secondary" })}>
           <MessageSquareText aria-hidden="true" />
-          Zapytaj ekspertów na forum
+          {p.askForum}
         </Link>
       </div>
       <p id="plan-druk-podpowiedz" className="print-hidden mt-3 text-sm text-muted">
-        W oknie drukowania wybierz „Zapisz jako PDF”, żeby zapisać plan na dysku.
+        {p.printHint}
       </p>
       <p role="status" aria-live="polite" className="print-hidden text-sm">
-        {copied === "ok" && "Plan skopiowany do schowka — wklej go w mailu albo dokumencie."}
-        {copied === "error" && <span className="font-bold text-destructive">Nie udało się skopiować. Zaznacz tekst planu ręcznie.</span>}
+        {copied === "ok" && p.copiedInfo}
+        {copied === "error" && <span className="font-bold text-destructive">{p.copyFailed}</span>}
       </p>
     </article>
   );
@@ -275,11 +275,16 @@ function PlanDocument({ plan, innovationTitle, institution, onRestart }: PlanDoc
 
 export function Middleman({ innovationId, innovationTitle: knownTitle, problem = "", variant = "page" }: MiddlemanProps) {
   const ids = useId();
+  const t = useT();
+  const m = t.middleman;
+  // Lista innowacji do wyboru jest lokalna (dane demo, po polsku) — tłumaczy ją backend.
+  const tr = useTranslatedTexts(libraryInnovations.flatMap((item) => [item.title, item.targetGroup]));
   const libraryMatch = libraryInnovations.find((item) => item.id === innovationId);
 
   const [phase, setPhase] = useState<Phase>("intro");
   const [picked, setPicked] = useState<string>(innovationId ?? "");
-  const [institution, setInstitution] = useState(INSTITUTIONS[0]);
+  const [institutionIndex, setInstitutionIndex] = useState(0);
+  const institution = m.institutions[institutionIndex];
   const [need, setNeed] = useState(problem);
   const [session, setSession] = useState<StartResult | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -326,7 +331,7 @@ export function Middleman({ innovationId, innovationTitle: knownTitle, problem =
       setQuestionIndex(result.question_index);
       setPhase("chat");
     } catch {
-      setError("Nie mogę połączyć się z asystentem. Sprawdź, czy serwer działa, i spróbuj jeszcze raz.");
+      setError(m.connectError);
     } finally {
       setBusy(false);
     }
@@ -336,7 +341,7 @@ export function Middleman({ innovationId, innovationTitle: knownTitle, problem =
     if (!session || busy) return;
     const text = answer.trim();
     if (!finish && !text) {
-      setError("Wpisz odpowiedź albo wybierz „Pokaż plan teraz”.");
+      setError(m.answerRequired);
       answerRef.current?.focus();
       return;
     }
@@ -372,7 +377,7 @@ export function Middleman({ innovationId, innovationTitle: knownTitle, problem =
       );
     } catch {
       setStreaming("");
-      if (!controller.signal.aborted) setError("Połączenie z asystentem zostało przerwane. Wyślij odpowiedź jeszcze raz.");
+      if (!controller.signal.aborted) setError(m.interrupted);
     } finally {
       setBusy(false);
     }
@@ -390,18 +395,17 @@ export function Middleman({ innovationId, innovationTitle: knownTitle, problem =
   }
 
   const innovationTitle =
-    session?.innovation.title ?? libraryMatch?.title ?? pickedLibrary?.title ?? knownTitle ?? "Innowacja";
+    session?.innovation.title ?? libraryMatch?.title ?? pickedLibrary?.title ?? knownTitle ?? m.innovationFallback;
   const inDialog = variant === "dialog";
 
   return (
     <div className={inDialog ? "mt-4" : "mx-auto max-w-content px-4 py-12 sm:px-6"}>
       <div className="print-hidden">
-        {!inDialog && <CutoutText as="h1" size="section" text="Dostosuj do siebie" />}
+        {!inDialog && <CutoutText as="h1" size="section" text={m.heading} />}
         <p className={cn("max-w-[62ch] text-lg", !inDialog && "mt-4")}>
-          Asystent zada Ci najwyżej 3 krótkie pytania i przygotuje szkic planu: kogo potrzebujesz, ile to kosztuje, gdzie to
-          zorganizować i skąd wziąć pieniądze.
+          {m.lead}
         </p>
-        <ol aria-label="Etapy" className="mt-6 flex flex-wrap gap-2 text-base">
+        <ol aria-label={m.steps} className="mt-6 flex flex-wrap gap-2 text-base">
           {(["intro", "chat", "plan"] as Phase[]).map((step, index) => (
             <li
               key={step}
@@ -411,7 +415,7 @@ export function Middleman({ innovationId, innovationTitle: knownTitle, problem =
                 phase === step ? "bg-primary text-primary-foreground" : "bg-surface text-foreground",
               )}
             >
-              {index + 1}. {["O Twojej instytucji", "Rozmowa z asystentem", "Plan wdrożenia"][index]}
+              {index + 1}. {m.stepNames[index]}
             </li>
           ))}
         </ol>
@@ -429,7 +433,7 @@ export function Middleman({ innovationId, innovationTitle: knownTitle, problem =
           <form onSubmit={begin} className="max-w-3xl border-(length:--bw) border-border bg-surface p-6 shadow-raised sm:p-8">
             {needsPicker ? (
               <fieldset>
-                <legend className="text-xl font-bold text-foreground">Którą innowację chcesz wdrożyć?</legend>
+                <legend className="text-xl font-bold text-foreground">{m.pickInnovation}</legend>
                 <div className="mt-4 grid gap-3">
                   {libraryInnovations.map((item) => (
                     <label
@@ -449,8 +453,8 @@ export function Middleman({ innovationId, innovationTitle: knownTitle, problem =
                         className="mt-1.5 size-5 shrink-0 accent-primary"
                       />
                       <span>
-                        <span className="block font-bold text-foreground">{item.title}</span>
-                        <span className="block text-base text-muted">{item.targetGroup}</span>
+                        <span className="block font-bold text-foreground">{tr(item.title)}</span>
+                        <span className="block text-base text-muted">{tr(item.targetGroup)}</span>
                       </span>
                     </label>
                   ))}
@@ -458,32 +462,34 @@ export function Middleman({ innovationId, innovationTitle: knownTitle, problem =
               </fieldset>
             ) : (
               <p className="text-lg">
-                Wybrana innowacja:{" "}
+                {m.selected}{" "}
                 <strong className="text-foreground">
-                  {libraryMatch?.title ?? knownTitle ?? `nr ${innovationId} z wyników wyszukiwania`}
+                  {libraryMatch ? tr(libraryMatch.title) : (knownTitle ?? m.fromResults(innovationId ?? ""))}
                 </strong>
               </p>
             )}
 
             <div className="mt-6">
               <label htmlFor={`${ids}-instytucja`} className="block font-bold text-foreground">
-                Twoja instytucja
+                {m.yourInstitution}
               </label>
               <select
                 id={`${ids}-instytucja`}
-                value={institution}
-                onChange={(event) => setInstitution(event.target.value)}
+                value={institutionIndex}
+                onChange={(event) => setInstitutionIndex(Number(event.target.value))}
                 className={cn(fieldClass, "min-h-12 cursor-pointer")}
               >
-                {INSTITUTIONS.map((option) => (
-                  <option key={option}>{option}</option>
+                {m.institutions.map((option, index) => (
+                  <option key={option} value={index}>
+                    {option}
+                  </option>
                 ))}
               </select>
             </div>
 
             <div className="mt-6">
               <label htmlFor={`${ids}-potrzeba`} className="block font-bold text-foreground">
-                Jaki problem chcecie rozwiązać? <span className="font-normal text-muted">(nieobowiązkowe)</span>
+                {m.problem} <span className="font-normal text-muted">{m.optional}</span>
               </label>
               <textarea
                 id={`${ids}-potrzeba`}
@@ -491,14 +497,14 @@ export function Middleman({ innovationId, innovationTitle: knownTitle, problem =
                 onChange={(event) => setNeed(event.target.value)}
                 rows={3}
                 maxLength={1500}
-                placeholder="np. W naszej gminie wielu seniorów mieszka samotnie i rzadko wychodzi z domu."
+                placeholder={m.problemPlaceholder}
                 className={cn(fieldClass, "min-h-28 py-3")}
               />
             </div>
 
             <Button type="submit" disabled={busy} className="mt-8">
               {busy ? <Loader2 aria-hidden="true" className="animate-spin" /> : <Bot aria-hidden="true" />}
-              {busy ? "Łączę z asystentem…" : "Zacznij rozmowę"}
+              {busy ? m.connecting : m.start}
             </Button>
           </form>
         )}
@@ -507,10 +513,10 @@ export function Middleman({ innovationId, innovationTitle: knownTitle, problem =
           <section aria-labelledby={`${ids}-rozmowa`} className="max-w-3xl">
             <div className="flex flex-wrap items-baseline justify-between gap-3">
               <h2 id={`${ids}-rozmowa`} className="text-xl font-bold text-foreground">
-                Rozmowa o: {session.innovation.title}
+                {m.conversationAbout(session.innovation.title)}
               </h2>
               <p className="font-bold text-muted">
-                Pytanie {questionIndex} z {session.max_questions}
+                {m.question(questionIndex, session.max_questions)}
               </p>
             </div>
             <AiDisclaimer className="mt-3" />
@@ -521,7 +527,7 @@ export function Middleman({ innovationId, innovationTitle: knownTitle, problem =
               />
             </div>
 
-            <div role="log" aria-live="polite" aria-label="Rozmowa z asystentem" className="mt-6 space-y-4">
+            <div role="log" aria-live="polite" aria-label={m.log} className="mt-6 space-y-4">
               {messages.map((message, index) => (
                 <div key={index} className={cn("appear flex", message.role === "user" ? "justify-end" : "justify-start")}>
                   <div
@@ -530,7 +536,7 @@ export function Middleman({ innovationId, innovationTitle: knownTitle, problem =
                       message.role === "ai" ? "bg-surface shadow-raised" : "bg-primary/10",
                     )}
                   >
-                    <p className="text-sm font-bold text-muted">{message.role === "ai" ? "Asystent" : "Ty"}</p>
+                    <p className="text-sm font-bold text-muted">{message.role === "ai" ? m.assistant : m.you}</p>
                     <p>{message.text}</p>
                   </div>
                 </div>
@@ -538,13 +544,13 @@ export function Middleman({ innovationId, innovationTitle: knownTitle, problem =
               {busy && (
                 <div className="flex justify-start" aria-hidden={streaming ? undefined : true}>
                   <div className="max-w-[85%] rounded-ui border-2 border-border bg-surface px-5 py-3 text-lg shadow-raised">
-                    <p className="text-sm font-bold text-muted">Asystent</p>
+                    <p className="text-sm font-bold text-muted">{m.assistant}</p>
                     {streaming ? (
                       <p>{streaming}</p>
                     ) : (
                       <p className="flex items-center gap-2 text-muted">
                         <Loader2 aria-hidden="true" className="size-5 animate-spin" />
-                        Analizuję odpowiedź…
+                        {m.analysing}
                       </p>
                     )}
                   </div>
@@ -561,7 +567,7 @@ export function Middleman({ innovationId, innovationTitle: knownTitle, problem =
               className="mt-6 border-(length:--bw) border-border bg-surface p-5"
             >
               <label htmlFor={`${ids}-odpowiedz`} className="block font-bold text-foreground">
-                Twoja odpowiedź
+                {m.yourAnswer}
               </label>
               <textarea
                 id={`${ids}-odpowiedz`}
@@ -581,16 +587,16 @@ export function Middleman({ innovationId, innovationTitle: knownTitle, problem =
                 aria-describedby={`${ids}-odpowiedz-podpowiedz`}
               />
               <p id={`${ids}-odpowiedz-podpowiedz`} className="mt-1 text-sm text-muted">
-                Enter wysyła, Shift + Enter robi nową linię.
+                {m.enterHint}
               </p>
               <div className="mt-4 flex flex-wrap gap-3">
                 <Button type="submit" disabled={busy}>
                   <Send aria-hidden="true" />
-                  Odpowiedz
+                  {m.reply}
                 </Button>
                 <Button type="button" variant="secondary" disabled={busy} onClick={() => send(true)}>
                   <ClipboardList aria-hidden="true" />
-                  Pokaż plan teraz
+                  {m.showPlan}
                 </Button>
               </div>
             </form>

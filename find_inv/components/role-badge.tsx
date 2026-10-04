@@ -1,6 +1,9 @@
+"use client";
+
 import { BadgeCheck, FlaskConical, Lightbulb, ShieldCheck, UserCheck, UserRound, type LucideIcon } from "lucide-react";
 
-import { FORUM_BADGE_LABELS, type ForumBadge } from "@/data/mock";
+import { type ForumBadge } from "@/data/mock";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 
 // Plakietka roli: ikona + słowo, więc rola nie jest przekazywana samym kolorem.
@@ -16,6 +19,7 @@ const STYLES: Record<ForumBadge, { icon: LucideIcon; className: string }> = {
 
 export function RoleBadge({ role, className }: { role: ForumBadge; className?: string }) {
   const { icon: Icon, className: colors } = STYLES[role];
+  const t = useT();
   return (
     <span
       className={cn(
@@ -25,7 +29,7 @@ export function RoleBadge({ role, className }: { role: ForumBadge; className?: s
       )}
     >
       <Icon aria-hidden="true" className="size-4 shrink-0" strokeWidth={2.25} />
-      {FORUM_BADGE_LABELS[role]}
+      {t.roles[role]}
     </span>
   );
 }

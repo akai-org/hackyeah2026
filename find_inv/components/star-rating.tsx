@@ -6,6 +6,7 @@ import { Star } from "lucide-react";
 import { apiFetch, apiPost } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/client";
 
 interface RatingData {
   average: number;
@@ -20,6 +21,7 @@ interface Props {
 
 export function StarRating({ innovationId }: Props) {
   const { user } = useAuth();
+  const r = useT().library.rating;
   const [data, setData] = useState<RatingData | null>(null);
   const [hover, setHover] = useState(0);
   const [submitted, setSubmitted] = useState(false);
@@ -53,12 +55,12 @@ export function StarRating({ innovationId }: Props) {
 
   return (
     <div className="mt-6">
-      <h2 className="text-lg font-bold text-foreground">Oceń tę innowację</h2>
+      <h2 className="text-lg font-bold text-foreground">{r.title}</h2>
 
       <div className="mt-3 flex flex-wrap items-center gap-4">
         <div
           role="group"
-          aria-label="Ocena od 1 do 5 gwiazdek"
+          aria-label={r.group}
           className="flex gap-1"
           onMouseLeave={() => setHover(0)}
         >
@@ -67,7 +69,7 @@ export function StarRating({ innovationId }: Props) {
               key={star}
               type="button"
               disabled={submitted || submitting}
-              aria-label={`${star} ${star === 1 ? "gwiazdka" : star < 5 ? "gwiazdki" : "gwiazdek"}`}
+              aria-label={r.star(star)}
               onClick={() => { void submit(star); }}
               onMouseEnter={() => setHover(star)}
               onFocus={() => setHover(star)}
@@ -90,22 +92,22 @@ export function StarRating({ innovationId }: Props) {
 
         <div className="text-sm text-muted">
           {submitted ? (
-            <span className="font-bold text-foreground">Dziękujemy za ocenę!</span>
+            <span className="font-bold text-foreground">{r.thanks}</span>
           ) : displayCount > 0 ? (
-            `${displayAvg.toFixed(1)} / 5 (${displayCount} ${displayCount === 1 ? "ocena" : displayCount < 5 ? "oceny" : "ocen"})`
+            r.summary(displayAvg.toFixed(1), displayCount)
           ) : (
-            "Brak ocen — bądź pierwszy"
+            r.none
           )}
         </div>
       </div>
 
       {data?.tester_count != null && data.tester_count > 0 && data.tester_average != null && (
         <p className="mt-2 text-sm text-muted">
-          Ocena testerów:{" "}
+          {r.testers}{" "}
           <strong className="text-foreground">
             {data.tester_average.toFixed(1)} / 5
           </strong>{" "}
-          ({data.tester_count} {data.tester_count === 1 ? "tester" : data.tester_count < 5 ? "testerów" : "testerów"})
+          ({r.testerCount(data.tester_count)})
         </p>
       )}
     </div>

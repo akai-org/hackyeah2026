@@ -6,6 +6,7 @@ import { ArrowRight, MapPin, Users } from "lucide-react";
 
 import type { InnovationCard } from "@/data/innovations";
 import { apiFetch } from "@/lib/api";
+import { useT } from "@/lib/i18n/client";
 
 // „Artykuł dnia”: jedna innowacja z Biblioteki ROPS, losowana według daty — przez cały dzień ta sama dla
 // wszystkich (nie skacze po odświeżeniu), następnego dnia inna. Archiwalne nie biorą udziału.
@@ -43,6 +44,7 @@ async function innovationOfTheDay(): Promise<InnovationCard | null> {
 
 /** Cała sekcja „Artykuł dnia”. Gdy API nie zwróci innowacji — sekcja się chowa (nic nie zmyślamy). */
 export function InnovationOfTheDaySection({ id }: { id: string }) {
+  const t = useT();
   const headingId = `${id}-tytul`;
   const [innovation, setInnovation] = useState<InnovationCard | null>(null);
   const [state, setState] = useState<"loading" | "ready" | "empty">("loading");
@@ -67,7 +69,7 @@ export function InnovationOfTheDaySection({ id }: { id: string }) {
     <section id={id} data-reveal aria-labelledby={headingId} className="border-y-(length:--bw) border-border bg-secondary">
       <div className="mx-auto max-w-content px-4 py-10 sm:px-6 lg:py-12">
         <article className="mx-auto max-w-3xl border-(length:--bw) border-border bg-surface p-6 shadow-raised md:p-8">
-          <p className="text-sm font-medium text-muted">Artykuł dnia z Biblioteki Innowacji ROPS</p>
+          <p className="text-sm font-medium text-muted">{t.home.articleOfTheDay}</p>
           {innovation ? <InnovationBody innovation={innovation} headingId={headingId} /> : <Skeleton headingId={headingId} />}
         </article>
       </div>
@@ -76,10 +78,11 @@ export function InnovationOfTheDaySection({ id }: { id: string }) {
 }
 
 function Skeleton({ headingId }: { headingId: string }) {
+  const t = useT();
   return (
     <div aria-busy="true">
       <h2 id={headingId} className="sr-only">
-        Wczytuję artykuł dnia
+        {t.home.loadingArticle}
       </h2>
       <div aria-hidden="true" className="mt-2 h-8 w-3/4 animate-pulse rounded-ui bg-secondary" />
       <div aria-hidden="true" className="mt-4 h-5 w-full animate-pulse rounded-ui bg-secondary" />
@@ -89,6 +92,7 @@ function Skeleton({ headingId }: { headingId: string }) {
 }
 
 function InnovationBody({ innovation, headingId }: { innovation: InnovationCard; headingId: string }) {
+  const t = useT();
   return (
     <>
       <h2 id={headingId} className="mt-2 text-2xl font-bold text-foreground">
@@ -105,7 +109,7 @@ function InnovationBody({ innovation, headingId }: { innovation: InnovationCard;
           <div className="flex items-start gap-2">
             <dt>
               <Users aria-hidden="true" className="mt-1 size-5 text-primary" />
-              <span className="sr-only">Dla kogo</span>
+              <span className="sr-only">{t.card.forWhom}</span>
             </dt>
             <dd>{shorten(innovation.target_group, 140)}</dd>
           </div>
@@ -114,7 +118,7 @@ function InnovationBody({ innovation, headingId }: { innovation: InnovationCard;
           <div className="flex items-start gap-2">
             <dt>
               <MapPin aria-hidden="true" className="mt-1 size-5 text-primary" />
-              <span className="sr-only">Gdzie działa</span>
+              <span className="sr-only">{t.card.where}</span>
             </dt>
             <dd>{shorten(innovation.where_implemented, 140)}</dd>
           </div>
@@ -124,7 +128,7 @@ function InnovationBody({ innovation, headingId }: { innovation: InnovationCard;
         href={`/innowacje/${innovation.id}`}
         className="mt-5 inline-flex min-h-12 items-center gap-2 font-medium text-primary underline underline-offset-4 hover:text-primary-hover"
       >
-        Czytaj całą kartę
+        {t.home.readCard}
         <span className="sr-only">: {innovation.title}</span>
         <ArrowRight aria-hidden="true" className="size-5" />
       </Link>

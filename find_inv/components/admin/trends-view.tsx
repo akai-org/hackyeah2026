@@ -16,7 +16,7 @@ import {
 } from "recharts";
 
 import { CutoutText } from "@/components/cutout-text";
-import { ErrorNote, LoadingRows, OfflineNote, tagLabel, useAdminData } from "@/components/admin/shared";
+import { ErrorNote, LoadingRows, OfflineNote, useAdminData, useAdminI18n } from "@/components/admin/shared";
 import { getTrends } from "@/lib/admin-api";
 
 // Jedna seria na wykres → jeden kolor marki (primary, kontrast 6,98:1 na surface), bez legendy.
@@ -37,15 +37,12 @@ const tooltipStyle = {
   padding: "8px 12px",
 };
 
-function shortDate(iso: string) {
-  return new Date(iso).toLocaleDateString("pl-PL", { day: "numeric", month: "short" });
-}
-
 export function DataTable({ caption, head, rows }: { caption: string; head: [string, string]; rows: Array<[string, number]> }) {
+  const { a } = useAdminI18n();
   return (
     <details className="mt-4">
       <summary className="inline-flex min-h-12 cursor-pointer items-center rounded-ui font-bold text-primary underline underline-offset-4">
-        Pokaż dane w tabeli
+        {a.showTable}
       </summary>
       <table className="mt-2 w-full border-collapse text-left">
         <caption className="sr-only">{caption}</caption>
@@ -71,6 +68,8 @@ export function DataTable({ caption, head, rows }: { caption: string; head: [str
 export function AdminTrendsView() {
   const ids = useId();
   const { data, offline, error, loading } = useAdminData(getTrends);
+  const { a, tagLabel, shortDate, number } = useAdminI18n();
+  const tr = a.trends;
 
   const tags = data?.top_tags.map((t) => ({ name: tagLabel(t.tag), count: t.count })) ?? [];
   const days = data?.by_day.map((d) => ({ date: shortDate(d.date), count: d.count })) ?? [];
@@ -78,30 +77,32 @@ export function AdminTrendsView() {
 
   return (
     <div>
-      <CutoutText as="h1" size="section" text="Czego szukają ludzie" />
+      <CutoutText as="h1" size="section" text={tr.title} />
       <p className="mt-3 mb-8 max-w-[60ch] text-lg">
-        Każde wyszukiwanie w HubMI to sygnał potrzeby. Tak widać, gdzie brakuje rozwiązań w Małopolsce.
+        {tr.lead}
       </p>
 
       <OfflineNote offline={offline} />
       <ErrorNote message={error} />
 
       {loading && !data ? (
-        <LoadingRows label="Wczytuję trendy" />
+        <LoadingRows label={tr.loading} />
       ) : data ? (
         <div className="grid gap-6 lg:grid-cols-2">
           <section aria-labelledby={`${ids}-dni`} className="border-(length:--bw) border-border bg-surface p-6 lg:col-span-2">
             <div className="flex flex-wrap items-baseline justify-between gap-3">
               <h2 id={`${ids}-dni`} className="text-xl font-bold text-foreground">
-                Wyszukiwania dzień po dniu
+                {tr.byDay}
               </h2>
               <p className="flex items-center gap-2 font-bold text-foreground">
-                <span className="tabular-nums">{data.total}</span> w ostatnich 14 dniach
+                <span className="tabular-nums">{data.total}</span>
+                {tr.last14}
                 {change !== null && change !== undefined && (
                   <span className="inline-flex items-center gap-1 rounded-full border-2 border-border bg-secondary/60 px-2.5 text-sm">
                     {change >= 0 ? <TrendingUp aria-hidden="true" className="size-4" /> : <TrendingDown aria-hidden="true" className="size-4" />}
                     {change >= 0 ? "+" : ""}
-                    {change.toLocaleString("pl-PL")}% tydzień do tygodnia
+                    {number(change)}
+                    {tr.weekOverWeek}
                   </span>
                 )}
               </p>
@@ -115,7 +116,7 @@ export function AdminTrendsView() {
                   <Tooltip
                     contentStyle={tooltipStyle}
                     cursor={{ stroke: MUTED, strokeDasharray: "4 4" }}
-                    formatter={(value) => [`${value}`, "Wyszukiwania"]}
+                    formatter={(value) => [`${value}`, tr.searches]}
                   />
                   <Area
                     type="monotone"
@@ -130,14 +131,14 @@ export function AdminTrendsView() {
                 </AreaChart>
               </ResponsiveContainer>
             </div>
-            <DataTable caption="Liczba wyszukiwań każdego dnia" head={["Dzień", "Wyszukiwania"]} rows={days.map((d) => [d.date, d.count])} />
+            <DataTable caption={tr.byDayCaption} head={[tr.day, tr.searches]} rows={days.map((d) => [d.date, d.count])} />
           </section>
 
           <section aria-labelledby={`${ids}-tagi`} className="border-(length:--bw) border-border bg-surface p-6">
             <h2 id={`${ids}-tagi`} className="text-xl font-bold text-foreground">
-              Najczęstsze tematy
+              {tr.topTopics}
             </h2>
-            <p className="mt-1 text-muted">Tagi nadane przez autotagger, top 10</p>
+            <p className="mt-1 text-muted">{tr.topTopicsHint}</p>
             <div aria-hidden="true" className="mt-4" style={{ height: Math.max(tags.length * 36, 120) }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart accessibilityLayer={false} data={tags} layout="vertical" margin={{ top: 0, right: 40, left: 0, bottom: 0 }} barCategoryGap={6}>
@@ -150,20 +151,20 @@ export function AdminTrendsView() {
                     tickLine={false}
                     axisLine={false}
                   />
-                  <Tooltip contentStyle={tooltipStyle} cursor={{ fill: GRID, opacity: 0.6 }} formatter={(value) => [`${value}`, "Wyszukiwania"]} />
+                  <Tooltip contentStyle={tooltipStyle} cursor={{ fill: GRID, opacity: 0.6 }} formatter={(value) => [`${value}`, tr.searches]} />
                   <Bar dataKey="count" fill={PRIMARY} radius={[0, 4, 4, 0]} isAnimationActive={false}>
                     <LabelList dataKey="count" position="right" fill={FOREGROUND} fontSize={15} />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            <DataTable caption="Najczęstsze tagi w wyszukiwaniach" head={["Temat", "Wyszukiwania"]} rows={tags.map((t) => [t.name, t.count])} />
+            <DataTable caption={tr.topTopicsCaption} head={[tr.topic, tr.searches]} rows={tags.map((t) => [t.name, t.count])} />
           </section>
 
           <div className="flex flex-col gap-6">
             <section aria-labelledby={`${ids}-zapytania`} className="border-(length:--bw) border-border bg-surface p-6">
               <h2 id={`${ids}-zapytania`} className="text-xl font-bold text-foreground">
-                Najczęstsze zapytania
+                {tr.topQueries}
               </h2>
               <ol className="mt-4 space-y-3">
                 {data.top_queries.slice(0, 6).map((q, index) => (
@@ -174,7 +175,7 @@ export function AdminTrendsView() {
                     <span className="flex-1">„{q.query}”</span>
                     <span className="shrink-0 font-bold tabular-nums">
                       {q.count}
-                      <span className="sr-only"> razy</span>
+                      <span className="sr-only">{a.times}</span>
                     </span>
                   </li>
                 ))}
@@ -184,11 +185,11 @@ export function AdminTrendsView() {
             <section aria-labelledby={`${ids}-luki`} className="border-(length:--bw) border-destructive bg-surface p-6">
               <h2 id={`${ids}-luki`} className="flex items-center gap-2 text-xl font-bold text-destructive">
                 <SearchX aria-hidden="true" className="size-6 shrink-0" />
-                Luki: szukano, nie znaleziono
+                {tr.gaps}
               </h2>
-              <p className="mt-1 text-muted">Tu warto poszukać nowych innowacji albo ogłosić konkurs.</p>
+              <p className="mt-1 text-muted">{tr.gapsHint}</p>
               {data.zero_result_queries.length === 0 ? (
-                <p className="mt-4">Każde zapytanie miało wyniki.</p>
+                <p className="mt-4">{tr.noGaps}</p>
               ) : (
                 <ul className="mt-4 space-y-2">
                   {data.zero_result_queries.map((q) => (
@@ -196,7 +197,7 @@ export function AdminTrendsView() {
                       <span>„{q.query}”</span>
                       <span className="shrink-0 font-bold tabular-nums">
                         {q.count}
-                        <span className="sr-only"> razy</span>
+                        <span className="sr-only">{a.times}</span>
                       </span>
                     </li>
                   ))}

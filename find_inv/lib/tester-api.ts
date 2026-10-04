@@ -29,13 +29,6 @@ export type Feedback = { rating: number; what_worked: string; improvements: stri
 
 export type Result<T> = { data: T; offline: boolean };
 
-export const STATUS_LABELS: Record<TestStatus, string> = {
-  requested: "Czeka na decyzję ROPS",
-  assigned: "Przypisana do Ciebie",
-  rejected: "Zgłoszenie odrzucone",
-  submitted: "Ocena wysłana",
-};
-
 const local: TestReport[] = [];
 
 async function call<T>(path: string, fallback: () => T, offline: boolean, init: RequestInit = {}): Promise<Result<T>> {

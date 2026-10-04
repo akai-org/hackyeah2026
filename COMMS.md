@@ -456,6 +456,8 @@ oraz modeli `Innovation`, `SearchLog` — jeśli nazwiecie inaczej, dajcie znać
 | — | — | — | — | — |
 | 2026-10-03 | A5 | `models.py`, `database.py` | Nowa tabela `events` (analityka: wyświetlenia, kliki, Middleman) + kolumna `forum_posts.innovation_id` (komentarze pod kartą). `init_db` dopisuje brakującą kolumnę przez ALTER TABLE — lokalnych baz nie trzeba kasować | do OK |
 | 2026-10-04 | A2 | `models.py` | Nowa tabela `grant_applications` (wnioski złożone w naborach, routers/grants.py). Tylko nowa tabela — create_all, bez migracji | gotowe |
+| 2026-10-04 | A3 | `llm.py`, `main.py` | Wielojęzyczność (pl/en/uk): middleware czyta nagłówek `X-Lang` (fallback cookie `lang`) do contextvara (`app/i18n.py`); `llm.chat` dokleja wtedy instrukcję systemową „odpowiadaj po angielsku/ukraińsku” (klucze JSON, tagi i enumy bez zmian). Dla `pl` zachowanie bez zmian. Front wysyła `X-Lang` w `apiFetch`/`apiStream`/`postSse`/Middlemanie | gotowe |
+| 2026-10-04 | A3 | `main.py` (+ nowy `app/translation.py`) | Tłumaczenie treści z bazy dla en/uk: middleware tłumaczy odpowiedzi JSON (innowacje, wyzwania, forum, nabory, edukacja, admin) przez LLM z cache w `translations.db` (osobny SQLite, bez zmian w models.py). Wyjątki: formularz edycji `/api/admin/innovations/{id}`, listy użytkowników/testerów. Nowy `POST /api/translate`. Rozgrzewanie: `python -m data.warm_translations`. Gotowe odpowiedzi Middlemana/czatu w trybie bez LLM też po en/uk | gotowe |
 
 ---
 

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ChevronRight, CircleHelp, MapPin, Tag, TrendingUp } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 
 export interface BackendInnovation {
@@ -25,12 +26,6 @@ export interface BackendInnovation {
   is_unmaintained: boolean;
 }
 
-const COST_LABEL: Record<string, string> = {
-  low: "Niski koszt",
-  medium: "Średni koszt",
-  high: "Wysoki koszt",
-};
-
 interface Props {
   innovation: BackendInnovation;
   headingLevel?: "h2" | "h3";
@@ -39,6 +34,7 @@ interface Props {
 }
 
 export function BackendInnovationCard({ innovation, headingLevel: Heading = "h3", onMiddleman, showScore }: Props) {
+  const t = useT();
   return (
     <article
       aria-label={innovation.title}
@@ -56,7 +52,7 @@ export function BackendInnovationCard({ innovation, headingLevel: Heading = "h3"
       {innovation.is_unmaintained && (
         <span className="mb-3 inline-flex w-fit items-center gap-1.5 rounded-ui border-2 border-border bg-background px-2 py-0.5 text-sm text-muted">
           <CircleHelp className="size-4" aria-hidden="true" />
-          Nieaktualna
+          {t.card.unmaintained}
         </span>
       )}
 
@@ -66,7 +62,7 @@ export function BackendInnovationCard({ innovation, headingLevel: Heading = "h3"
       <dl className="mt-4 space-y-2 text-sm">
         {innovation.target_group && (
           <div className="flex gap-2">
-            <dt className="text-muted shrink-0">Dla kogo:</dt>
+            <dt className="text-muted shrink-0">{t.card.forWhom}:</dt>
             <dd className="font-bold">{innovation.target_group}</dd>
           </div>
         )}
@@ -74,34 +70,34 @@ export function BackendInnovationCard({ innovation, headingLevel: Heading = "h3"
           <div className="flex gap-2 items-start">
             <dt>
               <MapPin className="inline size-4 text-muted" aria-hidden="true" />
-              <span className="sr-only">Gdzie wdrożono:</span>
+              <span className="sr-only">{t.card.whereImplemented}:</span>
             </dt>
             <dd className="text-muted">{innovation.where_implemented}</dd>
           </div>
         )}
         {innovation.cost_level && (
           <div className="flex gap-2">
-            <dt className="text-muted shrink-0">Koszt:</dt>
-            <dd className="font-bold">{COST_LABEL[innovation.cost_level] ?? innovation.cost_level}</dd>
+            <dt className="text-muted shrink-0">{t.card.cost}:</dt>
+            <dd className="font-bold">{t.cost[innovation.cost_level] ?? innovation.cost_level}</dd>
           </div>
         )}
         {showScore && innovation.match_score !== undefined && (
           <div className="flex gap-2">
-            <dt className="text-muted shrink-0">Dopasowanie:</dt>
+            <dt className="text-muted shrink-0">{t.card.match}:</dt>
             <dd className="font-bold">{Math.round(innovation.match_score * 100)}%</dd>
           </div>
         )}
       </dl>
 
       {innovation.tags.length > 0 && (
-        <ul className="mt-4 flex flex-wrap gap-2" aria-label="Tagi">
+        <ul className="mt-4 flex flex-wrap gap-2" aria-label={t.results.tagsLabel}>
           {innovation.tags.slice(0, 4).map((tag) => (
             <li
               key={tag}
               className="inline-flex items-center gap-1 rounded-full border border-primary bg-background px-2.5 py-0.5 text-sm text-primary"
             >
               <Tag className="size-3" aria-hidden="true" />
-              {tag}
+              {t.tags[tag] ?? tag}
             </li>
           ))}
         </ul>
@@ -114,14 +110,14 @@ export function BackendInnovationCard({ innovation, headingLevel: Heading = "h3"
             className={buttonVariants({ variant: "primary", className: "gap-2 text-sm" })}
           >
             <TrendingUp className="size-4" aria-hidden="true" />
-            Jak to wdrożyć?
+            {t.card.howToDeploy}
           </button>
         )}
         <Link
           href={`/innowacje/${innovation.id}`}
           className={buttonVariants({ variant: "secondary", className: "gap-2 text-sm" })}
         >
-          Szczegóły
+          {t.card.details}
           <ChevronRight className="size-4" aria-hidden="true" />
         </Link>
       </div>

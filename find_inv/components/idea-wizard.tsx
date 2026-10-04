@@ -7,6 +7,7 @@ import { DictationButton, DictationStatus, DictationSuggestion, useDictation } f
 import { Button } from "@/components/ui/button";
 import { STAGES } from "@/lib/ideas";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/client";
 
 // Asystent krok po kroku: jedno pytanie na ekran, odpowiedzi trafiają wprost do pól fiszki.
 
@@ -20,65 +21,27 @@ export type WizardAnswers = {
   partners: string;
 };
 
-type TextStep = {
+type StepText = { question: string; hint: string; placeholder: string };
+
+type TextStep = StepText & {
   kind: "text";
   key: "problem" | "idea" | "forWhom" | "place";
-  question: string;
-  hint: string;
-  placeholder: string;
   required: boolean;
   rows: number;
 };
 
-type Step = TextStep | { kind: "stage"; question: string; hint: string } | { kind: "money"; question: string; hint: string };
+type Step = TextStep | (StepText & { kind: "stage" }) | (StepText & { kind: "money" });
 
-const STEPS: Step[] = [
-  {
-    kind: "text",
-    key: "problem",
-    question: "Jaki problem chcesz rozwiązać?",
-    hint: "Opisz, co się dzieje i kogo to dotyka. Własnymi słowami.",
-    placeholder: "Na przykład: seniorzy w naszej wsi nie umieją umówić się do lekarza przez internet",
-    required: true,
-    rows: 4,
-  },
-  {
-    kind: "text",
-    key: "idea",
-    question: "Co chcesz zrobić?",
-    hint: "Na czym polega Twój pomysł i jak ma działać.",
-    placeholder: "Na przykład: raz w tygodniu uczniowie liceum uczą seniorów w świetlicy obsługi smartfona",
-    required: true,
-    rows: 5,
-  },
-  {
-    kind: "text",
-    key: "forWhom",
-    question: "Dla kogo jest ten pomysł?",
-    hint: "Kto na nim skorzysta. Możesz pominąć ten krok.",
-    placeholder: "Na przykład: seniorzy mieszkający samotnie",
-    required: false,
-    rows: 2,
-  },
-  {
-    kind: "text",
-    key: "place",
-    question: "Gdzie chcesz to zrobić?",
-    hint: "Gmina, miejscowość albo miejsce, np. świetlica. Możesz pominąć ten krok.",
-    placeholder: "Na przykład: świetlica wiejska, gmina Racławice",
-    required: false,
-    rows: 2,
-  },
-  {
-    kind: "stage",
-    question: "Na jakim etapie jest pomysł?",
-    hint: "Wybierz najbliższą odpowiedź.",
-  },
-  {
-    kind: "money",
-    question: "Ile to może kosztować i kto może pomóc?",
-    hint: "Jeśli jeszcze nie wiesz, zostaw puste — uzupełnisz na fiszce.",
-  },
+// Treść pytań jest w słowniku (creator.wizard.steps) — tu tylko budowa kroków w tej samej kolejności.
+type StepShape = Omit<TextStep, keyof StepText> | { kind: "stage" } | { kind: "money" };
+
+const STEP_SHAPES: StepShape[] = [
+  { kind: "text", key: "problem", required: true, rows: 4 },
+  { kind: "text", key: "idea", required: true, rows: 5 },
+  { kind: "text", key: "forWhom", required: false, rows: 2 },
+  { kind: "text", key: "place", required: false, rows: 2 },
+  { kind: "stage" },
+  { kind: "money" },
 ];
 
 function TextAnswer({
@@ -127,6 +90,9 @@ function TextAnswer({
 
 export function IdeaWizard({ onFinish, busy }: { onFinish: (answers: WizardAnswers) => void; busy: boolean }) {
   const ids = useId();
+  const t = useT();
+  const w = t.creator.wizard;
+  const STEPS = STEP_SHAPES.map((shape, i) => ({ ...shape, ...w.steps[i] }) as Step);
   const [index, setIndex] = useState(0);
   // Kierunek ostatniego kroku: „Dalej” wjeżdża z prawej, „Wstecz” z lewej.
   const [direction, setDirection] = useState<"forward" | "back">("forward");
@@ -181,11 +147,11 @@ export function IdeaWizard({ onFinish, busy }: { onFinish: (answers: WizardAnswe
   return (
     <form onSubmit={next} noValidate className="mt-8 max-w-3xl rounded-ui border-(length:--bw) border-border bg-surface p-6 sm:p-8">
       <p className="font-bold text-muted">
-        Krok {index + 1} z {STEPS.length}
+        {w.step(index + 1, STEPS.length)}
       </p>
       <div
         role="progressbar"
-        aria-label="Postęp asystenta"
+        aria-label={w.progress}
         aria-valuemin={1}
         aria-valuemax={STEPS.length}
         aria-valuenow={index + 1}
@@ -229,7 +195,7 @@ export function IdeaWizard({ onFinish, busy }: { onFinish: (answers: WizardAnswe
                       onChange={() => setAnswer("stage")(() => stage)}
                       className="size-5 accent-primary"
                     />
-                    {stage}
+                    {t.creator.stages[STAGES.indexOf(stage)] ?? stage}
                   </label>
                 </li>
               ))}
@@ -241,27 +207,27 @@ export function IdeaWizard({ onFinish, busy }: { onFinish: (answers: WizardAnswe
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
               <label htmlFor={`${ids}-budzet`} className="block font-bold text-foreground">
-                Budżet
+                {w.budget}
               </label>
               <input
                 id={`${ids}-budzet`}
                 type="text"
                 value={answers.budget}
                 onChange={(event) => setAnswer("budget")(() => event.target.value)}
-                placeholder="np. ok. 5 tys. zł rocznie"
+                placeholder={w.budgetPlaceholder}
                 className="mt-2 min-h-12 w-full rounded-ui border-(length:--bw) border-border bg-surface px-4 text-base text-foreground placeholder:text-muted"
               />
             </div>
             <div>
               <label htmlFor={`${ids}-partnerzy`} className="block font-bold text-foreground">
-                Partnerzy
+                {w.partners}
               </label>
               <input
                 id={`${ids}-partnerzy`}
                 type="text"
                 value={answers.partners}
                 onChange={(event) => setAnswer("partners")(() => event.target.value)}
-                placeholder="np. GOPS, szkoła"
+                placeholder={w.partnersPlaceholder}
                 className="mt-2 min-h-12 w-full rounded-ui border-(length:--bw) border-border bg-surface px-4 text-base text-foreground placeholder:text-muted"
               />
             </div>
@@ -275,7 +241,7 @@ export function IdeaWizard({ onFinish, busy }: { onFinish: (answers: WizardAnswe
           className="mt-3 flex items-start gap-2 rounded-ui border-2 border-destructive bg-surface px-4 py-3 font-bold text-destructive"
         >
           <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
-          Napisz choć jedno zdanie, żeby przejść dalej.
+          {w.oneSentence}
         </p>
       )}
 
@@ -285,7 +251,7 @@ export function IdeaWizard({ onFinish, busy }: { onFinish: (answers: WizardAnswe
             setDirection("back");
             setIndex(index - 1);
           }} disabled={busy}>
-            Wstecz
+            {w.back}
           </Button>
         )}
         <Button type="submit" disabled={busy}>
@@ -296,7 +262,7 @@ export function IdeaWizard({ onFinish, busy }: { onFinish: (answers: WizardAnswe
               <Sparkles aria-hidden="true" />
             )
           ) : null}
-          {last ? (busy ? "AI układa fiszkę…" : "Utwórz fiszkę") : "Dalej"}
+          {last ? (busy ? w.building : w.create) : w.next}
         </Button>
       </div>
     </form>

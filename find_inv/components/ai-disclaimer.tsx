@@ -1,5 +1,8 @@
+"use client";
+
 import { Info } from "lucide-react";
 
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 
 // Wspólne ostrzeżenie przy treściach z AI (Middleman, czat, kreator, generator wniosków).
@@ -12,6 +15,7 @@ type AiDisclaimerProps = {
 };
 
 export function AiDisclaimer({ className, printable = true }: AiDisclaimerProps) {
+  const t = useT();
   return (
     <p
       className={cn(
@@ -21,7 +25,7 @@ export function AiDisclaimer({ className, printable = true }: AiDisclaimerProps)
       )}
     >
       <Info aria-hidden="true" className="mt-1 size-5 shrink-0 text-foreground" />
-      <span>Odpowiedzi generuje AI i mogą zawierać błędy — zweryfikuj przed wdrożeniem.</span>
+      <span>{t.common.aiDisclaimer}</span>
     </p>
   );
 }

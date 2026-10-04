@@ -11,10 +11,8 @@ import {
   OfflineNote,
   STATUS_META,
   StatusBadge,
-  errorMessage,
-  formatDate,
-  tagLabel,
   useAdminData,
+  useAdminI18n,
 } from "@/components/admin/shared";
 import { Toast, useToast } from "@/components/toast";
 import { Button } from "@/components/ui/button";
@@ -33,10 +31,11 @@ import {
 } from "@/lib/admin-api";
 import { cn } from "@/lib/utils";
 
-const ACTIONS: Array<{ action: InnovationAction; label: string; done: string; icon: typeof CircleCheck; hideFor: InnovationStatus }> = [
-  { action: "approve", label: "Zatwierdź", done: "zatwierdzona", icon: CircleCheck, hideFor: "active" },
-  { action: "flag-unmaintained", label: "Nieaktualna", done: "oznaczona jako nieaktualna", icon: CircleAlert, hideFor: "unmaintained" },
-  { action: "archive", label: "Archiwizuj", done: "zarchiwizowana", icon: Archive, hideFor: "archived" },
+// Etykiety akcji są w słowniku (admin.innovations.actions).
+const ACTIONS: Array<{ action: InnovationAction; icon: typeof CircleCheck; hideFor: InnovationStatus }> = [
+  { action: "approve", icon: CircleCheck, hideFor: "active" },
+  { action: "flag-unmaintained", icon: CircleAlert, hideFor: "unmaintained" },
+  { action: "archive", icon: Archive, hideFor: "archived" },
 ];
 
 function Actions({
@@ -52,9 +51,10 @@ function Actions({
   onEdit: (item: AdminInnovation) => void;
   onDelete: (item: AdminInnovation) => void;
 }) {
+  const { a } = useAdminI18n();
   return (
     <div className="flex flex-wrap gap-2">
-      {ACTIONS.filter((a) => a.hideFor !== item.status).map(({ action, label, icon: Icon }) => {
+      {ACTIONS.filter((entry) => entry.hideFor !== item.status).map(({ action, icon: Icon }) => {
         const pending = busy === `${item.id}:${action}`;
         return (
           <Button
@@ -66,7 +66,7 @@ function Actions({
             className="min-h-12 px-3 text-base"
           >
             {pending ? <Loader2 aria-hidden="true" className="animate-spin" /> : <Icon aria-hidden="true" />}
-            {label}
+            {a.innovations.actions[action].label}
             <span className="sr-only">: {item.title}</span>
           </Button>
         );
@@ -79,7 +79,7 @@ function Actions({
         className="min-h-12 px-3 text-base"
       >
         {busy === `${item.id}:edit` ? <Loader2 aria-hidden="true" className="animate-spin" /> : <Pencil aria-hidden="true" />}
-        Edytuj
+        {a.innovations.edit}
         <span className="sr-only">: {item.title}</span>
       </Button>
       <Button
@@ -90,7 +90,7 @@ function Actions({
         className="min-h-12 px-3 text-base text-destructive"
       >
         <Trash2 aria-hidden="true" />
-        Usuń
+        {a.delete}
         <span className="sr-only">: {item.title}</span>
       </Button>
     </div>
@@ -108,6 +108,8 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
   const [editing, setEditing] = useState<Editing>(null);
   const [deleting, setDeleting] = useState<AdminInnovation | null>(null);
   const toast = useToast();
+  const { t, a, errorMessage, formatDate, tagLabel } = useAdminI18n();
+  const ai = a.innovations;
 
   const { data, offline, error, loading, update } = useAdminData(() => getInnovations(filters), JSON.stringify(filters));
 
@@ -124,7 +126,7 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
         ...current,
         items: current.items.map((row) => (row.id === updated.id ? { ...row, ...updated } : row)),
       }));
-      toast.show(`„${item.title}” ${ACTIONS.find((a) => a.action === action)!.done}.`);
+      toast.show(ai.statusChanged(item.title, ai.actions[action].done));
     } catch (err) {
       setActionError(errorMessage(err));
     } finally {
@@ -154,15 +156,15 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
         : { ...current, items: current.items.map((row) => (row.id === saved.id ? { ...row, ...saved } : row)) },
     );
     setEditing(null);
-    const index = saved.embedding === "skipped" ? " Wyszukiwanie semantyczne uwzględni ją po dodaniu klucza OpenRouter." : "";
-    toast.show(`„${saved.title}” ${id === undefined ? "dodana" : "zapisana"}.${index}`);
+    const index = saved.embedding === "skipped" ? ai.noEmbedding : "";
+    toast.show(`${id === undefined ? ai.added(saved.title) : ai.saved(saved.title)}${index}`);
   }
 
   async function handleDelete(item: AdminInnovation) {
     await deleteInnovation(item.id);
     update((current) => ({ items: current.items.filter((row) => row.id !== item.id), total: current.total - 1 }));
     setDeleting(null);
-    toast.show(`„${item.title}” usunięta.`);
+    toast.show(ai.deleted(item.title));
   }
 
   const items = data?.items ?? [];
@@ -170,20 +172,20 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
 
   return (
     <section aria-labelledby={`${ids}-tytul`}>
-      <CutoutText as="h1" size="section" text="Innowacje" id={`${ids}-tytul`} />
+      <CutoutText as="h1" size="section" text={ai.title} id={`${ids}-tytul`} />
       <div className="mt-3 mb-8 flex flex-wrap items-end justify-between gap-4">
         <p className="max-w-[60ch] text-lg">
-          Dodawaj i edytuj karty, zatwierdzaj nowe zgłoszenia, oznaczaj nieaktualne opisy i archiwizuj zakończone projekty.
+          {ai.lead}
         </p>
         <Button type="button" onClick={() => setEditing({ item: null })} disabled={busy !== null}>
           <Plus aria-hidden="true" />
-          Dodaj innowację
+          {ai.add}
         </Button>
       </div>
 
       <form
         role="search"
-        aria-label="Filtruj innowacje"
+        aria-label={ai.filter}
         onSubmit={(event) => {
           event.preventDefault();
           applyFilters({ ...filters, search: draftSearch.trim() });
@@ -192,20 +194,20 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
       >
         <div>
           <label htmlFor={`${ids}-szukaj`} className="block font-bold text-foreground">
-            Szukaj po nazwie lub miejscu
+            {ai.search}
           </label>
           <input
             id={`${ids}-szukaj`}
             type="search"
             value={draftSearch}
             onChange={(event) => setDraftSearch(event.target.value)}
-            placeholder="np. senior, Tarnów"
+            placeholder={ai.searchPlaceholder}
             className={fieldClass}
           />
         </div>
         <div>
           <label htmlFor={`${ids}-status`} className="block font-bold text-foreground">
-            Status
+            {ai.status}
           </label>
           <select
             id={`${ids}-status`}
@@ -213,17 +215,17 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
             onChange={(event) => applyFilters({ ...filters, status: event.target.value })}
             className={cn(fieldClass, "cursor-pointer md:w-52")}
           >
-            <option value="">Wszystkie</option>
+            <option value="">{ai.all}</option>
             {(Object.keys(STATUS_META) as InnovationStatus[]).map((status) => (
               <option key={status} value={status}>
-                {STATUS_META[status].label}
+                {a.status[status]}
               </option>
             ))}
           </select>
         </div>
         <div>
           <label htmlFor={`${ids}-tag`} className="block font-bold text-foreground">
-            Tag
+            {ai.tag}
           </label>
           <select
             id={`${ids}-tag`}
@@ -231,7 +233,7 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
             onChange={(event) => applyFilters({ ...filters, tags: event.target.value })}
             className={cn(fieldClass, "cursor-pointer md:w-56")}
           >
-            <option value="">Wszystkie tagi</option>
+            <option value="">{ai.allTags}</option>
             {TAXONOMY_TAGS.map((tag) => (
               <option key={tag} value={tag}>
                 {tagLabel(tag)}
@@ -241,7 +243,7 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
         </div>
         <Button type="submit">
           <Search aria-hidden="true" />
-          Szukaj
+          {t.common.search}
         </Button>
       </form>
 
@@ -250,7 +252,7 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <p aria-live="polite" className="font-bold text-foreground">
-          {loading ? "Wczytuję…" : `Znaleziono: ${items.length}`}
+          {loading ? ai.loading : ai.found(items.length)}
         </p>
         {hasFilters && (
           <Button
@@ -262,30 +264,30 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
             }}
           >
             <RotateCcw aria-hidden="true" />
-            Wyczyść filtry
+            {ai.clearFilters}
           </Button>
         )}
       </div>
 
       {loading && !data ? (
-        <LoadingRows label="Wczytuję innowacje" />
+        <LoadingRows label={ai.loadingList} />
       ) : items.length === 0 ? (
         <div className="border-(length:--bw) border-border bg-surface p-8">
-          <CutoutText as="p" size="section" text="Nic tu nie ma" />
-          <p className="mt-3">Żadna innowacja nie pasuje do filtrów. Zmień status albo wyczyść filtry.</p>
+          <CutoutText as="p" size="section" text={ai.emptyTitle} />
+          <p className="mt-3">{ai.empty}</p>
         </div>
       ) : (
         <>
           {/* Szeroki ekran: tabela. */}
           <div className="hidden overflow-x-auto border-(length:--bw) border-border bg-surface lg:block">
             <table className="w-full border-collapse text-left">
-              <caption className="sr-only">Innowacje w Bibliotece, {items.length} pozycji</caption>
+              <caption className="sr-only">{ai.caption(items.length)}</caption>
               <thead className="bg-secondary">
                 <tr>
-                  <th scope="col" className="px-4 py-3 font-bold text-foreground">Innowacja</th>
-                  <th scope="col" className="px-4 py-3 font-bold text-foreground">Status</th>
-                  <th scope="col" className="px-4 py-3 font-bold text-foreground">Dodano</th>
-                  <th scope="col" className="px-4 py-3 font-bold text-foreground">Akcje</th>
+                  <th scope="col" className="px-4 py-3 font-bold text-foreground">{ai.colInnovation}</th>
+                  <th scope="col" className="px-4 py-3 font-bold text-foreground">{ai.colStatus}</th>
+                  <th scope="col" className="px-4 py-3 font-bold text-foreground">{ai.colAdded}</th>
+                  <th scope="col" className="px-4 py-3 font-bold text-foreground">{ai.colActions}</th>
                 </tr>
               </thead>
               <tbody>
@@ -303,7 +305,7 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
                       <span className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
                         <span className="inline-flex items-center gap-1">
                           <MapPin aria-hidden="true" className="size-4" />
-                          {item.where_implemented || "brak danych"}
+                          {item.where_implemented || a.noData}
                         </span>
                         {item.tags.slice(0, 3).map((tag) => (
                           <span key={tag} className="rounded-full border border-primary bg-background px-2 text-primary">
@@ -336,7 +338,7 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
                 <p className="mt-2 text-muted">{item.short_desc}</p>
                 <p className="mt-2 flex items-center gap-1 text-sm text-muted">
                   <MapPin aria-hidden="true" className="size-4" />
-                  {item.where_implemented || "brak danych"} · dodano {formatDate(item.created_at)}
+                  {item.where_implemented || a.noData} · {ai.addedOn(formatDate(item.created_at))}
                 </p>
                 <div className="mt-4">
                   <Actions item={item} busy={busy} onAction={handleAction} onEdit={openEditor} onDelete={setDeleting} />
@@ -350,9 +352,9 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
       {editing && <InnovationFormDialog item={editing.item} onSave={handleSave} onClose={() => setEditing(null)} />}
       {deleting && (
         <ConfirmDeleteDialog
-          title="Usunąć innowację?"
+          title={ai.deleteTitle}
           what={deleting.title}
-          consequences="Karta zniknie z Biblioteki i wyszukiwania razem z komentarzami i zgłoszeniami testerów. Jeśli chcesz ją tylko ukryć, użyj „Archiwizuj”."
+          consequences={ai.deleteConsequences}
           onConfirm={() => handleDelete(deleting)}
           onClose={() => setDeleting(null)}
         />

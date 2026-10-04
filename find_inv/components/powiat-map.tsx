@@ -9,7 +9,9 @@ import { MOCK_GAP_INDEX, type GapEntry } from "@/data/innovations";
 import { MAP_VIEWBOX, POWIAT_SHAPES, type PowiatShape } from "@/data/malopolska-map";
 import { getGapIndex, getPulse, type GminaPulse } from "@/lib/knowledge";
 import { track } from "@/lib/track";
-import { cn, plural } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n/client";
+import type { RegionMessages } from "@/lib/i18n/ns/region";
 
 // Interaktywna mapa powiatów: kolor = Indeks Luki Innowacyjnej (jedna skala sekwencyjna od tła do `primary`),
 // kliknięcie pokazuje najważniejsze wyzwania i pasujące innowacje. Dane z tych samych endpointów co lista
@@ -42,11 +44,13 @@ const SMALL_LABEL = new Set(["proszowicki", "bochenski", "chrzanowski", "oswieci
 /** Nazwa powiatu w API: miasta na prawach powiatu mają przedrostek „m.”. */
 const apiName = (shape: PowiatShape) => (shape.city ? `m. ${shape.name}` : shape.name).toLowerCase();
 
-function fullName(shape: PowiatShape) {
-  return shape.city ? `${shape.name} (miasto)` : `Powiat ${shape.name}`;
+function fullName(shape: PowiatShape, r: RegionMessages) {
+  return shape.city ? r.city(shape.name) : r.Powiat(shape.name);
 }
 
 export function PowiatMap() {
+  const { t, locale } = useI18n();
+  const r = t.region;
   const [entries, setEntries] = useState<GapEntry[]>(MOCK_GAP_INDEX);
   const [selected, setSelected] = useState<string | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
@@ -91,8 +95,8 @@ export function PowiatMap() {
     [selectedId],
   );
   const sortedByName = useMemo(
-    () => [...POWIAT_SHAPES].sort((a, b) => fullName(a).localeCompare(fullName(b), "pl")),
-    [],
+    () => [...POWIAT_SHAPES].sort((a, b) => fullName(a, r).localeCompare(fullName(b, r), "pl")),
+    [r],
   );
 
   const shape = POWIAT_SHAPES.find((item) => item.id === selectedId)!;
@@ -122,7 +126,7 @@ export function PowiatMap() {
       <div className="relative border-(length:--bw) border-border bg-surface p-4 shadow-raised sm:p-6 lg:sticky lg:top-[calc(var(--header-h)+1rem)]">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <label className="grid gap-1 text-sm font-bold text-muted">
-            Wybierz powiat
+            {r.map.choose}
             <select
               value={selectedId}
               onChange={(event) => setSelected(event.target.value)}
@@ -130,7 +134,7 @@ export function PowiatMap() {
             >
               {sortedByName.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {fullName(item)}
+                  {fullName(item, r)}
                 </option>
               ))}
             </select>
@@ -146,7 +150,7 @@ export function PowiatMap() {
           >
             <span className="max-w-full truncate rounded-ui bg-primary px-3 py-1 text-sm font-bold text-primary-foreground">
               {hoverShape &&
-                `${fullName(hoverShape)} · ${hoverEntry ? `indeks ${formatNumber(hoverEntry.gap_score)}` : "brak danych"}`}
+                `${fullName(hoverShape, r)} · ${hoverEntry ? r.map.indexValue(formatNumber(hoverEntry.gap_score, locale)) : r.map.noData}`}
             </span>
           </p>
         </div>
@@ -154,7 +158,7 @@ export function PowiatMap() {
         <svg
           viewBox={MAP_VIEWBOX}
           role="group"
-          aria-label="Mapa powiatów Małopolski. Kolor oznacza Indeks Luki Innowacyjnej."
+          aria-label={r.map.label}
           className="mt-4 h-auto w-full"
           onMouseLeave={() => setHovered(null)}
         >
@@ -171,8 +175,8 @@ export function PowiatMap() {
                   role="button"
                   tabIndex={0}
                   aria-pressed={isSelected}
-                  aria-label={`${fullName(item)}, ${
-                    entry ? `indeks luki ${formatNumber(entry.gap_score)} z ${scaleMax}` : "brak danych"
+                  aria-label={`${fullName(item, r)}, ${
+                    entry ? `${r.map.indexValue(formatNumber(entry.gap_score, locale))}${r.gap.of(scaleMax)}` : r.map.noData
                   }`}
                   style={{ fill: colorFor(entry).fill, stroke: "var(--color-foreground)" }}
                   strokeWidth={isSelected ? 5 : isHovered ? 3.5 : 1.5}
@@ -242,10 +246,10 @@ export function PowiatMap() {
 
         {/* Legenda */}
         <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-          <span className="font-bold text-muted">Indeks luki:</span>
-          <span className="text-muted">mała luka</span>
+          <span className="font-bold text-muted">{r.map.legend}</span>
+          <span className="text-muted">{r.map.small}</span>
           <span className="tabular-nums">0</span>
-          <span className="flex" aria-label={`Skala kolorów od 0 do ${scaleMax}`} role="img">
+          <span className="flex" aria-label={r.map.colorScale(scaleMax)} role="img">
             {BIN_COLORS.map((bin) => (
               <span
                 key={bin.fill}
@@ -255,7 +259,7 @@ export function PowiatMap() {
             ))}
           </span>
           <span className="tabular-nums">{scaleMax}</span>
-          <span className="text-muted">duża luka</span>
+          <span className="text-muted">{r.map.large}</span>
         </div>
       </div>
 
@@ -270,8 +274,8 @@ export function PowiatMap() {
       >
         {!entry ? (
           <div key={shape.id} className="appear">
-            <h3 className="text-2xl font-bold text-foreground">{fullName(shape)}</h3>
-            <p className="mt-3 text-muted">Brak danych o tym powiecie.</p>
+            <h3 className="text-2xl font-bold text-foreground">{fullName(shape, r)}</h3>
+            <p className="mt-3 text-muted">{r.map.noPowiatData}</p>
           </div>
         ) : panel ? (
           <PowiatPanel key={panel.shape.id} {...panel} scaleMax={scaleMax} />
@@ -294,15 +298,17 @@ function PowiatPanel({
   pulse: GminaPulse;
   scaleMax: number;
 }) {
-  const query = `${fullName(shape)}: ${pulse.top_challenges.map((challenge) => challenge.title.toLowerCase()).join(", ")}`;
+  const { t, locale } = useI18n();
+  const r = t.region;
+  const query = `${fullName(shape, r)}: ${pulse.top_challenges.map((challenge) => challenge.title.toLowerCase()).join(", ")}`;
 
   return (
     <div className="appear">
       <p className="flex items-center gap-2 text-sm font-bold text-muted">
         <MapPin aria-hidden="true" className="size-4" />
-        {shape.city ? "Miasto na prawach powiatu" : "Powiat"}
+        {shape.city ? r.map.cityRights : r.map.powiat}
       </p>
-      <h3 className="mt-1 text-2xl font-bold text-foreground">{fullName(shape)}</h3>
+      <h3 className="mt-1 text-2xl font-bold text-foreground">{fullName(shape, r)}</h3>
 
       <div className="mt-4 flex items-center gap-3">
         <div className="relative h-5 flex-1 border-l border-border" aria-hidden="true">
@@ -312,16 +318,15 @@ function PowiatPanel({
           />
         </div>
         <p className="shrink-0 tabular-nums">
-          Indeks luki <span className="text-xl font-bold text-foreground">{formatNumber(entry.gap_score)}</span>
+          {r.map.gapIndex} <span className="text-xl font-bold text-foreground">{formatNumber(entry.gap_score, locale)}</span>
           <span className="text-muted"> / {scaleMax}</span>
         </p>
       </div>
       <p className="mt-1 text-sm text-muted">
-        Najczęściej: <span className="font-bold">{entry.top_area}</span> · {entry.innovations_count}{" "}
-        {plural(entry.innovations_count, "innowacja", "innowacje", "innowacji")} w Bibliotece
+        {r.gap.mostOften} <span className="font-bold">{entry.top_area}</span> · {r.gap.inLibrary(entry.innovations_count)}
       </p>
 
-      <h4 className="mt-6 font-bold text-foreground">Najważniejsze wyzwania</h4>
+      <h4 className="mt-6 font-bold text-foreground">{r.gap.topChallenges}</h4>
       {pulse.top_challenges.length ? (
         <ol className="mt-2 grid gap-2">
           {pulse.top_challenges.map((challenge, index) => (
@@ -333,21 +338,21 @@ function PowiatPanel({
               <p className="font-bold text-foreground">{challenge.title}</p>
               <p>
                 <span className="text-lg font-bold text-foreground tabular-nums">
-                  {formatNumber(challenge.indicator_value)}
+                  {formatNumber(challenge.indicator_value, locale)}
                 </span>{" "}
                 <span className="text-muted">{challenge.indicator_unit}</span>
               </p>
               <p className="text-sm text-muted">
-                {challenge.source}, {challenge.data_year} r.
+                {challenge.source}, {r.year(challenge.data_year)}
               </p>
             </li>
           ))}
         </ol>
       ) : (
-        <p className="mt-2 text-muted">Brak szczegółowych wskaźników dla tego powiatu.</p>
+        <p className="mt-2 text-muted">{r.gap.noIndicators}</p>
       )}
 
-      <h4 className="mt-6 font-bold text-foreground">Co może pomóc</h4>
+      <h4 className="mt-6 font-bold text-foreground">{r.gap.whatHelps}</h4>
       <ul className="mt-2 grid gap-2">
         {pulse.matching_innovations.map((innovation, index) => (
           <li key={innovation.id} className="appear" style={{ animationDelay: `${210 + index * 70}ms` }}>
@@ -379,15 +384,16 @@ function PowiatPanel({
         className="mt-5 inline-flex min-h-12 items-center gap-2 font-bold text-primary underline underline-offset-4 hover:text-primary-hover"
       >
         <Search aria-hidden="true" className="size-5" />
-        Szukaj rozwiązań dla tego powiatu
+        {r.map.searchPowiat}
       </Link>
     </div>
   );
 }
 
 function PanelSkeleton() {
+  const label = useI18n().t.region.gap.loadingPowiat;
   return (
-    <div role="status" aria-label="Wczytuję dane powiatu" className="animate-pulse">
+    <div role="status" aria-label={label} className="animate-pulse">
       <div className="h-4 w-40 rounded bg-secondary" />
       <div className="mt-3 h-7 w-56 rounded bg-secondary" />
       <div className="mt-5 h-5 w-full rounded bg-secondary" />

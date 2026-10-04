@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { apiPost } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/client";
 
 interface Props {
   innovationId: number;
@@ -20,6 +21,8 @@ const fieldClass =
 
 export function TesterApplyModal({ innovationId, innovationTitle, onClose, onSuccess }: Props) {
   const { user } = useAuth();
+  const t = useT();
+  const tm = t.library.testerModal;
   const containerRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const firstInputRef = useRef<HTMLInputElement>(null);
@@ -96,7 +99,7 @@ export function TesterApplyModal({ innovationId, innovationTitle, onClose, onSuc
           ref={closeRef}
           type="button"
           onClick={onClose}
-          aria-label="Zamknij"
+          aria-label={t.common.close}
           className="absolute right-4 top-4 rounded-ui p-1 text-muted hover:text-primary-hover focus-visible:outline-2 focus-visible:outline-focus"
         >
           <X className="size-5" aria-hidden="true" />
@@ -106,20 +109,20 @@ export function TesterApplyModal({ innovationId, innovationTitle, onClose, onSuc
           <FlaskConical className="size-7 shrink-0 text-primary" aria-hidden="true" />
           <div>
             <h2 id="tester-modal-title" className="text-xl font-bold text-foreground">
-              Zgłoś się jako tester
+              {tm.title}
             </h2>
             <p className="mt-0.5 text-sm text-muted">{innovationTitle}</p>
           </div>
         </div>
 
         <p className="mt-4 text-base text-foreground">
-          Twoje zgłoszenie trafi do twórcy innowacji. Po akceptacji zostaniesz testerem tej innowacji.
+          {tm.lead}
         </p>
 
         <form onSubmit={(e) => { void handleSubmit(e); }} noValidate className="mt-6 grid gap-5">
           <div>
             <label htmlFor="tester-name" className="block font-bold text-foreground">
-              Imię i nazwisko
+              {tm.name}
             </label>
             <input
               ref={firstInputRef}
@@ -134,14 +137,14 @@ export function TesterApplyModal({ innovationId, innovationTitle, onClose, onSuc
             {errors.name && (
               <p className="mt-1.5 flex items-center gap-1.5 text-sm font-bold text-destructive">
                 <CircleAlert className="size-4" aria-hidden="true" />
-                Wpisz imię i nazwisko.
+                {tm.nameError}
               </p>
             )}
           </div>
 
           <div>
             <label htmlFor="tester-email" className="block font-bold text-foreground">
-              Adres e-mail
+              {tm.email}
             </label>
             <input
               id="tester-email"
@@ -155,7 +158,7 @@ export function TesterApplyModal({ innovationId, innovationTitle, onClose, onSuc
             {errors.email && (
               <p className="mt-1.5 flex items-center gap-1.5 text-sm font-bold text-destructive">
                 <CircleAlert className="size-4" aria-hidden="true" />
-                Wpisz poprawny adres e-mail.
+                {tm.emailError}
               </p>
             )}
           </div>
@@ -163,10 +166,10 @@ export function TesterApplyModal({ innovationId, innovationTitle, onClose, onSuc
           <div className="flex flex-wrap gap-3 pt-2">
             <Button type="submit" disabled={submitting} className="flex-1">
               <FlaskConical aria-hidden="true" />
-              {submitting ? "Wysyłanie…" : "Wyślij zgłoszenie"}
+              {submitting ? tm.sending : tm.send}
             </Button>
             <Button type="button" variant="secondary" onClick={onClose}>
-              Anuluj
+              {t.common.cancel}
             </Button>
           </div>
         </form>

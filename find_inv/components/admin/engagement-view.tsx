@@ -20,7 +20,7 @@ import {
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { CutoutText } from "@/components/cutout-text";
-import { ErrorNote, LoadingRows, OfflineNote, tagLabel, useAdminData } from "@/components/admin/shared";
+import { ErrorNote, LoadingRows, OfflineNote, useAdminData, useAdminI18n } from "@/components/admin/shared";
 import { DataTable } from "@/components/admin/trends-view";
 import { getEngagement, type EngagementMetric, type InnovationEngagement } from "@/lib/admin-api";
 import { cn } from "@/lib/utils";
@@ -33,44 +33,24 @@ const FOREGROUND = "var(--color-foreground)";
 const MUTED = "var(--color-muted)";
 const GRID = "var(--color-secondary)";
 const SURFACE = "var(--color-surface)";
-const NUMBER = new Intl.NumberFormat("pl-PL");
 const PERIODS = [7, 14, 30] as const;
 
-const METRIC_LABELS: Record<EngagementMetric, string> = {
-  impressions: "Pokazania w wynikach",
-  clicks: "Kliknięcia kart",
-  views: "Wyświetlenia kart",
-  cta_clicks: "Kliknięcia przycisków",
-  middleman_starts: "Starty Middlemana",
-  middleman_plans: "Plany wdrożenia",
-  comments: "Komentarze",
-  tester_requests: "Zgłoszenia testerów",
-};
+// Etykiety metryk i kolumn są w słowniku (admin.engagement).
 const CHART_METRICS: EngagementMetric[] = ["views", "clicks", "comments", "middleman_starts"];
 
 type SortKey = "views" | "ctr_pct" | "comments" | "middleman_starts" | "tester_requests" | "views_delta";
-const COLUMNS: Array<{ key: SortKey; label: string }> = [
-  { key: "views", label: "Wyświetlenia" },
-  { key: "views_delta", label: "Zmiana" },
-  { key: "ctr_pct", label: "CTR" },
-  { key: "comments", label: "Komentarze" },
-  { key: "middleman_starts", label: "Middleman" },
-  { key: "tester_requests", label: "Testerzy" },
-];
-
-function shortDate(iso: string) {
-  return new Date(iso).toLocaleDateString("pl-PL", { day: "numeric", month: "short" });
-}
+const COLUMNS: SortKey[] = ["views", "views_delta", "ctr_pct", "comments", "middleman_starts", "tester_requests"];
 
 function Change({ pct }: { pct: number | null }) {
-  if (pct === null) return <span className="text-muted">brak danych z poprzedniego okresu</span>;
+  const { a, number } = useAdminI18n();
+  if (pct === null) return <span className="text-muted">{a.engagement.noPrev}</span>;
   const up = pct >= 0;
   const Icon = up ? TrendingUp : TrendingDown;
   return (
     <span className="inline-flex items-center gap-1 rounded-full border-2 border-border bg-secondary/60 px-2.5 text-sm font-bold text-foreground">
       <Icon aria-hidden="true" className="size-4" />
       {up ? "+" : ""}
-      {pct.toLocaleString("pl-PL")}%<span className="sr-only"> względem poprzedniego okresu</span>
+      {number(pct)}%<span className="sr-only">{a.engagement.vsPrev}</span>
     </span>
   );
 }
@@ -97,6 +77,9 @@ export function AdminEngagementView() {
   const [metric, setMetric] = useState<EngagementMetric>("views");
   const [sort, setSort] = useState<SortKey>("views");
   const { data, offline, error, loading } = useAdminData(() => getEngagement(days), String(days));
+  const { a, tagLabel, shortDate, number } = useAdminI18n();
+  const e = a.engagement;
+  const NUMBER = { format: number };
 
   const m = data?.overview.metrics;
   const series = data?.timeseries.map((d) => ({ date: shortDate(d.date), count: d[metric] })) ?? [];
@@ -108,13 +91,13 @@ export function AdminEngagementView() {
 
   return (
     <div>
-      <CutoutText as="h1" size="section" text="Zaangażowanie" />
+      <CutoutText as="h1" size="section" text={e.title} />
       <p className="mt-3 mb-6 max-w-[60ch] text-lg">
-        Które innowacje ludzie oglądają, komentują i chcą wdrożyć. Porównanie z poprzednim okresem tej samej długości.
+        {e.lead}
       </p>
 
       <fieldset className="mb-8 flex flex-wrap items-center gap-2">
-        <legend className="mb-2 font-bold text-foreground">Okres</legend>
+        <legend className="mb-2 font-bold text-foreground">{e.period}</legend>
         {PERIODS.map((period) => (
           <label
             key={period}
@@ -124,7 +107,7 @@ export function AdminEngagementView() {
             )}
           >
             <input type="radio" name={`${ids}-okres`} className="sr-only" checked={days === period} onChange={() => setDays(period)} />
-            {period} dni
+            {e.days(period)}
           </label>
         ))}
       </fieldset>
@@ -134,37 +117,37 @@ export function AdminEngagementView() {
       {data?.demo && !offline && (
         <p className="mb-6 flex items-start gap-3 rounded-ui border-2 border-warning bg-warning/10 px-4 py-3">
           <Info aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-warning" />
-          Nie zebraliśmy jeszcze zdarzeń, więc pokazuję dane przykładowe. Prawdziwe liczby pojawią się po pierwszych wejściach na karty innowacji.
+          {e.demo}
         </p>
       )}
 
       {loading && !data ? (
-        <LoadingRows label="Wczytuję statystyki zaangażowania" />
+        <LoadingRows label={e.loading} />
       ) : data && m ? (
         <div className="grid gap-6">
           <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Kpi icon={Eye} label="Wyświetlenia kart" value={NUMBER.format(m.views.value)} change={<Change pct={m.views.change_pct} />} />
+            <Kpi icon={Eye} label={e.metrics.views} value={NUMBER.format(m.views.value)} change={<Change pct={m.views.change_pct} />} />
             <Kpi
               icon={MousePointerClick}
-              label="CTR wyników"
-              value={data.overview.ctr_pct === null ? "–" : data.overview.ctr_pct.toLocaleString("pl-PL")}
+              label={e.ctr}
+              value={data.overview.ctr_pct === null ? "–" : number(data.overview.ctr_pct)}
               suffix={data.overview.ctr_pct === null ? undefined : "%"}
-              change={<span className="text-muted">{NUMBER.format(m.clicks.value)} kliknięć / {NUMBER.format(m.impressions.value)} pokazań</span>}
+              change={<span className="text-muted">{e.ctrDetail(NUMBER.format(m.clicks.value), NUMBER.format(m.impressions.value))}</span>}
             />
-            <Kpi icon={MessageSquare} label="Komentarze" value={NUMBER.format(m.comments.value)} change={<Change pct={m.comments.change_pct} />} />
-            <Kpi icon={UserRound} label="Unikalni odwiedzający" value={NUMBER.format(data.overview.unique_visitors)} />
-            <Kpi icon={MessageSquareText} label="Starty Middlemana" value={NUMBER.format(m.middleman_starts.value)} change={<Change pct={m.middleman_starts.change_pct} />} />
-            <Kpi icon={Route} label="Plany wdrożenia" value={NUMBER.format(m.middleman_plans.value)} change={<Change pct={m.middleman_plans.change_pct} />} />
-            <Kpi icon={FlaskConical} label="Zgłoszenia testerów" value={NUMBER.format(m.tester_requests.value)} change={<Change pct={m.tester_requests.change_pct} />} />
-            <Kpi icon={MousePointerClick} label="Kliknięcia przycisków" value={NUMBER.format(m.cta_clicks.value)} change={<Change pct={m.cta_clicks.change_pct} />} />
+            <Kpi icon={MessageSquare} label={e.metrics.comments} value={NUMBER.format(m.comments.value)} change={<Change pct={m.comments.change_pct} />} />
+            <Kpi icon={UserRound} label={e.visitors} value={NUMBER.format(data.overview.unique_visitors)} />
+            <Kpi icon={MessageSquareText} label={e.metrics.middleman_starts} value={NUMBER.format(m.middleman_starts.value)} change={<Change pct={m.middleman_starts.change_pct} />} />
+            <Kpi icon={Route} label={e.metrics.middleman_plans} value={NUMBER.format(m.middleman_plans.value)} change={<Change pct={m.middleman_plans.change_pct} />} />
+            <Kpi icon={FlaskConical} label={e.metrics.tester_requests} value={NUMBER.format(m.tester_requests.value)} change={<Change pct={m.tester_requests.change_pct} />} />
+            <Kpi icon={MousePointerClick} label={e.metrics.cta_clicks} value={NUMBER.format(m.cta_clicks.value)} change={<Change pct={m.cta_clicks.change_pct} />} />
           </dl>
 
           <section aria-labelledby={`${ids}-dni`} className="border-(length:--bw) border-border bg-surface p-6">
             <h2 id={`${ids}-dni`} className="text-xl font-bold text-primary">
-              {METRIC_LABELS[metric]} dzień po dniu
+              {e.perDay(e.metrics[metric])}
             </h2>
             <fieldset className="mt-3 flex flex-wrap gap-2">
-              <legend className="sr-only">Metryka na wykresie</legend>
+              <legend className="sr-only">{e.chartMetric}</legend>
               {CHART_METRICS.map((key) => (
                 <label
                   key={key}
@@ -174,7 +157,7 @@ export function AdminEngagementView() {
                   )}
                 >
                   <input type="radio" name={`${ids}-metryka`} className="sr-only" checked={metric === key} onChange={() => setMetric(key)} />
-                  {METRIC_LABELS[key]}
+                  {e.metrics[key]}
                 </label>
               ))}
             </fieldset>
@@ -187,7 +170,7 @@ export function AdminEngagementView() {
                   <Tooltip
                     contentStyle={{ background: SURFACE, border: "var(--bw) solid var(--color-border)", borderRadius: 12, color: FOREGROUND, fontSize: 16, padding: "8px 12px" }}
                     cursor={{ stroke: MUTED, strokeDasharray: "4 4" }}
-                    formatter={(value) => [`${value}`, METRIC_LABELS[metric]]}
+                    formatter={(value) => [`${value}`, e.metrics[metric]]}
                   />
                   <Area
                     type="monotone"
@@ -202,18 +185,18 @@ export function AdminEngagementView() {
                 </AreaChart>
               </ResponsiveContainer>
             </div>
-            <DataTable caption={`${METRIC_LABELS[metric]} każdego dnia`} head={["Dzień", METRIC_LABELS[metric]]} rows={series.map((d) => [d.date, d.count])} />
+            <DataTable caption={e.perDayCaption(e.metrics[metric])} head={[e.day, e.metrics[metric]]} rows={series.map((d) => [d.date, d.count])} />
           </section>
 
           <div className="grid gap-6 lg:grid-cols-2">
             <section aria-labelledby={`${ids}-fala`} className="border-(length:--bw) border-border bg-surface p-6">
               <h2 id={`${ids}-fala`} className="flex items-center gap-2 text-xl font-bold text-foreground">
                 <Flame aria-hidden="true" className="size-6 shrink-0 text-primary" />
-                Na fali
+                {e.rising}
               </h2>
-              <p className="mt-1 text-muted">Największy przyrost wyświetleń względem poprzednich {days} dni</p>
+              <p className="mt-1 text-muted">{e.risingHint(days)}</p>
               {rising.length === 0 ? (
-                <p className="mt-4">Żadna innowacja nie zyskała wyświetleń w tym okresie.</p>
+                <p className="mt-4">{e.noRising}</p>
               ) : (
                 <ol className="mt-4 space-y-3">
                   {rising.map((item, index) => (
@@ -238,16 +221,16 @@ export function AdminEngagementView() {
 
             <section aria-labelledby={`${ids}-lejek`} className="border-(length:--bw) border-border bg-surface p-6">
               <h2 id={`${ids}-lejek`} className="text-xl font-bold text-foreground">
-                Od karty do wdrożenia
+                {e.funnel}
               </h2>
-              <p className="mt-1 text-muted">Ile osób przechodzi kolejne kroki po otwarciu karty innowacji</p>
+              <p className="mt-1 text-muted">{e.funnelHint}</p>
               <ol className="mt-4 space-y-3">
                 {data.funnel.steps.map((step, index) => (
                   <li key={step.step}>
                     {index > 0 && step.pct_of_prev !== null && (
                       <p className="mb-1 flex items-center gap-1 text-sm text-muted">
                         <ArrowDown aria-hidden="true" className="size-4" />
-                        {step.pct_of_prev.toLocaleString("pl-PL")}% z poprzedniego kroku
+                        {e.ofPrev(number(step.pct_of_prev))}
                       </p>
                     )}
                     <div className="flex items-center justify-between gap-4">
@@ -265,18 +248,18 @@ export function AdminEngagementView() {
 
           <section aria-labelledby={`${ids}-ranking`} className="border-(length:--bw) border-border bg-surface p-6">
             <h2 id={`${ids}-ranking`} className="text-xl font-bold text-foreground">
-              Ranking innowacji
+              {e.ranking}
             </h2>
             <p className="mt-1 text-muted">
-              Dużo wyświetleń i niski CTR zwykle znaczy, że opis na karcie w wynikach nie zachęca. Kliknij nagłówek kolumny, żeby posortować.
+              {e.rankingHint}
             </p>
             <div className="mt-4 overflow-x-auto">
               <table className="w-full min-w-[44rem] border-collapse text-left">
-                <caption className="sr-only">Statystyki innowacji z ostatnich {days} dni</caption>
+                <caption className="sr-only">{e.rankingCaption(days)}</caption>
                 <thead>
                   <tr className="border-b-2 border-border">
-                    <th scope="col" className="py-2 pr-4 font-bold text-foreground">Innowacja</th>
-                    {COLUMNS.map((col) => (
+                    <th scope="col" className="py-2 pr-4 font-bold text-foreground">{e.innovation}</th>
+                    {COLUMNS.map((key) => ({ key, label: e.columns[key] })).map((col) => (
                       <th key={col.key} scope="col" aria-sort={sort === col.key ? "descending" : undefined} className="py-2 pl-3 text-right">
                         <button
                           type="button"
@@ -303,7 +286,7 @@ export function AdminEngagementView() {
                         {item.views_delta > 0 ? "+" : ""}
                         {item.views_delta}
                       </td>
-                      <td className="py-2 pl-3 text-right tabular-nums">{item.ctr_pct === null ? "–" : `${item.ctr_pct.toLocaleString("pl-PL")}%`}</td>
+                      <td className="py-2 pl-3 text-right tabular-nums">{item.ctr_pct === null ? "–" : `${number(item.ctr_pct)}%`}</td>
                       <td className="py-2 pl-3 text-right tabular-nums">{item.comments}</td>
                       <td className="py-2 pl-3 text-right tabular-nums">{item.middleman_starts}</td>
                       <td className="py-2 pl-3 text-right tabular-nums">{item.tester_requests}</td>
@@ -311,29 +294,29 @@ export function AdminEngagementView() {
                   ))}
                 </tbody>
               </table>
-              {ranking.length === 0 && <p className="mt-4">Brak zdarzeń w tym okresie.</p>}
+              {ranking.length === 0 && <p className="mt-4">{e.noEvents}</p>}
             </div>
           </section>
 
           <section aria-labelledby={`${ids}-popyt`} className="border-(length:--bw) border-destructive bg-surface p-6">
             <h2 id={`${ids}-popyt`} className="text-xl font-bold text-foreground">
-              Popyt a podaż
+              {e.demand}
             </h2>
             <p className="mt-1 text-muted">
-              Tematy z wyszukiwań zestawione z liczbą aktywnych innowacji. Dużo szukań na jedną innowację = luka, którą warto zapełnić.
+              {e.demandHint}
             </p>
             {data.demand.length === 0 ? (
-              <p className="mt-4">Brak wyszukiwań w tym okresie.</p>
+              <p className="mt-4">{e.noSearches}</p>
             ) : (
               <div className="mt-4 overflow-x-auto">
                 <table className="w-full min-w-[36rem] border-collapse text-left">
-                  <caption className="sr-only">Wyszukiwania i liczba innowacji według tematu</caption>
+                  <caption className="sr-only">{e.demandCaption}</caption>
                   <thead>
                     <tr className="border-b-2 border-border">
-                      <th scope="col" className="py-2 pr-4 font-bold text-foreground">Temat</th>
-                      <th scope="col" className="py-2 pr-4 font-bold text-foreground">Wyszukiwania</th>
-                      <th scope="col" className="py-2 pl-3 text-right font-bold text-foreground">Innowacje</th>
-                      <th scope="col" className="py-2 pl-3 text-right font-bold text-foreground">Szukań na innowację</th>
+                      <th scope="col" className="py-2 pr-4 font-bold text-foreground">{e.topic}</th>
+                      <th scope="col" className="py-2 pr-4 font-bold text-foreground">{e.searches}</th>
+                      <th scope="col" className="py-2 pl-3 text-right font-bold text-foreground">{e.innovations}</th>
+                      <th scope="col" className="py-2 pl-3 text-right font-bold text-foreground">{e.perInnovation}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -352,8 +335,8 @@ export function AdminEngagementView() {
                           </td>
                           <td className="py-2 pl-3 text-right tabular-nums">{row.innovations}</td>
                           <td className={cn("py-2 pl-3 text-right tabular-nums", gap && "font-bold text-destructive")}>
-                            {row.gap_ratio === null ? "brak innowacji" : row.gap_ratio.toLocaleString("pl-PL")}
-                            {gap && <span className="sr-only"> (luka)</span>}
+                            {row.gap_ratio === null ? e.noInnovations : number(row.gap_ratio)}
+                            {gap && <span className="sr-only">{e.gap}</span>}
                           </td>
                         </tr>
                       );

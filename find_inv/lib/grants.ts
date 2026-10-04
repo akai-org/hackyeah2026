@@ -3,6 +3,7 @@
 
 import { apiFetch, apiPost } from "@/lib/api";
 import type { IdeaDraft } from "@/lib/ideas";
+import { LOCALE_TAGS, type Locale } from "@/lib/i18n/config";
 
 export type GrantSection = { id: string; label: string; hint: string; max_chars: number };
 
@@ -31,9 +32,14 @@ export function submitApplication(grantId: string, applicant: Applicant, section
   );
 }
 
-/** „31 października 2026” — terminy naboru w czasie polskim. */
-export function formatCallDate(iso: string) {
-  return new Date(iso).toLocaleDateString("pl-PL", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Warsaw" });
+/** „31 października 2026” — terminy naboru w czasie polskim, nazwa miesiąca w języku interfejsu. */
+export function formatCallDate(iso: string, locale: Locale = "pl") {
+  return new Date(iso).toLocaleDateString(LOCALE_TAGS[locale], {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Europe/Warsaw",
+  });
 }
 
 export type GrantFill = {

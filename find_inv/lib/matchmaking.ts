@@ -1,7 +1,9 @@
 import { API_URL, apiFetch } from "@/lib/api";
 import { chunkText, fakeStream, postSse } from "@/lib/sse";
-import { TAG_KEYWORDS, TAG_LABELS, TAXONOMY_TAGS, type Tag } from "@/data/mock";
-import { COST_LABELS, MOCK_INNOVATIONS, type InnovationCard } from "@/data/innovations";
+import { TAG_KEYWORDS, TAXONOMY_TAGS, type Tag } from "@/data/mock";
+import { MOCK_INNOVATIONS, type InnovationCard } from "@/data/innovations";
+import { readLocaleCookie } from "@/lib/i18n/config";
+import { getMessages } from "@/lib/i18n/messages";
 
 // Matchmaking (CONTEXT.md, moduł 1): /api/tag → /api/match → /api/chat.
 // Każde wywołanie ma zapas w danych mock, żeby demo działało także bez backendu.
@@ -87,27 +89,27 @@ export async function getInnovation(id: number): Promise<InnovationCard | null> 
 }
 
 function localChatAnswer(question: string, innovations: InnovationCard[]): string {
+  // Odpowiedź zapasowa (backend nie odpowiada) w języku interfejsu; pola innowacji zostają, jakie przyszły.
+  const t = getMessages(readLocaleCookie());
+  const f = t.results.fallback;
   const lower = question.toLowerCase();
   const top = innovations[0];
-  if (!top) return "Nie mam jeszcze wyników, o które można zapytać. Opisz problem i kliknij „Szukaj”.";
+  if (!top) return f.noResults;
 
-  if (/koszt|ile kosztuje|pieni|budżet|finans/.test(lower)) {
+  if (/koszt|ile kosztuje|pieni|budżet|finans|cost|cheap|price|budget|варт|дешев|бюджет|грош/.test(lower)) {
     const lines = innovations
       .slice(0, 3)
-      .map(
-        (item) =>
-          `• ${item.title}: ${item.cost_level ? COST_LABELS[item.cost_level].toLowerCase() : "koszt do sprawdzenia"}`,
-      );
-    return `Najtańsze w starcie są rozwiązania oparte na wolontariacie.\n${lines.join("\n")}\nNa finansowanie warto sprawdzić FIO, PFRON i środki gminne.`;
+      .map((item) => `• ${item.title}: ${item.cost_level ? t.cost[item.cost_level].toLowerCase() : f.costUnknown}`);
+    return f.cheapest(lines.join("\n"));
   }
-  if (/gdzie|kto|wdroż|działa/.test(lower)) {
-    return `„${top.title}” działa już w: ${top.where_implemented ?? "kilku gminach Małopolski"}. Kliknij „Jak to wdrożyć?” przy karcie, a przygotuję szkic planu dla Twojej instytucji.`;
+  if (/gdzie|kto|wdroż|działa|where|who|implement|де |хто|впровад|працює/.test(lower)) {
+    return f.where(top.title, top.where_implemented ?? f.someMunicipalities);
   }
   const tags = top.tags
     .filter(isTag)
     .slice(0, 3)
-    .map((tag) => TAG_LABELS[tag].toLowerCase());
-  return `Najlepiej pasuje „${top.title}”: ${top.short_desc.toLowerCase()}. Odpowiada na ${tags.join(", ")}. ${top.full_desc ?? ""} Zapytaj o koszty, czas wdrożenia albo o to, gdzie już działa.`;
+    .map((tag) => t.tags[tag].toLowerCase());
+  return f.best(top.title, top.short_desc.toLowerCase(), tags.join(", "), top.full_desc ?? "");
 }
 
 /** Odpowiedź czatu RAG jako strumień fragmentów tekstu. */

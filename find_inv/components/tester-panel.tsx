@@ -12,30 +12,30 @@ import { useAuth } from "@/lib/auth";
 import { listInnovations } from "@/lib/knowledge";
 import { getMyTests, sendFeedback, type Feedback, type TestReport, type TestStatus } from "@/lib/tester-api";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/client";
 
 // Panel testera. Rolę testera nadaje admin ROPS; tester zgłasza się do konkretnych innowacji,
 // admin go do nich przypisuje, a przypisane innowacje tester ocenia (1–5, feedback, propozycje usprawnień).
 
-const RATING_LABELS = ["", "Nie działa", "Słabo", "Średnio", "Dobrze", "Bardzo dobrze"];
-
 const inputClass =
   "mt-2 w-full rounded-ui border-(length:--bw) bg-surface px-4 py-3 text-base text-foreground placeholder:text-muted";
 
-const GROUPS: Array<{ status: TestStatus; title: string; empty?: string }> = [
-  { status: "assigned", title: "Przypisane do mnie", empty: "ROPS nie przypisał Ci jeszcze żadnej innowacji." },
-  { status: "requested", title: "Czekają na decyzję ROPS" },
-  { status: "submitted", title: "Ocenione" },
-  { status: "rejected", title: "Odrzucone zgłoszenia" },
+const GROUPS: Array<{ status: TestStatus; hasEmpty?: boolean }> = [
+  { status: "assigned", hasEmpty: true },
+  { status: "requested" },
+  { status: "submitted" },
+  { status: "rejected" },
 ];
 
 export function TesterPanel() {
   const { user, status } = useAuth();
+  const tp = useT().tester;
 
   if (status === "loading") {
     return (
       <div className="flex items-center gap-3" role="status">
         <Loader2 aria-hidden="true" className="size-6 animate-spin text-primary" />
-        Sprawdzam uprawnienia…
+        {tp.checking}
       </div>
     );
   }
@@ -45,14 +45,14 @@ export function TesterPanel() {
       <div className="max-w-xl border-(length:--bw) border-border bg-surface p-6 shadow-raised sm:p-8">
         <h2 className="flex items-center gap-3 text-xl font-bold text-foreground">
           <FlaskConical aria-hidden="true" className="size-7 shrink-0 text-primary" />
-          Ta część jest dla testerów
+          {tp.onlyTesters}
         </h2>
         <p className="mt-3">
-          Rolę testera nadaje administrator ROPS. Wybierz innowację w{" "}
+          {tp.onlyTestersLead[0]}
           <Link href="/biblioteka" className="font-bold text-primary underline underline-offset-4 hover:text-primary-hover">
-            Bibliotece
-          </Link>{" "}
-          i na jej karcie kliknij „Zgłoś się jako tester”. Po zatwierdzeniu zobaczysz tu innowacje przypisane do Ciebie.
+            {tp.onlyTestersLead[1]}
+          </Link>
+          {tp.onlyTestersLead[2]}
         </p>
       </div>
     );
@@ -63,6 +63,7 @@ export function TesterPanel() {
 
 function Dashboard({ userId }: { userId: number | string }) {
   const { offline: sessionOffline } = useAuth();
+  const tp = useT().tester;
   const [tests, setTests] = useState<TestReport[] | null>(null);
   const [offline, setOffline] = useState(sessionOffline);
   const [loadError, setLoadError] = useState(false);
@@ -82,9 +83,9 @@ function Dashboard({ userId }: { userId: number | string }) {
     (report: TestReport, wasOffline: boolean) => {
       setTests((current) => [report, ...(current ?? [])]);
       setOffline(wasOffline);
-      toast.show(`Zgłoszenie wysłane: ${report.innovation_title}. ROPS da znać, czy Cię przypisze.`);
+      toast.show(tp.requestSent(report.innovation_title ?? ""));
     },
-    [toast],
+    [toast, tp],
   );
 
   const saveFeedback = useCallback(
@@ -92,9 +93,9 @@ function Dashboard({ userId }: { userId: number | string }) {
       const result = await sendFeedback(id, feedback, offline);
       setTests((current) => (current ?? []).map((report) => (report.id === id ? result.data : report)));
       setOpenId(null);
-      toast.show("Ocena wysłana. Dziękujemy — trafi do opisu innowacji.");
+      toast.show(tp.feedbackSent);
     },
-    [offline, toast],
+    [offline, toast, tp],
   );
 
   const count = (status: TestStatus) => tests?.filter((report) => report.status === status).length ?? 0;
@@ -104,14 +105,14 @@ function Dashboard({ userId }: { userId: number | string }) {
     <>
       {offline && (
         <p className="mb-6 border-l-4 border-destructive pl-4 text-muted" role="status">
-          Brak połączenia z serwerem. Testy zapisują się tylko w tej karcie przeglądarki.
+          {tp.offline}
         </p>
       )}
 
       <dl className="grid max-w-2xl grid-cols-3 gap-4">
         {(["assigned", "requested", "submitted"] as const).map((status) => (
           <div key={status} className="border-(length:--bw) border-border bg-surface p-4 shadow-raised">
-            <dt className="font-bold text-muted">{GROUPS.find((group) => group.status === status)!.title}</dt>
+            <dt className="font-bold text-muted">{tp.groups[status]}</dt>
             <dd className="text-3xl font-bold text-foreground">{tests ? count(status) : "–"}</dd>
           </div>
         ))}
@@ -122,21 +123,21 @@ function Dashboard({ userId }: { userId: number | string }) {
           {loadError ? (
             <p className="flex items-start gap-2 font-bold text-destructive" role="alert">
               <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
-              Nie udało się wczytać testów. Odśwież stronę.
+              {tp.loadFailed}
             </p>
           ) : !tests ? (
             <p className="flex items-center gap-3" role="status">
               <Loader2 aria-hidden="true" className="size-5 animate-spin text-primary" />
-              Wczytuję testy…
+              {tp.loading}
             </p>
           ) : (
-            GROUPS.map(({ status, title, empty }) => {
+            GROUPS.map(({ status, hasEmpty }) => {
               const items = tests.filter((report) => report.status === status);
-              if (!items.length && !empty) return null;
+              if (!items.length && !hasEmpty) return null;
               return (
                 <section key={status} aria-labelledby={`grupa-${status}`} className="mb-10">
                   <h2 id={`grupa-${status}`} className="text-xl font-bold text-foreground">
-                    {title}
+                    {tp.groups[status]}
                   </h2>
                   {items.length ? (
                     <ul className="mt-4 grid gap-4">
@@ -152,7 +153,7 @@ function Dashboard({ userId }: { userId: number | string }) {
                     </ul>
                   ) : (
                     <p className="mt-4 max-w-[55ch] text-muted">
-                      {empty} Zgłoś się do testu innowacji z listy obok albo z jej karty w Bibliotece.
+                      {tp.noAssigned} {tp.emptyHint}
                     </p>
                   )}
                 </section>
@@ -170,8 +171,9 @@ function Dashboard({ userId }: { userId: number | string }) {
 }
 
 export function Stars({ rating }: { rating: number }) {
+  const tp = useT().tester;
   return (
-    <span className="inline-flex items-center gap-1" aria-label={`Ocena ${rating} z 5: ${RATING_LABELS[rating]}`}>
+    <span className="inline-flex items-center gap-1" aria-label={tp.stars(rating, tp.ratingLabels[rating])}>
       {[1, 2, 3, 4, 5].map((value) => (
         <Star
           key={value}
@@ -195,7 +197,8 @@ function TestItem({
   onSubmit: (feedback: Feedback) => Promise<void>;
 }) {
   const formId = useId();
-  const title = report.innovation_title ?? `Innowacja #${report.innovation_id}`;
+  const tp = useT().tester;
+  const title = report.innovation_title ?? tp.innovationNo(report.innovation_id);
   const submitted = report.status === "submitted";
   const assigned = report.status === "assigned";
 
@@ -214,7 +217,7 @@ function TestItem({
         </div>
         {assigned && (
           <Button type="button" variant={open ? "secondary" : "primary"} onClick={onToggle} aria-expanded={open} aria-controls={formId}>
-            {open ? "Zwiń" : "Oceń test"}
+            {open ? tp.collapse : tp.rate}
           </Button>
         )}
       </div>
@@ -224,17 +227,17 @@ function TestItem({
           <Stars rating={report.rating} />
           {report.what_worked && (
             <p>
-              <span className="font-bold">Co zadziałało:</span> {report.what_worked}
+              <span className="font-bold">{tp.whatWorked}</span> {report.what_worked}
             </p>
           )}
           {report.improvements && (
             <p>
-              <span className="font-bold">Propozycje usprawnień:</span> {report.improvements}
+              <span className="font-bold">{tp.improvements}</span> {report.improvements}
             </p>
           )}
           {report.cost_note && (
             <p>
-              <span className="font-bold">Koszty:</span> {report.cost_note}
+              <span className="font-bold">{tp.costs}</span> {report.cost_note}
             </p>
           )}
         </div>
@@ -242,7 +245,7 @@ function TestItem({
 
       {report.status === "requested" && report.motivation && (
         <p className="mt-3 text-muted">
-          <span className="font-bold">Twoje uzasadnienie:</span> {report.motivation}
+          <span className="font-bold">{tp.motivation}</span> {report.motivation}
         </p>
       )}
 
@@ -255,6 +258,7 @@ type Errors = { rating?: string; what_worked?: string; submit?: string };
 
 function FeedbackForm({ id, title, onSubmit }: { id: string; title: string; onSubmit: (feedback: Feedback) => Promise<void> }) {
   const ids = useId();
+  const tp = useT().tester;
   const [rating, setRating] = useState(0);
   const [whatWorked, setWhatWorked] = useState("");
   const [improvements, setImprovements] = useState("");
@@ -267,8 +271,8 @@ function FeedbackForm({ id, title, onSubmit }: { id: string; title: string; onSu
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const found: Errors = {};
-    if (!rating) found.rating = "Wybierz ocenę od 1 do 5.";
-    if (!whatWorked.trim()) found.what_worked = "Napisz choć jedno zdanie o tym, jak poszedł test.";
+    if (!rating) found.rating = tp.ratingRequired;
+    if (!whatWorked.trim()) found.what_worked = tp.workedRequired;
     setErrors(found);
     if (found.rating) return firstRatingRef.current?.focus();
     if (found.what_worked) return workedRef.current?.focus();
@@ -277,7 +281,7 @@ function FeedbackForm({ id, title, onSubmit }: { id: string; title: string; onSu
     try {
       await onSubmit({ rating, what_worked: whatWorked.trim(), improvements: improvements.trim(), cost_note: costNote.trim() });
     } catch {
-      setErrors({ submit: "Nie udało się wysłać oceny. Spróbuj ponownie." });
+      setErrors({ submit: tp.sendFailed });
     } finally {
       setSending(false);
     }
@@ -292,10 +296,10 @@ function FeedbackForm({ id, title, onSubmit }: { id: string; title: string; onSu
     );
 
   return (
-    <form id={id} onSubmit={submit} noValidate aria-label={`Ocena testu: ${title}`} className="appear mt-6 border-t-2 border-border pt-6">
+    <form id={id} onSubmit={submit} noValidate aria-label={tp.formLabel(title)} className="appear mt-6 border-t-2 border-border pt-6">
       <fieldset aria-describedby={errors.rating ? `${ids}-rating-blad` : undefined}>
         <legend className="font-bold text-primary">
-          Jak oceniasz innowację? <span className="font-normal text-muted">(wymagane)</span>
+          {tp.howRate} <span className="font-normal text-muted">{tp.required}</span>
         </legend>
         <div className="mt-2 flex flex-wrap gap-2">
           {[1, 2, 3, 4, 5].map((value) => (
@@ -318,7 +322,7 @@ function FeedbackForm({ id, title, onSubmit }: { id: string; title: string; onSu
                 }}
                 className="sr-only"
               />
-              {value} – {RATING_LABELS[value]}
+              {value} – {tp.ratingLabels[value]}
             </label>
           ))}
         </div>
@@ -327,7 +331,7 @@ function FeedbackForm({ id, title, onSubmit }: { id: string; title: string; onSu
 
       <div className="mt-6">
         <label htmlFor={`${ids}-dzialalo`} className="block font-bold text-foreground">
-          Co zadziałało? <span className="font-normal text-muted">(wymagane)</span>
+          {tp.workedQ} <span className="font-normal text-muted">{tp.required}</span>
         </label>
         <textarea
           ref={workedRef}
@@ -347,10 +351,10 @@ function FeedbackForm({ id, title, onSubmit }: { id: string; title: string; onSu
 
       <div className="mt-6">
         <label htmlFor={`${ids}-usprawnienia`} className="block font-bold text-foreground">
-          Co trzeba zmienić lub usprawnić?
+          {tp.improveQ}
         </label>
         <p id={`${ids}-usprawnienia-podpowiedz`} className="mt-1 text-muted">
-          Twoje propozycje trafią do autorów innowacji.
+          {tp.improveHint}
         </p>
         <textarea
           id={`${ids}-usprawnienia`}
@@ -364,14 +368,14 @@ function FeedbackForm({ id, title, onSubmit }: { id: string; title: string; onSu
 
       <div className="mt-6">
         <label htmlFor={`${ids}-koszt`} className="block font-bold text-foreground">
-          Ile to kosztowało?
+          {tp.costQ}
         </label>
         <input
           id={`${ids}-koszt`}
           type="text"
           value={costNote}
           onChange={(event) => setCostNote(event.target.value)}
-          placeholder="np. 500 zł na materiały, 4 godziny pracy wolontariusza"
+          placeholder={tp.costPlaceholder}
           className={cn(inputClass, "min-h-12 border-border")}
         />
       </div>
@@ -379,7 +383,7 @@ function FeedbackForm({ id, title, onSubmit }: { id: string; title: string; onSu
       {errorText("submit")}
       <Button type="submit" disabled={sending} className="mt-6">
         {sending ? <Loader2 aria-hidden="true" className="animate-spin" /> : <Send aria-hidden="true" />}
-        Wyślij ocenę
+        {tp.send}
       </Button>
     </form>
   );
@@ -395,6 +399,8 @@ function InnovationPicker({
   onRequested: (report: TestReport, offline: boolean) => void;
 }) {
   const ids = useId();
+  const t = useT();
+  const tp = t.tester;
   const [query, setQuery] = useState("");
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<InnovationCard[] | null>(null);
@@ -412,9 +418,9 @@ function InnovationPicker({
   return (
     <section aria-labelledby={`${ids}-tytul`} className="self-start border-(length:--bw) border-border bg-surface p-6 shadow-raised">
       <h2 id={`${ids}-tytul`} className="text-xl font-bold text-foreground">
-        Zgłoś się do testu
+        {tp.applyTitle}
       </h2>
-      <p className="mt-2 text-muted">Wybierz innowację. Administrator ROPS zdecyduje, czy Ci ją przypisać.</p>
+      <p className="mt-2 text-muted">{tp.applyLead}</p>
       <form
         role="search"
         onSubmit={(event) => {
@@ -424,17 +430,17 @@ function InnovationPicker({
         className="mt-4 flex gap-2"
       >
         <label htmlFor={`${ids}-szukaj`} className="sr-only">
-          Szukaj innowacji
+          {tp.searchLabel}
         </label>
         <input
           id={`${ids}-szukaj`}
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="np. seniorzy, samotność"
+          placeholder={tp.searchPlaceholder}
           className={cn(inputClass, "mt-0 min-h-12 border-border")}
         />
-        <Button type="submit" aria-label="Szukaj">
+        <Button type="submit" aria-label={t.common.search}>
           <Search aria-hidden="true" />
         </Button>
       </form>
@@ -442,11 +448,11 @@ function InnovationPicker({
       {!results ? (
         <p className="mt-4 flex items-center gap-3" role="status">
           <Loader2 aria-hidden="true" className="size-5 animate-spin text-primary" />
-          Wczytuję innowacje…
+          {tp.loadingInnovations}
         </p>
       ) : results.length === 0 ? (
         <p className="mt-4 text-muted" role="status">
-          Nic nie znaleziono. Spróbuj innego słowa.
+          {tp.nothing}
         </p>
       ) : (
         <ul className="mt-4 grid gap-5">
@@ -458,7 +464,7 @@ function InnovationPicker({
               <p className="mt-1 line-clamp-2 text-muted">{innovation.short_desc}</p>
               <div className="mt-2">
                 {requestedIds.has(innovation.id) ? (
-                  <p className="font-bold text-muted">Już zgłoszona — sprawdź status obok.</p>
+                  <p className="font-bold text-muted">{tp.alreadyRequested}</p>
                 ) : (
                   <TestRequestForm innovation={innovation} offline={offline} onRequested={onRequested} />
                 )}

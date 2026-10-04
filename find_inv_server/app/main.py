@@ -1,11 +1,17 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+import json
+
+from fastapi import FastAPI, Request
+from fastapi.responses import Response
+from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session
 
 from app.config import settings
 from app.database import init_db
+from app.i18n import current_lang, normalize_lang
+from app.translation import should_translate_path, translate_payload, translate_texts
 from app.routers import admin, admin_panel, events, grants, health, ideas, knowledge, matchmaking, middleman, tester
 from app.routers import auth as auth_router
 from app.zasobnik.db import engine as zasobnik_engine
@@ -35,6 +41,47 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+
+@app.middleware("http")
+async def lang_middleware(request: Request, call_next):
+    # Frontend wysyła X-Lang (pl/en/uk); odpowiedzi LLM idą w tym języku.
+    lang = normalize_lang(request.headers.get("X-Lang") or request.cookies.get("lang"))
+    token = current_lang.set(lang)
+    try:
+        response = await call_next(request)
+        # Treści z bazy są po polsku — dla en/uk tłumaczymy odpowiedź JSON (cache w translations.db).
+        if (
+            lang != "pl"
+            and response.status_code == 200
+            and response.headers.get("content-type", "").startswith("application/json")
+            and should_translate_path(request.url.path)
+        ):
+            body = b"".join([chunk async for chunk in response.body_iterator])
+            try:
+                translated = await translate_payload(json.loads(body), lang)
+                body = json.dumps(translated, ensure_ascii=False).encode("utf-8")
+            except Exception:  # noqa: BLE001 — tłumaczenie nigdy nie psuje odpowiedzi
+                pass
+            headers = {k: v for k, v in response.headers.items() if k.lower() != "content-length"}
+            return Response(content=body, status_code=response.status_code, headers=headers, media_type="application/json")
+        return response
+    finally:
+        current_lang.reset(token)
+
+
+class TranslateRequest(BaseModel):
+    texts: list[str]
+
+
+@app.post("/api/translate")
+async def translate(body: TranslateRequest):
+    """Tłumaczy teksty trzymane na froncie (np. dane demo) na język z X-Lang. Brak tłumaczenia = oryginał."""
+    texts = [t[:4000] for t in body.texts[:200]]
+    mapping = await translate_texts(texts)
+    return {"data": [mapping.get(t, t) for t in texts], "error": None}
+
 
 app.include_router(health.router, prefix="/api")
 app.include_router(auth_router.router)

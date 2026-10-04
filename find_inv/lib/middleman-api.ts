@@ -1,6 +1,7 @@
 // Middleman AI: /api/middleman/start (JSON) i /api/middleman/answer (SSE z obiektami JSON).
 
 import { API_URL, apiFetch, readSessionCookie } from "@/lib/api";
+import { readLocaleCookie } from "@/lib/i18n/config";
 
 export type PlanPhase = { label: string; items: string[] };
 
@@ -51,7 +52,7 @@ export async function answerMiddleman(
   onEvent: (event: MiddlemanEvent) => void,
   signal?: AbortSignal,
 ) {
-  const headers = new Headers({ "Content-Type": "application/json" });
+  const headers = new Headers({ "Content-Type": "application/json", "X-Lang": readLocaleCookie() });
   const token = readSessionCookie();
   if (token) headers.set("X-Session-Token", token);
 

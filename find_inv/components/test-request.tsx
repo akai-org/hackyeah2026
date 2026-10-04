@@ -7,8 +7,9 @@ import { CircleAlert, ClipboardCheck, Clock, FlaskConical, Loader2, Send, X } fr
 import { Button } from "@/components/ui/button";
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { getMyTests, requestTest, STATUS_LABELS, type TestReport, type TestStatus } from "@/lib/tester-api";
+import { getMyTests, requestTest, type TestReport, type TestStatus } from "@/lib/tester-api";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/client";
 
 // Zgłoszenie testera do konkretnej innowacji. Admin ROPS decyduje, czy go przypisać.
 
@@ -23,6 +24,7 @@ const STATUS_STYLES: Record<TestStatus, { icon: typeof Clock; className: string 
 
 export function TestStatusBadge({ status }: { status: TestStatus }) {
   const { icon: Icon, className } = STATUS_STYLES[status];
+  const t = useT();
   return (
     <span
       className={cn(
@@ -31,7 +33,7 @@ export function TestStatusBadge({ status }: { status: TestStatus }) {
       )}
     >
       <Icon aria-hidden="true" className="size-4" />
-      {STATUS_LABELS[status]}
+      {t.library.test.status[status]}
     </span>
   );
 }
@@ -47,6 +49,8 @@ export function TestRequestForm({
   onRequested: (report: TestReport, offline: boolean) => void;
 }) {
   const { user } = useAuth();
+  const t = useT();
+  const tt = t.library.test;
   const ids = useId();
   const [open, setOpen] = useState(false);
   const [motivation, setMotivation] = useState("");
@@ -70,8 +74,8 @@ export function TestRequestForm({
     } catch (err) {
       setError(
         err instanceof ApiError && err.status === 409
-          ? "Już zgłosiłeś się do testu tej innowacji."
-          : "Nie udało się wysłać zgłoszenia. Spróbuj ponownie.",
+          ? tt.already
+          : tt.sendFailed,
       );
     } finally {
       setSending(false);
@@ -80,21 +84,21 @@ export function TestRequestForm({
 
   if (!open) {
     return (
-      <Button type="button" variant="secondary" onClick={() => setOpen(true)} aria-label={`Zgłoś się do testu: ${innovation.title}`}>
+      <Button type="button" variant="secondary" onClick={() => setOpen(true)} aria-label={tt.applyFor(innovation.title)}>
         <FlaskConical aria-hidden="true" />
-        Zgłoś się do testu
+        {tt.apply}
       </Button>
     );
   }
 
   return (
-    <form onSubmit={submit} aria-label={`Zgłoszenie do testu: ${innovation.title}`} className="appear grid gap-3">
+    <form onSubmit={submit} aria-label={tt.formLabel(innovation.title)} className="appear grid gap-3">
       <div>
         <label htmlFor={`${ids}-dlaczego`} className="block font-bold text-foreground">
-          Dlaczego chcesz ją przetestować?
+          {tt.why}
         </label>
         <p id={`${ids}-podpowiedz`} className="mt-1 text-muted">
-          Nieobowiązkowe. Np. gdzie ją sprawdzisz i z kim. Pomoże to ROPS podjąć decyzję.
+          {tt.whyHint}
         </p>
         <textarea
           ref={textareaRef}
@@ -115,10 +119,10 @@ export function TestRequestForm({
       <div className="flex flex-wrap gap-3">
         <Button type="submit" disabled={sending}>
           {sending ? <Loader2 aria-hidden="true" className="animate-spin" /> : <Send aria-hidden="true" />}
-          Wyślij zgłoszenie
+          {tt.send}
         </Button>
         <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
-          Anuluj
+          {t.common.cancel}
         </Button>
       </div>
     </form>
@@ -128,6 +132,7 @@ export function TestRequestForm({
 /** Ramka na karcie innowacji: dla testera zgłoszenie albo status, dla reszty nic. */
 export function TestRequestBox({ innovation }: { innovation: Innovation }) {
   const { user, offline: sessionOffline } = useAuth();
+  const tt = useT().library.test;
   const isTester = user?.role === "tester";
   const [report, setReport] = useState<TestReport | null | undefined>(undefined);
   const [offline, setOffline] = useState(sessionOffline);
@@ -152,23 +157,23 @@ export function TestRequestBox({ innovation }: { innovation: Innovation }) {
     >
       <h2 id="test-innowacji" className="flex items-center gap-2 text-xl font-bold text-foreground">
         <FlaskConical aria-hidden="true" className="size-6 text-primary" />
-        Testowanie
+        {tt.testing}
       </h2>
       {report ? (
         <>
           <p ref={statusRef} tabIndex={-1} role="status" className="mt-3">
-            <span className="font-bold">{STATUS_LABELS[report.status]}.</span>{" "}
-            {report.status === "requested" && "Dostaniesz innowację do testu, gdy ROPS zatwierdzi zgłoszenie."}
-            {report.status === "assigned" && "Po teście wystaw ocenę w panelu testera."}
+            <span className="font-bold">{tt.status[report.status]}.</span>{" "}
+            {report.status === "requested" && tt.requestedInfo}
+            {report.status === "assigned" && tt.assignedInfo}
           </p>
           <Link href="/testerzy/panel" className="mt-3 inline-block font-bold text-primary underline underline-offset-4 hover:text-primary-hover">
-            Przejdź do panelu testera
+            {tt.goPanel}
           </Link>
         </>
       ) : (
         <>
           <p className="mt-3 max-w-[60ch]">
-            Chcesz sprawdzić tę innowację w praktyce? Zgłoś się — administrator ROPS przypisze Ci ją do testu.
+            {tt.lead}
           </p>
           <div className="mt-4">
             <TestRequestForm

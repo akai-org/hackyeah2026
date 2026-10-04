@@ -4,10 +4,10 @@ import Link from "next/link";
 import { Archive, Coins, MapPin, Puzzle, Users } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
-import { COST_LABELS, type InnovationCard } from "@/data/innovations";
-import { TAG_LABELS, type Tag } from "@/data/mock";
+import { type InnovationCard } from "@/data/innovations";
+import { useT } from "@/lib/i18n/client";
 import { track, type CardSource } from "@/lib/track";
-import { cn, plural } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 // Karta innowacji w wynikach matchmakingu (DESIGN.md 8): stoi prosto, taśma tylko dekoracją,
 // „Dlaczego pasuje” w blockquote z lewą linią. „Nieaktualna” to szara plakietka z ikoną i słowem.
@@ -17,10 +17,6 @@ function short(text: string, max = 110): string {
   const clean = text.replace(/\s+/g, " ").trim();
   if (clean.length <= max) return clean;
   return `${clean.slice(0, clean.lastIndexOf(" ", max)).replace(/[,;:.]$/, "")}…`;
-}
-
-function tagLabel(tag: string): string {
-  return TAG_LABELS[tag as Tag] ?? tag.replace(/_/g, " ");
 }
 
 type MatchCardProps = {
@@ -44,6 +40,8 @@ export function MatchCard({
   headingLevel: Heading = "h3",
   source = rank ? "wyniki" : "biblioteka",
 }: MatchCardProps) {
+  const t = useT();
+  const tagLabel = (tag: string) => t.tags[tag] ?? tag.replace(/_/g, " ");
   const titleId = `innowacja-${innovation.id}`;
   const unmaintained = innovation.is_unmaintained ?? innovation.status === "unmaintained";
   const shared = innovation.tags.filter((tag) => queryTags.includes(tag));
@@ -66,7 +64,7 @@ export function MatchCard({
       {rank !== undefined && (
         <p className="mb-1 flex flex-wrap items-center gap-2 text-sm font-bold text-muted">
           {/* Bez procentu dopasowania: wynik TF-IDF nie jest skalibrowany, „28%” czyta się jak „nie pasuje”. */}
-          <span>{rank === 1 ? "Najlepiej pasuje" : `Wynik ${rank}`}</span>
+          <span>{rank === 1 ? t.card.bestMatch : t.card.rank(rank)}</span>
         </p>
       )}
 
@@ -77,7 +75,7 @@ export function MatchCard({
       {unmaintained && (
         <p className="mt-3 inline-flex items-start gap-2 self-start rounded-ui border-2 border-border bg-secondary/60 px-3 py-1 font-bold text-foreground">
           <Archive aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
-          Nieaktualna: nikt już jej nie prowadzi
+          {t.card.unmaintainedLong}
         </p>
       )}
 
@@ -85,15 +83,15 @@ export function MatchCard({
 
       {shared.length > 0 && (
         <blockquote className="mt-4 border-l-4 border-secondary pl-4">
-          <p className="text-sm font-bold text-muted">Dlaczego pasuje</p>
-          <p>Wspólne tematy: {shared.map(tagLabel).join(", ").toLowerCase()}.</p>
+          <p className="text-sm font-bold text-muted">{t.card.whyMatches}</p>
+          <p>{t.card.sharedTopics(shared.map(tagLabel).join(", ").toLowerCase())}</p>
         </blockquote>
       )}
 
       <dl className="mt-4 grid gap-2">
         {innovation.target_group && (
           <div>
-            <dt className="sr-only">Dla kogo</dt>
+            <dt className="sr-only">{t.card.forWhom}</dt>
             <dd className="flex items-start gap-2">
               <Users aria-hidden="true" className="mt-1 size-5 shrink-0 text-primary" />
               <span>{short(innovation.target_group)}</span>
@@ -102,7 +100,7 @@ export function MatchCard({
         )}
         {innovation.where_implemented && (
           <div>
-            <dt className="sr-only">Gdzie działa</dt>
+            <dt className="sr-only">{t.card.where}</dt>
             <dd className="flex items-start gap-2">
               <MapPin aria-hidden="true" className="mt-1 size-5 shrink-0 text-primary" />
               <span>{short(innovation.where_implemented)}</span>
@@ -111,13 +109,13 @@ export function MatchCard({
         )}
         {innovation.cost_level && (
           <div>
-            <dt className="sr-only">Koszt</dt>
+            <dt className="sr-only">{t.card.cost}</dt>
             <dd className="flex items-start gap-2">
               <Coins aria-hidden="true" className="mt-1 size-5 shrink-0 text-primary" />
               <span>
-                {COST_LABELS[innovation.cost_level]}
+                {t.cost[innovation.cost_level]}
                 {innovation.implementation_time_months
-                  ? `, start w ${innovation.implementation_time_months} ${plural(innovation.implementation_time_months, "miesiąc", "miesiące", "miesięcy")}`
+                  ? t.card.startIn(innovation.implementation_time_months)
                   : ""}
               </span>
             </dd>
@@ -125,12 +123,11 @@ export function MatchCard({
         )}
         {typeof innovation.testers_count === "number" && innovation.testers_count > 0 && (
           <div>
-            <dt className="sr-only">Testy</dt>
+            <dt className="sr-only">{t.card.tests}</dt>
             <dd className="flex items-start gap-2">
               <Puzzle aria-hidden="true" className="mt-1 size-5 shrink-0 text-primary" />
               <span>
-                Sprawdzona przez {innovation.testers_count}{" "}
-                {plural(innovation.testers_count, "testera", "testerów", "testerów")}
+                {t.card.testedBy(innovation.testers_count)}
               </span>
             </dd>
           </div>
@@ -143,14 +140,14 @@ export function MatchCard({
           onClick={() => track({ type: "cta_click", innovationId: innovation.id, meta: { button: "wdrozenie" } })}
           className={buttonVariants({ variant: "primary" })}
         >
-          Jak to wdrożyć?<span className="sr-only"> {innovation.title}</span>
+          {t.card.howToDeploy}<span className="sr-only"> {innovation.title}</span>
         </Link>
         <Link
           href={`/innowacje/${innovation.id}`}
           onClick={() => track({ type: "card_click", innovationId: innovation.id, meta: { source, position: rank } })}
           className={buttonVariants({ variant: "secondary" })}
         >
-          Zobacz kartę<span className="sr-only">: {innovation.title}</span>
+          {t.card.seeCard}<span className="sr-only">: {innovation.title}</span>
         </Link>
       </div>
     </article>

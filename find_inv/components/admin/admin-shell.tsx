@@ -9,30 +9,32 @@ import { CutoutText } from "@/components/cutout-text";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n/client";
 
 export const ADMIN_LINKS = [
-  { href: "/admin/statystyki", label: "Statystyki", icon: Gauge },
-  { href: "/admin/innowacje", label: "Innowacje", icon: Library },
-  { href: "/admin/uzytkownicy", label: "Użytkownicy", icon: Users },
-  { href: "/admin/testy", label: "Testy", icon: FlaskConical },
-  { href: "/admin/forum", label: "Forum", icon: MessagesSquare },
-  { href: "/admin/potrzeby", label: "Potrzeby", icon: Inbox },
-  { href: "/admin/trendy", label: "Trendy", icon: BarChart3 },
-  { href: "/admin/zaangazowanie", label: "Zaangażowanie", icon: Activity },
-  { href: "/admin/pomysly", label: "Pomysły", icon: Lightbulb },
-];
+  { href: "/admin/statystyki", key: "stats", icon: Gauge },
+  { href: "/admin/innowacje", key: "innovations", icon: Library },
+  { href: "/admin/uzytkownicy", key: "users", icon: Users },
+  { href: "/admin/testy", key: "tests", icon: FlaskConical },
+  { href: "/admin/forum", key: "forum", icon: MessagesSquare },
+  { href: "/admin/potrzeby", key: "needs", icon: Inbox },
+  { href: "/admin/trendy", key: "trends", icon: BarChart3 },
+  { href: "/admin/zaangazowanie", key: "engagement", icon: Activity },
+  { href: "/admin/pomysly", key: "ideas", icon: Lightbulb },
+] as const;
 
 // Panel ROPS: wpuszcza tylko rolę admin. Jury loguje się jednym kliknięciem z tego ekranu.
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const { user, status, login } = useAuth();
   const pathname = usePathname();
+  const a = useI18n().t.admin;
   const [loggingIn, setLoggingIn] = useState(false);
 
   if (status === "loading") {
     return (
       <div className="mx-auto flex max-w-content items-center gap-3 px-4 py-16 sm:px-6" role="status">
         <Loader2 aria-hidden="true" className="size-6 animate-spin text-primary" />
-        Sprawdzam uprawnienia…
+        {a.shell.checking}
       </div>
     );
   }
@@ -41,7 +43,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     async function loginAsAdmin() {
       setLoggingIn(true);
       try {
-        await login("admin", "Pracownik ROPS");
+        await login("admin", a.shell.adminName);
       } finally {
         setLoggingIn(false);
       }
@@ -49,20 +51,20 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
     return (
       <div className="mx-auto max-w-content px-4 py-16 sm:px-6">
-        <CutoutText as="h1" size="section" text="Panel ROPS" />
+        <CutoutText as="h1" size="section" text={a.shell.title} />
         <div className="mt-8 max-w-xl border-(length:--bw) border-border bg-surface p-6 shadow-raised sm:p-8">
           <h2 className="flex items-center gap-3 text-xl font-bold text-foreground">
             <ShieldCheck aria-hidden="true" className="size-7 shrink-0 text-primary" />
-            Ta część jest dla pracowników ROPS
+            {a.shell.staffOnly}
           </h2>
           <p className="mt-3">
             {user
-              ? "Jesteś zalogowany bez uprawnień administratora. Zaloguj się jako admin, żeby zarządzać Biblioteką."
-              : "Zaloguj się jako admin, żeby zatwierdzać innowacje, nadawać role i oglądać trendy."}
+              ? a.shell.noPermission
+              : a.shell.loginPrompt}
           </p>
           <Button type="button" onClick={loginAsAdmin} disabled={loggingIn} className="mt-6">
             {loggingIn ? <Loader2 aria-hidden="true" className="animate-spin" /> : <LogIn aria-hidden="true" />}
-            Zaloguj jako admin
+            {a.shell.loginAsAdmin}
           </Button>
         </div>
       </div>
@@ -73,14 +75,14 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     <div className="mx-auto max-w-content px-4 py-10 sm:px-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="font-bold text-muted">Panel ROPS</p>
-          <p className="text-sm text-muted">Zalogowano: {user.name}</p>
+          <p className="font-bold text-muted">{a.shell.title}</p>
+          <p className="text-sm text-muted">{a.shell.loggedIn(user.name)}</p>
         </div>
       </div>
 
-      <nav aria-label="Panel admina" className="mt-4 border-b-(length:--bw) border-border">
+      <nav aria-label={a.shell.navLabel} className="mt-4 border-b-(length:--bw) border-border">
         <ul className="-mb-(--bw) flex flex-wrap gap-1">
-          {ADMIN_LINKS.map(({ href, label, icon: Icon }) => {
+          {ADMIN_LINKS.map(({ href, key, icon: Icon }) => {
             const active = pathname === href;
             return (
               <li key={href}>
@@ -95,7 +97,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                   )}
                 >
                   <Icon aria-hidden="true" className="size-5 shrink-0" />
-                  {label}
+                  {a.nav[key]}
                 </Link>
               </li>
             );

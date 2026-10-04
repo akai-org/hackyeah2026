@@ -20,6 +20,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app import knowledge_store
 from app.config import settings
+from app.i18n import current_lang
+from app.translation import translate_text
 from app.local_matching import (
     TAXONOMY_TAGS,
     condense_locally,
@@ -411,6 +413,13 @@ def _rag_context(innovations: list[dict]) -> str:
     return "\n\n".join(parts)
 
 
+_INTERRUPTED = {
+    "pl": "\n(Odpowiedź przerwana. Zapytaj jeszcze raz.)",
+    "en": "\n(The answer was interrupted. Please ask again.)",
+    "uk": "\n(Відповідь перервано. Запитайте ще раз.)",
+}
+
+
 @router.post("/chat")
 async def chat(body: ChatRequest):
     async def gen() -> AsyncIterator[str]:
@@ -420,8 +429,12 @@ async def chat(body: ChatRequest):
         async def local_answer() -> AsyncIterator[str]:
             question = next((m.content for m in reversed(body.messages) if m.role == "user"), "")
             question = question.split("Pytanie:")[-1]  # pierwsza wiadomość niesie też opis problemu
+            # Odpowiedź z reguł jest po polsku — dla en/uk przez tłumacza (cache; błąd = oryginał).
+            answer = local_chat_answer(question, innovations)
+            if current_lang.get() != "pl":
+                answer = await translate_text(answer)
             # Słowo po słowie, żeby frontend dostał ten sam efekt pisania co z LLM.
-            for word in re.split(r"(?<=\s)", local_chat_answer(question, innovations)):
+            for word in re.split(r"(?<=\s)", answer):
                 yield _sse(word)
                 await asyncio.sleep(0.02)
 
@@ -447,7 +460,7 @@ async def chat(body: ChatRequest):
         except Exception:
             log.exception("chat stream failed")
             if sent:  # urwane w połowie — nie mieszamy dwóch odpowiedzi
-                yield _sse("\n(Odpowiedź przerwana. Zapytaj jeszcze raz.)")
+                yield _sse(_INTERRUPTED.get(current_lang.get(), _INTERRUPTED["pl"]))
             else:
                 async for event in local_answer():
                     yield event

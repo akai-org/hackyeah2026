@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, type RefObject } from "react";
 import { BookOpen, Lightbulb, MapPin, Search, Sparkles, type LucideIcon } from "lucide-react";
 
+import { useT } from "@/lib/i18n/client";
 import { SEARCH_TAGS } from "@/lib/search-tags";
 
 // Treść okna szybkiego wyszukiwania (Ctrl+K). Kategoria mówi, GDZIE szukać: „Szukaj” prowadzi na stronę
@@ -12,11 +13,11 @@ import { SEARCH_TAGS } from "@/lib/search-tags";
 
 export type SearchCategory = "all" | "problems" | "innovations" | "articles";
 
-const CATEGORIES: Array<{ value: SearchCategory; label: string; placeholder: string; icon: LucideIcon }> = [
-  { value: "all", label: "Wszystko", placeholder: "Opisz problem własnymi słowami", icon: Sparkles },
-  { value: "problems", label: "Problemy", placeholder: "Szukaj problemu, np. opieka zdrowotna", icon: MapPin },
-  { value: "innovations", label: "Innowacje", placeholder: "Szukaj innowacji, np. wolontariat", icon: Lightbulb },
-  { value: "articles", label: "Artykuły", placeholder: "Szukaj artykułu, np. spółdzielnia", icon: BookOpen },
+const CATEGORIES: Array<{ value: SearchCategory; icon: LucideIcon }> = [
+  { value: "all", icon: Sparkles },
+  { value: "problems", icon: MapPin },
+  { value: "innovations", icon: Lightbulb },
+  { value: "articles", icon: BookOpen },
 ];
 
 /** Adres strony wyników dla kategorii, tekstu i tagów (etykiet z SEARCH_TAGS). */
@@ -41,11 +42,12 @@ export function searchHref(category: SearchCategory, query: string, labels: stri
 
 export function QuickSearch({ inputRef, onNavigate }: { inputRef: RefObject<HTMLInputElement | null>; onNavigate: () => void }) {
   const router = useRouter();
+  const t = useT();
   const [category, setCategory] = useState<SearchCategory>("all");
   const [query, setQuery] = useState("");
   const [tags, setTags] = useState<string[]>([]);
 
-  const current = CATEGORIES.find((item) => item.value === category)!;
+  const current = t.quickSearch.categories[category];
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -61,8 +63,8 @@ export function QuickSearch({ inputRef, onNavigate }: { inputRef: RefObject<HTML
 
   return (
     <>
-      <div role="group" aria-label="Gdzie szukać" className="mt-6 flex flex-wrap gap-2">
-        {CATEGORIES.map(({ value, label, icon: Icon }) => (
+      <div role="group" aria-label={t.quickSearch.where} className="mt-6 flex flex-wrap gap-2">
+        {CATEGORIES.map(({ value, icon: Icon }) => (
           <button
             key={value}
             type="button"
@@ -74,7 +76,7 @@ export function QuickSearch({ inputRef, onNavigate }: { inputRef: RefObject<HTML
             className="inline-flex min-h-12 items-center gap-2 rounded-ui border-(length:--bw) border-border bg-background px-4 font-semibold text-foreground hover:bg-primary/10 aria-pressed:bg-primary aria-pressed:text-primary-foreground"
           >
             <Icon aria-hidden="true" className="size-5" />
-            {label}
+            {t.quickSearch.categories[value].label}
           </button>
         ))}
       </div>
@@ -86,7 +88,7 @@ export function QuickSearch({ inputRef, onNavigate }: { inputRef: RefObject<HTML
         <div className="flex min-h-12 min-w-0 flex-1 flex-wrap items-center gap-2 rounded-ui border-(length:--bw) border-border bg-background px-3 py-2">
           {tags.map((tag) => (
             <span key={tag} className="rounded-full bg-primary/10 px-2 py-1 text-sm font-semibold text-foreground">
-              #{tag}
+              #{t.quickSearch.tagLabels[tag] ?? tag}
             </span>
           ))}
           <input
@@ -106,16 +108,16 @@ export function QuickSearch({ inputRef, onNavigate }: { inputRef: RefObject<HTML
           className="inline-flex min-h-12 items-center gap-2 rounded-ui border-(length:--bw) border-border bg-primary px-5 font-bold text-primary-foreground hover:bg-primary-hover"
         >
           <Search aria-hidden="true" className="size-5" />
-          Szukaj
+          {t.common.search}
         </button>
       </form>
 
       <details className="mt-4 rounded-ui border-(length:--bw) border-border/40 bg-background">
         <summary className="flex min-h-12 cursor-pointer items-center justify-between gap-4 px-4 font-semibold text-foreground">
-          Wybierz tagi
-          <span className="text-sm text-muted">{tags.length ? `Wybrano: ${tags.length}` : "wielokrotny wybór"}</span>
+          {t.quickSearch.chooseTags}
+          <span className="text-sm text-muted">{tags.length ? t.quickSearch.selected(tags.length) : t.quickSearch.multiSelect}</span>
         </summary>
-        <div className="grid gap-1 border-t-(length:--bw) border-border/40 p-3 sm:grid-cols-2" aria-label="Lista tagów wyszukiwania">
+        <div className="grid gap-1 border-t-(length:--bw) border-border/40 p-3 sm:grid-cols-2" aria-label={t.quickSearch.tagList}>
           {SEARCH_TAGS.map(({ label }) => (
             <label key={label} className="flex min-h-12 cursor-pointer items-center gap-3 rounded-ui px-3 hover:bg-primary/10">
               <input
@@ -126,7 +128,7 @@ export function QuickSearch({ inputRef, onNavigate }: { inputRef: RefObject<HTML
                 }
                 className="size-5 accent-primary"
               />
-              <span className="text-base text-foreground">#{label}</span>
+              <span className="text-base text-foreground">#{t.quickSearch.tagLabels[label] ?? label}</span>
             </label>
           ))}
         </div>

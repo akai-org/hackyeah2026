@@ -10,6 +10,8 @@ import { type ForumPost } from "@/data/mock";
 import { apiFetch, apiPost } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n/client";
+import { formatDateTime } from "@/lib/i18n/format";
 
 interface ApiForumPost {
   id: number;
@@ -33,50 +35,24 @@ function fromApi(post: ApiForumPost): ForumPost {
   };
 }
 
-const MONTHS = [
-  "stycznia",
-  "lutego",
-  "marca",
-  "kwietnia",
-  "maja",
-  "czerwca",
-  "lipca",
-  "sierpnia",
-  "września",
-  "października",
-  "listopada",
-  "grudnia",
-];
-
-/** „2026-10-03T11:00:00” → „3 października 2026, 11:00”. Bez Intl, żeby serwer i przeglądarka dały ten sam tekst. */
-function formatDate(iso: string): string {
-  const [date, time = ""] = iso.split("T");
-  const [year, month, day] = date.split("-").map(Number);
-  return `${day} ${MONTHS[month - 1]} ${year}, ${time.slice(0, 5)}`;
-}
-
 function nowLocalIso(): string {
   const now = new Date();
   const pad = (value: number) => String(value).padStart(2, "0");
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:00`;
 }
 
-function repliesLabel(count: number): string {
-  if (count === 0) return "Brak odpowiedzi";
-  return count === 1 ? "1 odpowiedź" : `${count} odpowiedzi`;
-}
-
 const fieldClass =
   "mt-2 w-full rounded-ui border-(length:--bw) bg-surface px-4 text-base text-foreground placeholder:text-muted";
 
 function PostBody({ post }: { post: ForumPost }) {
+  const { locale } = useI18n();
   return (
     <>
       <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <span className="font-bold text-foreground">{post.author_name}</span>
         <RoleBadge role={post.badge} />
         <time dateTime={post.created_at} className="text-sm text-muted">
-          {formatDate(post.created_at)}
+          {formatDateTime(post.created_at, locale)}
         </time>
       </p>
       <p className="mt-2 max-w-[70ch] whitespace-pre-line">{post.content}</p>
@@ -86,6 +62,9 @@ function PostBody({ post }: { post: ForumPost }) {
 
 export function ForumBoard() {
   const { user, openLogin } = useAuth();
+  const { t } = useI18n();
+  const f = t.forum;
+  const cancel = t.common.cancel;
   const ids = useId();
   const toast = useToast();
 
@@ -103,7 +82,7 @@ export function ForumBoard() {
   const contentRef = useRef<HTMLTextAreaElement>(null);
   const replyRef = useRef<HTMLTextAreaElement>(null);
 
-  const author = { author_name: user?.name ?? "Gość", badge: user?.role ?? ("user" as const) };
+  const author = { author_name: user?.name ?? f.guest, badge: user?.role ?? ("user" as const) };
 
   useEffect(() => {
     apiFetch<ApiForumPost[]>("/api/forum")
@@ -162,7 +141,7 @@ export function ForumBoard() {
     setContent("");
     setThreadError(null);
     setFocusPost(post.id);
-    toast.show("Wątek dodany na górze listy.");
+    toast.show(f.threadAdded);
   }
 
   async function addReply(event: React.FormEvent<HTMLFormElement>, parentId: number) {
@@ -178,7 +157,7 @@ export function ForumBoard() {
     setReplyError(false);
     setReplyingTo(null);
     setFocusPost(post.id);
-    toast.show("Odpowiedź dodana.");
+    toast.show(f.replyAdded);
   }
 
   function startReply(threadId: number) {
@@ -191,7 +170,7 @@ export function ForumBoard() {
     return (
       <div className="mt-10 flex items-center gap-2 text-muted" role="status">
         <Loader2 aria-hidden="true" className="size-5 animate-spin" />
-        Wczytywanie wątków…
+        {f.loading}
       </div>
     );
   }
@@ -201,11 +180,11 @@ export function ForumBoard() {
       <aside aria-labelledby={`${ids}-nowy`} className="lg:sticky lg:top-[calc(var(--header-h)+1rem)] lg:col-start-2 lg:row-start-1">
         <form onSubmit={(e) => { void addThread(e); }} noValidate className="border-(length:--bw) border-border bg-secondary p-5 sm:p-6">
           <h2 id={`${ids}-nowy`} className="text-xl font-bold text-foreground">
-            Zadaj pytanie
+            {f.ask}
           </h2>
 
           <p className="mt-3 flex flex-wrap items-center gap-2">
-            <span>Piszesz jako</span>
+            <span>{f.writingAs}</span>
             <span className="font-bold text-foreground">{author.author_name}</span>
             <RoleBadge role={author.badge} />
           </p>
@@ -218,15 +197,15 @@ export function ForumBoard() {
                   onClick={openLogin}
                   className="cursor-pointer font-bold text-primary underline underline-offset-4 hover:text-primary-hover"
                 >
-                  Zaloguj się
+                  {f.login}
                 </button>
-                , żeby pisać jako tester albo konsultant.
+                {f.loginHint}
               </span>
             </p>
           )}
 
           <label htmlFor={`${ids}-tytul`} className="mt-5 block font-bold text-foreground">
-            Temat
+            {f.topic}
           </label>
           <input
             ref={titleRef}
@@ -239,12 +218,12 @@ export function ForumBoard() {
             }}
             aria-invalid={threadError === "title" || undefined}
             aria-describedby={threadError === "title" ? `${ids}-blad` : undefined}
-            placeholder="Na przykład: jak znaleźć wolontariuszy na wsi?"
+            placeholder={f.topicPlaceholder}
             className={cn(fieldClass, "min-h-12", threadError === "title" ? "border-destructive" : "border-border")}
           />
 
           <label htmlFor={`${ids}-tresc`} className="mt-5 block font-bold text-foreground">
-            Treść
+            {f.content}
           </label>
           <textarea
             ref={contentRef}
@@ -263,20 +242,20 @@ export function ForumBoard() {
           {threadError && (
             <p id={`${ids}-blad`} className="mt-3 flex items-start gap-2 font-bold text-destructive">
               <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
-              {threadError === "title" ? "Wpisz temat wątku." : "Wpisz treść pytania."}
+              {threadError === "title" ? f.topicError : f.contentError}
             </p>
           )}
 
           <Button type="submit" className="mt-5 w-full">
             <Send aria-hidden="true" />
-            Dodaj wątek
+            {f.addThread}
           </Button>
         </form>
       </aside>
 
       <section aria-labelledby={`${ids}-watki`} className="lg:col-start-1 lg:row-start-1">
         <h2 id={`${ids}-watki`} className="sr-only">
-          Wątki
+          {f.threads}
         </h2>
         <ul className="grid gap-8">
           {threads.map((thread) => {
@@ -301,9 +280,9 @@ export function ForumBoard() {
                     <PostBody post={thread} />
                   </div>
 
-                  <p className="mt-5 text-sm font-bold text-muted">{repliesLabel(replies.length)}</p>
+                  <p className="mt-5 text-sm font-bold text-muted">{f.replies(replies.length)}</p>
                   {replies.length > 0 && (
-                    <ul aria-label={`Odpowiedzi w wątku ${thread.title}`} className="mt-3 grid gap-4">
+                    <ul aria-label={f.repliesIn(thread.title ?? "")} className="mt-3 grid gap-4">
                       {replies.map((post) => (
                         <li
                           key={post.id}
@@ -323,7 +302,7 @@ export function ForumBoard() {
                   {replyingTo === thread.id ? (
                     <form onSubmit={(event) => { void addReply(event, thread.id); }} noValidate className="mt-5">
                       <label htmlFor={replyFieldId} className="block font-bold text-foreground">
-                        Twoja odpowiedź
+                        {f.yourReply}
                       </label>
                       <textarea
                         ref={replyRef}
@@ -341,23 +320,23 @@ export function ForumBoard() {
                       {replyError && (
                         <p id={`${replyFieldId}-blad`} className="mt-2 flex items-start gap-2 font-bold text-destructive">
                           <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
-                          Wpisz treść odpowiedzi.
+                          {f.replyError}
                         </p>
                       )}
                       <div className="mt-3 flex flex-wrap gap-3">
                         <Button type="submit">
                           <Send aria-hidden="true" />
-                          Dodaj odpowiedź
+                          {f.addReply}
                         </Button>
                         <Button type="button" variant="secondary" onClick={() => setReplyingTo(null)}>
-                          Anuluj
+                          {cancel}
                         </Button>
                       </div>
                     </form>
                   ) : (
                     <Button type="button" variant="secondary" onClick={() => startReply(thread.id)} className="mt-5">
                       <MessageSquareReply aria-hidden="true" />
-                      Odpowiedz<span className="sr-only"> w wątku {thread.title}</span>
+                      {f.reply}<span className="sr-only">{f.replyIn(thread.title ?? "")}</span>
                     </Button>
                   )}
                 </article>

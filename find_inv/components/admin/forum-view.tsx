@@ -4,7 +4,7 @@ import { useState } from "react";
 import { MessageSquare, Trash2 } from "lucide-react";
 
 import { ConfirmDeleteDialog } from "@/components/admin/dialogs";
-import { ErrorNote, LoadingRows, OfflineNote, formatDate, useAdminData } from "@/components/admin/shared";
+import { ErrorNote, LoadingRows, OfflineNote, useAdminData, useAdminI18n } from "@/components/admin/shared";
 import { CutoutText } from "@/components/cutout-text";
 import { RoleBadge } from "@/components/role-badge";
 import { Toast, useToast } from "@/components/toast";
@@ -22,12 +22,14 @@ export function AdminForumView() {
   const { data, offline, error, loading, update } = useAdminData(getForumPosts);
   const [deleting, setDeleting] = useState<AdminForumPost | null>(null);
   const toast = useToast();
+  const { t, a, formatDate } = useAdminI18n();
+  const f = a.forum;
 
   async function remove(post: AdminForumPost) {
     const { data: result } = await deleteForumPost(post.id);
     update((posts) => posts.filter((p) => p.id !== post.id && p.parent_id !== post.id));
     setDeleting(null);
-    toast.show(result.replies_deleted ? `Wpis usunięty razem z odpowiedziami (${result.replies_deleted}).` : "Wpis usunięty.");
+    toast.show(result.replies_deleted ? f.deletedWithReplies(result.replies_deleted) : f.deleted);
   }
 
   const posts = data ?? [];
@@ -35,20 +37,20 @@ export function AdminForumView() {
 
   return (
     <div>
-      <CutoutText as="h1" size="section" text="Forum" />
+      <CutoutText as="h1" size="section" text={t.admin.nav.forum} />
       <p className="mt-3 mb-8 max-w-[60ch] text-lg">
-        Wątki forum i komentarze pod kartami innowacji, od najnowszych. Usuwaj spam i wpisy łamiące zasady.
+        {f.lead}
       </p>
 
       <OfflineNote offline={offline} />
       <ErrorNote message={error} />
 
       {loading && !data ? (
-        <LoadingRows label="Wczytuję wpisy" />
+        <LoadingRows label={f.loading} />
       ) : posts.length === 0 ? (
         <p className="flex items-center gap-2 border-(length:--bw) border-border bg-surface p-6">
           <MessageSquare aria-hidden="true" className="size-5 text-muted" />
-          Na forum nie ma jeszcze żadnych wpisów.
+          {f.empty}
         </p>
       ) : (
         <ul className="space-y-4">
@@ -63,16 +65,16 @@ export function AdminForumView() {
                 </div>
                 <p className="mt-1 text-sm text-muted">
                   {post.parent_id !== null
-                    ? "Odpowiedź w wątku"
+                    ? f.reply
                     : post.innovation_title
-                      ? `Komentarz pod: ${post.innovation_title}`
-                      : "Wątek na forum"}
-                  {count > 0 && ` · ${count} odp.`}
+                      ? f.commentUnder(post.innovation_title)
+                      : f.thread}
+                  {count > 0 && f.replies(count)}
                 </p>
                 <p className="mt-3 whitespace-pre-line">{post.content}</p>
                 <Button type="button" variant="secondary" onClick={() => setDeleting(post)} className="mt-4 px-3 text-destructive">
                   <Trash2 aria-hidden="true" />
-                  Usuń wpis<span className="sr-only">: {excerpt(post.content, 40)}</span>
+                  {f.deletePost}<span className="sr-only">: {excerpt(post.content, 40)}</span>
                 </Button>
               </li>
             );
@@ -82,12 +84,12 @@ export function AdminForumView() {
 
       {deleting && (
         <ConfirmDeleteDialog
-          title="Usunąć wpis?"
+          title={f.deleteTitle}
           what={`${deleting.author_name}: „${excerpt(deleting.content)}”`}
           consequences={
             replies(deleting.id) > 0
-              ? `Razem z wpisem znikną odpowiedzi na niego (${replies(deleting.id)}).`
-              : "Wpis zniknie z forum."
+              ? f.withReplies(replies(deleting.id))
+              : f.disappears
           }
           onConfirm={() => remove(deleting)}
           onClose={() => setDeleting(null)}

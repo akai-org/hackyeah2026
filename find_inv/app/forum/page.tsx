@@ -4,11 +4,16 @@ import { CutoutText } from "@/components/cutout-text";
 import { ForumBoard } from "@/components/forum-board";
 import { ForumThread } from "@/components/forum-thread";
 import { PageBackdrop } from "@/components/page-backdrop";
+import { getT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = { title: "Forum" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.pages.titles.forum };
+}
 
 export default async function ForumPage({ searchParams }: PageProps<"/forum">) {
   const params = await searchParams;
+  const t = await getT();
   const innowacja = Array.isArray(params.innowacja) ? params.innowacja[0] : params.innowacja;
   const innovationId = innowacja ? Number(innowacja) : null;
 
@@ -23,10 +28,9 @@ export default async function ForumPage({ searchParams }: PageProps<"/forum">) {
   return (
     <PageBackdrop layout="corner-left">
       <div className="mx-auto max-w-content px-4 py-16 sm:px-6">
-        <CutoutText as="h1" size="section" text="Zapytaj innych" />
+        <CutoutText as="h1" size="section" text={t.pages.forum.heading} />
         <p className="mt-4 max-w-[60ch] text-lg">
-          Pytaj o wdrażanie innowacji i dziel się doświadczeniem. Odpowiadają mieszkańcy, testerzy, konsultanci i zespół
-          ROPS. Plakietka przy imieniu pokazuje, kto pisze.
+          {t.pages.forum.lead}
         </p>
         <ForumBoard />
       </div>

@@ -2,8 +2,12 @@ import type { Metadata } from "next";
 
 import { Middleman } from "@/components/middleman";
 import { PageBackdrop } from "@/components/page-backdrop";
+import { getT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = { title: "Plan wdrożenia" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.pages.titles.implementation };
+}
 
 function first(value: string | string[] | undefined): string | undefined {
   return (Array.isArray(value) ? value[0] : value)?.trim() || undefined;

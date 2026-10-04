@@ -7,21 +7,12 @@ import { ArrowLeft, ChevronRight, CircleAlert, MessageSquareReply, Send, Tag } f
 import { RoleBadge } from "@/components/role-badge";
 import { Toast, useToast } from "@/components/toast";
 import { Button } from "@/components/ui/button";
-import { TAG_LABELS, type ForumPost } from "@/data/mock";
+import { type ForumPost } from "@/data/mock";
 import { apiFetch, apiPost } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
-
-const MONTHS = [
-  "stycznia", "lutego", "marca", "kwietnia", "maja", "czerwca",
-  "lipca", "sierpnia", "września", "października", "listopada", "grudnia",
-];
-
-function formatDate(iso: string): string {
-  const [date, time = ""] = iso.split("T");
-  const [year, month, day] = date.split("-").map(Number);
-  return `${day} ${MONTHS[month - 1]} ${year}, ${time.slice(0, 5)}`;
-}
+import { useI18n } from "@/lib/i18n/client";
+import { formatDateTime } from "@/lib/i18n/format";
 
 function nowLocalIso(): string {
   const now = new Date();
@@ -70,6 +61,8 @@ interface Props {
 
 export function ForumThread({ innovationId, embedded, innovation: innovationProp }: Props) {
   const { user } = useAuth();
+  const { t, locale } = useI18n();
+  const f = t.forum;
   const ids = useId();
   const toast = useToast();
 
@@ -95,14 +88,14 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
       .then((data) => {
         if (data) {
           setInnovation(data);
-          if (!embedded) document.title = `Dyskusja: ${data.title} – HubMI`;
+          if (!embedded) document.title = f.discussionTitle(data.title);
         }
       })
       .catch(() => {});
     return () => {
-      if (!embedded) document.title = "HubMI – znajdź rozwiązanie, które już działa";
+      if (!embedded) document.title = t.meta.title;
     };
-  }, [innovationId, innovationProp, embedded]);
+  }, [innovationId, innovationProp, embedded, f, t.meta.title]);
 
   useEffect(() => {
     apiFetch<ApiForumPost[]>(`/api/forum?innovation_id=${innovationId}`)
@@ -130,7 +123,7 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
     return Math.max(0, ...posts.map((p) => p.id)) + 1;
   }
 
-  const authorName = nickname.trim() || user?.name || "Gość";
+  const authorName = nickname.trim() || user?.name || f.guest;
   // Badge "tester" pokazuje się tylko, gdy tester jest przypisany do tej innowacji.
   const effectiveRole = user?.role === "tester" && !isAssignedTester ? "user" : user?.role;
   const authorBadge = effectiveRole ?? ("user" as const);
@@ -164,7 +157,7 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
     setComment("");
     setCommentError(false);
     setFocusPost(id);
-    toast.show("Komentarz dodany.");
+    toast.show(f.commentAdded);
   }
 
   async function addReply(e: React.FormEvent, parentId: number) {
@@ -181,7 +174,7 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
     setReplyError(false);
     setReplyingTo(null);
     setFocusPost(id);
-    toast.show("Odpowiedź dodana.");
+    toast.show(f.replyAdded);
   }
 
   const threads = posts
@@ -201,16 +194,16 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
           className="inline-flex items-center gap-2 text-sm font-bold text-primary underline underline-offset-4 hover:text-primary-hover"
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
-          {innovation ? `Wróć do: ${innovation.title}` : "Wróć do innowacji"}
+          {innovation ? f.backTo(innovation.title) : f.backToInnovation}
         </Link>
       )}
 
       {/* Header — tylko w widoku pełnoekranowym */}
       {!embedded && (
         <div className="mt-8">
-          <p className="text-sm font-bold uppercase tracking-widest text-muted">Dyskusja społeczności</p>
+          <p className="text-sm font-bold uppercase tracking-widest text-muted">{f.discussion}</p>
           <h1 className="mt-1 text-3xl font-bold text-foreground">
-            {innovation?.title ?? "Wczytywanie…"}
+            {innovation?.title ?? f.loadingShort}
           </h1>
         </div>
       )}
@@ -219,14 +212,14 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
       {!embedded && innovation && (
         <div className="mt-4 flex flex-wrap items-center gap-3">
           {innovation.tags.length > 0 && (
-            <ul className="flex flex-wrap gap-2" aria-label="Tagi innowacji">
+            <ul className="flex flex-wrap gap-2" aria-label={f.innovationTags}>
               {innovation.tags.map((tag) => (
                 <li
                   key={tag}
                   className="inline-flex items-center gap-1 rounded-full border border-primary bg-background px-3 py-1 text-sm text-primary"
                 >
                   <Tag className="size-3" aria-hidden="true" />
-                  {(TAG_LABELS as Record<string, string>)[tag] ?? tag}
+                  {t.tags[tag] ?? tag}
                 </li>
               ))}
             </ul>
@@ -235,7 +228,7 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
             href={`/innowacje/${innovationId}`}
             className="ml-auto inline-flex items-center gap-1.5 rounded-ui border-2 border-border bg-surface px-4 py-2 text-sm font-bold text-foreground shadow-raised hover:bg-primary/10"
           >
-            Szczegóły innowacji
+            {f.innovationDetails}
             <ChevronRight className="size-4" aria-hidden="true" />
           </Link>
         </div>
@@ -246,16 +239,16 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
         <aside aria-labelledby={`${ids}-nowy`} className="lg:sticky lg:top-[calc(var(--header-h)+1rem)] lg:col-start-2 lg:row-start-1">
           <form onSubmit={addComment} noValidate className="border-(length:--bw) border-border bg-secondary p-5 sm:p-6">
             <h2 id={`${ids}-nowy`} className="text-xl font-bold text-foreground">
-              Dołącz do dyskusji
+              {f.join}
             </h2>
             <p className="mt-3 flex flex-wrap items-center gap-2 text-base">
-              <span>Piszesz jako</span>
+              <span>{f.writingAs}</span>
               <span className="font-bold text-foreground">{authorName}</span>
               <RoleBadge role={authorBadge} />
             </p>
 
             <label htmlFor={`${ids}-nick`} className="mt-5 block font-bold text-foreground">
-              Twój nick
+              {f.nick}
             </label>
             <input
               id={`${ids}-nick`}
@@ -263,14 +256,14 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
               autoComplete="nickname"
               value={nickname}
               onChange={(event) => setNickname(event.target.value)}
-              placeholder="Np. Zosia"
+              placeholder={f.nickPlaceholder}
               className={fieldClass}
             />
 
             <div className="mt-4">
               {usedInnovation ? (
                 <p className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-bold text-foreground">
-                  Potwierdzono ({usedCount} {usedCount === 1 ? "osoba" : usedCount < 5 ? "osoby" : "osób"})
+                  {f.confirmed(usedCount)}
                 </p>
               ) : (
                 <button
@@ -278,13 +271,13 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
                   onClick={() => { setUsedInnovation(true); setUsedCount((c) => c + 1); }}
                   className="inline-flex min-h-10 items-center gap-2 rounded-ui border-(length:--bw) border-border bg-surface px-4 text-sm font-medium text-foreground hover:bg-primary/10"
                 >
-                  Używałem tej inicjatywy
+                  {f.usedIt}
                 </button>
               )}
             </div>
 
             <label htmlFor={`${ids}-komentarz`} className="mt-5 block font-bold text-foreground">
-              Twój komentarz
+              {f.yourComment}
             </label>
             <textarea
               ref={commentRef}
@@ -297,28 +290,28 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
               }}
               aria-invalid={commentError || undefined}
               aria-describedby={commentError ? `${ids}-blad` : undefined}
-              placeholder="Napisz o swoich doświadczeniach z tą innowacją…"
+              placeholder={f.commentPlaceholder}
               className={cn(fieldClass, "min-h-28 py-3", commentError ? "border-destructive" : "border-border")}
             />
             {commentError && (
               <p id={`${ids}-blad`} className="mt-3 flex items-start gap-2 font-bold text-destructive">
                 <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
-                Wpisz treść komentarza.
+                {f.commentError}
               </p>
             )}
             <Button type="submit" className="mt-5 w-full">
               <Send aria-hidden="true" />
-              Dodaj komentarz
+              {f.addComment}
             </Button>
           </form>
         </aside>
 
         {/* Thread posts */}
         <section aria-labelledby={`${ids}-watki`} className="lg:col-start-1 lg:row-start-1">
-          <h2 id={`${ids}-watki`} className="sr-only">Komentarze</h2>
+          <h2 id={`${ids}-watki`} className="sr-only">{f.comments}</h2>
 
           {threads.length === 0 && (
-            <p className="text-muted">Brak komentarzy. Bądź pierwszy!</p>
+            <p className="text-muted">{f.noComments}</p>
           )}
 
           <ul className="grid gap-6">
@@ -333,7 +326,7 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
                   <article
                     id={`${ids}-post-${post.id}`}
                     tabIndex={-1}
-                    aria-label={`Komentarz od ${post.author_name}`}
+                    aria-label={f.commentFrom(post.author_name)}
                     className={cn(
                       "border-(length:--bw) border-border bg-surface p-5 shadow-raised sm:p-6",
                       focusPost === post.id && "appear",
@@ -343,13 +336,13 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
                       <span className="font-bold text-foreground">{post.author_name}</span>
                       {post.badge !== "user" && <RoleBadge role={post.badge} />}
                       <time dateTime={post.created_at} className="text-sm text-muted">
-                        {formatDate(post.created_at)}
+                        {formatDateTime(post.created_at, locale)}
                       </time>
                     </p>
                     <p className="mt-2 max-w-[70ch] whitespace-pre-line">{post.content}</p>
 
                     {replies.length > 0 && (
-                      <ul aria-label="Odpowiedzi" className="mt-4 grid gap-4">
+                      <ul aria-label={f.repliesLabel} className="mt-4 grid gap-4">
                         {replies.map((r) => (
                           <li
                             key={r.id}
@@ -364,7 +357,7 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
                               <span className="font-bold text-foreground">{r.author_name}</span>
                               {r.badge !== "user" && <RoleBadge role={r.badge} />}
                               <time dateTime={r.created_at} className="text-sm text-muted">
-                                {formatDate(r.created_at)}
+                                {formatDateTime(r.created_at, locale)}
                               </time>
                             </p>
                             <p className="mt-2 max-w-[70ch] whitespace-pre-line">{r.content}</p>
@@ -376,7 +369,7 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
                     {replyingTo === post.id ? (
                       <form onSubmit={(e) => addReply(e, post.id)} noValidate className="mt-5">
                         <label htmlFor={replyFieldId} className="block font-bold text-foreground">
-                          Twoja odpowiedź
+                          {f.yourReply}
                         </label>
                         <textarea
                           ref={replyRef}
@@ -393,10 +386,10 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
                         <div className="mt-3 flex flex-wrap gap-3">
                           <Button type="submit">
                             <Send aria-hidden="true" />
-                            Odpowiedz
+                            {f.reply}
                           </Button>
                           <Button type="button" variant="secondary" onClick={() => setReplyingTo(null)}>
-                            Anuluj
+                            {t.common.cancel}
                           </Button>
                         </div>
                       </form>
@@ -408,7 +401,7 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
                         className="mt-4"
                       >
                         <MessageSquareReply aria-hidden="true" />
-                        Odpowiedz
+                        {f.reply}
                       </Button>
                     )}
                   </article>

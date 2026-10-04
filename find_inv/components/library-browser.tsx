@@ -8,9 +8,10 @@ import { CutoutText } from "@/components/cutout-text";
 import { MatchCard } from "@/components/match-card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import type { InnovationCard } from "@/data/innovations";
-import { TAG_LABELS, TAXONOMY_TAGS, type Tag } from "@/data/mock";
+import { TAXONOMY_TAGS, type Tag } from "@/data/mock";
 import { listInnovations } from "@/lib/knowledge";
-import { cn, plural } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/client";
 
 // Biblioteka innowacji: wyszukiwanie na żywo i filtry. Stan filtrów jest w adresie strony,
 // więc link „Zobacz więcej” z wyników (?tags=...) otwiera Bibliotekę już przefiltrowaną.
@@ -19,11 +20,11 @@ const PAGE_SIZE = 12;
 const DEBOUNCE_MS = 300;
 
 const COSTS = [
-  { value: "", label: "Każdy koszt" },
-  { value: "low", label: "Niski" },
-  { value: "medium", label: "Średni" },
-  { value: "high", label: "Wysoki" },
-];
+  { value: "", key: "any" },
+  { value: "low", key: "low" },
+  { value: "medium", key: "medium" },
+  { value: "high", key: "high" },
+] as const;
 
 type Filters = { search: string; tags: Tag[]; cost: string; archived: boolean };
 
@@ -41,6 +42,8 @@ const fieldClass = "min-h-12 rounded-ui border-(length:--bw) border-border bg-su
 
 export function LibraryBrowser({ initial }: { initial: Filters }) {
   const ids = useId();
+  const t = useT();
+  const lb = t.library.browser;
   const [filters, setFilters] = useState<Filters>(initial);
   const [innovations, setInnovations] = useState<InnovationCard[]>([]);
   const [total, setTotal] = useState(0);
@@ -97,7 +100,7 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
       <form role="search" onSubmit={(event) => event.preventDefault()} className="mt-8 grid max-w-4xl grid-cols-1 gap-6">
         <div>
           <label htmlFor={`${ids}-szukaj`} className="block text-lg font-bold text-foreground">
-            Szukaj w Bibliotece
+            {lb.searchLabel}
           </label>
           <div className="relative mt-2">
             <Search
@@ -109,7 +112,7 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
               type="search"
               value={filters.search}
               onChange={(event) => update({ search: event.target.value })}
-              placeholder="Na przykład: seniorzy, transport, wolontariat"
+              placeholder={lb.searchPlaceholder}
               className={cn(fieldClass, "w-full pl-12 placeholder:text-muted")}
             />
           </div>
@@ -118,12 +121,12 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
         {/* Poziomy scroll tagów: strzałki + scroll, działa na mobile */}
         <div>
           <p id={`${ids}-tematy`} className="block font-bold text-foreground">
-            Tematy
+            {lb.topics}
           </p>
           <div className="relative mt-2 flex items-center gap-1">
             <button
               type="button"
-              aria-label="Przewiń tematy w lewo"
+              aria-label={lb.scrollLeft}
               onClick={() => { tagsScrollRef.current?.scrollBy({ left: -160, behavior: "smooth" }); }}
               className="shrink-0 rounded-ui border-(length:--bw) border-border bg-surface p-1.5 hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-focus"
             >
@@ -143,7 +146,7 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
                     onClick={() => update({ tags: [...filters.tags, tag as Tag] })}
                     className="inline-flex min-h-10 cursor-pointer items-center whitespace-nowrap rounded-ui border-(length:--bw) border-border bg-surface px-3 text-sm text-foreground hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-focus"
                   >
-                    {TAG_LABELS[tag as Tag]}
+                    {t.tags[tag]}
                   </button>
                 </li>
               ))}
@@ -151,7 +154,7 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
 
             <button
               type="button"
-              aria-label="Przewiń tematy w prawo"
+              aria-label={lb.scrollRight}
               onClick={() => { tagsScrollRef.current?.scrollBy({ left: 160, behavior: "smooth" }); }}
               className="shrink-0 rounded-ui border-(length:--bw) border-border bg-surface p-1.5 hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-focus"
             >
@@ -163,7 +166,7 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
         <div className="flex flex-wrap items-end gap-4">
           <div>
             <label htmlFor={`${ids}-koszt`} className="block font-bold text-foreground">
-              Koszt
+              {lb.cost}
             </label>
             <select
               id={`${ids}-koszt`}
@@ -173,7 +176,7 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
             >
               {COSTS.map((cost) => (
                 <option key={cost.value} value={cost.value}>
-                  {cost.label}
+                  {lb.costs[cost.key]}
                 </option>
               ))}
             </select>
@@ -185,14 +188,14 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
               onChange={(event) => update({ archived: event.target.checked })}
               className="size-6 cursor-pointer accent-primary"
             />
-            Pokaż też archiwalne
+            {lb.showArchived}
           </label>
         </div>
 
         {filters.tags.length > 0 && (
           <div role="group" aria-labelledby={`${ids}-wybrane`} className="flex flex-wrap items-center gap-2">
             <p id={`${ids}-wybrane`} className="font-bold text-foreground">
-              Wybrane tematy:
+              {lb.selectedTopics}
             </p>
             <ul className="flex flex-wrap gap-2">
               {filters.tags.map((tag) => (
@@ -200,11 +203,11 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
                   key={tag}
                   className="inline-flex min-h-10 items-center gap-1 rounded-ui border-(length:--bw) border-primary bg-primary/10 py-0.5 pr-0.5 pl-3 text-base text-foreground"
                 >
-                  {TAG_LABELS[tag]}
+                  {t.tags[tag]}
                   <button
                     type="button"
                     onClick={() => update({ tags: filters.tags.filter((item) => item !== tag) })}
-                    aria-label={`Usuń temat ${TAG_LABELS[tag].toLowerCase()}`}
+                    aria-label={lb.removeTopic(t.tags[tag].toLowerCase())}
                     className="inline-flex size-10 cursor-pointer items-center justify-center rounded-ui hover:bg-primary/10"
                   >
                     <X aria-hidden="true" className="size-4" />
@@ -220,19 +223,18 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
         {loading ? (
           <>
             <Loader2 aria-hidden="true" className="size-5 animate-spin" />
-            Szukam…
+            {lb.searching}
           </>
         ) : (
-          `Znaleziono ${total} ${plural(total, "innowację", "innowacje", "innowacji")}`
+          lb.found(total)
         )}
       </p>
 
       {!loading && innovations.length === 0 ? (
         <div className="mt-6 max-w-3xl">
-          <CutoutText as="h2" text="Nic tu jeszcze nie ma" />
+          <CutoutText as="h2" text={lb.emptyTitle} />
           <p className="mt-4 text-lg">
-            Żadna innowacja nie pasuje do tych filtrów. Zmień słowa albo usuń część tematów. Masz własny pomysł na to,
-            czego brakuje? Opisz go w Kreatorze.
+            {lb.emptyLead}
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             {hasFilters && (
@@ -241,12 +243,12 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
                 variant="secondary"
                 onClick={() => update({ search: "", tags: [], cost: "", archived: false })}
               >
-                Wyczyść filtry
+                {lb.clearFilters}
               </Button>
             )}
             <Link href="/kreator" className={buttonVariants({ variant: "primary" })}>
               <Lightbulb aria-hidden="true" />
-              Zgłoś pomysł
+              {lb.submitIdea}
             </Link>
           </div>
         </div>
@@ -267,11 +269,11 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
         <div className="mt-10 flex flex-wrap items-center gap-4">
           <Button type="button" variant="secondary" onClick={loadMore} disabled={loadingMore}>
             {loadingMore && <Loader2 aria-hidden="true" className="animate-spin" />}
-            Pokaż więcej
+            {lb.showMore}
           </Button>
           {/* aria-live: czytnik ekranu słyszy, że doszły nowe karty. */}
           <p role="status" aria-live="polite" className="text-muted">
-            Pokazano {innovations.length} z {total}
+            {lb.shown(innovations.length, total)}
           </p>
         </div>
       )}

@@ -1,4 +1,5 @@
 import { API_URL, readSessionCookie } from "@/lib/api";
+import { readLocaleCookie } from "@/lib/i18n/config";
 
 // Strumień SSE z backendu: linie `data: {chunk}`, zdarzenia rozdzielone pustą linią, koniec `data: [DONE]`.
 // EventSource nie umie POST, dlatego czytamy odpowiedź fetch ręcznie.
@@ -7,6 +8,7 @@ export async function* postSse(path: string, body: unknown, signal?: AbortSignal
   const headers = new Headers({ "Content-Type": "application/json", Accept: "text/event-stream" });
   const token = readSessionCookie();
   if (token) headers.set("X-Session-Token", token);
+  headers.set("X-Lang", readLocaleCookie());
 
   const response = await fetch(`${API_URL}${path}`, {
     method: "POST",

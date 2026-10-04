@@ -8,6 +8,8 @@ import { formatNumber } from "@/components/malopolska-stats";
 import type { Challenge } from "@/data/innovations";
 import { apiFetch } from "@/lib/api";
 import { matchesSearchTags, normalizeText, parseSearchTags, queryStems, type SearchTag } from "@/lib/search-tags";
+import { useI18n } from "@/lib/i18n/client";
+import type { RegionMessages } from "@/lib/i18n/ns/region";
 
 // Wyzwania społeczne z GET /api/challenges, pogrupowane po obszarze. Każda liczba ma powiat, rok i źródło
 // z linkiem. Bez danych z API — komunikat, nie przykładowe karty.
@@ -35,13 +37,14 @@ function sourceName(source: string) {
   return source.replace(/\s*\([^)]*\)\s*$/, "").trim() || source;
 }
 
-function powiatLabel(powiat: string) {
-  return powiat.startsWith("m. ") ? `${powiat.slice(3)} (miasto)` : `powiat ${powiat}`;
+function powiatLabel(powiat: string, r: RegionMessages) {
+  return powiat.startsWith("m. ") ? r.city(powiat.slice(3)) : r.powiat(powiat);
 }
 
 function SourceLink({ source, year }: { source: string; year?: number }) {
+  const r = useI18n().t.region;
   const url = sourceUrl(source);
-  const text = `${sourceName(source)}${year ? `, ${year} r.` : ""}`;
+  const text = `${sourceName(source)}${year ? `, ${r.year(year)}` : ""}`;
   if (!url) return <span>{text}</span>;
   return (
     <a
@@ -52,7 +55,7 @@ function SourceLink({ source, year }: { source: string; year?: number }) {
     >
       {text}
       <ExternalLink aria-hidden="true" className="size-4 shrink-0" />
-      <span className="sr-only">(otwiera się w nowej karcie)</span>
+      <span className="sr-only">{r.newTab}</span>
     </a>
   );
 }
@@ -66,6 +69,9 @@ export function ChallengesView({
   initialPowiat?: string;
   initialTags?: string;
 }) {
+  const { t, locale } = useI18n();
+  const r = t.region;
+  const ch = r.challenges;
   const [challenges, setChallenges] = useState<ApiChallenge[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [powiat, setPowiat] = useState(initialPowiat);
@@ -125,14 +131,14 @@ export function ChallengesView({
   if (failed) {
     return (
       <p role="alert" className="rounded-ui border-(length:--bw) border-destructive bg-surface p-5 font-semibold text-destructive">
-        Nie udało się wczytać wyzwań. Spróbuj odświeżyć stronę za chwilę.
+        {ch.loadFailed}
       </p>
     );
   }
 
   if (!challenges) {
     return (
-      <div role="status" aria-label="Wczytuję wyzwania" className="grid gap-6 md:grid-cols-2">
+      <div role="status" aria-label={ch.loading} className="grid gap-6 md:grid-cols-2">
         {[0, 1, 2, 3].map((index) => (
           <div key={index} className="h-64 animate-pulse border-(length:--bw) border-border/40 bg-background" />
         ))}
@@ -141,23 +147,23 @@ export function ChallengesView({
   }
 
   if (!challenges.length) {
-    return <p className="text-lg">Brak danych o wyzwaniach.</p>;
+    return <p className="text-lg">{ch.none}</p>;
   }
 
   return (
     <>
       {tags.length > 0 && (
-        <div className="mb-6 flex flex-wrap items-center gap-2" aria-label="Wybrane tagi">
-          <span className="font-bold text-foreground">Tagi:</span>
+        <div className="mb-6 flex flex-wrap items-center gap-2" aria-label={ch.selectedTags}>
+          <span className="font-bold text-foreground">{ch.tags}</span>
           {tags.map((tag) => (
             <button
               key={tag.label}
               type="button"
               onClick={() => setTags((list) => list.filter((item) => item !== tag))}
-              aria-label={`Usuń tag ${tag.label}`}
+              aria-label={ch.removeTag(t.quickSearch.tagLabels[tag.label] ?? tag.label)}
               className="inline-flex min-h-10 items-center gap-1 rounded-full border-2 border-border bg-primary/10 px-3 text-sm font-semibold text-foreground hover:bg-primary/10"
             >
-              #{tag.label}
+              #{t.quickSearch.tagLabels[tag.label] ?? tag.label}
               <X aria-hidden="true" className="size-4" />
             </button>
           ))}
@@ -166,40 +172,39 @@ export function ChallengesView({
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-wrap items-end gap-4">
           <label className="grid gap-1 font-bold text-foreground">
-            Szukaj problemu
+            {ch.search}
             <input
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="np. seniorzy, opieka zdrowotna"
+              placeholder={ch.searchPlaceholder}
               className="min-h-12 w-72 max-w-full rounded-ui border-(length:--bw) border-border bg-surface px-3 text-base font-normal text-foreground placeholder:text-muted"
             />
           </label>
           <label className="grid gap-1 font-bold text-foreground">
-            Pokaż dla powiatu
+            {ch.forPowiat}
             <select
               value={powiat}
               onChange={(event) => setPowiat(event.target.value)}
               className="min-h-12 rounded-ui border-(length:--bw) border-border bg-surface px-3 text-base font-normal text-foreground"
             >
-              <option value="">Cała Małopolska</option>
+              <option value="">{ch.allRegion}</option>
               {powiaty.map((name) => (
                 <option key={name} value={name}>
-                  {powiatLabel(name)}
+                  {powiatLabel(name, r)}
                 </option>
               ))}
             </select>
           </label>
         </div>
         <p aria-live="polite" className="text-muted">
-          {groups.length} {groups.length === 1 ? "obszar" : groups.length < 5 ? "obszary" : "obszarów"} ·{" "}
-          {groups.reduce((sum, group) => sum + group.items.length, 0)} wskaźników
+          {ch.summary(groups.length, groups.reduce((sum, group) => sum + group.items.length, 0))}
         </p>
       </div>
 
       {groups.length === 0 && (
         <p className="mt-8 text-lg">
-          Nic nie pasuje do wyszukiwania.{" "}
+          {ch.nothing}{" "}
           <button
             type="button"
             onClick={() => {
@@ -209,7 +214,7 @@ export function ChallengesView({
             }}
             className="font-bold text-primary underline underline-offset-4 hover:text-primary-hover"
           >
-            Pokaż wszystkie wyzwania
+            {ch.showAll}
           </button>
         </p>
       )}
@@ -226,15 +231,15 @@ export function ChallengesView({
 
             <table className="mt-5 w-full text-left">
               <caption className="sr-only">
-                {group.title}: {group.unit}, według powiatów
+                {ch.caption(group.title, group.unit)}
               </caption>
               <thead>
                 <tr className="border-b-2 border-border text-sm">
                   <th scope="col" className="py-2 pr-3 font-bold">
-                    Powiat
+                    {ch.powiatCol}
                   </th>
                   <th scope="col" className="py-2 text-right font-bold">
-                    Wartość
+                    {ch.valueCol}
                   </th>
                 </tr>
               </thead>
@@ -242,10 +247,10 @@ export function ChallengesView({
                 {group.items.slice(0, 6).map((item) => (
                   <tr key={item.id} className="border-b border-border/40">
                     <th scope="row" className="py-2 pr-3 font-normal">
-                      {powiatLabel(item.powiat)}
+                      {powiatLabel(item.powiat, r)}
                     </th>
                     <td className="py-2 text-right font-bold text-foreground tabular-nums">
-                      {formatNumber(item.indicator_value)}
+                      {formatNumber(item.indicator_value, locale)}
                     </td>
                   </tr>
                 ))}
@@ -253,10 +258,10 @@ export function ChallengesView({
             </table>
             <p className="mt-2 text-sm text-muted">
               {group.unit}
-              {group.items.length > 6 && ` · pokazano 6 z ${group.items.length} powiatów`}
+              {group.items.length > 6 && ch.shownOf(group.items.length)}
             </p>
             <p className="mt-3 text-sm">
-              Źródło: <SourceLink source={group.items[0].source} year={group.items[0].data_year} />
+              {r.source} <SourceLink source={group.items[0].source} year={group.items[0].data_year} />
             </p>
 
             <Link
@@ -264,7 +269,7 @@ export function ChallengesView({
               className="mt-auto inline-flex min-h-12 items-center gap-2 pt-4 font-bold text-primary underline underline-offset-4 hover:text-primary-hover"
             >
               <Search aria-hidden="true" className="size-5" />
-              Szukaj rozwiązań
+              {ch.findSolutions}
               <span className="sr-only">: {group.title}</span>
             </Link>
           </li>
@@ -273,13 +278,13 @@ export function ChallengesView({
 
       <section aria-labelledby="zrodla-tytul" className="mt-14">
         <h2 id="zrodla-tytul" className="text-2xl font-bold text-foreground">
-          Źródła danych i raporty
+          {ch.sources}
         </h2>
         <ul className="mt-4 grid gap-2">
           {sources.map((item) => (
             <li key={item.source}>
               <SourceLink source={item.source} />
-              <span className="text-muted"> — dane z lat {item.years.join(", ")}</span>
+              <span className="text-muted">{ch.years(item.years.join(", "))}</span>
             </li>
           ))}
           <li>
@@ -289,9 +294,9 @@ export function ChallengesView({
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 font-semibold text-primary underline underline-offset-4 hover:text-primary-hover"
             >
-              Raporty i diagnozy ROPS w Krakowie
+              {ch.ropsReports}
               <ExternalLink aria-hidden="true" className="size-4 shrink-0" />
-              <span className="sr-only">(otwiera się w nowej karcie)</span>
+              <span className="sr-only">{r.newTab}</span>
             </a>
           </li>
         </ul>

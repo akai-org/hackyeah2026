@@ -4,6 +4,7 @@ import { Bot } from "lucide-react";
 
 import { Middleman } from "@/components/middleman";
 import { Dialog } from "@/components/ui/dialog";
+import { useT } from "@/lib/i18n/client";
 
 // Okno „Jak to wdrożyć?” z wyników i karty innowacji. To ten sam Middleman co na /wdrozenie
 // (jeden UI), tylko w dużym oknie — prawie pełny ekran, żeby plan był czytelny.
@@ -19,7 +20,7 @@ const PRINT_CSS = `
     overflow: visible; margin: 0; border: 0; box-shadow: none;
   }
   dialog.middleman-dialog::backdrop { display: none; }
-  dialog.middleman-dialog button[aria-label="Zamknij"] { display: none; }
+  dialog.middleman-dialog button[data-dialog-close] { display: none; }
 }
 `;
 
@@ -32,11 +33,12 @@ interface Props {
 }
 
 export function MiddlemanModal({ innovationId, innovationTitle, problem = "", onClose }: Props) {
+  const title = useT().middleman.modalTitle;
   return (
     <Dialog
       open
       onClose={onClose}
-      title="Jak to wdrożyć?"
+      title={title}
       description={innovationTitle}
       icon={<Bot aria-hidden="true" className="size-8 shrink-0 text-primary" />}
       size="xl"

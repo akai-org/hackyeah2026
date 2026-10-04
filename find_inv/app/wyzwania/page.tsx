@@ -3,11 +3,12 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 import { ChallengesView } from "./challenges-view";
+import { getT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Wyzwania społeczne",
-  description: "Wskaźniki wyzwań społecznych w powiatach Małopolski — z danymi źródłowymi GUS i raportami ROPS.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.pages.titles.challenges, description: t.pages.challenges.description };
+}
 
 function first(value: string | string[] | undefined): string {
   return (Array.isArray(value) ? value[0] : value) ?? "";
@@ -15,6 +16,7 @@ function first(value: string | string[] | undefined): string {
 
 export default async function ChallengesPage({ searchParams }: PageProps<"/wyzwania">) {
   const params = await searchParams;
+  const t = await getT();
   const initial = { query: first(params.q), powiat: first(params.powiat), tags: first(params.tagi) };
 
   return (
@@ -26,14 +28,13 @@ export default async function ChallengesPage({ searchParams }: PageProps<"/wyzwa
             className="inline-flex min-h-12 items-center gap-2 font-semibold text-primary underline underline-offset-4 hover:text-primary-hover"
           >
             <ArrowLeft aria-hidden="true" className="size-5" />
-            Wróć na stronę główną
+            {t.pages.challenges.back}
           </Link>
           <h1 id="wyzwania-tytul" className="mt-10 max-w-[18ch] text-hero font-bold text-foreground">
-            Wyzwania społeczne Małopolski
+            {t.pages.challenges.heading}
           </h1>
           <p className="mt-6 max-w-[62ch] text-lg">
-            Wskaźniki, które pokazują, z czym mierzą się mieszkańcy poszczególnych powiatów. Przy każdej liczbie
-            jest rok i źródło. Wybierz obszar i poszukaj rozwiązań, które już działają.
+            {t.pages.challenges.lead}
           </p>
         </div>
       </section>
@@ -41,7 +42,7 @@ export default async function ChallengesPage({ searchParams }: PageProps<"/wyzwa
       <section aria-labelledby="obszary-tytul" className="bg-surface">
         <div className="mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
           <h2 id="obszary-tytul" className="sr-only">
-            Obszary wyzwań
+            {t.pages.challenges.areas}
           </h2>
           {/* key: nowe wyszukiwanie z nagłówka na tej samej stronie zaczyna od nowa. */}
           <ChallengesView

@@ -14,6 +14,7 @@ import {
 
 import { Switch } from "@/components/ui/switch";
 import { usePresence } from "@/lib/use-presence";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 import { Accessibility } from "lucide-react";
 
@@ -138,6 +139,7 @@ export function useSimpleMode() {
 
 export function AccessibilitySettings({ className }: { className?: string }) {
   const { spacing, setSpacing, contrast, setContrast, fontSize, setFontSize } = useSimpleMode();
+  const t = useT();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -172,35 +174,35 @@ export function AccessibilitySettings({ className }: { className?: string }) {
         aria-controls={panelId}
         aria-haspopup="dialog"
         onClick={() => setOpen((value) => !value)}
-        title="Ustawienia dostępności"
+        title={t.a11y.settings}
         className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-full border-(length:--bw) border-border bg-primary text-primary-foreground shadow-raised hover:bg-primary-hover"
       >
         <Accessibility aria-hidden="true" className="size-7" />
-        <span className="sr-only">Dostępność</span>
+        <span className="sr-only">{t.a11y.short}</span>
       </button>
 
       {panel.mounted && (
         <div
           id={panelId}
           role="dialog"
-          aria-label="Ustawienia dostępności"
+          aria-label={t.a11y.settings}
           data-closing={panel.closing || undefined}
           className="popover-panel fixed right-4 bottom-20 z-30 w-[min(22rem,calc(100vw-2rem))] rounded-ui border-(length:--bw) border-border bg-surface p-4 shadow-raised"
         >
-          <p className="text-lg font-semibold text-foreground">Ustawienia dostępności</p>
+          <p className="text-lg font-semibold text-foreground">{t.a11y.settings}</p>
           <div className="mt-3 grid gap-2">
             <AccessibilityOption id={`${panelId}-spacing`} checked={spacing} onCheckedChange={setSpacing}>
-              Duże odstępy
+              {t.a11y.spacing}
             </AccessibilityOption>
             <AccessibilityOption id={`${panelId}-contrast`} checked={contrast} onCheckedChange={setContrast}>
-              Wysoki kontrast
+              {t.a11y.contrast}
             </AccessibilityOption>
             <fieldset className="mt-2 border-t-2 border-border/40 pt-3">
-              <legend className="text-base font-semibold text-foreground">Rozmiar czcionki</legend>
+              <legend className="text-base font-semibold text-foreground">{t.a11y.fontSize}</legend>
               <div className="mt-2 flex gap-2">
                 <button
                   type="button"
-                  aria-label="Zmniejsz czcionkę"
+                  aria-label={t.a11y.fontSmaller}
                   aria-pressed={fontSize === "small"}
                   onClick={() => setFontSize("small")}
                   className="min-h-12 min-w-12 rounded-ui border-(length:--bw) border-border bg-surface px-3 text-base font-semibold text-primary hover:bg-primary/10 aria-pressed:bg-primary aria-pressed:text-primary-foreground"
@@ -209,7 +211,7 @@ export function AccessibilitySettings({ className }: { className?: string }) {
                 </button>
                 <button
                   type="button"
-                  aria-label="Zwiększ czcionkę"
+                  aria-label={t.a11y.fontLarger}
                   aria-pressed={fontSize === "large"}
                   onClick={() => setFontSize("large")}
                   className="min-h-12 min-w-12 rounded-ui border-(length:--bw) border-border bg-surface px-3 text-xl font-semibold text-primary hover:bg-primary/10 aria-pressed:bg-primary aria-pressed:text-primary-foreground"
@@ -222,7 +224,7 @@ export function AccessibilitySettings({ className }: { className?: string }) {
                     onClick={() => setFontSize("default")}
                     className="min-h-12 rounded-ui px-3 text-base font-semibold text-primary underline underline-offset-4 hover:text-primary-hover"
                   >
-                    Domyślna
+                    {t.a11y.fontDefault}
                   </button>
                 )}
               </div>

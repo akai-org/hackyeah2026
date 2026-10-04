@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { CircleCheck, X } from "lucide-react";
+import { useT } from "@/lib/i18n/client";
 
 // Krótkie potwierdzenie akcji („Zgłoszenie wysłane”). Region aria-live jest w DOM od początku,
 // żeby czytnik ekranu ogłosił każdą nową wiadomość. Znika po 6 s albo po kliknięciu „Zamknij”.
@@ -21,6 +22,7 @@ type ToastProps = {
 };
 
 export function Toast({ message, onClose }: ToastProps) {
+  const t = useT();
   useEffect(() => {
     if (!message) return;
     const timer = window.setTimeout(onClose, HIDE_AFTER_MS);
@@ -43,7 +45,7 @@ export function Toast({ message, onClose }: ToastProps) {
           <button
             type="button"
             onClick={onClose}
-            aria-label="Zamknij powiadomienie"
+            aria-label={t.common.closeNotification}
             className="inline-flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-ui hover:bg-secondary/60"
           >
             <X aria-hidden="true" className="size-5" />

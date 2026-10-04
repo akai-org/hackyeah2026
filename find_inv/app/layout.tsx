@@ -5,26 +5,29 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SIMPLE_MODE_SCRIPT, SimpleModeProvider } from "@/components/simple-mode";
 import { AuthProvider } from "@/lib/auth";
+import { I18nProvider } from "@/lib/i18n/client";
+import { getLocale, getT } from "@/lib/i18n/server";
 import { fontVariables } from "./fonts";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: {
-    default: "HubMI – znajdź rozwiązanie, które już działa",
-    template: "%s – HubMI",
-  },
-  description:
-    "Opisz problem społeczny własnymi słowami. HubMI pokaże innowacje społeczne, które już działają w Małopolsce.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return {
+    title: { default: t.meta.title, template: "%s – HubMI" },
+    description: t.meta.description,
+  };
+}
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const locale = await getLocale();
   return (
     // suppressHydrationWarning: skrypt ustawień dostępności może dodać atrybuty data-* przed hydracją.
-    <html lang="pl" className={fontVariables} data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang={locale} className={fontVariables} data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: SIMPLE_MODE_SCRIPT }} />
       </head>
       <body className="flex min-h-screen flex-col font-body antialiased">
+        <I18nProvider initialLocale={locale}>
         <SimpleModeProvider>
           <AuthProvider>
             <SiteHeader />
@@ -35,6 +38,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <LoginDialog />
           </AuthProvider>
         </SimpleModeProvider>
+        </I18nProvider>
       </body>
     </html>
   );

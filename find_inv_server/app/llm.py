@@ -3,6 +3,7 @@ from typing import AsyncGenerator
 import openai
 
 from app.config import settings
+from app.i18n import language_instruction
 
 _client: openai.AsyncOpenAI | None = None
 
@@ -23,6 +24,9 @@ async def chat(
     model: str | None = None,
     response_format: dict | None = None,
 ) -> str | AsyncGenerator[str, None]:
+    instruction = language_instruction()
+    if instruction:
+        messages = [*messages, {"role": "system", "content": instruction}]
     kwargs: dict = dict(
         model=model or settings.openrouter_model,
         messages=messages,

@@ -1,5 +1,7 @@
 // Klient API backendu FastAPI. Odpowiedzi mają kształt { data, error }.
 
+import { readLocaleCookie } from "@/lib/i18n/config";
+
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 // Inna nazwa niż cookie "session" z backendu: tamto jest HttpOnly, a na tym samym hoście (localhost, deploy
@@ -39,6 +41,8 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   const token = readSessionCookie();
   const headers = new Headers(init.headers);
   if (token) headers.set("X-Session-Token", token);
+  // Backend odpowiada (LLM) w języku interfejsu.
+  headers.set("X-Lang", readLocaleCookie());
   if (init.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
 
   const response = await fetch(`${API_URL}${path}`, { ...init, headers, credentials: "include" });
@@ -66,7 +70,11 @@ export function apiStream(path: string, body: unknown, onChunk: (chunk: string) 
       const res = await fetch(`${API_URL}${path}`, {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json", ...(token ? { "X-Session-Token": token } : {}) },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Lang": readLocaleCookie(),
+          ...(token ? { "X-Session-Token": token } : {}),
+        },
         body: JSON.stringify(body),
         signal: controller.signal,
       });

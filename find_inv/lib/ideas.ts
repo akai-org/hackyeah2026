@@ -116,11 +116,12 @@ export const ALLOWED_EXTENSIONS = [
 ]; // prettier-ignore
 
 /** Komunikat, jeśli plik nie przejdzie walidacji backendu — sprawdzamy przed wysłaniem. */
-export function fileProblem(file: File): string | null {
+/** Kod problemu z plikiem (type, empty, size) — tekst dla użytkownika daje słownik i18n. */
+export function fileProblem(file: File): "type" | "empty" | "size" | null {
   const extension = file.name.slice(file.name.lastIndexOf(".")).toLowerCase();
-  if (!ALLOWED_EXTENSIONS.includes(extension)) return "nieobsługiwany typ pliku";
-  if (file.size === 0) return "plik jest pusty";
-  if (file.size > MAX_FILE_BYTES) return "plik jest większy niż 10 MB";
+  if (!ALLOWED_EXTENSIONS.includes(extension)) return "type";
+  if (file.size === 0) return "empty";
+  if (file.size > MAX_FILE_BYTES) return "size";
   return null;
 }
 
@@ -148,19 +149,19 @@ export const MAX_PDF_BYTES = 10 * 1024 * 1024;
 
 export type PdfText = { text: string; pages: number; truncated: boolean };
 
-/** Tekst z PDF-u (POST /api/ideas/extract-pdf). Rzuca Error z komunikatem do pokazania użytkownikowi. */
+/** Tekst z PDF-u (POST /api/ideas/extract-pdf). Rzuca Error z kodem (pdf_type, pdf_size, offline, read_failed — tłumaczy UI) albo komunikatem z backendu. */
 export async function extractPdfText(file: File): Promise<PdfText> {
-  if (!file.name.toLowerCase().endsWith(".pdf")) throw new Error("Wybierz plik PDF.");
-  if (file.size > MAX_PDF_BYTES) throw new Error("Plik jest większy niż 10 MB.");
+  if (!file.name.toLowerCase().endsWith(".pdf")) throw new Error("pdf_type");
+  if (file.size > MAX_PDF_BYTES) throw new Error("pdf_size");
   const body = new FormData();
   body.append("file", file);
   let response: Response;
   try {
     response = await fetch(`${API_URL}/api/ideas/extract-pdf`, { method: "POST", body });
   } catch {
-    throw new Error("Brak połączenia z serwerem. Spróbuj ponownie albo wklej opis ręcznie.");
+    throw new Error("offline");
   }
   const json = (await response.json().catch(() => null)) as { data: PdfText | null; error: string | null } | null;
-  if (!response.ok || !json?.data) throw new Error(json?.error ?? "Nie udało się odczytać pliku.");
+  if (!response.ok || !json?.data) throw new Error(json?.error ?? "read_failed");
   return json.data;
 }

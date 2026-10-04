@@ -8,7 +8,7 @@ import { ArrowRight } from "lucide-react";
 
 export type QuickNavSection = { id: string; label: string };
 
-export function QuickNav({ sections }: { sections: QuickNavSection[] }) {
+export function QuickNav({ sections, label }: { sections: QuickNavSection[]; label: string }) {
   const [missing, setMissing] = useState<string[]>([]);
 
   useEffect(() => {
@@ -23,7 +23,7 @@ export function QuickNav({ sections }: { sections: QuickNavSection[] }) {
   }, [sections]);
 
   return (
-    <nav aria-label="Szybki dostęp" className="mt-6">
+    <nav aria-label={label} className="mt-6">
       <ul className="flex flex-wrap gap-x-6 gap-y-1">
         {sections
           .filter((section) => !missing.includes(section.id))

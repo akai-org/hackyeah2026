@@ -9,7 +9,8 @@ import { MatchCard } from "@/components/match-card";
 import { Button } from "@/components/ui/button";
 import { MOCK_GAP_INDEX, type GapEntry } from "@/data/innovations";
 import { getGapIndex, getPulse, type GminaPulse } from "@/lib/knowledge";
-import { cn, plural } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n/client";
 
 // Indeks Luki Innowacyjnej: gdzie problemów jest dużo, a innowacji mało („białe plamy”).
 // Jedna seria → jeden kolor (primary), bez legendy; słupki ≤ 24 px z zaokrąglonym końcem, wartość przy końcu słupka
@@ -27,6 +28,8 @@ type Level = 2 | 3 | 4 | 5;
 function Pulse({ entry, level }: { entry: GapEntry; level: Level }) {
   const Heading = `h${level}` as const;
   const [pulse, setPulse] = useState<GminaPulse | null>(null);
+  const { t, locale } = useI18n();
+  const r = t.region;
 
   useEffect(() => {
     getPulse(entry.powiat, entry.top_area).then(setPulse);
@@ -36,7 +39,7 @@ function Pulse({ entry, level }: { entry: GapEntry; level: Level }) {
     return (
       <p role="status" className="flex items-center gap-2 text-muted">
         <Loader2 aria-hidden="true" className="size-5 animate-spin" />
-        Wczytuję dane powiatu…
+        {r.gap.loadingPowiat}
       </p>
     );
   }
@@ -44,7 +47,7 @@ function Pulse({ entry, level }: { entry: GapEntry; level: Level }) {
   return (
     <div className="grid gap-6">
       <div>
-        <Heading className="text-lg font-bold text-foreground">Najważniejsze wyzwania</Heading>
+        <Heading className="text-lg font-bold text-foreground">{r.gap.topChallenges}</Heading>
         {pulse.top_challenges.length ? (
           <ul className="mt-3 grid gap-3 md:grid-cols-3">
             {pulse.top_challenges.map((challenge) => (
@@ -52,29 +55,29 @@ function Pulse({ entry, level }: { entry: GapEntry; level: Level }) {
                 <p className="font-bold text-foreground">{challenge.title}</p>
                 <p className="mt-1">
                   <span className="text-xl font-bold text-foreground tabular-nums">
-                    {formatNumber(challenge.indicator_value)}
+                    {formatNumber(challenge.indicator_value, locale)}
                   </span>{" "}
                   {challenge.indicator_unit}
                 </p>
                 <p className="mt-1 text-sm text-muted">
-                  {challenge.source}, {challenge.data_year} r.
+                  {challenge.source}, {r.year(challenge.data_year)}
                 </p>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="mt-2 text-muted">Brak szczegółowych wskaźników dla tego powiatu.</p>
+          <p className="mt-2 text-muted">{r.gap.noIndicators}</p>
         )}
       </div>
       <div>
-        <Heading className="text-lg font-bold text-foreground">Co może pomóc</Heading>
+        <Heading className="text-lg font-bold text-foreground">{r.gap.whatHelps}</Heading>
         <ul className="mt-3 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {pulse.matching_innovations.map((innovation) => (
             <li key={innovation.id} className="flex">
               <MatchCard
                 innovation={innovation}
                 headingLevel={`h${Math.min(level + 1, 5) as Level}`}
-                query={`Powiat ${entry.powiat}: ${entry.top_area}`}
+                query={r.gap.pulseQuery(entry.powiat, entry.top_area)}
               />
             </li>
           ))}
@@ -87,6 +90,8 @@ function Pulse({ entry, level }: { entry: GapEntry; level: Level }) {
 export function GapIndex({ limit, level = 3 }: GapIndexProps) {
   const RowHeading = `h${level}` as const;
   const ids = useId();
+  const { t, locale } = useI18n();
+  const g = t.region.gap;
   const [entries, setEntries] = useState<GapEntry[]>(MOCK_GAP_INDEX);
   const [open, setOpen] = useState<string | null>(null);
 
@@ -101,7 +106,7 @@ export function GapIndex({ limit, level = 3 }: GapIndexProps) {
   return (
     <div>
       <p id={`${ids}-skala`} className="text-sm text-muted">
-        Indeks od 0 do {scaleMax}. Im dłuższy pasek, tym więcej problemów i mniej sprawdzonych rozwiązań w powiecie.
+        {g.scale(scaleMax)}
       </p>
       <ol className="mt-4 grid gap-3">
         {visible.map((entry, index) => {
@@ -112,7 +117,7 @@ export function GapIndex({ limit, level = 3 }: GapIndexProps) {
             <li key={entry.powiat} className="border-(length:--bw) border-border bg-surface">
               <div className="grid items-center gap-x-6 gap-y-2 p-4 md:grid-cols-[11rem_minmax(0,1fr)_15rem]">
                 <RowHeading className="text-lg font-bold text-foreground">
-                  <span className="sr-only">{index + 1}. </span>Powiat {entry.powiat}
+                  <span className="sr-only">{index + 1}. </span>{t.region.Powiat(entry.powiat)}
                 </RowHeading>
 
                 <div className="flex items-center gap-3">
@@ -120,18 +125,17 @@ export function GapIndex({ limit, level = 3 }: GapIndexProps) {
                     <div className="h-full rounded-r-[4px] bg-primary" style={{ width: `${width}%` }} />
                   </div>
                   <p className="w-24 shrink-0 tabular-nums">
-                    <span className="sr-only">Indeks luki: </span>
-                    <span className="font-bold text-foreground">{formatNumber(entry.gap_score)}</span>
-                    <span className="sr-only"> z {scaleMax}</span>
+                    <span className="sr-only">{g.index}</span>
+                    <span className="font-bold text-foreground">{formatNumber(entry.gap_score, locale)}</span>
+                    <span className="sr-only">{g.of(scaleMax)}</span>
                   </p>
                 </div>
 
                 <p className="text-base">
-                  Najczęściej: <span className="font-bold">{entry.top_area}</span>
+                  {g.mostOften} <span className="font-bold">{entry.top_area}</span>
                   <br />
                   <span className="text-muted">
-                    {entry.innovations_count} {plural(entry.innovations_count, "innowacja", "innowacje", "innowacji")} w
-                    Bibliotece
+                    {g.inLibrary(entry.innovations_count)}
                   </span>
                 </p>
               </div>
@@ -146,7 +150,7 @@ export function GapIndex({ limit, level = 3 }: GapIndexProps) {
                     onClick={() => setOpen(expanded ? null : entry.powiat)}
                   >
                     {expanded ? <ChevronUp aria-hidden="true" /> : <ChevronDown aria-hidden="true" />}
-                    {expanded ? "Zwiń" : "Puls powiatu"}
+                    {expanded ? g.collapse : g.pulse}
                     <span className="sr-only"> {entry.powiat}</span>
                   </Button>
                   <div id={panelId} hidden={!expanded} className={cn(expanded && "mt-5 pb-2")}>
@@ -163,7 +167,7 @@ export function GapIndex({ limit, level = 3 }: GapIndexProps) {
           href="/luka-innowacyjna"
           className="mt-6 inline-flex min-h-12 items-center font-bold text-primary underline underline-offset-4 hover:text-primary-hover"
         >
-          Zobacz wszystkie powiaty i puls każdego z nich
+          {g.seeAll}
         </Link>
       )}
     </div>

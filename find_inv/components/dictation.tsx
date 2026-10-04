@@ -4,6 +4,8 @@ import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react"
 import { Check, CircleAlert, Info, Loader2, Mic, Square, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { LOCALE_TAGS } from "@/lib/i18n/config";
+import { useI18n, useT } from "@/lib/i18n/client";
 import { correctTranscript } from "@/lib/matchmaking";
 import { cn } from "@/lib/utils";
 
@@ -48,15 +50,23 @@ function useDictationSupported() {
   );
 }
 
-const DICTATION_ERRORS: Record<string, string> = {
-  "not-allowed": "Brak dostępu do mikrofonu. Zezwól na mikrofon w ustawieniach przeglądarki albo wpisz tekst.",
-  "service-not-allowed": "Brak dostępu do mikrofonu. Zezwól na mikrofon w ustawieniach przeglądarki albo wpisz tekst.",
-  "no-speech": "Nic nie usłyszałem. Kliknij „Podyktuj” i spróbuj jeszcze raz albo wpisz tekst.",
-  "audio-capture": "Nie znaleziono mikrofonu. Podłącz mikrofon albo wpisz tekst.",
-  network: "Dyktowanie wymaga połączenia z internetem. Sprawdź połączenie albo wpisz tekst.",
-};
+type DictationMessages = ReturnType<typeof useT>["dictation"];
 
-const GENERIC_ERROR = "Dyktowanie nie zadziałało. Spróbuj jeszcze raz albo wpisz tekst.";
+function errorMessage(code: string, t: DictationMessages): string {
+  switch (code) {
+    case "not-allowed":
+    case "service-not-allowed":
+      return t.noMic;
+    case "no-speech":
+      return t.noSpeech;
+    case "audio-capture":
+      return t.noDevice;
+    case "network":
+      return t.network;
+    default:
+      return t.generic;
+  }
+}
 
 export type DictationState = "idle" | "recording" | "checking" | "confirm" | "done" | "error";
 
@@ -86,6 +96,8 @@ export function useDictation(
   options: DictationOptions = {},
 ) {
   const supported = useDictationSupported();
+  const { locale, t: messages } = useI18n();
+  const t = messages.dictation;
   const [state, setState] = useState<DictationState>("idle");
   const [message, setMessage] = useState("");
   const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
@@ -112,13 +124,13 @@ export function useDictation(
     setText((current) => current.replace(original, corrected));
     setSuggestion(null);
     setState("done");
-    setMessage("Poprawiono tekst");
+    setMessage(t.corrected);
   }
 
   function reject() {
     setSuggestion(null);
     setState("done");
-    setMessage("Zostawiono Twój tekst");
+    setMessage(t.kept);
   }
 
   function toggle() {
@@ -134,13 +146,13 @@ export function useDictation(
     const RecognitionImpl = getRecognition();
     if (!RecognitionImpl) {
       setState("error");
-      setMessage("Dyktowanie nie jest obsługiwane w tej przeglądarce. Wpisz tekst ręcznie.");
+      setMessage(t.unsupported);
       return;
     }
 
     const live = Boolean(options.live);
     const recognition = new RecognitionImpl();
-    recognition.lang = "pl-PL";
+    recognition.lang = LOCALE_TAGS[locale];
     recognition.interimResults = live;
     recognition.continuous = live;
     recognition.maxAlternatives = 1;
@@ -189,7 +201,7 @@ export function useDictation(
       if (event.error === "aborted") return;
       failed = true;
       setState("error");
-      setMessage(DICTATION_ERRORS[event.error] ?? GENERIC_ERROR);
+      setMessage(errorMessage(event.error, t));
     };
 
     recognition.onend = () => {
@@ -198,7 +210,7 @@ export function useDictation(
       if (failed) return;
       if (!heard) {
         setState("error");
-        setMessage(DICTATION_ERRORS["no-speech"]);
+        setMessage(t.noSpeech);
         return;
       }
       // Koniec mówienia: poprawka z LLM (albo prosta poprawka bez klucza) i pytanie do użytkownika.
@@ -206,7 +218,7 @@ export function useDictation(
       const original = spoken;
       const session = sessionRef.current;
       setState("checking");
-      setMessage("Sprawdzam tekst…");
+      setMessage(t.checkingText);
       void correctTranscript(original, live && Boolean(options.condense)).then(({ corrected, condensed }) => {
         if (session !== sessionRef.current) return; // w międzyczasie zaczęło się nowe nagranie
         if (corrected && corrected !== original) {
@@ -215,7 +227,7 @@ export function useDictation(
           setMessage("");
         } else {
           setState("done");
-          setMessage("Gotowe, sprawdź tekst");
+          setMessage(t.ready);
         }
       });
     };
@@ -224,13 +236,13 @@ export function useDictation(
     sessionRef.current += 1;
     setSuggestion(null);
     setState("recording");
-    setMessage(live ? "Słucham… Tekst pojawia się w polu na bieżąco." : "Nagrywam…");
+    setMessage(live ? t.listeningLive : t.recording);
     try {
       recognition.start();
     } catch {
       recognitionRef.current = null;
       setState("error");
-      setMessage(GENERIC_ERROR);
+      setMessage(t.generic);
     }
   }
 
@@ -241,6 +253,7 @@ type Dictation = ReturnType<typeof useDictation>;
 
 /** Przycisk „Podyktuj” / „Zatrzymaj”. Bez wsparcia przeglądarki kliknięcie pokazuje komunikat w DictationStatus. */
 export function DictationButton({ dictation, className }: { dictation: Dictation; className?: string }) {
+  const t = useT().dictation;
   return (
     <Button
       type="button"
@@ -251,23 +264,23 @@ export function DictationButton({ dictation, className }: { dictation: Dictation
       {dictation.state === "checking" ? (
         <>
           <Loader2 aria-hidden="true" className="animate-spin" />
-          Sprawdzam…
-          <span className="sr-only"> — kliknij, żeby nagrać od nowa</span>
+          {t.checking}
+          <span className="sr-only">{t.clickToRerecord}</span>
         </>
       ) : dictation.state === "confirm" ? (
         <>
           <Mic aria-hidden="true" />
-          Nagraj od nowa
+          {t.rerecord}
         </>
       ) : dictation.state === "recording" ? (
         <>
           <Square aria-hidden="true" className="fill-current" />
-          Zatrzymaj
+          {t.stop}
         </>
       ) : (
         <>
           <Mic aria-hidden="true" />
-          Podyktuj
+          {t.dictate}
         </>
       )}
     </Button>
@@ -295,11 +308,12 @@ export function DictationStatus({ dictation }: { dictation: Dictation }) {
 
 /** Informacja o przetwarzaniu mowy (DESIGN.md, sekcja 8). */
 export function DictationNotice({ dictation, id }: { dictation: Dictation; id?: string }) {
+  const t = useT().dictation;
   if (!dictation.supported) return null;
   return (
     <p id={id} className="mt-3 flex max-w-[65ch] items-start gap-2 text-sm text-muted">
       <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-      Dyktowanie może przetwarzać dźwięk w zewnętrznej usłudze przeglądarki. Nie podawaj danych osobowych.
+      {t.privacy}
     </p>
   );
 }
@@ -346,6 +360,7 @@ function diffWords(original: string, corrected: string) {
 /** Pytanie po dyktowaniu: przyjąć poprawkę AI (/api/voice-fix) czy zostawić tekst użytkownika. */
 export function DictationSuggestion({ dictation }: { dictation: Dictation }) {
   const ids = useId();
+  const t = useT().dictation;
   const headingRef = useRef<HTMLParagraphElement>(null);
   const suggestion = dictation.suggestion;
 
@@ -364,18 +379,17 @@ export function DictationSuggestion({ dictation }: { dictation: Dictation }) {
       className="appear mt-3 max-w-[65ch] rounded-ui border-(length:--bw) border-primary bg-primary/10 p-4"
     >
       <p id={`${ids}-pytanie`} ref={headingRef} tabIndex={-1} className="font-bold text-foreground focus:outline-none">
-        Czy chodziło Ci o…?
+        {t.didYouMean}
       </p>
       {suggestion.condensed ? (
         <>
           {/* Przy streszczeniu prawie każde słowo jest „zmienione”, więc zamiast podświetleń — skrót i pełna wypowiedź. */}
           <p className="mt-2 rounded-ui bg-surface px-3 py-2 text-lg">{suggestion.corrected}</p>
           <p className="mt-1 text-sm text-muted">
-            Skróciliśmy wypowiedź do najważniejszych informacji (z {count(suggestion.original)} do{" "}
-            {count(suggestion.corrected)} słów).
+            {t.condensed(count(suggestion.original), count(suggestion.corrected))}
           </p>
           <details className="mt-2 text-sm">
-            <summary className="cursor-pointer font-bold text-foreground">Pokaż całą wypowiedź</summary>
+            <summary className="cursor-pointer font-bold text-foreground">{t.showFull}</summary>
             <p className="mt-1 rounded-ui bg-surface px-3 py-2 text-muted">{suggestion.original}</p>
           </details>
         </>
@@ -390,11 +404,11 @@ export function DictationSuggestion({ dictation }: { dictation: Dictation }) {
             ))}
           </p>
           {words.some((word) => word.changed) && (
-            <p className="mt-1 text-sm text-muted">Poprawione słowa są pogrubione i podkreślone.</p>
+            <p className="mt-1 text-sm text-muted">{t.changedHint}</p>
           )}
           {removed.length > 0 && (
             <p className="mt-1 text-sm text-muted">
-              Usunięte zbędne słowa: {removed.map((word) => `„${word}”`).join(", ")}.
+              {t.removed} {removed.map((word) => `„${word}”`).join(", ")}.
             </p>
           )}
         </>
@@ -402,11 +416,11 @@ export function DictationSuggestion({ dictation }: { dictation: Dictation }) {
       <div className="mt-3 flex flex-wrap gap-3">
         <Button type="button" onClick={dictation.accept}>
           <Check aria-hidden="true" />
-          Tak, popraw
+          {t.accept}
         </Button>
         <Button type="button" variant="secondary" onClick={dictation.reject}>
           <X aria-hidden="true" />
-          Nie, zostaw mój tekst
+          {t.reject}
         </Button>
       </div>
     </section>

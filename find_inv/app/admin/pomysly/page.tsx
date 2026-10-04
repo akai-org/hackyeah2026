@@ -5,6 +5,8 @@ import { CheckCircle, Clock, Download, Paperclip, Tag, X } from "lucide-react";
 import { API_URL, apiFetch, apiPost, readSessionCookie } from "@/lib/api";
 import { formatSize } from "@/lib/ideas";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n/client";
+import { LOCALE_TAGS } from "@/lib/i18n/config";
 
 interface Attachment {
   id: number;
@@ -45,16 +47,18 @@ interface Idea {
   created_at: string | null;
 }
 
-const STATUS_LABEL: Record<string, { label: string; className: string }> = {
-  pending:  { label: "Nowy",       className: "border-accent bg-accent text-accent-foreground" },
-  reviewed: { label: "Przejrzany", className: "border-success bg-success/10 text-success" },
-  rejected: { label: "Odrzucony",  className: "border-border bg-background text-muted" },
+const STATUS_CLASS: Record<string, string> = {
+  pending: "border-accent bg-accent text-accent-foreground",
+  reviewed: "border-success bg-success/10 text-success",
+  rejected: "border-border bg-background text-muted",
 };
 
 export default function PomyslyPage() {
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [filter, setFilter] = useState("");
   const [pending, setPending] = useState<number | null>(null);
+  const { locale, t } = useI18n();
+  const ai = t.admin.ideas;
 
   function load() {
     const params = filter ? `?status=${filter}` : "";
@@ -83,16 +87,16 @@ export default function PomyslyPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-primary">Pomysły z Kreatora</h1>
-        <p className="text-sm text-muted">{counts.pending} nowych</p>
+        <h1 className="text-2xl font-bold text-primary">{ai.title}</h1>
+        <p className="text-sm text-muted">{ai.newCount(counts.pending)}</p>
       </div>
 
       <div className="flex gap-2 flex-wrap">
         {[
-          { value: "", label: "Wszystkie" },
-          { value: "pending", label: "Nowe" },
-          { value: "reviewed", label: "Przejrzane" },
-          { value: "rejected", label: "Odrzucone" },
+          { value: "", label: ai.filters.all },
+          { value: "pending", label: ai.filters.pending },
+          { value: "reviewed", label: ai.filters.reviewed },
+          { value: "rejected", label: ai.filters.rejected },
         ].map(({ value, label }) => (
           <button
             key={value}
@@ -108,13 +112,13 @@ export default function PomyslyPage() {
       </div>
 
       {ideas.length === 0 ? (
-        <p className="py-12 text-center text-muted">Brak pomysłów w tej kategorii.</p>
+        <p className="py-12 text-center text-muted">{ai.empty}</p>
       ) : (
         <ul className="space-y-4">
           {ideas.map((idea) => {
-            const badge = STATUS_LABEL[idea.status];
+            const badge = { label: ai.status[idea.status], className: STATUS_CLASS[idea.status] };
             const date = idea.created_at
-              ? new Date(idea.created_at).toLocaleDateString("pl-PL", { day: "numeric", month: "short", year: "numeric" })
+              ? new Date(idea.created_at).toLocaleDateString(LOCALE_TAGS[locale], { day: "numeric", month: "short", year: "numeric" })
               : "—";
             return (
               <li key={idea.id} className="rounded-ui border-(length:--bw) border-border bg-surface p-5 shadow-raised">
@@ -134,11 +138,11 @@ export default function PomyslyPage() {
                     <p className="mt-1 whitespace-pre-line text-sm">{idea.essence}</p>
                     <dl className="mt-2 grid gap-x-3 gap-y-0.5 text-sm sm:grid-cols-[8rem_1fr]">
                       {([
-                        ["Dla kogo", idea.for_whom],
-                        ["Gdzie", idea.place],
-                        ["Etap", idea.stage],
-                        ["Budżet", idea.budget],
-                        ["Partnerzy", idea.partners],
+                        [ai.fields.forWhom, idea.for_whom],
+                        [ai.fields.place, idea.place],
+                        [ai.fields.stage, idea.stage],
+                        [ai.fields.budget, idea.budget],
+                        [ai.fields.partners, idea.partners],
                       ] as const)
                         .filter(([, value]) => value)
                         .map(([label, value]) => (
@@ -149,37 +153,37 @@ export default function PomyslyPage() {
                         ))}
                     </dl>
                     {idea.attachments && idea.attachments.length > 0 && (
-                      <ul className="mt-2 flex flex-wrap gap-2" aria-label={`Załączniki: ${idea.title}`}>
+                      <ul className="mt-2 flex flex-wrap gap-2" aria-label={ai.attachments(idea.title)}>
                         {idea.attachments.map((attachment) => (
                           <li key={attachment.id}>
                             <button
                               type="button"
-                              onClick={() => downloadAttachment(idea.id, attachment).catch(() => alert("Nie udało się pobrać pliku."))}
+                              onClick={() => downloadAttachment(idea.id, attachment).catch(() => alert(ai.downloadFailed))}
                               className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-ui border-2 border-border bg-background px-3 text-sm hover:bg-secondary/60"
                             >
                               <Paperclip className="size-4" aria-hidden="true" />
                               {attachment.filename}
                               <span className="text-muted">({formatSize(attachment.size)})</span>
                               <Download className="size-4" aria-hidden="true" />
-                              <span className="sr-only">— pobierz</span>
+                              <span className="sr-only">{ai.download}</span>
                             </button>
                           </li>
                         ))}
                       </ul>
                     )}
                     {idea.tags.length > 0 && (
-                      <ul className="mt-2 flex flex-wrap gap-1.5" aria-label="Tagi">
+                      <ul className="mt-2 flex flex-wrap gap-1.5" aria-label={ai.tags}>
                         {idea.tags.map((tag) => (
                           <li key={tag} className="inline-flex items-center gap-1 rounded-full border border-primary bg-background px-2 py-0.5 text-xs text-primary">
                             <Tag className="size-2.5" aria-hidden="true" />
-                            {tag}
+                            {t.tags[tag] ?? tag}
                           </li>
                         ))}
                       </ul>
                     )}
                     {idea.author_name && (
                       <p className="mt-2 text-xs text-muted">
-                        Zgłosił: {idea.author_name}{idea.author_email ? ` (${idea.author_email})` : ""}
+                        {ai.submittedBy(idea.author_name)}{idea.author_email ? ` (${idea.author_email})` : ""}
                       </p>
                     )}
                   </div>
@@ -188,8 +192,8 @@ export default function PomyslyPage() {
                       <button
                         onClick={() => setStatus(idea.id, "reviewed")}
                         disabled={pending === idea.id}
-                        aria-label={`Oznacz jako przejrzany: ${idea.title}`}
-                        title="Przejrzany"
+                        aria-label={ai.markReviewed(idea.title)}
+                        title={ai.reviewed}
                         className="inline-flex size-9 items-center justify-center rounded-ui border-(length:--bw) border-border bg-surface text-success hover:bg-success/10 disabled:opacity-40"
                       >
                         <CheckCircle className="size-4" aria-hidden="true" />
@@ -197,8 +201,8 @@ export default function PomyslyPage() {
                       <button
                         onClick={() => setStatus(idea.id, "rejected")}
                         disabled={pending === idea.id}
-                        aria-label={`Odrzuć: ${idea.title}`}
-                        title="Odrzuć"
+                        aria-label={ai.rejectLabel(idea.title)}
+                        title={ai.reject}
                         className="inline-flex size-9 items-center justify-center rounded-ui border-(length:--bw) border-border bg-surface text-destructive hover:bg-destructive/10 disabled:opacity-40"
                       >
                         <X className="size-4" aria-hidden="true" />
