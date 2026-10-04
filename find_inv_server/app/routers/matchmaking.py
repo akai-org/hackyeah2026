@@ -176,9 +176,12 @@ def _admin_statuses() -> dict[int, str]:
 async def _catalog() -> list[dict]:
     """Widoczne innowacje: baza (A1) → JSON ROPS (A3) → mocki. Archiwalne i oczekujące są ukryte."""
     innovations = await _fetch_innovations()
+    # Statusy z bazy są źródłem prawdy (panel admina zapisuje je w SQLite). Kopia w pamięci (admin_store)
+    # liczy się tylko przy zapasowym katalogu z JSON-a — inaczej po restarcie odarchiwizowałaby innowacje.
+    statuses: dict[int, str] = {}
     if not innovations:
         innovations = [knowledge_store.public(i, full=True) for i in knowledge_store.load_innovations()]
-    statuses = _admin_statuses()
+        statuses = _admin_statuses()
     visible = []
     for innov in innovations:
         status = statuses.get(innov["id"], innov.get("status"))

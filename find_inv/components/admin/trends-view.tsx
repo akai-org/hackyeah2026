@@ -108,7 +108,7 @@ export function AdminTrendsView() {
             </div>
             <div aria-hidden="true" className="mt-4 h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={days} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                <AreaChart accessibilityLayer={false} data={days} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
                   <CartesianGrid stroke={GRID} vertical={false} />
                   <XAxis dataKey="date" tick={{ fill: MUTED, fontSize: 14 }} tickLine={false} axisLine={{ stroke: GRID }} interval="preserveStartEnd" minTickGap={24} />
                   <YAxis allowDecimals={false} tick={{ fill: MUTED, fontSize: 14 }} tickLine={false} axisLine={false} />
@@ -140,7 +140,7 @@ export function AdminTrendsView() {
             <p className="mt-1 text-muted">Tagi nadane przez autotagger, top 10</p>
             <div aria-hidden="true" className="mt-4" style={{ height: Math.max(tags.length * 36, 120) }}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={tags} layout="vertical" margin={{ top: 0, right: 40, left: 0, bottom: 0 }} barCategoryGap={6}>
+                <BarChart accessibilityLayer={false} data={tags} layout="vertical" margin={{ top: 0, right: 40, left: 0, bottom: 0 }} barCategoryGap={6}>
                   <XAxis type="number" hide />
                   <YAxis
                     type="category"

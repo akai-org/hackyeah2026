@@ -48,11 +48,11 @@ export function TesterPanel() {
           Ta część jest dla testerów
         </h2>
         <p className="mt-3">
-          Rolę testera nadaje administrator ROPS.{" "}
-          <Link href="/testerzy" className="font-bold text-primary underline underline-offset-4 hover:text-primary-hover">
-            Wyślij zgłoszenie
-          </Link>
-          , a po zatwierdzeniu zobaczysz tu innowacje przypisane do Ciebie.
+          Rolę testera nadaje administrator ROPS. Wybierz innowację w{" "}
+          <Link href="/biblioteka" className="font-bold text-primary underline underline-offset-4 hover:text-primary-hover">
+            Bibliotece
+          </Link>{" "}
+          i na jej karcie kliknij „Zgłoś się jako tester”. Po zatwierdzeniu zobaczysz tu innowacje przypisane do Ciebie.
         </p>
       </div>
     );

@@ -32,7 +32,6 @@ export function SiteFooter() {
                 { href: "/biblioteka", label: "Biblioteka innowacji" },
                 { href: "/forum", label: "Forum" },
                 { href: "/kreator", label: "Kreator pomysłów" },
-                { href: "/testerzy", label: "Zostań testerem" },
               ].map(({ href, label }) => (
                 <li key={href}>
                   <Link href={href} className={linkClass}>{label}</Link>

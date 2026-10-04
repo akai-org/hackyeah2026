@@ -56,6 +56,37 @@ Frontend: http://localhost:3000 · API: http://localhost:8000 · Swagger: http:/
 
 ---
 
+## Deploy (Docker Compose) — link do demo
+
+Cała aplikacja (FastAPI + Next.js) startuje jednym poleceniem na dowolnym serwerze z Dockerem.
+Przy pierwszym starcie backend sam wgrywa dane demo i katalog innowacji ROPS do wolumenu `hubmi-data`
+(SQLite, ChromaDB, załączniki) — kolejne restarty niczego nie nadpisują.
+
+```bash
+# lokalnie: http://localhost:3000 (frontend), http://localhost:8000/docs (API)
+docker compose up -d --build
+
+# na serwerze z domeną — adresy publiczne trafiają do builda frontendu i do CORS backendu
+PUBLIC_APP_URL=https://hubmi.example.pl \
+PUBLIC_API_URL=https://api.hubmi.example.pl \
+docker compose up -d --build
+```
+
+| Zmienna | Domyślnie | Po co |
+|---|---|---|
+| `PUBLIC_APP_URL` | `http://localhost:3000` | adres frontendu — dozwolony origin CORS |
+| `PUBLIC_API_URL` | `http://localhost:8000` | adres API widziany z przeglądarki (wbudowywany w build Next.js — po zmianie `--build`) |
+| `APP_PORT` / `API_PORT` | `3000` / `8000` | porty na hoście |
+
+Klucze trzymaj w `find_inv_server/.env` (nie commituj): `OPENROUTER_API_KEY` (bez niego działają reguły
+lokalne, bez czatu z modelem i wyszukiwania semantycznego) i `ADMIN_TOKEN` (panel zgłoszonych potrzeb —
+**zmień z `change-me`**). TLS: postaw przed kontenerami Caddy albo nginx (Let's Encrypt).
+
+Co musi zrobić człowiek, żeby był publiczny link: wykupić VPS (2 vCPU / 4 GB wystarczy) i domenę, ustawić
+rekordy DNS na oba adresy, wgrać `.env` z kluczami i uruchomić polecenie wyżej. Koszty: `docs/koszty-utrzymania.md`.
+
+---
+
 ## Setup narzędzi AI
 
 Repo z AI skillami dla całego zespołu. Sklonuj i skopiuj pliki — gotowe.

@@ -1,6 +1,6 @@
 # HubMI.pl — Status projektu
 
-> Aktualizacja: 2026-10-03. Deadline: 4 październik 11:00.
+> Aktualizacja: 2026-10-04 (panel admina i deploy — A4, runda 2). Deadline: 4 październik 11:00.
 
 ---
 
@@ -37,9 +37,11 @@
 - `/forum` — wątki z badge'ami ról
 - `/admin` — redirect do /admin/statystyki
 - `/admin/statystyki` — liczniki + recent activity panel (wołają /api/admin/stats + /api/admin/recent)
-- `/admin/innowacje` — tabela + Zatwierdź/Archiwizuj/Nieaktywna + CSV export
-- `/admin/uzytkownicy` — lista + zmiana roli + zatwierdzanie testerów
-- `/admin/trendy` — wykresy recharts (top tagi, zgłoszenia per dzień)
+- `/admin/innowacje` — CMS: dodawanie, edycja wszystkich pól karty, usuwanie (z potwierdzeniem) + Zatwierdź/Archiwizuj/Nieaktualna; zapis w SQLite, wektor w ChromaDB przeliczany przy zapisie i usuwany przy kasowaniu
+- `/admin/uzytkownicy` — lista + zmiana roli + zatwierdzanie testerów (testers.approved + users.role) + usuwanie kont
+- `/admin/forum` — moderacja: wpisy forum i komentarze pod kartami, usuwanie z odpowiedziami
+- `/admin/potrzeby` — zgłoszone potrzeby z Zasobnika: wykres per obszar, trend 30 dni, tabela z filtrem regionu
+- `/admin/trendy` — wykresy recharts (top tagi, zgłoszenia per dzień) z `search_logs`
 - `/admin/pomysly` — lista pomysłów z /api/admin/ideas
 - `/deklaracja-dostepnosci` — strona WCAG
 - `not-found.tsx` — custom 404
@@ -79,7 +81,8 @@
 
 | Co | Stan |
 |---|---|
-| Admin auth | Używa X-Dev-Admin header zamiast session — wystarczy na hackathon |
+| Admin auth | Rola admin z sesji (`/api/auth/session`) albo nagłówek `X-Dev-Admin` — bez hasła, wystarczy na hackathon; przed wdrożeniem: prawdziwe logowanie |
+| Re-embedding w CMS | Bez `OPENROUTER_API_KEY` zapis innowacji usuwa nieaktualny wektor zamiast liczyć nowy (karta jest w Bibliotece i w wyszukiwaniu tekstowym) |
 | `/api/forum` | Woła SQLite, fallback na MOCK_FORUM_POSTS — działa |
 | `/api/voice-fix` | Woła LLM, fallback na echo — działa |
 | `/kreator` | Fake AI analiza (setTimeout) — celowo mock per AGENTS.md |
@@ -124,11 +127,19 @@ LLM:        OpenRouter API        → .env OPENROUTER_API_KEY
 ## Uruchomienie
 
 ```bash
+docker compose up -d --build   # backend :8000 + frontend :3000, dane w wolumenie hubmi-data (opis: README → Deploy)
+# lub:
 ./setup.sh        # instaluje zależności, seeduje SQLite, startuje oba serwery
 # lub ręcznie:
 cd find_inv_server && uvicorn app.main:app --reload --port 8000
 cd find_inv && npm run dev
 ```
+
+## Deploy i koszty
+
+- `docker-compose.yml` + Dockerfile w `find_inv/` i `find_inv_server/` — sprawdzone lokalnie (seed przy pierwszym starcie, CORS, adres API w buildzie).
+- **Publicznego linku jeszcze nie ma** — potrzebny człowiek: VPS + domena + `.env` z `OPENROUTER_API_KEY` i `ADMIN_TOKEN` (kroki w `README.md`).
+- Koszty utrzymania (LLM, hosting, ludzie): `docs/koszty-utrzymania.md`.
 
 ## Kryteria oceny jury
 

@@ -6,7 +6,7 @@ import { ApiError, apiFetch, readSessionCookie, writeSessionCookie } from "@/lib
 import type { Role } from "@/data/mock";
 
 // Logowanie bez hasła (CONTEXT.md): użytkownik wybiera rolę, backend wydaje token sesji,
-// token żyje w cookie "session". Gdy backend nie odpowiada (np. auth jeszcze nie wdrożony),
+// token żyje w cookie "hubmi_session" i idzie do API w nagłówku X-Session-Token. Gdy backend nie odpowiada (np. auth jeszcze nie wdrożony),
 // sesja działa lokalnie w przeglądarce, żeby demo nie stanęło.
 
 export type User = {
