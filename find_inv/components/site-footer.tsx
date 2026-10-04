@@ -33,7 +33,6 @@ export async function SiteFooter() {
             <ul className="space-y-1">
               {[
                 { href: "/biblioteka", label: t.footer.links.library },
-                { href: "/forum", label: t.footer.links.forum },
                 { href: "/kreator", label: t.footer.links.creator },
                 { href: "/wyzwania", label: t.footer.links.challenges },
                 { href: "/edukacja", label: t.footer.links.education },
