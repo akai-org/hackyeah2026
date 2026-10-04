@@ -64,7 +64,7 @@ export function SiteHeader() {
         Przejdź do treści
       </a>
 
-      <div className="relative mx-auto flex max-w-content items-center gap-4 px-4 py-3 sm:px-6">
+      <div className="relative mx-auto flex items-center gap-4 px-4 py-3 sm:px-6">
         <Link href="/" aria-label="HubMI, strona główna" className="inline-flex min-h-12 shrink-0 items-center rounded-ui py-1">
           <CutoutText text="HubMI" as="span" size="logo" labelled={false} />
         </Link>
