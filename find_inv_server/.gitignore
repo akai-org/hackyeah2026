@@ -14,6 +14,7 @@ __pycache__/
 *.db
 chroma_db/
 rops_raw/
+data_refresh.json
 
 # załączniki do fiszek pomysłów
 uploads/

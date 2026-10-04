@@ -17,6 +17,12 @@ class Settings(BaseSettings):
     # Załączniki do fiszek pomysłów (POST /api/ideas/{id}/attachments).
     uploads_path: str = "./uploads"
 
+    # Comiesięczne odświeżanie danych scrapowanych (ROPS + GUS BDL) — app/data_refresh.py.
+    data_refresh_enabled: bool = True
+    data_refresh_interval_days: int = 30
+    # Stan odświeżania (daty, liczniki, błędy); w Dockerze na wolumenie /data, żeby przeżył restart.
+    data_refresh_state_path: str = "./data_refresh.json"
+
     # ---------- Zasobnik wiedzy (app/zasobnik: obszary, zasoby, potrzeby) ----------
     # Osobna, synchroniczna baza SQLModel — własna zmienna, żeby nie zderzyć się z DATABASE_URL.
     zasobnik_database_url: str = "sqlite:///./zasobnik.db"

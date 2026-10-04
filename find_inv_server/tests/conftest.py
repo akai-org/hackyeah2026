@@ -9,6 +9,8 @@ os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{_tmp}/findinv.db"
 os.environ["CHROMA_PATH"] = f"{_tmp}/chroma"
 os.environ["UPLOADS_PATH"] = f"{_tmp}/uploads"
 os.environ["OPENROUTER_API_KEY"] = ""
+os.environ["DATA_REFRESH_ENABLED"] = "false"  # testy nie scrapują ROPS/GUS
+os.environ["DATA_REFRESH_STATE_PATH"] = f"{_tmp}/data_refresh.json"
 
 from app.database import init_db  # noqa: E402
 from app.zasobnik.db import init_db as init_zasobnik_db  # noqa: E402

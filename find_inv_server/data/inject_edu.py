@@ -414,8 +414,8 @@ KADR_INNOVATIONS = [
 
 # ── Merge z istniejącymi danymi ─────────────────────────────────────────────
 
-def main() -> None:
-    existing = json.loads(OUT.read_text(encoding="utf-8"))
+def main(out: Path = OUT) -> None:
+    existing = json.loads(out.read_text(encoding="utf-8"))
     existing_titles = {r["title"].lower().strip() for r in existing}
 
     new_records = PDF_INNOVATIONS + KADR_INNOVATIONS
@@ -433,7 +433,7 @@ def main() -> None:
     for n, rec in enumerate(existing, 1):
         rec["id"] = n
 
-    OUT.write_text(json.dumps(existing, ensure_ascii=False, indent=2), encoding="utf-8")
+    out.write_text(json.dumps(existing, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\nDodano {added} nowych rekordów. Łącznie: {len(existing)}")
 
 

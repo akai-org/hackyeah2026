@@ -7,6 +7,7 @@ Auth: dopóki A1 nie wystawi app.auth.get_current_user, wpuszczamy nagłówek X-
 Gdy get_current_user jest dostępny, wystarczy też sesja z rolą "admin" (cookie/X-Session-Token).
 """
 
+import asyncio
 import json
 import logging
 from datetime import datetime, timedelta
@@ -16,7 +17,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import func, or_, select
 
-from app import admin_store
+from app import admin_store, data_refresh
 from app.config import settings
 from app.database import get_db
 from app.models import ForumPost, Innovation, SearchLog, Tester, User
@@ -515,3 +516,34 @@ def demo_reset():
     """Przywraca dane startowe — przydatne przed kolejnym pokazem dla jury."""
     admin_store.reset()
     return _ok({"reset": True})
+
+
+# ---------- Odświeżanie danych scrapowanych (ROPS + GUS) ----------
+
+_refresh_task: asyncio.Task | None = None
+
+
+def _refresh_status() -> dict:
+    return {
+        "running": data_refresh.is_running(),
+        "interval_days": settings.data_refresh_interval_days,
+        "due": data_refresh.due_sources(),
+        "sources": data_refresh.load_state(),
+    }
+
+
+@router.get("/data-refresh")
+def data_refresh_status():
+    """Kiedy ostatnio pobrano dane ROPS i GUS, z jakim wynikiem i co czeka na odświeżenie."""
+    return _ok(_refresh_status())
+
+
+@router.post("/data-refresh", status_code=status.HTTP_202_ACCEPTED)
+async def data_refresh_now(force: bool = True):
+    """Uruchamia scrape w tle (domyślnie wszystkie źródła, ?force=false tylko te z minionym terminem)."""
+    global _refresh_task
+    if data_refresh.is_running():
+        raise HTTPException(status.HTTP_409_CONFLICT, "Odświeżanie danych już trwa")
+    _refresh_task = asyncio.create_task(data_refresh.run_refresh(force=force))
+    await asyncio.sleep(0)  # task bierze lock, zanim oddamy status
+    return _ok(_refresh_status())

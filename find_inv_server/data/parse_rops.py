@@ -124,9 +124,9 @@ def cost_level(text: str) -> str:
     return "medium"
 
 
-def main() -> None:
+def main(raw: Path = RAW, out: Path = OUT) -> None:
     items: dict[str, dict] = {}
-    for f in sorted(RAW.glob("item__*.html")):
+    for f in sorted(raw.glob("item__*.html")):
         _, cat, slug = f.stem.split("__", 2)
         h = f.read_text(encoding="utf-8")
         i = h.find('content__main')
@@ -194,8 +194,8 @@ def main() -> None:
     data = list(items.values())
     for n, rec in enumerate(data, 1):
         rec["id"] = n
-    OUT.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"Zapisano {len(data)} innowacji -> {OUT}")
+    out.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"Zapisano {len(data)} innowacji -> {out}")
 
 
 if __name__ == "__main__":
