@@ -3,6 +3,7 @@
 export const pl = {
   titles: {
     innovation: "Karta innowacji",
+    educationMaterial: "Materiał edukacyjny",
     creator: "Kreator pomysłów",
     testerPanel: "Panel testera",
     implementation: "Plan wdrożenia",
@@ -68,6 +69,7 @@ export type PagesMessages = typeof pl;
 export const en: PagesMessages = {
   titles: {
     innovation: "Innovation card",
+    educationMaterial: "Educational material",
     creator: "Idea creator",
     testerPanel: "Tester panel",
     implementation: "Implementation plan",
@@ -131,6 +133,7 @@ export const en: PagesMessages = {
 export const uk: PagesMessages = {
   titles: {
     innovation: "Картка інновації",
+    educationMaterial: "Освітній матеріал",
     creator: "Конструктор ідей",
     testerPanel: "Панель тестувальника",
     implementation: "План впровадження",

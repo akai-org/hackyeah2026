@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { BookOpen, ExternalLink, FileText, PlayCircle, X } from "lucide-react";
+import { ArrowRight, BookOpen, ExternalLink, FileText, PlayCircle, X } from "lucide-react";
 
+import { MdContent, ResourceLink, educationHref, type EducationResource } from "@/components/education-material";
 import { API_URL } from "@/lib/api";
 import { readLocaleCookie } from "@/lib/i18n/config";
 import { matchesSearchTags, normalizeText, parseSearchTags, queryStems, type SearchTag } from "@/lib/search-tags";
@@ -10,19 +12,6 @@ import { useI18n } from "@/lib/i18n/client";
 
 // Materiały edukacyjne z GET /api/resources?type=education (Zasobnik). Ten endpoint zwraca { items, total }
 // bez koperty { data }, dlatego zwykły fetch zamiast apiFetch.
-
-export type EducationResource = {
-  id: number;
-  title: string;
-  summary: string;
-  content: string;
-  tags: string[];
-  url: string | null;
-  video_url: string | null;
-  attachment_url: string | null;
-  source: string | null;
-  areas: Array<{ slug: string; name: string }>;
-};
 
 async function loadEducation(): Promise<EducationResource[]> {
   // X-Lang: backend tłumaczy materiały na język interfejsu (cookie z :3000 nie trafia do :8000).
@@ -32,53 +21,6 @@ async function loadEducation(): Promise<EducationResource[]> {
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   const body = (await response.json()) as { items?: EducationResource[] };
   return body.items ?? [];
-}
-
-function MdContent({ content }: { content: string }) {
-  const blocks = content.split(/\n(?=##\s)|\n{2,}/).filter(Boolean);
-  return (
-    <>
-      {blocks.map((block, i) => {
-        if (block.startsWith("## ")) {
-          return (
-            <h4 key={i} className="font-bold text-foreground">
-              {block.slice(3).trim()}
-            </h4>
-          );
-        }
-        const lines = block.split("\n");
-        const isList = lines.some((l) => l.trimStart().startsWith("- "));
-        if (isList) {
-          return (
-            <ul key={i} className="ml-4 list-disc space-y-0.5">
-              {lines
-                .filter((l) => l.trimStart().startsWith("- "))
-                .map((l, j) => (
-                  <li key={j}>{l.replace(/^\s*-\s/, "")}</li>
-                ))}
-            </ul>
-          );
-        }
-        return <p key={i}>{block.trim()}</p>;
-      })}
-    </>
-  );
-}
-
-function ResourceLink({ href, icon: Icon, children, title }: { href: string; icon: typeof ExternalLink; children: string; title: string }) {
-  const newTab = useI18n().t.region.newTab;
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="inline-flex min-h-12 items-center gap-2 font-bold text-primary underline underline-offset-4 hover:text-primary-hover"
-    >
-      <Icon aria-hidden="true" className="size-5 shrink-0" />
-      {children}
-      <span className="sr-only">: {title} ({newTab})</span>
-    </a>
-  );
 }
 
 export function EducationList({ initialQuery = "", initialTags = "" }: { initialQuery?: string; initialTags?: string }) {
@@ -100,15 +42,6 @@ export function EducationList({ initialQuery = "", initialTags = "" }: { initial
       active = false;
     };
   }, []);
-
-  // Wejście z „Artykułu dnia” (/edukacja#material-{id}): lista ładuje się po stronie klienta, więc przeglądarka
-  // nie znajdzie kotwicy sama — przewijamy po załadowaniu (płynnie, jeśli użytkownik nie ogranicza ruchu).
-  useEffect(() => {
-    if (!items) return;
-    const target = decodeURIComponent(window.location.hash.slice(1));
-    if (!target.startsWith("material-")) return;
-    requestAnimationFrame(() => document.getElementById(target)?.scrollIntoView({ block: "start" }));
-  }, [items]);
 
   const areas = useMemo(() => {
     const all = new Map<string, string>();
@@ -239,6 +172,14 @@ export function EducationList({ initialQuery = "", initialTags = "" }: { initial
               )}
 
               <div className="mt-auto flex flex-wrap gap-x-6 pt-4">
+                <Link
+                  href={educationHref(item.id)}
+                  className="inline-flex min-h-12 items-center gap-2 font-bold text-primary underline underline-offset-4 hover:text-primary-hover"
+                >
+                  {ed.details}
+                  <span className="sr-only">: {item.title}</span>
+                  <ArrowRight aria-hidden="true" className="size-5 shrink-0" />
+                </Link>
                 {item.url && (
                   <ResourceLink href={item.url} icon={ExternalLink} title={item.title}>
                     {ed.open}
