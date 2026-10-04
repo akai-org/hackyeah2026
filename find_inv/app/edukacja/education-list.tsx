@@ -101,6 +101,15 @@ export function EducationList({ initialQuery = "", initialTags = "" }: { initial
     };
   }, []);
 
+  // Wejście z „Artykułu dnia” (/edukacja#material-{id}): lista ładuje się po stronie klienta, więc przeglądarka
+  // nie znajdzie kotwicy sama — przewijamy po załadowaniu (płynnie, jeśli użytkownik nie ogranicza ruchu).
+  useEffect(() => {
+    if (!items) return;
+    const target = decodeURIComponent(window.location.hash.slice(1));
+    if (!target.startsWith("material-")) return;
+    requestAnimationFrame(() => document.getElementById(target)?.scrollIntoView({ block: "start" }));
+  }, [items]);
+
   const areas = useMemo(() => {
     const all = new Map<string, string>();
     for (const item of items ?? []) for (const entry of item.areas) all.set(entry.slug, entry.name);
