@@ -134,7 +134,7 @@ const plCore = {
   quickSearch: {
     where: "Gdzie szukać",
     categories: {
-      all: { label: "Wszystko", placeholder: "Opisz problem własnymi słowami" },
+      all: { label: "Wszystko", placeholder: "Szukaj wszędzie, np. seniorzy, wolontariat" },
       problems: { label: "Problemy", placeholder: "Szukaj problemu, np. opieka zdrowotna" },
       innovations: { label: "Innowacje", placeholder: "Szukaj innowacji, np. wolontariat" },
       articles: { label: "Artykuły", placeholder: "Szukaj artykułu, np. spółdzielnia" },
@@ -417,7 +417,7 @@ const enCore: CoreMessages = {
   quickSearch: {
     where: "Where to search",
     categories: {
-      all: { label: "Everything", placeholder: "Describe the problem in your own words" },
+      all: { label: "Everything", placeholder: "Search everything, e.g. seniors, volunteering" },
       problems: { label: "Problems", placeholder: "Search problems, e.g. healthcare" },
       innovations: { label: "Innovations", placeholder: "Search innovations, e.g. volunteering" },
       articles: { label: "Articles", placeholder: "Search articles, e.g. cooperative" },
@@ -698,7 +698,7 @@ const ukCore: CoreMessages = {
   quickSearch: {
     where: "Де шукати",
     categories: {
-      all: { label: "Усе", placeholder: "Опишіть проблему своїми словами" },
+      all: { label: "Усе", placeholder: "Шукати всюди, напр. літні люди, волонтерство" },
       problems: { label: "Проблеми", placeholder: "Пошук проблеми, напр. охорона здоров’я" },
       innovations: { label: "Інновації", placeholder: "Пошук інновації, напр. волонтерство" },
       articles: { label: "Статті", placeholder: "Пошук статті, напр. кооператив" },
