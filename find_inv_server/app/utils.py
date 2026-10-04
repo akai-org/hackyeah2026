@@ -76,7 +76,8 @@ async def run_autotagger(text: str) -> dict:
             ],
             response_format={"type": "json_object"},
         )
-        result = json.loads(raw)
+        # Model potrafi owinąć JSON w ```json … ``` mimo json_object — wycinamy sam obiekt.
+        result = json.loads(raw[raw.find("{") : raw.rfind("}") + 1])
         result["tags"] = [t for t in result.get("tags", []) if t in TAXONOMY_TAGS]
         result.setdefault("is_relevant", True)
         return result

@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>HubMI — film</title>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=block" rel="stylesheet">
+<style>
+  /* Tokeny 1:1 z find_inv/app/globals.css */
+  :root {
+    --bg: #f7f8fa; --surface: #ffffff; --secondary: #ece6da; --fg: #000000; --muted: #5b626c;
+    --border: #5c6470; --primary: #345995; --primary-hover: #284778; --accent: #f4845f; --success: #2e6b45;
+    --tint: #d4dbe8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: #000; }
+  body { font-family: "Atkinson Hyperlegible", system-ui, sans-serif; color: var(--fg); -webkit-font-smoothing: antialiased; }
+  #stage {
+    position: relative; width: 1920px; height: 1080px; overflow: hidden;
+    /* tło jak hero aplikacji (.bg-dots) */
+    background-color: var(--tint);
+    background-image: radial-gradient(circle, rgba(255,255,255,.72) 1.5px, transparent 2px);
+    background-size: 24px 24px;
+  }
+
+  /* ---------- okno z nagraniem ---------- */
+  #win {
+    position: absolute; left: 612px; top: 126px; width: 1244px; height: 815px;
+    background: var(--surface); border: 2px solid var(--border); border-radius: 14px; overflow: hidden;
+    box-shadow: 0 30px 60px rgba(20, 30, 60, .22), 0 12px 24px rgba(0, 0, 0, .12);
+  }
+  .bar { height: 38px; background: #eceef2; border-bottom: 1px solid #d5d9e0; display: flex; align-items: center; padding: 0 16px; gap: 8px; position: relative; }
+  .bar i { width: 12px; height: 12px; border-radius: 50%; background: #c6cad2; }
+  .bar span { position: absolute; left: 0; right: 0; text-align: center; font-size: 15px; color: var(--muted); }
+  #view { position: relative; width: 1240px; height: 775px; overflow: hidden; background: var(--bg); }
+  #cam { position: absolute; inset: 0; transform-origin: 50% 50%; }
+  #cam img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+  /* ---------- podpisy ---------- */
+  .cap { position: absolute; left: 96px; width: 480px; top: 50%; translate: 0 -50%; opacity: 0; }
+  .chapter {
+    display: inline-flex; align-items: center; gap: 12px; background: var(--primary); color: #fff;
+    border-radius: 999px; padding: 9px 22px 9px 10px; font-size: 24px; font-weight: 700; margin-bottom: 30px;
+  }
+  .chapter b { background: #fff; color: var(--primary); border-radius: 999px; padding: 1px 12px; font-size: 21px; }
+  .title { font-size: 62px; line-height: 1.08; font-weight: 700; letter-spacing: -0.01em; }
+  .sub { font-size: 30px; line-height: 1.4; margin-top: 24px; }
+  .note { font-size: 21px; color: var(--muted); margin-top: 18px; line-height: 1.4; }
+  .steps { list-style: none; display: flex; flex-direction: column; gap: 30px; }
+  .steps li { display: flex; gap: 20px; opacity: .32; }
+  .steps .n { flex: none; width: 56px; height: 56px; border-radius: 50%; background: var(--surface); border: 2px solid var(--border); display: grid; place-items: center; font-size: 28px; font-weight: 700; }
+  .steps li.on .n { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .steps h3 { font-size: 40px; line-height: 1.1; }
+  .steps p { font-size: 25px; line-height: 1.35; margin-top: 6px; }
+  .big { font-size: 190px; line-height: .95; font-weight: 700; color: var(--primary); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .hl { background: linear-gradient(transparent 60%, var(--accent) 60%); }
+  .ticks { list-style: none; margin-top: 30px; display: flex; flex-direction: column; gap: 14px; }
+  .ticks li { display: flex; gap: 14px; align-items: center; font-size: 32px; font-weight: 700; opacity: 0; }
+  .ticks li span { width: 42px; height: 42px; border-radius: 50%; background: var(--success); color: #fff; display: grid; place-items: center; font-size: 24px; }
+
+  /* ---------- plansza tytułowa i końcowa ---------- */
+  .card { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; opacity: 0; }
+  .logo { font-size: 220px; font-weight: 700; line-height: 1; letter-spacing: -0.02em; position: relative; }
+  .card .l1 { font-size: 46px; font-weight: 700; margin-top: 34px; }
+  .card .l2 { font-size: 40px; margin-top: 14px; }
+  .card .l3 { font-size: 24px; color: var(--muted); margin-top: 40px; }
+</style>
+</head>
+<body>
+<div id="stage">
+
+  <!-- plansza tytułowa -->
+  <div class="card" id="intro">
+    <div class="logo">HubMI</div>
+    <p class="l1">Małopolski Hub Innowacji Społecznych</p>
+    <p class="l2">Znajdź rozwiązanie, które <span class="hl">już działa</span>.</p>
+  </div>
+
+  <!-- okno z nagraniem prawdziwej aplikacji -->
+  <div id="win">
+    <div class="bar"><i></i><i></i><i></i><span>HubMI – znajdź rozwiązanie, które już działa</span></div>
+    <div id="view"><div id="cam"><img id="imgB" alt=""><img id="imgA" alt=""></div></div>
+  </div>
+
+  <!-- podpisy -->
+  <div class="cap" id="cProb">
+    <div class="big" id="cnt">0</div>
+    <p class="sub" style="font-weight:700;font-size:38px;margin-top:10px">sprawdzonych innowacji społecznych w&nbsp;Bibliotece ROPS</p>
+    <p class="sub" id="cProb2">Mieszkańcy, gminy i&nbsp;organizacje często <span class="hl">nie wiedzą, że istnieją</span>.</p>
+  </div>
+
+  <div class="cap" id="cMatch">
+    <div class="chapter"><b>01</b>Matchmaking</div>
+    <ol class="steps">
+      <li id="st1"><span class="n">1</span><div><h3>Opisz problem</h3><p>Własnymi słowami, tak jak mówisz.</p></div></li>
+      <li id="st2"><span class="n">2</span><div><h3>AI rozpoznaje tematy</h3><p>Seniorzy, samotność, gmina wiejska…</p></div></li>
+      <li id="st3"><span class="n">3</span><div><h3>Pasujące innowacje</h3><p>Z Biblioteki ROPS, z&nbsp;oceną dopasowania.</p></div></li>
+    </ol>
+  </div>
+
+  <div class="cap" id="cChat">
+    <div class="chapter"><b>02</b>Czat z AI</div>
+    <h2 class="title">Dopytaj AI<br>o wyniki</h2>
+    <p class="sub">Asystent zna znalezione innowacje i&nbsp;odpowiada na żywo.</p>
+  </div>
+
+  <div class="cap" id="cMM1">
+    <div class="chapter"><b>03</b>Jak to wdrożyć?</div>
+    <h2 class="title">Plan dla Twojej instytucji</h2>
+    <p class="sub">Asystent zadaje kilka pytań: o&nbsp;gminę, ludzi i&nbsp;budżet.</p>
+  </div>
+  <div class="cap" id="cMM2">
+    <div class="chapter"><b>03</b>Jak to wdrożyć?</div>
+    <h2 class="title">Gotowy szkic planu</h2>
+    <p class="sub">Cel, kto realizuje, koszt, miejsce i&nbsp;etapy wdrożenia.</p>
+  </div>
+
+  <div class="cap" id="cMap">
+    <div class="chapter"><b>04</b>Kondycja Małopolski</div>
+    <h2 class="title">Gdzie brakuje rozwiązań?</h2>
+    <p class="sub">Dane GUS i&nbsp;Indeks Luki Innowacyjnej dla każdego powiatu.</p>
+  </div>
+
+  <div class="cap" id="cKre">
+    <div class="chapter"><b>05</b>Kreator pomysłów</div>
+    <h2 class="title">Masz własny pomysł?</h2>
+    <p class="sub">AI rozpisze go na fiszkę i&nbsp;szkic wniosku o&nbsp;dofinansowanie.</p>
+  </div>
+
+  <div class="cap" id="cAdm">
+    <div class="chapter"><b>06</b>Panel ROPS</div>
+    <h2 class="title">Wiedza dla ROPS</h2>
+    <p class="sub">Zgłoszone potrzeby i&nbsp;wyszukiwania mieszkańców w&nbsp;jednym miejscu.</p>
+  </div>
+
+  <div class="cap" id="cA11y">
+    <div class="chapter"><b>07</b>Dostępność</div>
+    <h2 class="title">Dla każdego</h2>
+    <ul class="ticks">
+      <li id="tk1"><span>✓</span>Wysoki kontrast</li>
+      <li id="tk2"><span>✓</span>Większa czcionka</li>
+      <li id="tk3"><span>✓</span>3 języki: PL · EN · UK</li>
+    </ul>
+    <p class="note" id="tkNote">Audyt axe-core (WCAG 2.1 A i AA): 0 błędów na 11 podstronach.</p>
+  </div>
+
+  <!-- plansza końcowa -->
+  <div class="card" id="outro">
+    <div class="logo">HubMI</div>
+    <p class="l2" style="margin-top:34px">Znajdź rozwiązanie, które <span class="hl">już działa</span>.</p>
+    <p class="l3">Prototyp stworzony podczas HackYeah 2026 · dane: Biblioteka innowacji ROPS Kraków, GUS</p>
+  </div>
+</div>
+
+<script src="node_modules/gsap/dist/gsap.min.js"></script>
+<script src="edl.js"></script>
+<script src="compose.js"></script>
+</body>
+</html>
