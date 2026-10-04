@@ -213,7 +213,13 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
               </thead>
               <tbody>
                 {items.map((item) => (
-                  <tr key={item.id} className={cn("border-t-2 border-border/40 align-top", item.status === "pending" && "bg-warning/10")}>
+                  <tr
+                    key={item.id}
+                    className={cn(
+                      "border-t-2 border-border/40 align-top",
+                      item.status === "pending" && "shadow-[inset_4px_0_0_var(--color-warning)]",
+                    )}
+                  >
                     <th scope="row" className="max-w-md px-4 py-4 text-left font-normal">
                       <span className="block font-bold text-foreground">{item.title}</span>
                       <span className="mt-1 block text-muted">{item.short_desc}</span>
@@ -223,7 +229,7 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
                           {item.where_implemented || "brak danych"}
                         </span>
                         {item.tags.slice(0, 3).map((tag) => (
-                          <span key={tag} className="rounded-full border border-border bg-secondary/60 px-2">
+                          <span key={tag} className="rounded-full border border-primary bg-background px-2 text-primary">
                             {tagLabel(tag)}
                           </span>
                         ))}
