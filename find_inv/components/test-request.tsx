@@ -129,26 +129,21 @@ export function TestRequestForm({
   );
 }
 
-/** Ramka na karcie innowacji: dla testera zgłoszenie albo status, dla reszty nic. */
-export function TestRequestBox({ innovation }: { innovation: Innovation }) {
+/** Ramka na karcie innowacji: dla testera status jego zgłoszenia do testu (zgłasza się przez popup z imieniem i e-mailem). */
+export function TestRequestBox({ innovation, refreshKey = 0 }: { innovation: Innovation; refreshKey?: number }) {
   const { user, offline: sessionOffline } = useAuth();
   const tt = useT().library.test;
   const isTester = user?.role === "tester";
   const [report, setReport] = useState<TestReport | null | undefined>(undefined);
-  const [offline, setOffline] = useState(sessionOffline);
-  const statusRef = useRef<HTMLParagraphElement>(null);
 
   useEffect(() => {
     if (!isTester || !user) return;
     getMyTests(user.id, sessionOffline)
-      .then((result) => {
-        setReport(result.data.find((row) => row.innovation_id === innovation.id) ?? null);
-        setOffline(result.offline);
-      })
+      .then((result) => setReport(result.data.find((row) => row.innovation_id === innovation.id) ?? null))
       .catch(() => setReport(null));
-  }, [isTester, user, sessionOffline, innovation.id]);
+  }, [isTester, user, sessionOffline, innovation.id, refreshKey]);
 
-  if (!isTester || report === undefined) return null;
+  if (!isTester || !report) return null;
 
   return (
     <section
@@ -159,35 +154,14 @@ export function TestRequestBox({ innovation }: { innovation: Innovation }) {
         <FlaskConical aria-hidden="true" className="size-6 text-primary" />
         {tt.testing}
       </h2>
-      {report ? (
-        <>
-          <p ref={statusRef} tabIndex={-1} role="status" className="mt-3">
-            <span className="font-bold">{tt.status[report.status]}.</span>{" "}
-            {report.status === "requested" && tt.requestedInfo}
-            {report.status === "assigned" && tt.assignedInfo}
-          </p>
-          <Link href="/testerzy/panel" className="mt-3 inline-block font-bold text-primary underline underline-offset-4 hover:text-primary-hover">
-            {tt.goPanel}
-          </Link>
-        </>
-      ) : (
-        <>
-          <p className="mt-3 max-w-[60ch]">
-            {tt.lead}
-          </p>
-          <div className="mt-4">
-            <TestRequestForm
-              innovation={innovation}
-              offline={offline}
-              onRequested={(created, wasOffline) => {
-                setReport(created);
-                setOffline(wasOffline);
-                requestAnimationFrame(() => statusRef.current?.focus());
-              }}
-            />
-          </div>
-        </>
-      )}
+      <p role="status" className="mt-3">
+        <span className="font-bold">{tt.status[report.status]}.</span>{" "}
+        {report.status === "requested" && tt.requestedInfo}
+        {report.status === "assigned" && tt.assignedInfo}
+      </p>
+      <Link href="/testerzy/panel" className="mt-3 inline-block font-bold text-primary underline underline-offset-4 hover:text-primary-hover">
+        {tt.goPanel}
+      </Link>
     </section>
   );
 }

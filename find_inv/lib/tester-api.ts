@@ -119,7 +119,7 @@ export function getTestRequests(status: TestStatus | "" = "") {
   );
 }
 
-export function decideTestRequest(id: number, decision: "assign" | "reject") {
+export function decideTestRequest(id: number, decision: "assign" | "reject" | "unassign") {
   return call<TestReport>(
     `/api/admin/test-requests/${id}/${decision}`,
     () => updateLocal(id, { status: decision === "assign" ? "assigned" : "rejected", decided_at: now() }),

@@ -146,6 +146,7 @@ async def list_test_requests(status: str = "", _: User = AdminDep):
             profile = profiles.get(report.user_id)
             rows.append({
                 **_row(report),
+                "tester_name": profile.name if profile else report.user.name if report.user else None,
                 "tester_email": profile.email if profile else None,
                 "tester_organization": profile.organization if profile else None,
             })
@@ -173,6 +174,21 @@ async def assign_tester(report_id: int, _: User = AdminDep):
 @router.post("/api/admin/test-requests/{report_id}/reject")
 async def reject_tester(report_id: int, _: User = AdminDep):
     return await _decide(report_id, "rejected")
+
+
+@router.post("/api/admin/test-requests/{report_id}/unassign")
+async def unassign_tester(report_id: int, _: User = AdminDep):
+    """Admin zdejmuje przypisanego testera z innowacji — test wraca do stanu "rejected"."""
+    async with get_db() as db:
+        report = await _get(db, report_id)
+        if report.status != "assigned":
+            raise HTTPException(status_code=409, detail="Usunąć można tylko przypisanego testera")
+        report.status = "rejected"
+        report.decided_at = datetime.now()
+        if report.innovation and report.innovation.testers_count:
+            report.innovation.testers_count -= 1
+        await db.commit()
+        return {"data": _row(report)}
 
 
 @router.get("/api/innovations/{innovation_id}/tester-status")

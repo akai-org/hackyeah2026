@@ -25,14 +25,19 @@ class SetRoleBody(BaseModel):
 @router.post("/session")
 async def create_session(body: SessionBody, response: Response):
     role = body.role if body.role in VALID_ROLES else "user"
-    token = str(uuid.uuid4())
     async with get_db() as db:
-        user = User(name=body.name, role=role, session_token=token)
-        db.add(user)
-        await db.commit()
-        await db.refresh(user)
-    response.set_cookie("session", token, httponly=True, samesite="lax")
-    return {"data": {"session_token": token, "role": user.role, "id": user.id, "name": user.name}}
+        # Ta sama nazwa + rola = to samo konto. Bez tego każde logowanie tworzyło nowego usera
+        # i np. tester tracił testy przypisane mu przez admina.
+        user = (await db.execute(
+            select(User).where(User.name == body.name, User.role == role).order_by(User.id).limit(1)
+        )).scalar_one_or_none()
+        if user is None:
+            user = User(name=body.name, role=role, session_token=str(uuid.uuid4()))
+            db.add(user)
+            await db.commit()
+            await db.refresh(user)
+    response.set_cookie("session", user.session_token, httponly=True, samesite="lax")
+    return {"data": {"session_token": user.session_token, "role": user.role, "id": user.id, "name": user.name}}
 
 
 @router.post("/set-role")
