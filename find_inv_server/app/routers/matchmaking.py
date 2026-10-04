@@ -81,6 +81,8 @@ class MatchRequest(BaseModel):
     text: str
     tags: list[str] = Field(default_factory=list)
     limit: int = Field(default=TOP_N, ge=1, le=20)
+    # Podpowiedzi na żywo (kreator, debounce) nie liczą się do trendów wyszukiwań.
+    log: bool = True
 
 
 class VoiceFixRequest(BaseModel):
@@ -293,8 +295,9 @@ async def match(body: MatchRequest, background: BackgroundTasks):
         ranked = rank_locally(text, body.tags, catalog)
 
     shown = ranked[: body.limit]
-    _schedule_logs(background, text, body.tags, len(ranked))
-    background.add_task(_log_impressions, shown)
+    if body.log:
+        _schedule_logs(background, text, body.tags, len(ranked))
+        background.add_task(_log_impressions, shown)
     return _ok({"innovations": shown, "total_found": len(ranked)})
 
 

@@ -207,3 +207,18 @@ class Event(Base):
     anon_id: Mapped[str | None] = mapped_column(String(64), nullable=True)  # UUID przeglądarki, do liczenia unikalnych osób
     meta: Mapped[str] = mapped_column(Text, default="{}")  # JSON
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), index=True)
+
+
+class GrantApplication(Base):
+    """Wniosek złożony w naborze (routers/grants.py). Przyjmowany tylko, gdy nabór jest otwarty."""
+
+    __tablename__ = "grant_applications"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    grant_id: Mapped[str] = mapped_column(String(64), index=True)  # id naboru z routers/grants.py
+    user_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"), nullable=True)
+    applicant_name: Mapped[str] = mapped_column(String(256))
+    applicant_email: Mapped[str] = mapped_column(String(256))
+    organization: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    sections: Mapped[str] = mapped_column(Text)  # JSON {id sekcji: tekst}
+    submitted_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())

@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { CircleAlert, Loader2, Sparkles } from "lucide-react";
 
-import { DictationButton, DictationStatus, useDictation } from "@/components/dictation";
+import { DictationButton, DictationStatus, DictationSuggestion, useDictation } from "@/components/dictation";
 import { Button } from "@/components/ui/button";
 import { STAGES } from "@/lib/ideas";
 import { cn } from "@/lib/utils";
@@ -120,6 +120,7 @@ function TextAnswer({
       </p>
       <DictationButton dictation={dictation} className="mt-3" />
       <DictationStatus dictation={dictation} />
+      <DictationSuggestion dictation={dictation} />
     </>
   );
 }

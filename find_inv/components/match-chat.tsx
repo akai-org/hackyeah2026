@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { Bot, CircleAlert, Info, Send, Square, UserRound } from "lucide-react";
 
+import { AiDisclaimer } from "@/components/ai-disclaimer";
 import { Button } from "@/components/ui/button";
 import type { InnovationCard } from "@/data/innovations";
 import { streamChat, type ChatMessage } from "@/lib/matchmaking";
@@ -83,6 +84,7 @@ export function MatchChat({ innovations, tags }: MatchChatProps) {
         <Info aria-hidden="true" className="mt-1 size-5 shrink-0" />
         Odpowiada AI na podstawie kart z Biblioteki. Ważne szczegóły sprawdź w karcie innowacji.
       </p>
+      <AiDisclaimer className="mt-3" />
 
       {messages.length > 0 && (
         // tabIndex: przewijany obszar musi być osiągalny klawiaturą.

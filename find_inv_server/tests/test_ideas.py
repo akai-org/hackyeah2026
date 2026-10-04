@@ -84,3 +84,51 @@ def test_attachment_download_is_admin_only():
                         files={"file": ("a.txt", b"tajne", "text/plain")})
         url = f"/api/admin/ideas/{saved['id']}/attachments/{upload.json()['data']['id']}"
         assert c.get(url).status_code == 401
+
+
+def _text_pdf(text: str) -> bytes:
+    """Minimalny PDF z jedną stroną tekstu (Helvetica) — bez zewnętrznych bibliotek."""
+    stream = f"BT /F1 12 Tf 72 720 Td ({text}) Tj ET".encode("latin-1")
+    objects = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R "
+        b"/Resources << /Font << /F1 5 0 R >> >> >>",
+        b"<< /Length " + str(len(stream)).encode() + b" >>\nstream\n" + stream + b"\nendstream",
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    ]
+    out = bytearray(b"%PDF-1.4\n")
+    offsets = []
+    for number, body in enumerate(objects, start=1):
+        offsets.append(len(out))
+        out += f"{number} 0 obj\n".encode() + body + b"\nendobj\n"
+    xref = len(out)
+    out += f"xref\n0 {len(objects) + 1}\n0000000000 65535 f \n".encode()
+    out += b"".join(f"{offset:010d} 00000 n \n".encode() for offset in offsets)
+    out += f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n".encode()
+    return bytes(out)
+
+
+def test_extract_pdf_returns_text():
+    pdf = _text_pdf("Spotkania mlodziezy z seniorami w swietlicy wiejskiej")
+    with TestClient(app) as c:
+        body = c.post("/api/ideas/extract-pdf", files={"file": ("pomysl.pdf", pdf, "application/pdf")}).json()
+    assert body["error"] is None, body
+    assert "seniorami" in body["data"]["text"] and body["data"]["pages"] == 1
+
+
+def test_extract_pdf_errors():
+    import io
+
+    from pypdf import PdfWriter
+
+    blank = io.BytesIO()
+    writer = PdfWriter()
+    writer.add_blank_page(width=200, height=200)
+    writer.write(blank)
+    with TestClient(app) as c:
+        scan = c.post("/api/ideas/extract-pdf", files={"file": ("skan.pdf", blank.getvalue(), "application/pdf")})
+        not_pdf = c.post("/api/ideas/extract-pdf", files={"file": ("plik.pdf", b"hello", "application/pdf")})
+        wrong_ext = c.post("/api/ideas/extract-pdf", files={"file": ("plik.txt", b"%PDF", "text/plain")})
+    assert "skan" in scan.json()["error"]
+    assert not_pdf.json()["error"] and wrong_ext.json()["error"]

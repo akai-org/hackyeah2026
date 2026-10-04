@@ -6,6 +6,7 @@ import {
   CircleAlert,
   CircleCheck,
   CircleHelp,
+  FilePen,
   FileText,
   Loader2,
   Paperclip,
@@ -16,9 +17,12 @@ import {
   X,
 } from "lucide-react";
 
+import { AiDisclaimer } from "@/components/ai-disclaimer";
+import { IdeaMatches } from "@/components/idea-matches";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { TAG_LABELS } from "@/data/mock";
 import { useAuth } from "@/lib/auth";
+import { storeIdea } from "@/lib/grants";
 import {
   ALLOWED_EXTENSIONS,
   MAX_FILES,
@@ -177,8 +181,8 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
   const sending = uploads.some((upload) => upload.status === "sending");
 
   return (
-    <section aria-labelledby={`${ids}-fiszka`} className="appear mt-12 max-w-3xl">
-      <article className="relative border-(length:--bw) border-deep bg-surface p-6 shadow-paper sm:p-8">
+    <section aria-labelledby={`${ids}-fiszka`} className="appear mt-12">
+      <article className="relative max-w-3xl border-(length:--bw) border-deep bg-surface p-6 shadow-paper sm:p-8">
         {/* Kawałek taśmy przyklejający fiszkę do tablicy (DESIGN.md 8, karta innowacji). */}
         <span aria-hidden="true" className="simple-hidden absolute -top-3 right-10 h-6 w-24 rotate-[4deg] bg-butter/90" />
 
@@ -190,6 +194,7 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
           <Sparkles aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
           AI rozpisało Twój opis na pola. Sprawdź je i popraw przed zapisaniem.
         </p>
+        <AiDisclaimer className="mt-3" />
 
         <dl className="mt-6 grid gap-5 sm:grid-cols-[12rem_1fr]">
           <dt className="font-bold text-deep">
@@ -402,6 +407,10 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
             <Search aria-hidden="true" />
             Sprawdź, co już działa
           </Link>
+          <Link href="/wnioski" onClick={() => storeIdea(draft)} className={buttonVariants({ variant: "secondary" })}>
+            <FilePen aria-hidden="true" />
+            Napisz wniosek o grant
+          </Link>
           <Button type="button" variant="secondary" onClick={onEdit}>
             <Pencil aria-hidden="true" />
             Popraw opis
@@ -451,6 +460,12 @@ export function IdeaCardEditor({ initial, searchText, onEdit }: IdeaCardEditorPr
           </p>
         )}
       </article>
+
+      {/* Pasujące innowacje dokładają się POD fiszką i odświeżają przy jej edycji. */}
+      <IdeaMatches
+        text={[draft.title, draft.shortDesc, draft.essence, draft.problem, draft.forWhom].join(". ")}
+        tags={draft.tags}
+      />
     </section>
   );
 }

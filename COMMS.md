@@ -126,6 +126,43 @@ Podmienione przez A1: okno logowania (`login-dialog.tsx`), szybkie wyszukiwanie 
 
 <!-- Dopisuj wpisy tutaj na górze -->
 
+[01:04] A2 start: agent-2/kreator-ai (runda 2 — kreator, AI, generator wniosków)
+[01:30] [DONE] Generator wniosków: `GET /api/grants` (2 wzory: oferta realizacji zadania publicznego, mikrogrant),
+  `POST /api/grants/fill` { grant_id, idea: tekst | fiszka } → { sections: {id: tekst}, missing[], source: "llm"|"rules" }.
+  Front `/wnioski`, przycisk „Napisz wniosek o grant” na fiszce w kreatorze (fiszka przez sessionStorage `hubmi:fiszka`).
+  Nowy wspólny komponent `components/ai-disclaimer.tsx` (ostrzeżenie o błędach AI).
+[03:45] [DONE] Generator wniosków — nabory z terminami: wniosek można złożyć TYLKO w okresie naboru.
+  `GET /api/grants` zwraca nabory (`opens_at`, `closes_at`, `status: upcoming|open|closed`, `demo`, `template`, `sections`);
+  `POST /api/grants/{id}/applications` { applicant_name, applicant_email, organization?, sections } → zapis w SQLite,
+  poza terminem / niekompletny → `error`. Uzupełnianie z fiszki: otwarte i nadchodzące (przygotowanie wniosku), zakończone — nie.
+  Nabory są PRZYKŁADOWE (oznaczone w UI jako dane demonstracyjne). [FYI A4] panel admina może listować `grant_applications`.
+[03:15] [DONE] runda 2 (A2, `agent-2/kreator-ai`): 7/7 zadań. Build OK, pytest 57/57. Sprawdzone w przeglądarce (Edge):
+  kreator → podobne innowacje → fiszka → /wnioski → druk; Middleman w oknie (Esc zamyka, focus na pierwszym polu), plan + druk.
+  Uwagi: `gh` niezainstalowany → PR do założenia ręcznie z linku. Klucz OpenRouter w moim .env zwraca 401 — LLM w /api/grants/fill
+  nietestowany na żywo (ścieżka bez klucza działa). Lint: 4 błędy były już na main (biblioteka/[id], wyniki, deklaracja, innovation-detail).
+  [FYI ALL] Po pullu: `pip install -r requirements.txt` (pypdf) i restart backendu — `uvicorn --reload` nie łapie nowych routerów pewnie.
+[02:55] [DONE] „Czy chodziło Ci o…?” po `POST /api/voice-fix` także w kreatorze i asystencie krok po kroku (wcześniej
+  poprawka wchodziła po cichu). Akceptuj = podmiana podyktowanego fragmentu, „Nie, zostaw mój tekst” = oryginał.
+  Wyszukiwarka (tryb na żywo, search-form A3) działa jak dotąd — zmienił się tylko nagłówek pytania.
+[02:45] [DONE] Eksport planu Middlemana: „Pobierz plan (PDF)” (window.print, nagłówek wydruku z datą, bez ramek/cieni,
+  w oknie drukuje się tylko plan) + „Kopiuj jako tekst” (schowek). Plan pokazuje też wybraną instytucję.
+[02:35] [DONE] Ostrzeżenie „Odpowiedzi generuje AI i mogą zawierać błędy — zweryfikuj przed wdrożeniem” = `<AiDisclaimer />`
+  (`components/ai-disclaimer.tsx`): Middleman (rozmowa + plan), kreator (fiszka), generator wniosków, czat.
+[FYI A3] Dopisałem po 1 linii `<AiDisclaimer className="mt-3" />` (+ import) w `app/wyniki/page.tsx` (czat pod wynikami)
+  i `components/match-chat.tsx`. Przy przenosinach czatu zachowajcie ten komponent.
+[02:25] [DONE] Jeden Middleman: `MiddlemanModal` (wyniki, karta innowacji) to teraz duże okno (prawie pełny ekran)
+  `<Dialog>` z TYM SAMYM komponentem `<Middleman variant="dialog">` co `/wdrozenie` — stary czat w modalu usunięty.
+  Propsy `MiddlemanModal` bez zmian (+ opcjonalny `problem`), więc A3 nie musi nic zmieniać w wynikach/karcie.
+[FYI A1] `components/ui/dialog.tsx` skopiowany 1:1 z `agent-1/ux-a11y` (Twój [NEED A2]) — identyczna treść, merge bez konfliktu.
+  Animacje okna dojdą z Twoim globals.css.
+[02:05] [DONE] Kreator: „Wczytaj opis z PDF” → `POST /api/ideas/extract-pdf` (multipart `file`, do 10 MB, 30 stron, pypdf)
+  → { text, pages, truncated }; skan bez tekstu / hasło / uszkodzony plik → `error` z komunikatem. Nowa zależność: `pypdf`
+  w requirements.txt — **zrób `pip install -r requirements.txt`**.
+[01:50] [DONE] Kreator: podobne innowacje pod fiszką na żywo (debounce 800 ms, `POST /api/match`, 3 karty MatchCard).
+[FYI A3] `routers/matchmaking.py`: `MatchRequest.log: bool = True` — przy `log: false` /api/match nie zapisuje search_logs
+  ani impressions (podpowiedzi na żywo nie śmiecą trendów). `lib/matchmaking.ts` → `matchInnovations(..., { log })`. Domyślnie bez zmian.
+[FYI A1] Dopisałem 1 linię w `site-header.tsx` → NAV_LINKS: `{ href: "/wnioski", label: "Wnioski" }`. Przy konflikcie zachowaj ją.
+
 [FYI A1] (branch a2-bug-fixes) models.py: dwie NOWE tabele `idea_details` (krótki opis, gdzie, etap, budżet, partnerzy,
   upload_token) i `idea_attachments` — tylko nowe tabele, więc create_all działa na istniejących bazach bez migracji.
   POST /api/ideas przyjmuje te pola (opcjonalnie) i zwraca `upload_token`; GET /api/admin/ideas zwraca je + `attachments`.
@@ -416,6 +453,7 @@ oraz modeli `Innovation`, `SearchLog` — jeśli nazwiecie inaczej, dajcie znać
 |---|---|---|---|---|
 | — | — | — | — | — |
 | 2026-10-03 | A5 | `models.py`, `database.py` | Nowa tabela `events` (analityka: wyświetlenia, kliki, Middleman) + kolumna `forum_posts.innovation_id` (komentarze pod kartą). `init_db` dopisuje brakującą kolumnę przez ALTER TABLE — lokalnych baz nie trzeba kasować | do OK |
+| 2026-10-04 | A2 | `models.py` | Nowa tabela `grant_applications` (wnioski złożone w naborach, routers/grants.py). Tylko nowa tabela — create_all, bez migracji | gotowe |
 
 ---
 

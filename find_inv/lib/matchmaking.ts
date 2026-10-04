@@ -63,11 +63,13 @@ export async function matchInnovations(
   text: string,
   tags: string[],
   limit = 5,
+  /** `log: false` — podpowiedzi na żywo (kreator) nie trafiają do trendów wyszukiwań. */
+  options: { log?: boolean } = {},
 ): Promise<{ innovations: InnovationCard[]; total_found: number }> {
   try {
     const result = await apiFetch<{ innovations: InnovationCard[]; total_found?: number }>("/api/match", {
       method: "POST",
-      body: JSON.stringify({ text, tags, limit }),
+      body: JSON.stringify({ text, tags, limit, log: options.log ?? true }),
     });
     return { innovations: result.innovations, total_found: result.total_found ?? result.innovations.length };
   } catch {

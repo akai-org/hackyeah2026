@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react"
 import { Check, CircleAlert, Info, Loader2, Mic, Square, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { correctTranscript, fixTranscript } from "@/lib/matchmaking";
+import { correctTranscript } from "@/lib/matchmaking";
 import { cn } from "@/lib/utils";
 
 // Dyktowanie (Web Speech API) wspólne dla wyszukiwarki i Kreatora pomysłów.
@@ -62,8 +62,9 @@ export type DictationState = "idle" | "recording" | "checking" | "confirm" | "do
 
 export type DictationOptions = {
   /**
-   * Tryb na żywo: tekst pojawia się w polu w trakcie mówienia, a po zakończeniu poprawka z /api/voice-fix
-   * czeka na decyzję użytkownika („Czy o to chodziło?”). Bez tej opcji poprawka wchodzi od razu.
+   * Tryb na żywo: tekst pojawia się w polu w trakcie mówienia (i nowe nagranie czyści pole). Bez tej opcji
+   * dopisujemy tylko gotowe zdania. W obu trybach poprawka z /api/voice-fix czeka na decyzję użytkownika
+   * („Czy chodziło Ci o…?”, <DictationSuggestion>).
    */
   live?: boolean;
   /** Razem z `live`: wypowiedź „naokoło” backend skraca do sedna (kto, co, gdzie). */
@@ -76,8 +77,8 @@ export type Suggestion = { original: string; corrected: string; condensed: boole
 const SILENCE_MS = 3000;
 
 /**
- * Dyktowanie do pola tekstowego. Podyktowany tekst jest dopisywany przez `setText`,
- * a potem podmieniany na wersję poprawioną przez /api/voice-fix (przy błędzie zostaje surowy).
+ * Dyktowanie do pola tekstowego. Podyktowany tekst jest dopisywany przez `setText`. Gdy /api/voice-fix
+ * zwróci inną wersję, użytkownik decyduje: `accept` podmienia fragment, `reject` zostawia oryginał.
  */
 export function useDictation(
   setText: (update: (previous: string) => string) => void,
@@ -125,13 +126,10 @@ export function useDictation(
       recognitionRef.current?.stop();
       return;
     }
-    // Tryb na żywo: nowe nagranie zaczyna od czystej karty — znika poprzednie pytanie i tekst w polu.
-    if (options.live) {
-      setSuggestion(null);
-      setText(() => "");
-    } else if (state === "checking" || state === "confirm") {
-      return;
-    }
+    // Nowe nagranie zamyka niepotwierdzoną poprawkę (zostaje tekst użytkownika). W trybie na żywo
+    // zaczynamy od czystej karty — znika też tekst w polu.
+    setSuggestion(null);
+    if (options.live) setText(() => "");
 
     const RecognitionImpl = getRecognition();
     if (!RecognitionImpl) {
@@ -182,12 +180,9 @@ export function useDictation(
       transcript = transcript.trim();
       if (!transcript) return;
       heard = true;
+      spoken = spoken ? `${spoken} ${transcript}` : transcript;
       setText((previous) => (previous.trim() ? `${previous.trimEnd()} ${transcript}` : transcript));
       onHeard?.();
-      // Backend poprawia gramatykę i błędy rozpoznawania mowy. Podmieniamy tylko podyktowany fragment.
-      void fixTranscript(transcript).then((corrected) => {
-        if (corrected !== transcript) setText((current) => current.replace(transcript, corrected));
-      });
     };
 
     recognition.onerror = (event) => {
@@ -206,17 +201,13 @@ export function useDictation(
         setMessage(DICTATION_ERRORS["no-speech"]);
         return;
       }
-      if (!live) {
-        setState("done");
-        setMessage("Gotowe, sprawdź tekst");
-        return;
-      }
       // Koniec mówienia: poprawka z LLM (albo prosta poprawka bez klucza) i pytanie do użytkownika.
+      // Podmieniamy potem tylko podyktowany fragment, nie cały tekst pola.
       const original = spoken;
       const session = sessionRef.current;
       setState("checking");
       setMessage("Sprawdzam tekst…");
-      void correctTranscript(original, Boolean(options.condense)).then(({ corrected, condensed }) => {
+      void correctTranscript(original, live && Boolean(options.condense)).then(({ corrected, condensed }) => {
         if (session !== sessionRef.current) return; // w międzyczasie zaczęło się nowe nagranie
         if (corrected && corrected !== original) {
           setSuggestion({ original, corrected, condensed });
@@ -352,7 +343,7 @@ function diffWords(original: string, corrected: string) {
   return { words, removed: [...new Set(dropped.map((word) => word.toLowerCase()))] };
 }
 
-/** Pytanie po dyktowaniu w trybie na żywo: przyjąć poprawkę AI czy zostawić tekst użytkownika. */
+/** Pytanie po dyktowaniu: przyjąć poprawkę AI (/api/voice-fix) czy zostawić tekst użytkownika. */
 export function DictationSuggestion({ dictation }: { dictation: Dictation }) {
   const ids = useId();
   const headingRef = useRef<HTMLParagraphElement>(null);
@@ -373,7 +364,7 @@ export function DictationSuggestion({ dictation }: { dictation: Dictation }) {
       className="appear mt-3 max-w-[65ch] rounded-ui border-(length:--bw) border-deep bg-mint p-4"
     >
       <p id={`${ids}-pytanie`} ref={headingRef} tabIndex={-1} className="font-bold text-deep focus:outline-none">
-        Czy o to chodziło?
+        Czy chodziło Ci o…?
       </p>
       {suggestion.condensed ? (
         <>

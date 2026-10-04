@@ -8,7 +8,9 @@ import {
   CalendarRange,
   CircleAlert,
   CircleHelp,
+  ClipboardCheck,
   ClipboardList,
+  Copy,
   Download,
   HandCoins,
   Info,
@@ -23,6 +25,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { AiDisclaimer } from "@/components/ai-disclaimer";
 import { CutoutText } from "@/components/cutout-text";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { innovations as libraryInnovations } from "@/data/innovations.mock";
@@ -47,7 +50,14 @@ const fieldClass =
 type Message = { role: "ai" | "user"; text: string };
 type Phase = "intro" | "chat" | "plan";
 
-type MiddlemanProps = { innovationId?: string; problem?: string };
+type MiddlemanProps = {
+  innovationId?: string;
+  /** Tytuł znany z karty, z której otwarto okno (wyniki, karta innowacji) — zanim odpowie backend. */
+  innovationTitle?: string;
+  problem?: string;
+  /** „dialog”: w oknie „Jak to wdrożyć?” — bez nagłówka strony i marginesów (tytuł daje Dialog). */
+  variant?: "page" | "dialog";
+};
 
 function Missing() {
   return (
@@ -70,12 +80,59 @@ function PlanSection({ icon: Icon, title, children }: { icon: LucideIcon; title:
   );
 }
 
-function PlanDocument({ plan, innovationTitle, onRestart }: { plan: MiddlemanPlan; innovationTitle: string; onRestart: () => void }) {
+/** Plan jako zwykły tekst — do wklejenia w maila, notatkę czy wniosek. */
+function planToText(plan: MiddlemanPlan, innovationTitle: string, institution: string): string {
+  const list = (items?: string[]) => (items?.length ? items.map((item) => `- ${item}`).join("\n") : "- do uzupełnienia");
+  const lines = [
+    `PLAN WDROŻENIA: ${innovationTitle}`,
+    `Instytucja: ${institution}`,
+    "",
+    `Cel: ${plan.goal || "do uzupełnienia"}`,
+    `Kto realizuje: ${plan.staff_needed || "do uzupełnienia"}`,
+    `Szacowany koszt: ${plan.estimated_cost || "do uzupełnienia"}`,
+    `Gdzie zorganizować: ${plan.location_suggestions || "do uzupełnienia"}`,
+    `Czas: ${plan.timeline || "do uzupełnienia"}`,
+    "",
+    ...(plan.phases ?? []).flatMap((phase) => [`${phase.label}:`, list(phase.items)]),
+    "Kolejne kroki:",
+    list(plan.steps),
+    "",
+    "Skąd wziąć pieniądze:",
+    list(plan.funding_hints ? plan.funding_hints.split(/;\s*/) : []),
+    ...(plan.risks?.length ? ["", "Ryzyka:", list(plan.risks)] : []),
+    ...(plan.missing?.length ? ["", "Do uzupełnienia:", list(plan.missing)] : []),
+    "",
+    "Szkic przygotowany przez AI w HubMI.pl — może zawierać błędy, zweryfikuj przed wdrożeniem.",
+  ];
+  return lines.join("\n");
+}
+
+type PlanDocumentProps = { plan: MiddlemanPlan; innovationTitle: string; institution: string; onRestart: () => void };
+
+function PlanDocument({ plan, innovationTitle, institution, onRestart }: PlanDocumentProps) {
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const [copied, setCopied] = useState<"ok" | "error" | null>(null);
   useEffect(() => headingRef.current?.focus(), []);
 
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(planToText(plan, innovationTitle, institution));
+      setCopied("ok");
+    } catch {
+      setCopied("error");
+    }
+  }
+
   return (
-    <article aria-labelledby="plan-tytul" className="appear border-(length:--bw) border-deep bg-surface p-6 shadow-paper sm:p-10">
+    <article
+      aria-labelledby="plan-tytul"
+      className="appear border-(length:--bw) border-deep bg-surface p-6 shadow-paper sm:p-10 print:border-0 print:p-0"
+    >
+      {/* Nagłówek wydruku: skąd jest dokument i kiedy powstał. */}
+      <p className="mb-4 hidden border-b-2 border-deep pb-2 text-base print:flex print:justify-between">
+        <span className="font-bold">HubMI.pl · plan wdrożenia innowacji społecznej</span>
+        <span>{new Date().toLocaleDateString("pl-PL", { day: "numeric", month: "long", year: "numeric" })}</span>
+      </p>
       <h2 id="plan-tytul" ref={headingRef} tabIndex={-1} className="focus:outline-none">
         <CutoutText as="span" size="section" text="Twój plan wdrożenia" labelled={false} />
         <span className="sr-only">Twój plan wdrożenia</span>
@@ -84,11 +141,15 @@ function PlanDocument({ plan, innovationTitle, onRestart }: { plan: MiddlemanPla
         Innowacja: <strong className="text-deep">{innovationTitle}</strong>
         {plan.source?.where_implemented && <span className="text-muted"> · działa już w: {plan.source.where_implemented}</span>}
       </p>
+      <p className="mt-1 text-lg">
+        Instytucja: <strong className="text-deep">{institution}</strong>
+      </p>
 
       <p className="mt-6 flex items-start gap-3 rounded-ui border-2 border-deep bg-sage px-4 py-3">
         <Info aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-deep" />
         To jest szkic. Sprawdź koszty i przepisy przed wdrożeniem.
       </p>
+      <AiDisclaimer className="mt-3" />
 
       <div className="mt-8 space-y-8">
         <PlanSection icon={Target} title="Cel">
@@ -118,7 +179,7 @@ function PlanDocument({ plan, innovationTitle, onRestart }: { plan: MiddlemanPla
           </dl>
         </PlanSection>
 
-        <PlanSection icon={CalendarRange} title={`Etapy · ${plan.timeline}`}>
+        <PlanSection icon={CalendarRange} title={plan.timeline ? `Etapy · ${plan.timeline}` : "Etapy"}>
           {plan.phases?.length ? (
             <ol className="grid gap-4 md:grid-cols-3">
               {plan.phases.map((phase) => (
@@ -184,9 +245,13 @@ function PlanDocument({ plan, innovationTitle, onRestart }: { plan: MiddlemanPla
       </div>
 
       <div className="print-hidden mt-10 flex flex-wrap gap-3 border-t-2 border-sage pt-6">
-        <Button type="button" onClick={() => window.print()}>
+        <Button type="button" onClick={() => window.print()} aria-describedby="plan-druk-podpowiedz">
           <Download aria-hidden="true" />
           Pobierz plan (PDF)
+        </Button>
+        <Button type="button" variant="secondary" onClick={copy}>
+          {copied === "ok" ? <ClipboardCheck aria-hidden="true" /> : <Copy aria-hidden="true" />}
+          {copied === "ok" ? "Skopiowano" : "Kopiuj jako tekst"}
         </Button>
         <Button type="button" variant="secondary" onClick={onRestart}>
           <RotateCcw aria-hidden="true" />
@@ -197,11 +262,18 @@ function PlanDocument({ plan, innovationTitle, onRestart }: { plan: MiddlemanPla
           Zapytaj ekspertów na forum
         </Link>
       </div>
+      <p id="plan-druk-podpowiedz" className="print-hidden mt-3 text-sm text-muted">
+        W oknie drukowania wybierz „Zapisz jako PDF”, żeby zapisać plan na dysku.
+      </p>
+      <p role="status" aria-live="polite" className="print-hidden text-sm">
+        {copied === "ok" && "Plan skopiowany do schowka — wklej go w mailu albo dokumencie."}
+        {copied === "error" && <span className="font-bold text-alert">Nie udało się skopiować. Zaznacz tekst planu ręcznie.</span>}
+      </p>
     </article>
   );
 }
 
-export function Middleman({ innovationId, problem = "" }: MiddlemanProps) {
+export function Middleman({ innovationId, innovationTitle: knownTitle, problem = "", variant = "page" }: MiddlemanProps) {
   const ids = useId();
   const libraryMatch = libraryInnovations.find((item) => item.id === innovationId);
 
@@ -244,7 +316,7 @@ export function Middleman({ innovationId, problem = "" }: MiddlemanProps) {
     try {
       const result = await startMiddleman({
         innovation_id: innovationId ?? picked ?? null,
-        innovation_title: local?.title,
+        innovation_title: local?.title ?? knownTitle,
         innovation_desc: local?.summary,
         problem_desc: need.trim(),
         institution,
@@ -317,13 +389,15 @@ export function Middleman({ innovationId, problem = "" }: MiddlemanProps) {
     setError(null);
   }
 
-  const innovationTitle = session?.innovation.title ?? libraryMatch?.title ?? pickedLibrary?.title ?? "Innowacja";
+  const innovationTitle =
+    session?.innovation.title ?? libraryMatch?.title ?? pickedLibrary?.title ?? knownTitle ?? "Innowacja";
+  const inDialog = variant === "dialog";
 
   return (
-    <div className="mx-auto max-w-content px-4 py-12 sm:px-6">
+    <div className={inDialog ? "mt-4" : "mx-auto max-w-content px-4 py-12 sm:px-6"}>
       <div className="print-hidden">
-        <CutoutText as="h1" size="section" text="Dostosuj do siebie" />
-        <p className="mt-4 max-w-[62ch] text-lg">
+        {!inDialog && <CutoutText as="h1" size="section" text="Dostosuj do siebie" />}
+        <p className={cn("max-w-[62ch] text-lg", !inDialog && "mt-4")}>
           Asystent zada Ci najwyżej 3 krótkie pytania i przygotuje szkic planu: kogo potrzebujesz, ile to kosztuje, gdzie to
           zorganizować i skąd wziąć pieniądze.
         </p>
@@ -385,7 +459,9 @@ export function Middleman({ innovationId, problem = "" }: MiddlemanProps) {
             ) : (
               <p className="text-lg">
                 Wybrana innowacja:{" "}
-                <strong className="text-deep">{libraryMatch?.title ?? `nr ${innovationId} z wyników wyszukiwania`}</strong>
+                <strong className="text-deep">
+                  {libraryMatch?.title ?? knownTitle ?? `nr ${innovationId} z wyników wyszukiwania`}
+                </strong>
               </p>
             )}
 
@@ -437,7 +513,8 @@ export function Middleman({ innovationId, problem = "" }: MiddlemanProps) {
                 Pytanie {questionIndex} z {session.max_questions}
               </p>
             </div>
-            <div aria-hidden="true" className="mt-2 h-2 rounded-full bg-sage">
+            <AiDisclaimer className="mt-3" />
+            <div aria-hidden="true" className="mt-4 h-2 rounded-full bg-sage">
               <div
                 className="h-2 rounded-full bg-leaf transition-[width] duration-300"
                 style={{ width: `${(questionIndex / session.max_questions) * 100}%` }}
@@ -520,7 +597,9 @@ export function Middleman({ innovationId, problem = "" }: MiddlemanProps) {
           </section>
         )}
 
-        {phase === "plan" && plan && <PlanDocument plan={plan} innovationTitle={innovationTitle} onRestart={restart} />}
+        {phase === "plan" && plan && (
+          <PlanDocument plan={plan} innovationTitle={innovationTitle} institution={institution} onRestart={restart} />
+        )}
       </div>
     </div>
   );
