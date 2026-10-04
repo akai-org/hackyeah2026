@@ -94,7 +94,7 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
 
   return (
     <>
-      <form role="search" onSubmit={(event) => event.preventDefault()} className="mt-8 grid max-w-4xl gap-6">
+      <form role="search" onSubmit={(event) => event.preventDefault()} className="mt-8 grid max-w-4xl grid-cols-1 gap-6">
         <div>
           <label htmlFor={`${ids}-szukaj`} className="block text-lg font-bold text-foreground">
             Szukaj w Bibliotece
@@ -134,7 +134,7 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
               ref={tagsScrollRef}
               role="group"
               aria-labelledby={`${ids}-tematy`}
-              className="flex gap-2 overflow-x-auto scroll-smooth py-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              className="flex min-w-0 flex-1 gap-2 overflow-x-auto scroll-smooth py-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
               {remainingTags.map((tag) => (
                 <li key={tag} className="shrink-0">
