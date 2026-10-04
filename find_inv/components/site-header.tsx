@@ -67,12 +67,12 @@ export function SiteHeader() {
         {t.header.skipToContent}
       </a>
 
-      <div className="relative mx-auto flex items-center gap-4 px-4 py-3 sm:px-6">
+      <div className="relative mx-auto flex items-center gap-2 px-4 py-3 sm:gap-4 sm:px-6">
         <Link href="/" aria-label={t.header.homeLabel} className="inline-flex min-h-12 shrink-0 items-center rounded-ui py-1">
           <CutoutText text="HubMI" as="span" size="logo" labelled={false} />
         </Link>
 
-        <div className="flex min-w-0 flex-1 justify-center px-2 sm:px-4">
+        <div className="hidden min-w-0 flex-1 justify-center px-4 sm:flex">
           <button
             type="button"
             onClick={openSearch}
@@ -86,7 +86,7 @@ export function SiteHeader() {
           </button>
         </div>
 
-        <div className="ml-auto flex shrink-0 items-center gap-3">
+        <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
           <nav aria-label={t.header.mainNav} className="nav-desktop hidden xl:block">
           <ul className="flex items-center gap-1">
             {links.map((link) => (

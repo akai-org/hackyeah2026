@@ -150,7 +150,7 @@ export function AdminTestRequestsView() {
             {assigned.length === 0 ? (
               <p className="mt-4 text-muted">{ts.noneOngoing}</p>
             ) : (
-              <div className="mt-4 overflow-x-auto border-(length:--bw) border-border bg-surface">
+              <div className="relative mt-4 overflow-x-auto border-(length:--bw) border-border bg-surface">
                 <table className="w-full min-w-[40rem] border-collapse text-left">
                   <caption className="sr-only">{ts.ongoingCaption}</caption>
                   <thead className="bg-secondary">

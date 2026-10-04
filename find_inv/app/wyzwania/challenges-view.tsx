@@ -138,7 +138,7 @@ export function ChallengesView({
 
   if (!challenges) {
     return (
-      <div role="status" aria-label={ch.loading} className="grid gap-6 md:grid-cols-2">
+      <div role="status" aria-label={ch.loading} className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {[0, 1, 2, 3].map((index) => (
           <div key={index} className="h-64 animate-pulse border-(length:--bw) border-border/40 bg-background" />
         ))}
@@ -219,14 +219,14 @@ export function ChallengesView({
         </p>
       )}
 
-      <ul className="mt-8 grid gap-6 md:grid-cols-2">
+      <ul className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
         {groups.map((group) => (
           <li
             key={group.area}
             className="hover-lift flex flex-col border-(length:--bw) border-border bg-background p-6 shadow-raised md:p-8"
           >
             <p className="text-sm font-semibold text-muted">{group.area}</p>
-            <h3 className="mt-1 text-xl font-bold text-foreground">{group.title}</h3>
+            <h3 className="mt-1 text-xl font-bold break-words hyphens-auto text-foreground">{group.title}</h3>
             <p className="mt-3 max-w-[55ch]">{group.description}</p>
 
             <table className="mt-5 w-full text-left">

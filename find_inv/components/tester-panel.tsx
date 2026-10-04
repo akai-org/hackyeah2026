@@ -173,7 +173,7 @@ function Dashboard({ userId }: { userId: number | string }) {
 export function Stars({ rating }: { rating: number }) {
   const tp = useT().tester;
   return (
-    <span className="inline-flex items-center gap-1" aria-label={tp.stars(rating, tp.ratingLabels[rating])}>
+    <span role="img" className="inline-flex items-center gap-1" aria-label={tp.stars(rating, tp.ratingLabels[rating])}>
       {[1, 2, 3, 4, 5].map((value) => (
         <Star
           key={value}

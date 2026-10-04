@@ -96,7 +96,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       <div className="mt-4 lg:mt-8 lg:grid lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-10">
         {/* Mobile/tablet: jeden rząd przewijany w poziomie zamiast zawijania. Desktop: pionowy sidebar z grupami. */}
         <nav aria-label={a.shell.navLabel} className="-mx-4 border-b-(length:--bw) border-border sm:-mx-6 lg:mx-0 lg:border-b-0">
-          <div className="flex snap-x gap-1 overflow-x-auto px-4 pb-2 [scrollbar-width:thin] sm:px-6 lg:sticky lg:top-24 lg:flex-col lg:gap-6 lg:overflow-visible lg:p-0">
+          <div className="relative flex snap-x gap-1 overflow-x-auto px-4 pb-2 [scrollbar-width:thin] sm:px-6 lg:sticky lg:top-24 lg:flex-col lg:gap-6 lg:overflow-visible lg:p-0">
             {ADMIN_LINK_GROUPS.map((group) => (
               <div key={group.key} className="flex shrink-0 gap-1 lg:flex-col">
                 <p className="hidden px-3 pb-1 text-xs font-bold tracking-wide text-muted uppercase lg:block">

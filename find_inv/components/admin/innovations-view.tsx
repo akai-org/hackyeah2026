@@ -279,7 +279,7 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
       ) : (
         <>
           {/* Szeroki ekran: tabela. */}
-          <div className="hidden overflow-x-auto border-(length:--bw) border-border bg-surface lg:block">
+          <div className="relative hidden overflow-x-auto border-(length:--bw) border-border bg-surface lg:block">
             <table className="w-full border-collapse text-left">
               <caption className="sr-only">{ai.caption(items.length)}</caption>
               <thead className="bg-secondary">

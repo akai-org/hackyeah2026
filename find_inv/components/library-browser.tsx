@@ -135,9 +135,8 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
 
             <ul
               ref={tagsScrollRef}
-              role="group"
               aria-labelledby={`${ids}-tematy`}
-              className="flex min-w-0 flex-1 gap-2 overflow-x-auto scroll-smooth py-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              className="relative flex min-w-0 flex-1 gap-2 overflow-x-auto scroll-smooth py-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
               {remainingTags.map((tag) => (
                 <li key={tag} className="shrink-0">

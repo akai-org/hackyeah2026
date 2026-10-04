@@ -54,7 +54,7 @@ export function AdminNeedsView() {
       {loading && !data ? (
         <LoadingRows label={n.loading} />
       ) : data && trends ? (
-        <div className="grid gap-6">
+        <div className="grid grid-cols-1 gap-6">
           <section aria-labelledby={`${ids}-obszary`} className="border-(length:--bw) border-border bg-surface p-6">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
@@ -162,7 +162,7 @@ export function AdminNeedsView() {
                 {n.empty}
               </p>
             ) : (
-              <div className="mt-4 overflow-x-auto">
+              <div tabIndex={0} className="relative mt-4 overflow-x-auto">
                 <table className="w-full min-w-[40rem] border-collapse text-left">
                   <caption className="sr-only">{n.caption}</caption>
                   <thead className="bg-secondary">

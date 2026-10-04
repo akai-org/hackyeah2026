@@ -33,6 +33,12 @@ export function TesterApplyModal({ innovationId, innovationTitle, onClose, onSuc
   const [submitting, setSubmitting] = useState(false);
   const [alreadyApplied, setAlreadyApplied] = useState(false);
 
+  // Po zamknięciu fokus wraca na przycisk, który otworzył okno (WCAG 2.4.3).
+  useEffect(() => {
+    const opener = document.activeElement as HTMLElement | null;
+    return () => opener?.focus();
+  }, []);
+
   // Focus trap
   useEffect(() => {
     setTimeout(() => firstInputRef.current?.focus(), 50);

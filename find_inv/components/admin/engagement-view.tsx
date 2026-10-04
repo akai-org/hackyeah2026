@@ -124,8 +124,8 @@ export function AdminEngagementView() {
       {loading && !data ? (
         <LoadingRows label={e.loading} />
       ) : data && m ? (
-        <div className="grid gap-6">
-          <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-6">
+          <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Kpi icon={Eye} label={e.metrics.views} value={NUMBER.format(m.views.value)} change={<Change pct={m.views.change_pct} />} />
             <Kpi
               icon={MousePointerClick}
@@ -204,7 +204,7 @@ export function AdminEngagementView() {
                       <span aria-hidden="true" className="w-6 shrink-0 text-right font-bold text-muted tabular-nums">
                         {index + 1}.
                       </span>
-                      <Link href={`/innowacje/${item.id}`} className="flex-1 font-bold text-primary underline underline-offset-4 hover:text-primary-hover">
+                      <Link href={`/innowacje/${item.id}`} className="min-w-0 flex-1 font-bold break-words text-primary underline underline-offset-4 hover:text-primary-hover">
                         {item.title}
                       </Link>
                       <span className="shrink-0 tabular-nums">
@@ -253,7 +253,7 @@ export function AdminEngagementView() {
             <p className="mt-1 text-muted">
               {e.rankingHint}
             </p>
-            <div className="mt-4 overflow-x-auto">
+            <div tabIndex={0} className="relative mt-4 overflow-x-auto">
               <table className="w-full min-w-[44rem] border-collapse text-left">
                 <caption className="sr-only">{e.rankingCaption(days)}</caption>
                 <thead>
@@ -308,7 +308,7 @@ export function AdminEngagementView() {
             {data.demand.length === 0 ? (
               <p className="mt-4">{e.noSearches}</p>
             ) : (
-              <div className="mt-4 overflow-x-auto">
+              <div tabIndex={0} className="relative mt-4 overflow-x-auto">
                 <table className="w-full min-w-[36rem] border-collapse text-left">
                   <caption className="sr-only">{e.demandCaption}</caption>
                   <thead>

@@ -7,19 +7,19 @@ import { expect, test } from "@playwright/test";
 
 // Wartości z @theme w app/globals.css (pierwszy test pilnuje, że się zgadzają).
 const COLORS = {
-  background: "#f4fbfb",
+  background: "#f7f8fa",
   surface: "#ffffff",
-  secondary: "#c2d2b8",
+  secondary: "#ece6da",
   foreground: "#000000",
-  muted: "#888888",
-  border: "#5f7568",
+  muted: "#5b626c",
+  border: "#5c6470",
   primary: "#345995",
   "primary-hover": "#284778",
   "primary-foreground": "#ffffff",
   accent: "#f4845f",
   "accent-foreground": "#000000",
   success: "#2e6b45",
-  warning: "#7a4e00",
+  warning: "#aa0505",
   destructive: "#a3322a",
   focus: "#1f3f73",
 };
@@ -69,10 +69,15 @@ for (const [fg, bg] of TEXT_PAIRS) {
   });
 }
 
-// `muted` (#888) ma ok. 3,4:1 na tle — za mało na zwykły tekst (WCAG AA 4,5:1). Do poprawy w palecie.
-test.fixme("tekst muted na background ≥ 4,5:1", () => {
-  expect(contrast(COLORS.muted, COLORS.background)).toBeGreaterThanOrEqual(4.5);
-});
+// Tekst pomocniczy (muted) i obramowania pól (border, elementy UI ≥ 3:1 — WCAG 1.4.11).
+for (const bg of ["background", "surface", "secondary"] as const) {
+  test(`tekst muted na ${bg} ≥ 4,5:1`, () => {
+    expect(contrast(COLORS.muted, COLORS[bg])).toBeGreaterThanOrEqual(4.5);
+  });
+  test(`obramowanie border na ${bg} ≥ 3:1`, () => {
+    expect(contrast(COLORS.border, COLORS[bg])).toBeGreaterThanOrEqual(3);
+  });
+}
 
 test("pierścień fokusu na mapie widoczny na skrajnych kolorach skali (≥ 3:1)", () => {
   // Skala mapy idzie od `background` do `primary`; pierścień to `surface` + `focus`.

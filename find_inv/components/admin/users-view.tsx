@@ -145,7 +145,7 @@ export function AdminUsersView() {
             <h2 id={`${ids}-lista`} className="text-xl font-bold text-foreground">
               {au.allUsers} <span className="tabular-nums">({data.users.length})</span>
             </h2>
-            <div className="mt-4 overflow-x-auto border-(length:--bw) border-border bg-surface">
+            <div className="relative mt-4 overflow-x-auto border-(length:--bw) border-border bg-surface">
               <table className="w-full min-w-[44rem] border-collapse text-left">
                 <caption className="sr-only">{au.caption}</caption>
                 <thead className="bg-secondary">
