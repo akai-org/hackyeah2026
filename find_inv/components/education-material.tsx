@@ -29,6 +29,16 @@ export type EducationResource = {
 
 export const educationHref = (id: number) => `/edukacja/${id}`;
 
+/** Wszystkie materiały edukacyjne (GET /api/resources?type=education → { items, total }). */
+export async function loadEducationMaterials(): Promise<EducationResource[]> {
+  const response = await fetch(`${API_URL}/api/resources?type=education&limit=100`, {
+    headers: { "X-Lang": readLocaleCookie() },
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const body = (await response.json()) as { items?: EducationResource[] };
+  return body.items ?? [];
+}
+
 /** Prosty markdown z bazy: nagłówki „## ”, listy „- ” i akapity. `heading` — poziom nagłówków sekcji. */
 export function MdContent({ content, heading: Heading = "h4" }: { content: string; heading?: "h2" | "h3" | "h4" }) {
   const blocks = content.split(/\n(?=##\s)|\n{2,}/).filter(Boolean);

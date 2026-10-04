@@ -27,6 +27,8 @@ export function searchHref(category: SearchCategory, query: string, tags: Tag[] 
   if (category === "all") {
     // Dopasowanie AI czyta tylko tekst — nazwy tagów dopisujemy do opisu.
     params.set("q", [query, ...tags.map(labelOf)].filter(Boolean).join(", "));
+    // Tagi też osobno — strona wyników dobiera po nich artykuły z Edukacji.
+    if (tags.length) params.set("tagi", tags.join(","));
     return `/wyniki?${params}`;
   }
   if (query) params.set("q", query);

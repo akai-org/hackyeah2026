@@ -10,7 +10,9 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { BackendInnovationCard, type BackendInnovation } from "@/components/backend-innovation-card";
 import { AiDisclaimer } from "@/components/ai-disclaimer";
 import { MiddlemanModal } from "@/components/middleman-modal";
+import { EducationMatches } from "@/components/education-matches";
 import { apiPost, apiStream } from "@/lib/api";
+import { isTaxonomyTag, parseSearchTags } from "@/lib/search-tags";
 import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +34,8 @@ function ResultsContent() {
   const searchParams = useSearchParams();
   const t = useT();
   const query = searchParams.get("q")?.trim() ?? "";
+  // Tagi zaznaczone w szybkim wyszukiwaniu (?tagi=…) — dla artykułów z Edukacji pod innowacjami.
+  const chosenTags = parseSearchTags(searchParams.get("tagi") ?? "").map((tag) => tag.id);
 
   const [tagResult, setTagResult] = useState<TagResult | null>(null);
   const [innovations, setInnovations] = useState<BackendInnovation[]>([]);
@@ -237,6 +241,15 @@ function ResultsContent() {
           </>
         )}
       </section>
+
+      {/* Artykuły z Edukacji: tagi zaznaczone + wykryte przez AI, słowa zapytania */}
+      {query && !tagsLoading && !matchLoading && (
+        <EducationMatches
+          key={query}
+          query={query}
+          tags={[...new Set([...chosenTags, ...(tagResult?.tags ?? []).filter(isTaxonomyTag)])]}
+        />
+      )}
 
       {/* Chat RAG */}
       {chatOpen && innovations.length > 0 && (

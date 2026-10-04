@@ -225,6 +225,9 @@ const plCore = {
     privacy: "Dyktowanie może przetwarzać dźwięk w zewnętrznej usłudze przeglądarki. Nie podawaj danych osobowych.",
   },
   results: {
+    articles: "Artykuły z Edukacji",
+    articlesLead: "Materiały edukacyjne pasujące do Twojego wyszukiwania.",
+    allArticles: "Zobacz wszystkie w Edukacji",
     pageTitle: (q: string) => `Wyniki: ${q} – HubMI`,
     noQuery: "Nie podano opisu problemu.",
     backHome: "Wróć do strony głównej",
@@ -509,6 +512,9 @@ const enCore: CoreMessages = {
     privacy: "Dictation may process audio in an external browser service. Don't share personal data.",
   },
   results: {
+    articles: "Articles from Education",
+    articlesLead: "Educational materials matching your search.",
+    allArticles: "See all in Education",
     pageTitle: (q: string) => `Results: ${q} – HubMI`,
     noQuery: "No problem description was given.",
     backHome: "Back to the home page",
@@ -791,6 +797,9 @@ const ukCore: CoreMessages = {
     privacy: "Диктування може обробляти звук у зовнішньому сервісі браузера. Не вказуйте персональних даних.",
   },
   results: {
+    articles: "Статті з розділу «Освіта»",
+    articlesLead: "Освітні матеріали, що відповідають вашому пошуку.",
+    allArticles: "Переглянути всі в розділі «Освіта»",
     pageTitle: (q: string) => `Результати: ${q} – HubMI`,
     noQuery: "Опис проблеми не вказано.",
     backHome: "Повернутися на головну",
