@@ -46,7 +46,7 @@ export function AdminForumView() {
       {loading && !data ? (
         <LoadingRows label="Wczytuję wpisy" />
       ) : posts.length === 0 ? (
-        <p className="flex items-center gap-2 border-(length:--bw) border-deep bg-surface p-6">
+        <p className="flex items-center gap-2 border-(length:--bw) border-border bg-surface p-6">
           <MessageSquare aria-hidden="true" className="size-5 text-muted" />
           Na forum nie ma jeszcze żadnych wpisów.
         </p>
@@ -55,9 +55,9 @@ export function AdminForumView() {
           {posts.map((post) => {
             const count = post.parent_id === null ? replies(post.id) : 0;
             return (
-              <li key={post.id} className="border-(length:--bw) border-deep bg-surface p-5">
+              <li key={post.id} className="border-(length:--bw) border-border bg-surface p-5">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                  <span className="font-bold text-deep">{post.author_name}</span>
+                  <span className="font-bold text-foreground">{post.author_name}</span>
                   {ROLES.has(post.badge) && <RoleBadge role={post.badge as Role} />}
                   <span className="text-sm text-muted">{formatDate(post.created_at)}</span>
                 </div>
@@ -70,7 +70,7 @@ export function AdminForumView() {
                   {count > 0 && ` · ${count} odp.`}
                 </p>
                 <p className="mt-3 whitespace-pre-line">{post.content}</p>
-                <Button type="button" variant="secondary" onClick={() => setDeleting(post)} className="mt-4 px-3 text-alert">
+                <Button type="button" variant="secondary" onClick={() => setDeleting(post)} className="mt-4 px-3 text-destructive">
                   <Trash2 aria-hidden="true" />
                   Usuń wpis<span className="sr-only">: {excerpt(post.content, 40)}</span>
                 </Button>

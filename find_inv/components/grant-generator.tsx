@@ -37,7 +37,7 @@ import { cn } from "@/lib/utils";
 // naboru wniosek da się przygotować i wydrukować; zakończone nabory są tylko do wglądu.
 
 const FIELD_CLASS =
-  "w-full rounded-ui border-(length:--bw) border-deep bg-surface p-4 text-base text-ink placeholder:text-muted";
+  "w-full rounded-ui border-(length:--bw) border-border bg-surface p-4 text-base text-foreground placeholder:text-muted";
 
 // Fiszka trafia do sessionStorage w kreatorze; tu tylko ją czytamy (bez efektu — zgodnie z SSR).
 const noSubscribe = () => () => {};
@@ -48,22 +48,22 @@ const EMPTY_APPLICANT: Applicant = { applicant_name: "", applicant_email: "", or
 function CallStatusBadge({ grant }: { grant: Grant }) {
   if (grant.status === "open") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-ui border-2 border-leaf bg-mint px-2.5 py-0.5 text-sm font-bold text-ink">
-        <CalendarClock aria-hidden="true" className="size-4 text-deep" />
+      <span className="inline-flex items-center gap-1.5 rounded-ui border-2 border-primary bg-primary/10 px-2.5 py-0.5 text-sm font-bold text-foreground">
+        <CalendarClock aria-hidden="true" className="size-4 text-foreground" />
         Nabór trwa — wnioski do {formatCallDate(grant.closes_at)}
       </span>
     );
   }
   if (grant.status === "upcoming") {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-ui border-2 border-deep bg-paper px-2.5 py-0.5 text-sm font-bold text-ink">
-        <CalendarClock aria-hidden="true" className="size-4 text-deep" />
+      <span className="inline-flex items-center gap-1.5 rounded-ui border-2 border-border bg-background px-2.5 py-0.5 text-sm font-bold text-foreground">
+        <CalendarClock aria-hidden="true" className="size-4 text-foreground" />
         Nabór od {formatCallDate(grant.opens_at)} do {formatCallDate(grant.closes_at)}
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-ui border-2 border-muted bg-sage px-2.5 py-0.5 text-sm font-bold text-ink">
+    <span className="inline-flex items-center gap-1.5 rounded-ui border-2 border-border bg-secondary px-2.5 py-0.5 text-sm font-bold text-foreground">
       <CalendarX2 aria-hidden="true" className="size-4" />
       Zakończony {formatCallDate(grant.closes_at)}
     </span>
@@ -73,7 +73,7 @@ function CallStatusBadge({ grant }: { grant: Grant }) {
 function CallDetails({ grant }: { grant: Grant }) {
   return (
     <>
-      <span className="block font-bold text-deep">{grant.name}</span>
+      <span className="block font-bold text-foreground">{grant.name}</span>
       <span className="mt-1 block">
         <CallStatusBadge grant={grant} />
       </span>
@@ -86,7 +86,7 @@ function CallDetails({ grant }: { grant: Grant }) {
           href={grant.template.source_url}
           target="_blank"
           rel="noreferrer"
-          className="mt-1 inline-flex items-center gap-1 text-sm font-bold text-deep underline"
+          className="mt-1 inline-flex items-center gap-1 text-sm font-bold text-foreground underline"
         >
           Wzór i regulamin <ExternalLink aria-hidden="true" className="size-4" />
           <span className="sr-only">(otwiera się w nowej karcie)</span>
@@ -193,7 +193,7 @@ export function GrantGenerator() {
 
   if (loadError) {
     return (
-      <p role="alert" className="mt-8 flex max-w-3xl items-start gap-2 rounded-ui border-2 border-alert bg-surface px-4 py-3 font-bold text-alert">
+      <p role="alert" className="mt-8 flex max-w-3xl items-start gap-2 rounded-ui border-2 border-destructive bg-surface px-4 py-3 font-bold text-destructive">
         <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
         Nie udało się pobrać listy naborów. Sprawdź, czy serwer działa, i odśwież stronę.
       </p>
@@ -215,7 +215,7 @@ export function GrantGenerator() {
         <AiDisclaimer />
 
         <fieldset>
-          <legend className="text-lg font-bold text-deep">1. Wybierz nabór</legend>
+          <legend className="text-lg font-bold text-foreground">1. Wybierz nabór</legend>
           <p className="mt-1 text-muted">
             Wniosek złożysz tylko w trakcie naboru. Na nabór, który dopiero się zacznie, możesz przygotować wniosek
             wcześniej.
@@ -225,7 +225,7 @@ export function GrantGenerator() {
               {available.map((item) => (
                 <label
                   key={item.id}
-                  className="flex cursor-pointer items-start gap-3 rounded-ui border-(length:--bw) border-deep bg-surface p-4 has-checked:bg-mint"
+                  className="flex cursor-pointer items-start gap-3 rounded-ui border-(length:--bw) border-border bg-surface p-4 has-checked:bg-primary/10"
                 >
                   <input
                     type="radio"
@@ -238,7 +238,7 @@ export function GrantGenerator() {
                       clear();
                     }}
                     disabled={filling || submitting}
-                    className="mt-1 size-5 shrink-0 accent-deep"
+                    className="mt-1 size-5 shrink-0 accent-primary"
                   />
                   <span>
                     <CallDetails grant={item} />
@@ -247,16 +247,16 @@ export function GrantGenerator() {
               ))}
             </div>
           ) : (
-            <p className="mt-3 rounded-ui border-2 border-deep bg-surface px-4 py-3">
+            <p className="mt-3 rounded-ui border-2 border-border bg-surface px-4 py-3">
               Teraz nie trwa ani nie jest zaplanowany żaden nabór. Sprawdź stronę później.
             </p>
           )}
           {closed.length > 0 && (
             <details className="mt-4">
-              <summary className="cursor-pointer font-bold text-deep">Zakończone nabory ({closed.length})</summary>
+              <summary className="cursor-pointer font-bold text-foreground">Zakończone nabory ({closed.length})</summary>
               <ul className="mt-3 grid gap-3">
                 {closed.map((item) => (
-                  <li key={item.id} className="rounded-ui border-2 border-sage bg-paper p-4">
+                  <li key={item.id} className="rounded-ui border-2 border-border/40 bg-background p-4">
                     <CallDetails grant={item} />
                   </li>
                 ))}
@@ -267,12 +267,12 @@ export function GrantGenerator() {
 
         {grant && (
           <section aria-labelledby={`${ids}-zrodlo`}>
-            <h2 id={`${ids}-zrodlo`} className="text-lg font-bold text-deep">
+            <h2 id={`${ids}-zrodlo`} className="text-lg font-bold text-foreground">
               2. Skąd wziąć treść?
             </h2>
             {storedIdea ? (
-              <div className="mt-2 rounded-ui border-(length:--bw) border-deep bg-surface p-4">
-                <p className="flex items-center gap-2 font-bold text-deep">
+              <div className="mt-2 rounded-ui border-(length:--bw) border-border bg-surface p-4">
+                <p className="flex items-center gap-2 font-bold text-foreground">
                   <FileText aria-hidden="true" className="size-5" />
                   Fiszka z Kreatora: {storedIdea.title || "bez tytułu"}
                 </p>
@@ -285,14 +285,14 @@ export function GrantGenerator() {
             ) : (
               <p className="mt-2 text-muted">
                 Nie masz jeszcze fiszki?{" "}
-                <Link href="/kreator" className="font-bold text-deep underline">
+                <Link href="/kreator" className="font-bold text-foreground underline">
                   Utwórz ją w Kreatorze pomysłów
                 </Link>{" "}
                 albo wklej opis poniżej.
               </p>
             )}
 
-            <label htmlFor={`${ids}-opis`} className="mt-6 block font-bold text-deep">
+            <label htmlFor={`${ids}-opis`} className="mt-6 block font-bold text-foreground">
               {storedIdea ? "albo wklej inny opis pomysłu" : "Opis pomysłu"}
             </label>
             <textarea
@@ -310,10 +310,10 @@ export function GrantGenerator() {
             </Button>
 
             <div role="status" aria-live="polite">
-              {filling && <p className="mt-3 font-bold text-deep">AI pisze sekcje wniosku…</p>}
+              {filling && <p className="mt-3 font-bold text-foreground">AI pisze sekcje wniosku…</p>}
             </div>
             {fillError && (
-              <p role="alert" className="mt-3 flex items-start gap-2 rounded-ui border-2 border-alert bg-surface px-4 py-3 font-bold text-alert">
+              <p role="alert" className="mt-3 flex items-start gap-2 rounded-ui border-2 border-destructive bg-surface px-4 py-3 font-bold text-destructive">
                 <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
                 {fillError}
               </p>
@@ -324,7 +324,7 @@ export function GrantGenerator() {
 
       {grant && (
         <section aria-labelledby={`${ids}-wniosek`} className="mt-12 max-w-3xl print:mt-0 print:max-w-none">
-          <h2 id={`${ids}-wniosek`} ref={formHeadingRef} tabIndex={-1} className="text-xl font-bold text-deep focus:outline-none print:text-2xl">
+          <h2 id={`${ids}-wniosek`} ref={formHeadingRef} tabIndex={-1} className="text-xl font-bold text-foreground focus:outline-none print:text-2xl">
             <span className="print:hidden">3. Wniosek: </span>
             {grant.name}
           </h2>
@@ -349,7 +349,7 @@ export function GrantGenerator() {
               const over = value.length > section.max_chars;
               return (
                 <div key={section.id} className="print:break-inside-avoid">
-                  <label htmlFor={fieldId} className="block font-bold text-deep">
+                  <label htmlFor={fieldId} className="block font-bold text-foreground">
                     {section.label}
                   </label>
                   <p id={`${fieldId}-podpowiedz`} className="mt-1 text-muted print:hidden">
@@ -363,12 +363,12 @@ export function GrantGenerator() {
                     onChange={(event) => setValues((current) => ({ ...current, [section.id]: event.target.value }))}
                     aria-describedby={`${fieldId}-podpowiedz ${fieldId}-licznik`}
                     aria-invalid={over || undefined}
-                    className={cn(FIELD_CLASS, "mt-2 resize-y read-only:bg-paper print:hidden", over && "border-alert")}
+                    className={cn(FIELD_CLASS, "mt-2 resize-y read-only:bg-background print:hidden", over && "border-destructive")}
                   />
                   {/* Na wydruku pole tekstowe ucina treść — drukujemy zwykły tekst. */}
                   <p className="hidden whitespace-pre-wrap print:block">{value || "—"}</p>
                   <p id={`${fieldId}-licznik`} className="mt-1 flex flex-wrap items-center gap-x-4 text-sm print:hidden">
-                    <span className={cn("tabular-nums", over ? "font-bold text-alert" : "text-muted")}>
+                    <span className={cn("tabular-nums", over ? "font-bold text-destructive" : "text-muted")}>
                       {value.length} / {section.max_chars} znaków{over && " — za długo"}
                     </span>
                     {todo && (
@@ -409,14 +409,14 @@ export function GrantGenerator() {
             </Link>
           </div>
 
-          <section aria-labelledby={`${ids}-zloz`} className="mt-12 border-t-2 border-sage pt-8 print:hidden">
-            <h2 id={`${ids}-zloz`} className="text-xl font-bold text-deep">
+          <section aria-labelledby={`${ids}-zloz`} className="mt-12 border-t-2 border-border/40 pt-8 print:hidden">
+            <h2 id={`${ids}-zloz`} className="text-xl font-bold text-foreground">
               4. Złóż wniosek
             </h2>
 
             {grant.status === "upcoming" && (
-              <p className="mt-3 flex items-start gap-2 rounded-ui border-2 border-deep bg-paper px-4 py-3">
-                <CalendarClock aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-deep" />
+              <p className="mt-3 flex items-start gap-2 rounded-ui border-2 border-border bg-background px-4 py-3">
+                <CalendarClock aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-foreground" />
                 <span>
                   Nabór jeszcze się nie rozpoczął. Wnioski przyjmujemy od <strong>{formatCallDate(grant.opens_at)}</strong>{" "}
                   do <strong>{formatCallDate(grant.closes_at)}</strong>. Przygotuj wniosek już teraz i wydrukuj go albo zapisz
@@ -431,10 +431,10 @@ export function GrantGenerator() {
                   ref={confirmationRef}
                   tabIndex={-1}
                   role="status"
-                  className="mt-3 rounded-ui border-2 border-leaf bg-mint px-4 py-3 focus:outline-none"
+                  className="mt-3 rounded-ui border-2 border-primary bg-primary/10 px-4 py-3 focus:outline-none"
                 >
-                  <p className="flex items-start gap-2 font-bold text-ink">
-                    <CircleCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-deep" />
+                  <p className="flex items-start gap-2 font-bold text-foreground">
+                    <CircleCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-foreground" />
                     Wniosek złożony (nr {submitted.id}) w naborze „{grant.name}”.
                   </p>
                   <p className="mt-1 pl-7">
@@ -445,11 +445,11 @@ export function GrantGenerator() {
               ) : (
                 <form onSubmit={submit} className="mt-3 grid gap-4">
                   <p className="text-muted">
-                    Wnioski przyjmujemy do <strong className="text-ink">{formatCallDate(grant.closes_at)}</strong> (do końca
+                    Wnioski przyjmujemy do <strong className="text-foreground">{formatCallDate(grant.closes_at)}</strong> (do końca
                     dnia). Wszystkie sekcje muszą być uzupełnione.
                   </p>
                   <div>
-                    <label htmlFor={`${ids}-wnioskodawca`} className="block font-bold text-deep">
+                    <label htmlFor={`${ids}-wnioskodawca`} className="block font-bold text-foreground">
                       Wnioskodawca (imię i nazwisko albo nazwa organizacji)
                     </label>
                     <input
@@ -463,7 +463,7 @@ export function GrantGenerator() {
                     />
                   </div>
                   <div>
-                    <label htmlFor={`${ids}-email`} className="block font-bold text-deep">
+                    <label htmlFor={`${ids}-email`} className="block font-bold text-foreground">
                       E-mail do kontaktu
                     </label>
                     <input
@@ -477,7 +477,7 @@ export function GrantGenerator() {
                     />
                   </div>
                   <div>
-                    <label htmlFor={`${ids}-organizacja`} className="block font-bold text-deep">
+                    <label htmlFor={`${ids}-organizacja`} className="block font-bold text-foreground">
                       Organizacja lub grupa <span className="font-normal text-muted">(nieobowiązkowe)</span>
                     </label>
                     <input
@@ -490,7 +490,7 @@ export function GrantGenerator() {
                     />
                   </div>
                   {submitError && (
-                    <p role="alert" className="flex items-start gap-2 rounded-ui border-2 border-alert bg-surface px-4 py-3 font-bold text-alert">
+                    <p role="alert" className="flex items-start gap-2 rounded-ui border-2 border-destructive bg-surface px-4 py-3 font-bold text-destructive">
                       <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
                       {submitError}
                     </p>

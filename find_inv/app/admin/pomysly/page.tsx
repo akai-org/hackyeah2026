@@ -46,9 +46,9 @@ interface Idea {
 }
 
 const STATUS_LABEL: Record<string, { label: string; className: string }> = {
-  pending:  { label: "Nowy",       className: "bg-butter text-ink" },
-  reviewed: { label: "Przejrzany", className: "bg-mint text-deep" },
-  rejected: { label: "Odrzucony",  className: "bg-paper text-muted" },
+  pending:  { label: "Nowy",       className: "border-accent bg-accent text-accent-foreground" },
+  reviewed: { label: "Przejrzany", className: "border-success bg-success/10 text-success" },
+  rejected: { label: "Odrzucony",  className: "border-border bg-background text-muted" },
 };
 
 export default function PomyslyPage() {
@@ -83,7 +83,7 @@ export default function PomyslyPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-deep">Pomysły z Kreatora</h1>
+        <h1 className="text-2xl font-bold text-primary">Pomysły z Kreatora</h1>
         <p className="text-sm text-muted">{counts.pending} nowych</p>
       </div>
 
@@ -98,8 +98,8 @@ export default function PomyslyPage() {
             key={value}
             onClick={() => setFilter(value)}
             className={cn(
-              "rounded-ui border-(length:--bw) border-deep px-4 py-2 text-sm font-bold",
-              filter === value ? "bg-deep text-surface" : "bg-surface text-deep hover:bg-sage",
+              "rounded-ui border-(length:--bw) border-border px-4 py-2 text-sm font-bold",
+              filter === value ? "bg-primary text-primary-foreground" : "bg-surface text-primary hover:bg-primary/10",
             )}
           >
             {label}
@@ -117,11 +117,11 @@ export default function PomyslyPage() {
               ? new Date(idea.created_at).toLocaleDateString("pl-PL", { day: "numeric", month: "short", year: "numeric" })
               : "—";
             return (
-              <li key={idea.id} className="rounded-ui border-(length:--bw) border-deep bg-surface p-5 shadow-paper">
+              <li key={idea.id} className="rounded-ui border-(length:--bw) border-border bg-surface p-5 shadow-raised">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className={cn("rounded-full border border-deep px-2 py-0.5 text-xs font-bold", badge.className)}>
+                      <span className={cn("rounded-full border border-border px-2 py-0.5 text-xs font-bold", badge.className)}>
                         {badge.label}
                       </span>
                       <span className="flex items-center gap-1 text-xs text-muted">
@@ -129,7 +129,7 @@ export default function PomyslyPage() {
                         {date}
                       </span>
                     </div>
-                    <h2 className="mt-2 font-bold text-deep">{idea.title}</h2>
+                    <h2 className="mt-2 font-bold text-primary">{idea.title}</h2>
                     {idea.short_desc && <p className="mt-1 text-sm font-bold">{idea.short_desc}</p>}
                     <p className="mt-1 whitespace-pre-line text-sm">{idea.essence}</p>
                     <dl className="mt-2 grid gap-x-3 gap-y-0.5 text-sm sm:grid-cols-[8rem_1fr]">
@@ -155,7 +155,7 @@ export default function PomyslyPage() {
                             <button
                               type="button"
                               onClick={() => downloadAttachment(idea.id, attachment).catch(() => alert("Nie udało się pobrać pliku."))}
-                              className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-ui border-2 border-deep bg-paper px-3 text-sm hover:bg-sage"
+                              className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-ui border-2 border-border bg-background px-3 text-sm hover:bg-secondary/60"
                             >
                               <Paperclip className="size-4" aria-hidden="true" />
                               {attachment.filename}
@@ -170,7 +170,7 @@ export default function PomyslyPage() {
                     {idea.tags.length > 0 && (
                       <ul className="mt-2 flex flex-wrap gap-1.5" aria-label="Tagi">
                         {idea.tags.map((tag) => (
-                          <li key={tag} className="inline-flex items-center gap-1 rounded-full border border-leaf bg-paper px-2 py-0.5 text-xs text-leaf">
+                          <li key={tag} className="inline-flex items-center gap-1 rounded-full border border-primary bg-background px-2 py-0.5 text-xs text-primary">
                             <Tag className="size-2.5" aria-hidden="true" />
                             {tag}
                           </li>
@@ -190,7 +190,7 @@ export default function PomyslyPage() {
                         disabled={pending === idea.id}
                         aria-label={`Oznacz jako przejrzany: ${idea.title}`}
                         title="Przejrzany"
-                        className="inline-flex size-9 items-center justify-center rounded-ui border-(length:--bw) border-deep bg-mint hover:bg-leaf hover:text-surface disabled:opacity-40"
+                        className="inline-flex size-9 items-center justify-center rounded-ui border-(length:--bw) border-border bg-surface text-success hover:bg-success/10 disabled:opacity-40"
                       >
                         <CheckCircle className="size-4" aria-hidden="true" />
                       </button>
@@ -199,7 +199,7 @@ export default function PomyslyPage() {
                         disabled={pending === idea.id}
                         aria-label={`Odrzuć: ${idea.title}`}
                         title="Odrzuć"
-                        className="inline-flex size-9 items-center justify-center rounded-ui border-(length:--bw) border-deep bg-paper hover:bg-alert hover:text-surface disabled:opacity-40"
+                        className="inline-flex size-9 items-center justify-center rounded-ui border-(length:--bw) border-border bg-surface text-destructive hover:bg-destructive/10 disabled:opacity-40"
                       >
                         <X className="size-4" aria-hidden="true" />
                       </button>

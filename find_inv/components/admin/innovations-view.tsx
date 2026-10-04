@@ -87,7 +87,7 @@ function Actions({
         variant="secondary"
         disabled={busy !== null}
         onClick={() => onDelete(item)}
-        className="min-h-12 px-3 text-base text-alert"
+        className="min-h-12 px-3 text-base text-destructive"
       >
         <Trash2 aria-hidden="true" />
         Usuń
@@ -188,10 +188,10 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
           event.preventDefault();
           applyFilters({ ...filters, search: draftSearch.trim() });
         }}
-        className="mb-8 grid gap-4 border-(length:--bw) border-deep bg-surface p-5 md:grid-cols-[1fr_auto_auto_auto] md:items-end"
+        className="mb-8 grid gap-4 border-(length:--bw) border-border bg-surface p-5 md:grid-cols-[1fr_auto_auto_auto] md:items-end"
       >
         <div>
-          <label htmlFor={`${ids}-szukaj`} className="block font-bold text-deep">
+          <label htmlFor={`${ids}-szukaj`} className="block font-bold text-foreground">
             Szukaj po nazwie lub miejscu
           </label>
           <input
@@ -204,7 +204,7 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
           />
         </div>
         <div>
-          <label htmlFor={`${ids}-status`} className="block font-bold text-deep">
+          <label htmlFor={`${ids}-status`} className="block font-bold text-foreground">
             Status
           </label>
           <select
@@ -222,7 +222,7 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
           </select>
         </div>
         <div>
-          <label htmlFor={`${ids}-tag`} className="block font-bold text-deep">
+          <label htmlFor={`${ids}-tag`} className="block font-bold text-foreground">
             Tag
           </label>
           <select
@@ -249,7 +249,7 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
       <ErrorNote message={error ?? actionError} />
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <p aria-live="polite" className="font-bold text-deep">
+        <p aria-live="polite" className="font-bold text-foreground">
           {loading ? "Wczytuję…" : `Znaleziono: ${items.length}`}
         </p>
         {hasFilters && (
@@ -270,29 +270,35 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
       {loading && !data ? (
         <LoadingRows label="Wczytuję innowacje" />
       ) : items.length === 0 ? (
-        <div className="border-(length:--bw) border-deep bg-surface p-8">
+        <div className="border-(length:--bw) border-border bg-surface p-8">
           <CutoutText as="p" size="section" text="Nic tu nie ma" />
           <p className="mt-3">Żadna innowacja nie pasuje do filtrów. Zmień status albo wyczyść filtry.</p>
         </div>
       ) : (
         <>
           {/* Szeroki ekran: tabela. */}
-          <div className="hidden overflow-x-auto border-(length:--bw) border-deep bg-surface lg:block">
+          <div className="hidden overflow-x-auto border-(length:--bw) border-border bg-surface lg:block">
             <table className="w-full border-collapse text-left">
               <caption className="sr-only">Innowacje w Bibliotece, {items.length} pozycji</caption>
-              <thead className="bg-sage">
+              <thead className="bg-secondary">
                 <tr>
-                  <th scope="col" className="px-4 py-3 font-bold text-deep">Innowacja</th>
-                  <th scope="col" className="px-4 py-3 font-bold text-deep">Status</th>
-                  <th scope="col" className="px-4 py-3 font-bold text-deep">Dodano</th>
-                  <th scope="col" className="px-4 py-3 font-bold text-deep">Akcje</th>
+                  <th scope="col" className="px-4 py-3 font-bold text-foreground">Innowacja</th>
+                  <th scope="col" className="px-4 py-3 font-bold text-foreground">Status</th>
+                  <th scope="col" className="px-4 py-3 font-bold text-foreground">Dodano</th>
+                  <th scope="col" className="px-4 py-3 font-bold text-foreground">Akcje</th>
                 </tr>
               </thead>
               <tbody>
                 {items.map((item) => (
-                  <tr key={item.id} className={cn("border-t-2 border-sage align-top", item.status === "pending" && "bg-butter/30")}>
+                  <tr
+                    key={item.id}
+                    className={cn(
+                      "border-t-2 border-border/40 align-top",
+                      item.status === "pending" && "shadow-[inset_4px_0_0_var(--color-warning)]",
+                    )}
+                  >
                     <th scope="row" className="max-w-md px-4 py-4 text-left font-normal">
-                      <span className="block font-bold text-deep">{item.title}</span>
+                      <span className="block font-bold text-foreground">{item.title}</span>
                       <span className="mt-1 block text-muted">{item.short_desc}</span>
                       <span className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
                         <span className="inline-flex items-center gap-1">
@@ -300,7 +306,7 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
                           {item.where_implemented || "brak danych"}
                         </span>
                         {item.tags.slice(0, 3).map((tag) => (
-                          <span key={tag} className="rounded-full border border-deep bg-mint px-2">
+                          <span key={tag} className="rounded-full border border-primary bg-background px-2 text-primary">
                             {tagLabel(tag)}
                           </span>
                         ))}
@@ -322,9 +328,9 @@ export function AdminInnovationsView({ initialStatus = "" }: { initialStatus?: s
           {/* Wąski ekran: karty. */}
           <ul className="space-y-4 lg:hidden">
             {items.map((item) => (
-              <li key={item.id} className="border-(length:--bw) border-deep bg-surface p-5">
+              <li key={item.id} className="border-(length:--bw) border-border bg-surface p-5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                  <h2 className="text-lg font-bold text-deep">{item.title}</h2>
+                  <h2 className="text-lg font-bold text-foreground">{item.title}</h2>
                   <StatusBadge status={item.status} />
                 </div>
                 <p className="mt-2 text-muted">{item.short_desc}</p>

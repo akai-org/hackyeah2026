@@ -19,16 +19,16 @@ export default async function ChallengesPage({ searchParams }: PageProps<"/wyzwa
 
   return (
     <div className="min-h-screen">
-      <section aria-labelledby="wyzwania-tytul" className="border-b-(length:--bw) border-deep bg-paper">
+      <section aria-labelledby="wyzwania-tytul" className="border-b-(length:--bw) border-border bg-background">
         <div className="mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
           <Link
             href="/"
-            className="inline-flex min-h-12 items-center gap-2 font-semibold text-leaf underline underline-offset-4 hover:text-deep"
+            className="inline-flex min-h-12 items-center gap-2 font-semibold text-primary underline underline-offset-4 hover:text-primary-hover"
           >
             <ArrowLeft aria-hidden="true" className="size-5" />
             Wróć na stronę główną
           </Link>
-          <h1 id="wyzwania-tytul" className="mt-10 max-w-[18ch] text-hero font-bold text-deep">
+          <h1 id="wyzwania-tytul" className="mt-10 max-w-[18ch] text-hero font-bold text-foreground">
             Wyzwania społeczne Małopolski
           </h1>
           <p className="mt-6 max-w-[62ch] text-lg">

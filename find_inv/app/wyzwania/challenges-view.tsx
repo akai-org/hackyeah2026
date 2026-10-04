@@ -48,7 +48,7 @@ function SourceLink({ source, year }: { source: string; year?: number }) {
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center gap-1 font-semibold text-leaf underline underline-offset-4 hover:text-deep"
+      className="inline-flex items-center gap-1 font-semibold text-primary underline underline-offset-4 hover:text-primary-hover"
     >
       {text}
       <ExternalLink aria-hidden="true" className="size-4 shrink-0" />
@@ -124,7 +124,7 @@ export function ChallengesView({
 
   if (failed) {
     return (
-      <p role="alert" className="rounded-ui border-(length:--bw) border-alert bg-surface p-5 font-semibold text-alert">
+      <p role="alert" className="rounded-ui border-(length:--bw) border-destructive bg-surface p-5 font-semibold text-destructive">
         Nie udało się wczytać wyzwań. Spróbuj odświeżyć stronę za chwilę.
       </p>
     );
@@ -134,7 +134,7 @@ export function ChallengesView({
     return (
       <div role="status" aria-label="Wczytuję wyzwania" className="grid gap-6 md:grid-cols-2">
         {[0, 1, 2, 3].map((index) => (
-          <div key={index} className="h-64 animate-pulse border-(length:--bw) border-sage bg-paper" />
+          <div key={index} className="h-64 animate-pulse border-(length:--bw) border-border/40 bg-background" />
         ))}
       </div>
     );
@@ -148,14 +148,14 @@ export function ChallengesView({
     <>
       {tags.length > 0 && (
         <div className="mb-6 flex flex-wrap items-center gap-2" aria-label="Wybrane tagi">
-          <span className="font-bold text-deep">Tagi:</span>
+          <span className="font-bold text-foreground">Tagi:</span>
           {tags.map((tag) => (
             <button
               key={tag.label}
               type="button"
               onClick={() => setTags((list) => list.filter((item) => item !== tag))}
               aria-label={`Usuń tag ${tag.label}`}
-              className="inline-flex min-h-10 items-center gap-1 rounded-full border-2 border-deep bg-mint px-3 text-sm font-semibold text-deep hover:bg-sage"
+              className="inline-flex min-h-10 items-center gap-1 rounded-full border-2 border-border bg-primary/10 px-3 text-sm font-semibold text-foreground hover:bg-primary/10"
             >
               #{tag.label}
               <X aria-hidden="true" className="size-4" />
@@ -165,22 +165,22 @@ export function ChallengesView({
       )}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-wrap items-end gap-4">
-          <label className="grid gap-1 font-bold text-deep">
+          <label className="grid gap-1 font-bold text-foreground">
             Szukaj problemu
             <input
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="np. seniorzy, opieka zdrowotna"
-              className="min-h-12 w-72 max-w-full rounded-ui border-(length:--bw) border-deep bg-surface px-3 text-base font-normal text-ink placeholder:text-muted"
+              className="min-h-12 w-72 max-w-full rounded-ui border-(length:--bw) border-border bg-surface px-3 text-base font-normal text-foreground placeholder:text-muted"
             />
           </label>
-          <label className="grid gap-1 font-bold text-deep">
+          <label className="grid gap-1 font-bold text-foreground">
             Pokaż dla powiatu
             <select
               value={powiat}
               onChange={(event) => setPowiat(event.target.value)}
-              className="min-h-12 rounded-ui border-(length:--bw) border-deep bg-surface px-3 text-base font-normal text-ink"
+              className="min-h-12 rounded-ui border-(length:--bw) border-border bg-surface px-3 text-base font-normal text-foreground"
             >
               <option value="">Cała Małopolska</option>
               {powiaty.map((name) => (
@@ -207,7 +207,7 @@ export function ChallengesView({
               setPowiat("");
               setTags([]);
             }}
-            className="font-bold text-leaf underline underline-offset-4 hover:text-deep"
+            className="font-bold text-primary underline underline-offset-4 hover:text-primary-hover"
           >
             Pokaż wszystkie wyzwania
           </button>
@@ -218,10 +218,10 @@ export function ChallengesView({
         {groups.map((group) => (
           <li
             key={group.area}
-            className="hover-lift flex flex-col border-(length:--bw) border-deep bg-paper p-6 shadow-paper md:p-8"
+            className="hover-lift flex flex-col border-(length:--bw) border-border bg-background p-6 shadow-raised md:p-8"
           >
             <p className="text-sm font-semibold text-muted">{group.area}</p>
-            <h3 className="mt-1 text-xl font-bold text-deep">{group.title}</h3>
+            <h3 className="mt-1 text-xl font-bold text-foreground">{group.title}</h3>
             <p className="mt-3 max-w-[55ch]">{group.description}</p>
 
             <table className="mt-5 w-full text-left">
@@ -229,7 +229,7 @@ export function ChallengesView({
                 {group.title}: {group.unit}, według powiatów
               </caption>
               <thead>
-                <tr className="border-b-2 border-deep text-sm">
+                <tr className="border-b-2 border-border text-sm">
                   <th scope="col" className="py-2 pr-3 font-bold">
                     Powiat
                   </th>
@@ -240,11 +240,11 @@ export function ChallengesView({
               </thead>
               <tbody>
                 {group.items.slice(0, 6).map((item) => (
-                  <tr key={item.id} className="border-b border-sage">
+                  <tr key={item.id} className="border-b border-border/40">
                     <th scope="row" className="py-2 pr-3 font-normal">
                       {powiatLabel(item.powiat)}
                     </th>
-                    <td className="py-2 text-right font-bold text-deep tabular-nums">
+                    <td className="py-2 text-right font-bold text-foreground tabular-nums">
                       {formatNumber(item.indicator_value)}
                     </td>
                   </tr>
@@ -261,7 +261,7 @@ export function ChallengesView({
 
             <Link
               href={`/wyniki?q=${encodeURIComponent(group.title.toLowerCase())}`}
-              className="mt-auto inline-flex min-h-12 items-center gap-2 pt-4 font-bold text-leaf underline underline-offset-4 hover:text-deep"
+              className="mt-auto inline-flex min-h-12 items-center gap-2 pt-4 font-bold text-primary underline underline-offset-4 hover:text-primary-hover"
             >
               <Search aria-hidden="true" className="size-5" />
               Szukaj rozwiązań
@@ -272,7 +272,7 @@ export function ChallengesView({
       </ul>
 
       <section aria-labelledby="zrodla-tytul" className="mt-14">
-        <h2 id="zrodla-tytul" className="text-2xl font-bold text-deep">
+        <h2 id="zrodla-tytul" className="text-2xl font-bold text-foreground">
           Źródła danych i raporty
         </h2>
         <ul className="mt-4 grid gap-2">
@@ -287,7 +287,7 @@ export function ChallengesView({
               href="https://rops.krakow.pl"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 font-semibold text-leaf underline underline-offset-4 hover:text-deep"
+              className="inline-flex items-center gap-1 font-semibold text-primary underline underline-offset-4 hover:text-primary-hover"
             >
               Raporty i diagnozy ROPS w Krakowie
               <ExternalLink aria-hidden="true" className="size-4 shrink-0" />

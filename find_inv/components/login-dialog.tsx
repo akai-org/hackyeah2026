@@ -36,7 +36,7 @@ export function LoginDialog() {
       </p>
 
       <fieldset className="mt-6">
-        <legend className="font-bold text-deep">Wybierz rolę</legend>
+        <legend className="font-bold text-foreground">Wybierz rolę</legend>
         <ul className="mt-2 grid gap-3">
           {ROLES.map((role) => (
             <li key={role.value}>
@@ -44,12 +44,12 @@ export function LoginDialog() {
                 type="button"
                 onClick={() => choose(role.value)}
                 disabled={pending !== null}
-                className="flex min-h-12 w-full cursor-pointer items-center gap-4 rounded-ui border-(length:--bw) border-deep bg-surface px-4 py-3 text-left hover:bg-mint disabled:cursor-wait disabled:opacity-70"
+                className="flex min-h-12 w-full cursor-pointer items-center gap-4 rounded-ui border-(length:--bw) border-border bg-surface px-4 py-3 text-left hover:bg-primary/10 disabled:cursor-wait disabled:opacity-70"
               >
                 <RoleBadge role={role.value} className="w-36 shrink-0 justify-center" />
                 <span className="flex-1 text-base">{role.description}</span>
                 {pending === role.value && (
-                  <Loader2 aria-label="Loguję" className="size-5 shrink-0 animate-spin text-deep" />
+                  <Loader2 aria-label="Loguję" className="size-5 shrink-0 animate-spin text-foreground" />
                 )}
               </button>
             </li>

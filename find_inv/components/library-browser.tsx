@@ -37,7 +37,7 @@ function syncUrl({ search, tags, cost, archived }: Filters) {
   window.history.replaceState(null, "", query ? `?${query}` : window.location.pathname);
 }
 
-const fieldClass = "min-h-12 rounded-ui border-(length:--bw) border-deep bg-surface px-4 text-base text-ink";
+const fieldClass = "min-h-12 rounded-ui border-(length:--bw) border-border bg-surface px-4 text-base text-foreground";
 
 export function LibraryBrowser({ initial }: { initial: Filters }) {
   const ids = useId();
@@ -96,7 +96,7 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
     <>
       <form role="search" onSubmit={(event) => event.preventDefault()} className="mt-8 grid max-w-4xl gap-6">
         <div>
-          <label htmlFor={`${ids}-szukaj`} className="block text-lg font-bold text-deep">
+          <label htmlFor={`${ids}-szukaj`} className="block text-lg font-bold text-foreground">
             Szukaj w Bibliotece
           </label>
           <div className="relative mt-2">
@@ -117,7 +117,7 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
 
         {/* Poziomy scroll tagów: strzałki + scroll, działa na mobile */}
         <div>
-          <p id={`${ids}-tematy`} className="block font-bold text-deep">
+          <p id={`${ids}-tematy`} className="block font-bold text-foreground">
             Tematy
           </p>
           <div className="relative mt-2 flex items-center gap-1">
@@ -125,7 +125,7 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
               type="button"
               aria-label="Przewiń tematy w lewo"
               onClick={() => { tagsScrollRef.current?.scrollBy({ left: -160, behavior: "smooth" }); }}
-              className="shrink-0 rounded-ui border-(length:--bw) border-deep bg-surface p-1.5 hover:bg-sage focus-visible:outline-2 focus-visible:outline-deep"
+              className="shrink-0 rounded-ui border-(length:--bw) border-border bg-surface p-1.5 hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-focus"
             >
               <ChevronLeft className="size-4" aria-hidden="true" />
             </button>
@@ -141,7 +141,7 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
                   <button
                     type="button"
                     onClick={() => update({ tags: [...filters.tags, tag as Tag] })}
-                    className="inline-flex min-h-10 cursor-pointer items-center whitespace-nowrap rounded-ui border-(length:--bw) border-deep bg-surface px-3 text-sm text-ink hover:bg-mint focus-visible:outline-2 focus-visible:outline-deep"
+                    className="inline-flex min-h-10 cursor-pointer items-center whitespace-nowrap rounded-ui border-(length:--bw) border-border bg-surface px-3 text-sm text-foreground hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-focus"
                   >
                     {TAG_LABELS[tag as Tag]}
                   </button>
@@ -153,7 +153,7 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
               type="button"
               aria-label="Przewiń tematy w prawo"
               onClick={() => { tagsScrollRef.current?.scrollBy({ left: 160, behavior: "smooth" }); }}
-              className="shrink-0 rounded-ui border-(length:--bw) border-deep bg-surface p-1.5 hover:bg-sage focus-visible:outline-2 focus-visible:outline-deep"
+              className="shrink-0 rounded-ui border-(length:--bw) border-border bg-surface p-1.5 hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-focus"
             >
               <ChevronRight className="size-4" aria-hidden="true" />
             </button>
@@ -162,7 +162,7 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
 
         <div className="flex flex-wrap items-end gap-4">
           <div>
-            <label htmlFor={`${ids}-koszt`} className="block font-bold text-deep">
+            <label htmlFor={`${ids}-koszt`} className="block font-bold text-foreground">
               Koszt
             </label>
             <select
@@ -178,12 +178,12 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
               ))}
             </select>
           </div>
-          <label className="flex min-h-12 cursor-pointer items-center gap-3 font-bold text-deep">
+          <label className="flex min-h-12 cursor-pointer items-center gap-3 font-bold text-foreground">
             <input
               type="checkbox"
               checked={filters.archived}
               onChange={(event) => update({ archived: event.target.checked })}
-              className="size-6 cursor-pointer accent-deep"
+              className="size-6 cursor-pointer accent-primary"
             />
             Pokaż też archiwalne
           </label>
@@ -191,21 +191,21 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
 
         {filters.tags.length > 0 && (
           <div role="group" aria-labelledby={`${ids}-wybrane`} className="flex flex-wrap items-center gap-2">
-            <p id={`${ids}-wybrane`} className="font-bold text-deep">
+            <p id={`${ids}-wybrane`} className="font-bold text-foreground">
               Wybrane tematy:
             </p>
             <ul className="flex flex-wrap gap-2">
               {filters.tags.map((tag) => (
                 <li
                   key={tag}
-                  className="inline-flex min-h-10 items-center gap-1 rounded-ui border-(length:--bw) border-deep bg-mint py-0.5 pr-0.5 pl-3 text-base text-ink"
+                  className="inline-flex min-h-10 items-center gap-1 rounded-ui border-(length:--bw) border-primary bg-primary/10 py-0.5 pr-0.5 pl-3 text-base text-foreground"
                 >
                   {TAG_LABELS[tag]}
                   <button
                     type="button"
                     onClick={() => update({ tags: filters.tags.filter((item) => item !== tag) })}
                     aria-label={`Usuń temat ${TAG_LABELS[tag].toLowerCase()}`}
-                    className="inline-flex size-10 cursor-pointer items-center justify-center rounded-ui hover:bg-sage"
+                    className="inline-flex size-10 cursor-pointer items-center justify-center rounded-ui hover:bg-primary/10"
                   >
                     <X aria-hidden="true" className="size-4" />
                   </button>
@@ -216,7 +216,7 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
         )}
       </form>
 
-      <p role="status" aria-live="polite" className="mt-8 flex min-h-8 items-center gap-2 font-bold text-deep">
+      <p role="status" aria-live="polite" className="mt-8 flex min-h-8 items-center gap-2 font-bold text-primary">
         {loading ? (
           <>
             <Loader2 aria-hidden="true" className="size-5 animate-spin" />

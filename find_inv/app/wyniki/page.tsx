@@ -113,10 +113,10 @@ function ResultsContent() {
       {/* Zapytanie */}
       <div className="max-w-2xl">
         <p className="text-sm font-bold text-muted">Twój opis problemu</p>
-        <blockquote className="mt-2 rounded-ui border-(length:--bw) border-deep bg-surface px-5 py-4 text-lg italic">
+        <blockquote className="mt-2 rounded-ui border-(length:--bw) border-border bg-surface px-5 py-4 text-lg italic">
           {query}
         </blockquote>
-        <Link href="/" className="mt-3 inline-flex text-sm text-muted underline underline-offset-4 hover:text-deep">
+        <Link href="/" className="mt-3 inline-flex text-sm text-muted underline underline-offset-4 hover:text-primary-hover">
           Opisz inny problem
         </Link>
       </div>
@@ -131,13 +131,13 @@ function ResultsContent() {
           {tagsLoading ? (
             <div className="mt-2 flex gap-2" aria-busy="true" aria-label="Trwa analiza">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-8 w-24 animate-pulse rounded-ui bg-sage" />
+                <div key={i} className="h-8 w-24 animate-pulse rounded-ui bg-secondary" />
               ))}
             </div>
           ) : (
             <ul className="mt-2 flex flex-wrap gap-2" aria-label="Tagi">
               {tagResult?.tags.map((tag) => (
-                <li key={tag} className="inline-flex items-center gap-1 rounded-ui border-(length:--bw) border-deep bg-mint px-3 py-1 text-sm font-bold text-ink">
+                <li key={tag} className="inline-flex items-center gap-1 rounded-ui border-(length:--bw) border-border bg-secondary/60 px-3 py-1 text-sm font-bold text-foreground">
                   {tag}
                 </li>
               ))}
@@ -147,7 +147,7 @@ function ResultsContent() {
             </ul>
           )}
           {tagResult && !tagResult.is_relevant && (
-            <p role="alert" className="mt-3 rounded-ui border-2 border-alert bg-surface px-4 py-3 text-sm font-bold text-alert">
+            <p role="alert" className="mt-3 rounded-ui border-2 border-destructive bg-surface px-4 py-3 text-sm font-bold text-destructive">
               Opis nie wygląda jak problem społeczny. Spróbuj opisać konkretną sytuację osoby lub grupy w Polsce.
             </p>
           )}
@@ -161,7 +161,7 @@ function ResultsContent() {
             <p className="text-xl font-bold text-muted" aria-live="polite">Szukam pasujących innowacji…</p>
             <ul className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {[1, 2, 3, 4, 5].map((i) => (
-                <li key={i} className="h-64 animate-pulse rounded-ui border-(length:--bw) border-sage bg-sage" />
+                <li key={i} className="h-64 animate-pulse rounded-ui border-(length:--bw) border-transparent bg-secondary" />
               ))}
             </ul>
           </>
@@ -220,8 +220,8 @@ function ResultsContent() {
 
       {/* Chat RAG */}
       {chatOpen && innovations.length > 0 && (
-        <section aria-label="Chat AI" className="mt-10 border-t-2 border-sage pt-8">
-          <h2 className="flex items-center gap-2 text-xl font-bold text-deep">
+        <section aria-label="Chat AI" className="mt-10 border-t-2 border-border/40 pt-8">
+          <h2 className="flex items-center gap-2 text-xl font-bold text-foreground">
             <MessageCircle className="size-5" aria-hidden="true" />
             Zapytaj AI o innowacje
           </h2>
@@ -232,7 +232,7 @@ function ResultsContent() {
             role="log"
             aria-label="Rozmowa z AI"
             aria-live="polite"
-            className="mt-4 max-h-80 overflow-y-auto space-y-3 rounded-ui border-(length:--bw) border-sage bg-paper p-4"
+            className="mt-4 max-h-80 overflow-y-auto space-y-3 rounded-ui border-(length:--bw) border-border/40 bg-background p-4"
           >
             {chatMessages.length === 0 && (
               <p className="text-sm text-muted">Zadaj pytanie o innowacje powyżej.</p>
@@ -240,14 +240,14 @@ function ResultsContent() {
             {chatMessages.map((m, i) => (
               <div
                 key={i}
-                className={cn("rounded-ui p-3 text-sm", m.role === "assistant" ? "bg-sage" : "bg-mint ml-8")}
+                className={cn("rounded-ui p-3 text-sm", m.role === "assistant" ? "bg-secondary/60" : "bg-primary/10 ml-8")}
               >
                 <span className="font-bold">{m.role === "assistant" ? "AI" : "Ty"}</span>
                 <p className="mt-1 whitespace-pre-wrap">{m.content}</p>
               </div>
             ))}
             {chatLoading && (
-              <div className="rounded-ui bg-sage p-3 text-sm">
+              <div className="rounded-ui bg-secondary/60 p-3 text-sm">
                 <span className="inline-flex gap-1" aria-label="AI pisze">
                   <span className="animate-pulse">●</span>
                   <span className="animate-pulse [animation-delay:150ms]">●</span>
@@ -266,7 +266,7 @@ function ResultsContent() {
               onChange={(e) => setChatInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendChat()}
               placeholder="Np. Która z tych innowacji jest najtańsza?"
-              className="flex-1 rounded-ui border-(length:--bw) border-deep bg-surface px-4 py-2"
+              className="flex-1 rounded-ui border-(length:--bw) border-border bg-surface px-4 py-2"
             />
             <Button onClick={sendChat} disabled={chatLoading || !chatInput.trim()}>
               <Send className="size-4" aria-hidden="true" />

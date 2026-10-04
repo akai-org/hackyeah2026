@@ -68,26 +68,26 @@ export function AdminNeedsView() {
         <LoadingRows label="Wczytuję zgłoszone potrzeby" />
       ) : data && trends ? (
         <div className="grid gap-6">
-          <section aria-labelledby={`${ids}-obszary`} className="border-(length:--bw) border-deep bg-surface p-6">
+          <section aria-labelledby={`${ids}-obszary`} className="border-(length:--bw) border-border bg-surface p-6">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
-                <h2 id={`${ids}-obszary`} className="text-xl font-bold text-deep">
+                <h2 id={`${ids}-obszary`} className="text-xl font-bold text-foreground">
                   Potrzeby i wyszukiwania według obszaru
                 </h2>
                 <p className="mt-1 text-muted">
-                  <span className="font-bold text-deep tabular-nums">{trends.total_needs}</span> zgłoszeń i{" "}
-                  <span className="font-bold text-deep tabular-nums">{trends.total_searches}</span> wyszukiwań w okresie
+                  <span className="font-bold text-foreground tabular-nums">{trends.total_needs}</span> zgłoszeń i{" "}
+                  <span className="font-bold text-foreground tabular-nums">{trends.total_searches}</span> wyszukiwań w okresie
                 </p>
               </div>
               <div>
-                <label htmlFor={`${ids}-okres`} className="block font-bold text-deep">
+                <label htmlFor={`${ids}-okres`} className="block font-bold text-foreground">
                   Okres
                 </label>
                 <select
                   id={`${ids}-okres`}
                   value={months}
                   onChange={(event) => setMonths(Number(event.target.value))}
-                  className="mt-2 min-h-12 cursor-pointer rounded-ui border-(length:--bw) border-deep bg-surface px-3 text-base"
+                  className="mt-2 min-h-12 cursor-pointer rounded-ui border-(length:--bw) border-border bg-surface px-3 text-base"
                 >
                   {PERIODS.map((p) => (
                     <option key={p} value={p}>
@@ -121,13 +121,13 @@ export function AdminNeedsView() {
                 />
                 <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {areas.map((a) => (
-                    <li key={a.area?.slug ?? "brak"} className="rounded-ui border-2 border-sage p-4">
-                      <p className="font-bold text-deep">{areaName(a.area)}</p>
+                    <li key={a.area?.slug ?? "brak"} className="rounded-ui border-2 border-border/40 p-4">
+                      <p className="font-bold text-foreground">{areaName(a.area)}</p>
                       <p className="mt-1 flex items-center gap-2 text-sm">
                         {a.trend === "down" ? (
                           <TrendingDown aria-hidden="true" className="size-4 text-muted" />
                         ) : (
-                          <TrendingUp aria-hidden="true" className={cn("size-4", a.trend === "up" || a.trend === "new" ? "text-alert" : "text-muted")} />
+                          <TrendingUp aria-hidden="true" className={cn("size-4", a.trend === "up" || a.trend === "new" ? "text-destructive" : "text-muted")} />
                         )}
                         <span>
                           {a.needs_last_30d} w ostatnich 30 dniach (wcześniej {a.needs_prev_30d}) — {TREND_LABELS[a.trend]}
@@ -141,21 +141,21 @@ export function AdminNeedsView() {
             )}
           </section>
 
-          <section aria-labelledby={`${ids}-lista`} className="border-(length:--bw) border-deep bg-surface p-6">
+          <section aria-labelledby={`${ids}-lista`} className="border-(length:--bw) border-border bg-surface p-6">
             <div className="flex flex-wrap items-end justify-between gap-4">
-              <h2 id={`${ids}-lista`} className="text-xl font-bold text-deep">
+              <h2 id={`${ids}-lista`} className="text-xl font-bold text-foreground">
                 Ostatnie zgłoszenia <span className="tabular-nums">({needs.length})</span>
               </h2>
               {regions.length > 0 && (
                 <div>
-                  <label htmlFor={`${ids}-region`} className="block font-bold text-deep">
+                  <label htmlFor={`${ids}-region`} className="block font-bold text-foreground">
                     Region
                   </label>
                   <select
                     id={`${ids}-region`}
                     value={region}
                     onChange={(event) => setRegion(event.target.value)}
-                    className="mt-2 min-h-12 cursor-pointer rounded-ui border-(length:--bw) border-deep bg-surface px-3 text-base"
+                    className="mt-2 min-h-12 cursor-pointer rounded-ui border-(length:--bw) border-border bg-surface px-3 text-base"
                   >
                     <option value="">Wszystkie</option>
                     {regions.map((r) => (
@@ -176,18 +176,18 @@ export function AdminNeedsView() {
               <div className="mt-4 overflow-x-auto">
                 <table className="w-full min-w-[40rem] border-collapse text-left">
                   <caption className="sr-only">Zgłoszone potrzeby, od najnowszych</caption>
-                  <thead className="bg-sage">
+                  <thead className="bg-secondary">
                     <tr>
-                      <th scope="col" className="px-4 py-3 font-bold text-deep">Opis potrzeby</th>
-                      <th scope="col" className="px-4 py-3 font-bold text-deep">Obszar</th>
-                      <th scope="col" className="px-4 py-3 font-bold text-deep">Kto zgłosił</th>
-                      <th scope="col" className="px-4 py-3 font-bold text-deep">Region</th>
-                      <th scope="col" className="px-4 py-3 font-bold text-deep">Data</th>
+                      <th scope="col" className="px-4 py-3 font-bold text-foreground">Opis potrzeby</th>
+                      <th scope="col" className="px-4 py-3 font-bold text-foreground">Obszar</th>
+                      <th scope="col" className="px-4 py-3 font-bold text-foreground">Kto zgłosił</th>
+                      <th scope="col" className="px-4 py-3 font-bold text-foreground">Region</th>
+                      <th scope="col" className="px-4 py-3 font-bold text-foreground">Data</th>
                     </tr>
                   </thead>
                   <tbody>
                     {needs.map((need) => (
-                      <tr key={need.id} className="border-t-2 border-sage align-top">
+                      <tr key={need.id} className="border-t-2 border-border/40 align-top">
                         <td className="max-w-md px-4 py-3">{need.description}</td>
                         <td className="px-4 py-3">{need.area ? need.area.name : <span className="text-muted">nieprzypisane</span>}</td>
                         <td className="px-4 py-3">{REPORTER_LABELS[need.reporter_type] ?? need.reporter_type}</td>

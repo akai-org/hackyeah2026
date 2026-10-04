@@ -71,7 +71,7 @@ export function QuickSearch({ inputRef, onNavigate }: { inputRef: RefObject<HTML
               setCategory(value);
               inputRef.current?.focus();
             }}
-            className="inline-flex min-h-12 items-center gap-2 rounded-ui border-(length:--bw) border-deep bg-paper px-4 font-semibold text-deep hover:bg-sage aria-pressed:bg-deep aria-pressed:text-surface"
+            className="inline-flex min-h-12 items-center gap-2 rounded-ui border-(length:--bw) border-border bg-background px-4 font-semibold text-foreground hover:bg-primary/10 aria-pressed:bg-primary aria-pressed:text-primary-foreground"
           >
             <Icon aria-hidden="true" className="size-5" />
             {label}
@@ -83,9 +83,9 @@ export function QuickSearch({ inputRef, onNavigate }: { inputRef: RefObject<HTML
         <label htmlFor="quick-search" className="sr-only">
           {current.placeholder}
         </label>
-        <div className="flex min-h-12 min-w-0 flex-1 flex-wrap items-center gap-2 rounded-ui border-(length:--bw) border-deep bg-paper px-3 py-2">
+        <div className="flex min-h-12 min-w-0 flex-1 flex-wrap items-center gap-2 rounded-ui border-(length:--bw) border-border bg-background px-3 py-2">
           {tags.map((tag) => (
-            <span key={tag} className="rounded-full bg-mint px-2 py-1 text-sm font-semibold text-deep">
+            <span key={tag} className="rounded-full bg-primary/10 px-2 py-1 text-sm font-semibold text-foreground">
               #{tag}
             </span>
           ))}
@@ -98,35 +98,35 @@ export function QuickSearch({ inputRef, onNavigate }: { inputRef: RefObject<HTML
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={current.placeholder}
-            className="min-w-[8rem] flex-1 bg-transparent px-1 text-base text-ink outline-none placeholder:text-muted"
+            className="min-w-[8rem] flex-1 bg-transparent px-1 text-base text-foreground outline-none placeholder:text-muted"
           />
         </div>
         <button
           type="submit"
-          className="inline-flex min-h-12 items-center gap-2 rounded-ui border-(length:--bw) border-deep bg-deep px-5 font-bold text-surface hover:bg-leaf"
+          className="inline-flex min-h-12 items-center gap-2 rounded-ui border-(length:--bw) border-border bg-primary px-5 font-bold text-primary-foreground hover:bg-primary-hover"
         >
           <Search aria-hidden="true" className="size-5" />
           Szukaj
         </button>
       </form>
 
-      <details className="mt-4 rounded-ui border-(length:--bw) border-sage bg-paper">
-        <summary className="flex min-h-12 cursor-pointer items-center justify-between gap-4 px-4 font-semibold text-deep">
+      <details className="mt-4 rounded-ui border-(length:--bw) border-border/40 bg-background">
+        <summary className="flex min-h-12 cursor-pointer items-center justify-between gap-4 px-4 font-semibold text-foreground">
           Wybierz tagi
           <span className="text-sm text-muted">{tags.length ? `Wybrano: ${tags.length}` : "wielokrotny wybór"}</span>
         </summary>
-        <div className="grid gap-1 border-t-(length:--bw) border-sage p-3 sm:grid-cols-2" aria-label="Lista tagów wyszukiwania">
+        <div className="grid gap-1 border-t-(length:--bw) border-border/40 p-3 sm:grid-cols-2" aria-label="Lista tagów wyszukiwania">
           {SEARCH_TAGS.map(({ label }) => (
-            <label key={label} className="flex min-h-12 cursor-pointer items-center gap-3 rounded-ui px-3 hover:bg-sage">
+            <label key={label} className="flex min-h-12 cursor-pointer items-center gap-3 rounded-ui px-3 hover:bg-primary/10">
               <input
                 type="checkbox"
                 checked={tags.includes(label)}
                 onChange={() =>
                   setTags((list) => (list.includes(label) ? list.filter((item) => item !== label) : [...list, label]))
                 }
-                className="size-5 accent-deep"
+                className="size-5 accent-primary"
               />
-              <span className="text-base text-deep">#{label}</span>
+              <span className="text-base text-foreground">#{label}</span>
             </label>
           ))}
         </div>

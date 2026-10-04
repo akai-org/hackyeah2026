@@ -31,7 +31,7 @@ export function QuickNav({ sections }: { sections: QuickNavSection[] }) {
             <li key={section.id}>
               <a
                 href={`#${section.id}`}
-                className="inline-flex min-h-12 items-center gap-2 font-medium text-leaf underline underline-offset-4 hover:text-deep"
+                className="inline-flex min-h-12 items-center gap-2 font-medium text-primary underline underline-offset-4 hover:text-primary-hover"
               >
                 {section.label}
                 <ArrowRight aria-hidden="true" className="size-5" />

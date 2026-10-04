@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Generator wniosków" };
 
 export default function GrantsPage() {
   return (
-    <PageBackdrop layout="side" leafColor="leaf">
+    <PageBackdrop layout="side">
       <div className="mx-auto max-w-content px-4 py-16 sm:px-6 print:p-0">
         <div className="print:hidden">
           <CutoutText as="h1" size="section" text="Napisz wniosek" />

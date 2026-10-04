@@ -86,37 +86,37 @@ export function AdminUsersView() {
       ) : data ? (
         <>
           <section aria-labelledby={`${ids}-testerzy`} className="mb-12">
-            <h2 id={`${ids}-testerzy`} className="text-xl font-bold text-deep">
+            <h2 id={`${ids}-testerzy`} className="text-xl font-bold text-foreground">
               Zgłoszenia testerów <span className="tabular-nums">({pending.length})</span>
             </h2>
             {pending.length === 0 ? (
-              <p className="mt-4 flex items-center gap-2 rounded-ui border-2 border-deep bg-mint px-4 py-3 font-bold">
-                <CircleCheck aria-hidden="true" className="size-5 text-deep" />
+              <p className="mt-4 flex items-center gap-2 rounded-ui border-2 border-success bg-success/10 px-4 py-3 font-bold text-success">
+                <CircleCheck aria-hidden="true" className="size-5" />
                 Wszystkie zgłoszenia rozpatrzone.
               </p>
             ) : (
               <ul className="mt-4 grid gap-4 md:grid-cols-2">
                 {pending.map((tester) => (
-                  <li key={tester.id} className="appear flex flex-col border-(length:--bw) border-deep bg-surface p-5 shadow-paper">
-                    <h3 className="text-lg font-bold text-deep">{tester.name}</h3>
+                  <li key={tester.id} className="appear flex flex-col border-(length:--bw) border-border bg-surface p-5 shadow-raised">
+                    <h3 className="text-lg font-bold text-foreground">{tester.name}</h3>
                     <dl className="mt-2 space-y-1 text-base">
                       <div className="flex items-center gap-2">
                         <dt>
-                          <Building2 aria-hidden="true" className="size-4 text-leaf" />
+                          <Building2 aria-hidden="true" className="size-4 text-primary" />
                           <span className="sr-only">Organizacja</span>
                         </dt>
                         <dd>{tester.organization}</dd>
                       </div>
                       <div className="flex items-center gap-2">
                         <dt>
-                          <Sparkles aria-hidden="true" className="size-4 text-leaf" />
+                          <Sparkles aria-hidden="true" className="size-4 text-primary" />
                           <span className="sr-only">Specjalizacja</span>
                         </dt>
                         <dd>{tester.expertise}</dd>
                       </div>
                       <div className="flex items-center gap-2">
                         <dt>
-                          <Mail aria-hidden="true" className="size-4 text-leaf" />
+                          <Mail aria-hidden="true" className="size-4 text-primary" />
                           <span className="sr-only">E-mail</span>
                         </dt>
                         <dd className="break-all">{tester.email}</dd>
@@ -140,18 +140,18 @@ export function AdminUsersView() {
           </section>
 
           <section aria-labelledby={`${ids}-lista`}>
-            <h2 id={`${ids}-lista`} className="text-xl font-bold text-deep">
+            <h2 id={`${ids}-lista`} className="text-xl font-bold text-foreground">
               Wszyscy użytkownicy <span className="tabular-nums">({data.users.length})</span>
             </h2>
-            <div className="mt-4 overflow-x-auto border-(length:--bw) border-deep bg-surface">
+            <div className="mt-4 overflow-x-auto border-(length:--bw) border-border bg-surface">
               <table className="w-full min-w-[44rem] border-collapse text-left">
                 <caption className="sr-only">Użytkownicy platformy i ich role</caption>
-                <thead className="bg-sage">
+                <thead className="bg-secondary">
                   <tr>
-                    <th scope="col" className="px-4 py-3 font-bold text-deep">Osoba lub instytucja</th>
-                    <th scope="col" className="px-4 py-3 font-bold text-deep">Rola</th>
-                    <th scope="col" className="px-4 py-3 font-bold text-deep">Zmień rolę</th>
-                    <th scope="col" className="px-4 py-3 font-bold text-deep">
+                    <th scope="col" className="px-4 py-3 font-bold text-foreground">Osoba lub instytucja</th>
+                    <th scope="col" className="px-4 py-3 font-bold text-foreground">Rola</th>
+                    <th scope="col" className="px-4 py-3 font-bold text-foreground">Zmień rolę</th>
+                    <th scope="col" className="px-4 py-3 font-bold text-foreground">
                       <span className="sr-only">Usuń konto</span>
                     </th>
                   </tr>
@@ -160,12 +160,12 @@ export function AdminUsersView() {
                   {data.users.map((user) => {
                     const selectId = `${ids}-rola-${user.id}`;
                     return (
-                      <tr key={user.id} className="border-t-2 border-sage">
+                      <tr key={user.id} className="border-t-2 border-border/40">
                         <th scope="row" className="px-4 py-3 text-left font-normal">
-                          <span className="block font-bold text-deep">{user.name}</span>
+                          <span className="block font-bold text-foreground">{user.name}</span>
                           <span className="text-sm text-muted">od {formatDate(user.created_at)}</span>
                           {user.tester_pending && (
-                            <span className="ml-2 rounded-full border border-deep bg-butter px-2 text-sm font-bold text-deep">
+                            <span className="ml-2 rounded-full border border-accent bg-accent px-2 text-sm font-bold text-accent-foreground">
                               chce zostać testerem
                             </span>
                           )}
@@ -187,7 +187,7 @@ export function AdminUsersView() {
                                   value={user.role}
                                   disabled={busy !== null}
                                   onChange={(event) => changeRole(user, event.target.value as Exclude<Role, "admin">)}
-                                  className="min-h-12 cursor-pointer rounded-ui border-(length:--bw) border-deep bg-surface px-3 text-base"
+                                  className="min-h-12 cursor-pointer rounded-ui border-(length:--bw) border-border bg-surface px-3 text-base"
                                 >
                                   {ASSIGNABLE.map((role) => (
                                     <option key={role} value={role}>
@@ -196,7 +196,7 @@ export function AdminUsersView() {
                                   ))}
                                 </select>
                                 {busy === `role:${user.id}` && (
-                                  <Loader2 aria-label="Zapisuję" className="size-5 animate-spin text-leaf" />
+                                  <Loader2 aria-label="Zapisuję" className="size-5 animate-spin text-primary" />
                                 )}
                               </span>
                             </>
@@ -209,7 +209,7 @@ export function AdminUsersView() {
                               variant="secondary"
                               disabled={busy !== null}
                               onClick={() => setDeleting(user)}
-                              className="px-3 text-alert"
+                              className="px-3 text-destructive"
                             >
                               <Trash2 aria-hidden="true" />
                               Usuń<span className="sr-only"> konto: {user.name}</span>

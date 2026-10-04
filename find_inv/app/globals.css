@@ -1,6 +1,53 @@
 @import "tailwindcss";
 @config "../tailwind.config.ts";
 
+/* ---------- Tokeny kolorów (DESIGN.md, sekcja 3) ----------
+   Jedyne miejsce z wartościami kolorów w aplikacji. Komponenty znają tylko nazwy
+   (bg-primary, text-muted, border-border, var(--color-focus) itd.), więc tryb
+   wysokiego kontrastu podmienia wartości niżej i cały interfejs zmienia się sam.
+   `--color-*: initial` wyłącza domyślną paletę Tailwinda (red-500, white, black…),
+   żeby nie powstał drugi, równoległy system kolorów. */
+
+@theme {
+  --color-*: initial;
+
+  --color-background: #f4fbfb;
+  --color-surface: #ffffff;
+  --color-secondary: #c2d2b8;
+  --color-foreground: #000000;
+  --color-muted: #888888;
+  --color-border: #5f7568;
+
+  --color-primary: #345995;
+  --color-primary-hover: #284778;
+  --color-primary-foreground: #ffffff;
+
+  --color-accent: #f4845f;
+  --color-accent-foreground: #000000;
+
+  --color-success: #2e6b45;
+  --color-warning: #7a4e00;
+  --color-destructive: #a3322a;
+
+  --color-focus: #1f3f73;
+  /* Przyciemnienie pod oknami modalnymi (zawsze z modyfikatorem krycia, np. bg-overlay/60). */
+  --color-overlay: #000000;
+
+  /* Cień kartki: twardy, zabarwiony kolorem treści, nigdy czysta czerń. */
+  --shadow-raised: 0 12px 24px color-mix(in srgb, var(--color-foreground) 16%, transparent);
+}
+
+/* Skala kartogramu (mapa powiatów) liczona z tokenów: od tła do `primary`.
+   Kroki 1-3 niosą tekst `foreground`, kroki 4-5 tekst `primary-foreground` (każda para ≥ 4,5:1). */
+:root {
+  --map-0: var(--color-background);
+  --map-1: color-mix(in srgb, var(--color-primary) 12%, var(--color-background));
+  --map-2: color-mix(in srgb, var(--color-primary) 28%, var(--color-background));
+  --map-3: color-mix(in srgb, var(--color-primary) 48%, var(--color-background));
+  --map-4: color-mix(in srgb, var(--color-primary) 88%, var(--color-background));
+  --map-5: var(--color-primary);
+}
+
 /* ---------- Podstawa (DESIGN.md, sekcja 12) ---------- */
 
 @layer base {
@@ -10,11 +57,15 @@
     --bw: 2px;
     /* Wysokość przyklejonego nagłówka — odstęp dla kotwic i skip linka. */
     --header-h: 5.5rem;
+
+    .animate-pulse-slow {
+  animation: pulse 3s ease-in-out infinite;
+}
   }
 
   body {
-    background-color: theme(colors.paper);
-    color: theme(colors.ink);
+    background-color: var(--color-background);
+    color: var(--color-foreground);
     font-size: 1.125rem;
     line-height: 1.6;
     overflow-x: clip;
@@ -34,20 +85,25 @@
   }
 
   ::selection {
-    background-color: theme(colors.mint);
-    color: theme(colors.ink);
+    background-color: var(--color-secondary);
+    color: var(--color-foreground);
+  }
+
+  ::placeholder {
+    color: var(--color-muted);
+    opacity: 1;
   }
 
   /* ---------- Focus (DESIGN.md, sekcja 8) ---------- */
 
   :focus-visible {
-    outline: 3px solid theme(colors.deep);
+    outline: 3px solid var(--color-focus);
     outline-offset: 3px;
   }
 
-  /* Na tle `deep` dodatkowy jasny pierścień w odstępie między elementem a obrysem. */
-  .focus-on-deep:focus-visible {
-    box-shadow: 0 0 0 3px theme(colors.surface);
+  /* Na tle `primary` dodatkowy jasny pierścień w odstępie między elementem a obrysem. */
+  .focus-on-primary:focus-visible {
+    box-shadow: 0 0 0 3px var(--color-surface);
   }
 }
 
@@ -63,13 +119,77 @@
   }
 }
 
+/* ---------- Dekoracje tła: poświata, przejście sekcji, groszek (DESIGN.md, sekcja 3.3) ----------
+   Statyczne (bez animacji), tylko w hero, wybranych sekcjach i stopce. Przejścia kończą się
+   na 70% `secondary`, bo tam każdy kolor tekstu (także `primary` i statusy) ma jeszcze ≥ 4,5:1. */
+
+@layer components {
+  .bg-glow {
+    background-color: var(--color-background);
+    background-image:
+      radial-gradient(48rem 26rem at 88% -8%, color-mix(in srgb, var(--color-secondary) 60%, transparent), transparent 70%),
+      radial-gradient(36rem 22rem at -12% 30%, color-mix(in srgb, var(--color-primary) 7%, transparent), transparent 70%);
+  }
+
+  .bg-section-fade {
+    background-color: var(--color-background);
+    background-image: linear-gradient(
+      180deg,
+      var(--color-background),
+      color-mix(in srgb, var(--color-secondary) 70%, var(--color-background)) 55%,
+      color-mix(in srgb, var(--color-secondary) 70%, var(--color-background))
+    );
+  }
+
+  /* Groszek: drobne, rzadkie kropki w kolorze treści przy 8% krycia, wygaszane maską
+     w stronę treści, więc pod tekstem praktycznie znikają. */
+.bg-dots {
+  position: relative;
+  isolation: isolate;
+  background-color: color-mix(
+    in srgb,
+    var(--color-primary) 18%,
+    var(--color-background)
+  );
+}
+
+[data-contrast="high"] .bg-dots {
+  background-color: var(--color-background);
+}
+  .bg-dots::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: radial-gradient(
+      circle,
+      color-mix(in srgb, #ffffff 72%, transparent) 1.5px,
+      transparent 2px
+    );
+    background-size: 24px 24px;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .bg-dots-bottom::before {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  /* Twardy cień wyciętego papieru (litery kolażu, chmurki). Filter, bo cień liczy się po clip-path. */
+  .shadow-cutout {
+    filter: drop-shadow(3px 3px 0 color-mix(in srgb, var(--color-foreground) 22%, transparent));
+  }
+}
+
 /* ---------- Kolaż: <CutoutText> (DESIGN.md, sekcja 6) ---------- */
 
 @layer components {
   .cutout {
     font-family: var(--font-atkinson), system-ui, sans-serif;
     font-weight: 700;
-    color: theme(colors.deep);
+    color: var(--color-foreground);
     /* Normalna spacja ma ok. 0,25em, razem daje ok. 0,4em między słowami. */
     word-spacing: 0.15em;
   }
@@ -85,7 +205,7 @@
     font-size: calc(1em * var(--s, 1));
     transform: translateY(var(--dy, 0)) rotate(var(--r, 0deg));
     /* Cień liczony po clip-path, dlatego filter na rodzicu, a nie box-shadow na wycinku. */
-    filter: drop-shadow(3px 3px 0 rgba(18, 50, 41, 0.25));
+    filter: drop-shadow(3px 3px 0 color-mix(in srgb, var(--color-foreground) 25%, transparent));
   }
 
   .cutout-char:last-child {
@@ -129,7 +249,7 @@
     }
   }
 
-  /* Ograniczony ruch: zwykły nagłówek Atkinson 700 w kolorze `deep`. */
+  /* Ograniczony ruch: zwykły nagłówek Atkinson 700 w kolorze `foreground`. */
   @media (prefers-reduced-motion: reduce) {
     .cutout-letters {
       display: none;
@@ -158,65 +278,78 @@ html[data-font-size="large"] {
   font-size: 125%;
 }
 
+/* ---------- Wysoki kontrast (DESIGN.md, sekcja 3.4) ----------
+   Te same tokeny, inne wartości: żółty na czarnym (konwencja serwisów publicznych).
+   Komponenty niczego tu nie nadpisują, zmienia się tylko paleta. Do tego grubsze ramki,
+   mocniejszy focus, podkreślone linki i brak dekoracji. */
+
 html[data-contrast="high"] {
-  --bw: 3px;
   color-scheme: dark;
+  --bw: 3px;
+
+  --color-background: #000000;
+  --color-surface: #0d0d0d;
+  --color-secondary: #1c1c1c;
+  --color-foreground: #d4ff00;
+  --color-muted: #ffffff;
+  --color-border: #d4ff00;
+
+  --color-primary: #d4ff00;
+  --color-primary-hover: #ffffff;
+  --color-primary-foreground: #000000;
+
+  --color-accent: #ff9e7a;
+  --color-accent-foreground: #000000;
+
+  --color-success: #5ee08a;
+  --color-warning: #ffc94d;
+  --color-destructive: #ff4838b6;
+
+  --color-focus: #7fe7ff;
+  --color-overlay: #000000;
+
+
+  /* Kartogram: kroki 1-2 ciemne z żółtym tekstem, 3-5 jasne z czarnym tekstem. */
+  --map-1: color-mix(in srgb, var(--color-primary) 10%, var(--color-background));
+  --map-2: color-mix(in srgb, var(--color-primary) 22%, var(--color-background));
+  --map-3: color-mix(in srgb, var(--color-primary) 62%, var(--color-background));
+  --map-4: color-mix(in srgb, var(--color-primary) 82%, var(--color-background));
 }
 
-html[data-contrast="high"] body,
-html[data-contrast="high"] .bg-paper,
-html[data-contrast="high"] .bg-surface,
-html[data-contrast="high"] .bg-sage,
-html[data-contrast="high"] .bg-mint,
-html[data-contrast="high"] .bg-butter,
-html[data-contrast="high"] .bg-deep,
-html[data-contrast="high"] .bg-leaf {
-  background-color: #000 !important;
-  background-image: none !important;
-}
-
-html[data-contrast="high"] :where(body, body *) {
-  color: #fff500 !important;
-}
-
-html[data-contrast="high"] .bg-deep,
-html[data-contrast="high"] .bg-leaf {
-  background-color: #fff500 !important;
-}
-
-html[data-contrast="high"] .bg-deep.text-surface,
-html[data-contrast="high"] .bg-leaf.text-surface {
-  color: #000 !important;
-}
-
-html[data-contrast="high"] svg {
-  color: #fff500 !important;
-  stroke: #fff500 !important;
-}
-
-html[data-contrast="high"] .bg-deep *,
-html[data-contrast="high"] .bg-leaf * {
-  color: #000 !important;
-  stroke: #000 !important;
-}
-
-html[data-contrast="high"] :where(.border-deep, .border-sage, .border-leaf) {
-  border-color: #fff500 !important;
-}
-
-html[data-contrast="high"] input::placeholder,
-html[data-contrast="high"] textarea::placeholder {
-  color: #fff500 !important;
+/* Kolor nie może być jedynym wyróżnikiem linku, gdy `primary` = `foreground`. */
+html[data-contrast="high"] a:not([class*="bg-"]) {
+  text-decoration-line: underline;
+  text-underline-offset: 4px;
 }
 
 html[data-contrast="high"] :focus-visible {
-  outline: 4px solid #fff500;
+  outline: 4px solid var(--color-focus);
   outline-offset: 4px;
+  box-shadow: 0 0 0 8px var(--color-background);
 }
 
 html[data-contrast="high"] ::selection {
-  background-color: #fff500;
-  color: #000;
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+/* Dekoracja ustępuje czytelności. */
+html[data-contrast="high"] :is(.bg-glow, .bg-section-fade) {
+  background-image: none;
+}
+
+html[data-contrast="high"] .simple-hidden,
+html[data-contrast="high"] .bg-dots::before {
+  display: none;
+}
+
+/* Tailwind wkleja wartość cienia do klasy, więc wyłączamy go tutaj, a nie przez token. */
+html[data-contrast="high"] .shadow-raised {
+  box-shadow: none;
+}
+
+html[data-contrast="high"] :is(.cutout-char, .shadow-cutout) {
+  filter: none;
 }
 
 /* ---------- Ruch w odpowiedzi na akcję (DESIGN.md, sekcja 9) ---------- */
@@ -255,14 +388,14 @@ html[data-contrast="high"] ::selection {
   }
 
   @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-    :where(button, a, label, [role="button"])[class*="border-deep"][class*="hover:bg-"]:not(:disabled, [aria-disabled="true"]):hover {
+    :where(button, a, label, [role="button"])[class*="border-"][class*="hover:bg-"]:not(:disabled, [aria-disabled="true"]):hover {
       translate: -1px -1px;
-      box-shadow: 2px 2px 0 rgba(18, 50, 41, 0.3);
+      box-shadow: 2px 2px 0 color-mix(in srgb, var(--color-foreground) 30%, transparent);
     }
 
-    :where(button, a, label, [role="button"])[class*="border-deep"][class*="hover:bg-"]:not(:disabled):active {
+    :where(button, a, label, [role="button"])[class*="border-"][class*="hover:bg-"]:not(:disabled):active {
       translate: 0 0;
-      box-shadow: 0 0 0 rgba(18, 50, 41, 0.3);
+      box-shadow: 0 0 0 color-mix(in srgb, var(--color-foreground) 30%, transparent);
     }
   }
 }
@@ -394,7 +527,7 @@ html[data-contrast="high"] ::selection {
   .hover-lift:hover,
   .hover-lift:focus-within {
     translate: 0 -2px;
-    box-shadow: 0 14px 28px rgba(18, 50, 41, 0.18);
+    box-shadow: 0 14px 28px color-mix(in srgb, var(--color-foreground) 18%, transparent);
   }
 }
 
@@ -402,7 +535,7 @@ html[data-contrast="high"] ::selection {
 
 @media print {
   body {
-    background: #fff;
+    background: var(--color-surface);
   }
 
   header,
@@ -412,7 +545,26 @@ html[data-contrast="high"] ::selection {
     display: none !important;
   }
 
-  .shadow-paper {
+  .shadow-raised {
     box-shadow: none !important;
+  }
+
+  :is(.bg-glow, .bg-section-fade) {
+    background-image: none !important;
+  }
+
+  .bg-dots::before {
+    display: none;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+
+  50% {
+    opacity: 0.7;
   }
 }

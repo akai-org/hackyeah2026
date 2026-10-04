@@ -82,9 +82,9 @@ export function FeaturedInnovations({ headingId, children }: { headingId: string
       }}
     >
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h2 id={headingId} className="text-2xl font-medium text-deep">
+        <h2 id={headingId} className="text-2xl font-medium text-foreground">
           Popularne innowacje dla:{" "}
-          <span className={cn("inline-block font-bold text-leaf", fade)} style={{ transitionDuration: `${FADE_MS}ms` }}>
+          <span className={cn("inline-block font-bold text-primary", fade)} style={{ transitionDuration: `${FADE_MS}ms` }}>
             {AUDIENCES[index].label}
           </span>
         </h2>
@@ -92,7 +92,7 @@ export function FeaturedInnovations({ headingId, children }: { headingId: string
           type="button"
           onClick={() => setPaused((current) => !current)}
           aria-pressed={paused}
-          className="inline-flex min-h-12 items-center gap-2 font-medium text-leaf underline underline-offset-4 hover:text-deep"
+          className="inline-flex min-h-12 items-center gap-2 font-medium text-primary underline underline-offset-4 hover:text-primary-hover"
         >
           {paused ? <Play aria-hidden="true" className="size-5" /> : <Pause aria-hidden="true" className="size-5" />}
           {paused ? "Wznów zmienianie" : "Zatrzymaj zmienianie"}
@@ -102,7 +102,7 @@ export function FeaturedInnovations({ headingId, children }: { headingId: string
       {children}
 
       <ul
-        className={cn("mt-10 grid gap-8 md:grid-cols-2 lg:grid-cols-3", fade)}
+        className={cn("mt-10 grid auto-rows-fr items-stretch gap-8 md:grid-cols-2 lg:grid-cols-3", fade)}
         style={{ transitionDuration: `${FADE_MS}ms` }}
       >
         {byAudience[index].map((innovation) => (

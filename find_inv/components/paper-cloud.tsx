@@ -28,8 +28,8 @@ const SHAPES = {
 } as const;
 
 const COLORS = {
-  surface: "text-surface",
-  mint: "text-mint",
+  surface: "text-primary-foreground",
+  secondary: "text-secondary",
 } as const;
 
 type PaperCloudProps = {
@@ -48,7 +48,7 @@ export function PaperCloud({ shape = "wide", color = "surface", className }: Pap
       focusable="false"
       viewBox={viewBox}
       className={cn(
-        "simple-hidden pointer-events-none select-none drop-shadow-[3px_3px_0_rgba(27,67,50,0.25)]",
+        "simple-hidden shadow-cutout pointer-events-none select-none",
         COLORS[color],
         className,
       )}

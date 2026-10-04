@@ -38,7 +38,7 @@ export function MiddlemanModal({ innovationId, innovationTitle, problem = "", on
       onClose={onClose}
       title="Jak to wdrożyć?"
       description={innovationTitle}
-      icon={<Bot aria-hidden="true" className="size-8 shrink-0 text-leaf" />}
+      icon={<Bot aria-hidden="true" className="size-8 shrink-0 text-primary" />}
       size="xl"
       className="middleman-dialog h-[calc(100dvh-2rem)] max-w-[min(90rem,calc(100vw-2rem))]"
     >

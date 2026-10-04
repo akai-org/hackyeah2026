@@ -15,9 +15,9 @@ import { cn } from "@/lib/utils";
 type Innovation = { id: number; title: string };
 
 const STATUS_STYLES: Record<TestStatus, { icon: typeof Clock; className: string }> = {
-  requested: { icon: Clock, className: "bg-sage text-ink" },
-  assigned: { icon: FlaskConical, className: "bg-butter text-deep" },
-  submitted: { icon: ClipboardCheck, className: "bg-mint text-ink" },
+  requested: { icon: Clock, className: "border-border bg-secondary text-foreground" },
+  assigned: { icon: FlaskConical, className: "border-primary bg-primary/10 text-primary" },
+  submitted: { icon: ClipboardCheck, className: "border-success bg-success/10 text-success" },
   rejected: { icon: X, className: "bg-surface text-muted" },
 };
 
@@ -26,7 +26,7 @@ export function TestStatusBadge({ status }: { status: TestStatus }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border-2 border-deep px-2.5 py-0.5 text-sm font-bold",
+        "inline-flex items-center gap-1.5 rounded-full border-2 border-border px-2.5 py-0.5 text-sm font-bold",
         className,
       )}
     >
@@ -90,7 +90,7 @@ export function TestRequestForm({
   return (
     <form onSubmit={submit} aria-label={`Zgłoszenie do testu: ${innovation.title}`} className="appear grid gap-3">
       <div>
-        <label htmlFor={`${ids}-dlaczego`} className="block font-bold text-deep">
+        <label htmlFor={`${ids}-dlaczego`} className="block font-bold text-foreground">
           Dlaczego chcesz ją przetestować?
         </label>
         <p id={`${ids}-podpowiedz`} className="mt-1 text-muted">
@@ -103,11 +103,11 @@ export function TestRequestForm({
           value={motivation}
           onChange={(event) => setMotivation(event.target.value)}
           aria-describedby={`${ids}-podpowiedz`}
-          className="mt-2 w-full rounded-ui border-(length:--bw) border-deep bg-surface px-4 py-3 text-base text-ink"
+          className="mt-2 w-full rounded-ui border-(length:--bw) border-border bg-surface px-4 py-3 text-base text-foreground"
         />
       </div>
       {error && (
-        <p role="alert" className="flex items-start gap-2 font-bold text-alert">
+        <p role="alert" className="flex items-start gap-2 font-bold text-destructive">
           <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
           {error}
         </p>
@@ -148,10 +148,10 @@ export function TestRequestBox({ innovation }: { innovation: Innovation }) {
   return (
     <section
       aria-labelledby="test-innowacji"
-      className="mt-8 border-(length:--bw) border-deep bg-surface p-6 shadow-paper print:hidden"
+      className="mt-8 border-(length:--bw) border-border bg-surface p-6 shadow-raised print:hidden"
     >
-      <h2 id="test-innowacji" className="flex items-center gap-2 text-xl font-bold text-deep">
-        <FlaskConical aria-hidden="true" className="size-6 text-leaf" />
+      <h2 id="test-innowacji" className="flex items-center gap-2 text-xl font-bold text-foreground">
+        <FlaskConical aria-hidden="true" className="size-6 text-primary" />
         Testowanie
       </h2>
       {report ? (
@@ -161,7 +161,7 @@ export function TestRequestBox({ innovation }: { innovation: Innovation }) {
             {report.status === "requested" && "Dostaniesz innowację do testu, gdy ROPS zatwierdzi zgłoszenie."}
             {report.status === "assigned" && "Po teście wystaw ocenę w panelu testera."}
           </p>
-          <Link href="/testerzy/panel" className="mt-3 inline-block font-bold text-deep underline underline-offset-4">
+          <Link href="/testerzy/panel" className="mt-3 inline-block font-bold text-primary underline underline-offset-4 hover:text-primary-hover">
             Przejdź do panelu testera
           </Link>
         </>

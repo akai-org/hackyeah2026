@@ -64,9 +64,9 @@ export function InnovationOfTheDaySection({ id }: { id: string }) {
   if (state === "empty") return null;
 
   return (
-    <section id={id} data-reveal aria-labelledby={headingId} className="border-y-(length:--bw) border-deep bg-sage">
+    <section id={id} data-reveal aria-labelledby={headingId} className="border-y-(length:--bw) border-border bg-secondary">
       <div className="mx-auto max-w-content px-4 py-10 sm:px-6 lg:py-12">
-        <article className="mx-auto max-w-3xl border-(length:--bw) border-deep bg-surface p-6 shadow-paper md:p-8">
+        <article className="mx-auto max-w-3xl border-(length:--bw) border-border bg-surface p-6 shadow-raised md:p-8">
           <p className="text-sm font-medium text-muted">Artykuł dnia z Biblioteki Innowacji ROPS</p>
           {innovation ? <InnovationBody innovation={innovation} headingId={headingId} /> : <Skeleton headingId={headingId} />}
         </article>
@@ -81,9 +81,9 @@ function Skeleton({ headingId }: { headingId: string }) {
       <h2 id={headingId} className="sr-only">
         Wczytuję artykuł dnia
       </h2>
-      <div aria-hidden="true" className="mt-2 h-8 w-3/4 animate-pulse rounded-ui bg-sage" />
-      <div aria-hidden="true" className="mt-4 h-5 w-full animate-pulse rounded-ui bg-sage" />
-      <div aria-hidden="true" className="mt-2 h-5 w-5/6 animate-pulse rounded-ui bg-sage" />
+      <div aria-hidden="true" className="mt-2 h-8 w-3/4 animate-pulse rounded-ui bg-secondary" />
+      <div aria-hidden="true" className="mt-4 h-5 w-full animate-pulse rounded-ui bg-secondary" />
+      <div aria-hidden="true" className="mt-2 h-5 w-5/6 animate-pulse rounded-ui bg-secondary" />
     </div>
   );
 }
@@ -91,11 +91,11 @@ function Skeleton({ headingId }: { headingId: string }) {
 function InnovationBody({ innovation, headingId }: { innovation: InnovationCard; headingId: string }) {
   return (
     <>
-      <h2 id={headingId} className="mt-2 text-2xl font-bold text-deep">
+      <h2 id={headingId} className="mt-2 text-2xl font-bold text-foreground">
         {innovation.title}
       </h2>
       {innovation.category && (
-        <p className="mt-2 inline-flex rounded-ui border-2 border-deep bg-mint px-3 py-0.5 text-sm font-medium text-ink">
+        <p className="mt-2 inline-flex rounded-ui border-2 border-border bg-secondary/60 px-3 py-0.5 text-sm font-medium text-foreground">
           {innovation.category}
         </p>
       )}
@@ -104,7 +104,7 @@ function InnovationBody({ innovation, headingId }: { innovation: InnovationCard;
         {innovation.target_group && (
           <div className="flex items-start gap-2">
             <dt>
-              <Users aria-hidden="true" className="mt-1 size-5 text-leaf" />
+              <Users aria-hidden="true" className="mt-1 size-5 text-primary" />
               <span className="sr-only">Dla kogo</span>
             </dt>
             <dd>{shorten(innovation.target_group, 140)}</dd>
@@ -113,7 +113,7 @@ function InnovationBody({ innovation, headingId }: { innovation: InnovationCard;
         {innovation.where_implemented && (
           <div className="flex items-start gap-2">
             <dt>
-              <MapPin aria-hidden="true" className="mt-1 size-5 text-leaf" />
+              <MapPin aria-hidden="true" className="mt-1 size-5 text-primary" />
               <span className="sr-only">Gdzie działa</span>
             </dt>
             <dd>{shorten(innovation.where_implemented, 140)}</dd>
@@ -122,7 +122,7 @@ function InnovationBody({ innovation, headingId }: { innovation: InnovationCard;
       </dl>
       <Link
         href={`/innowacje/${innovation.id}`}
-        className="mt-5 inline-flex min-h-12 items-center gap-2 font-medium text-leaf underline underline-offset-4 hover:text-deep"
+        className="mt-5 inline-flex min-h-12 items-center gap-2 font-medium text-primary underline underline-offset-4 hover:text-primary-hover"
       >
         Czytaj całą kartę
         <span className="sr-only">: {innovation.title}</span>

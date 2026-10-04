@@ -19,7 +19,7 @@ export default async function EducationPage({ searchParams }: PageProps<"/edukac
 
   return (
     <>
-      <section aria-labelledby="edukacja-tytul" className="border-b-(length:--bw) border-deep bg-paper">
+      <section aria-labelledby="edukacja-tytul" className="border-b-(length:--bw) border-border bg-background">
         <div className="mx-auto max-w-content px-4 py-16 sm:px-6 lg:py-20">
           <CutoutText id="edukacja-tytul" as="h1" size="hero" text="Edukacja" />
           <p className="mt-6 max-w-[60ch] text-lg">

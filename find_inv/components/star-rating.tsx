@@ -53,7 +53,7 @@ export function StarRating({ innovationId }: Props) {
 
   return (
     <div className="mt-6">
-      <h2 className="text-lg font-bold text-deep">Oceń tę innowację</h2>
+      <h2 className="text-lg font-bold text-foreground">Oceń tę innowację</h2>
 
       <div className="mt-3 flex flex-wrap items-center gap-4">
         <div
@@ -73,9 +73,9 @@ export function StarRating({ innovationId }: Props) {
               onFocus={() => setHover(star)}
               onBlur={() => setHover(0)}
               className={cn(
-                "cursor-pointer rounded p-0.5 transition-colors focus-visible:outline-2 focus-visible:outline-deep disabled:cursor-default",
+                "cursor-pointer rounded p-0.5 transition-colors focus-visible:outline-2 focus-visible:outline-focus disabled:cursor-default",
                 star <= (hover || (submitted ? displayAvg : 0))
-                  ? "text-butter"
+                  ? "text-accent"
                   : "text-muted",
               )}
             >
@@ -90,7 +90,7 @@ export function StarRating({ innovationId }: Props) {
 
         <div className="text-sm text-muted">
           {submitted ? (
-            <span className="font-bold text-deep">Dziękujemy za ocenę!</span>
+            <span className="font-bold text-foreground">Dziękujemy za ocenę!</span>
           ) : displayCount > 0 ? (
             `${displayAvg.toFixed(1)} / 5 (${displayCount} ${displayCount === 1 ? "ocena" : displayCount < 5 ? "oceny" : "ocen"})`
           ) : (
@@ -102,7 +102,7 @@ export function StarRating({ innovationId }: Props) {
       {data?.tester_count != null && data.tester_count > 0 && data.tester_average != null && (
         <p className="mt-2 text-sm text-muted">
           Ocena testerów:{" "}
-          <strong className="text-deep">
+          <strong className="text-foreground">
             {data.tester_average.toFixed(1)} / 5
           </strong>{" "}
           ({data.tester_count} {data.tester_count === 1 ? "tester" : data.tester_count < 5 ? "testerów" : "testerów"})

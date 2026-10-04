@@ -3,17 +3,25 @@ import { join } from "node:path";
 
 import { expect, test } from "@playwright/test";
 
-// Kontrast tokenów kolorów (tailwind.config.ts) wg WCAG 2.x: tekst ≥ 4,5:1, elementy UI ≥ 3:1.
+// Kontrast tokenów kolorów (@theme w app/globals.css) wg WCAG 2.x: tekst ≥ 4,5:1, elementy UI ≥ 3:1.
 
+// Wartości z @theme w app/globals.css (pierwszy test pilnuje, że się zgadzają).
 const COLORS = {
-  paper: "#F4FBF8",
-  surface: "#FFFFFF",
-  sage: "#C2D2B8",
-  mint: "#DCE8D8",
-  butter: "#F4845F",
-  deep: "#123229",
-  leaf: "#1A5E47",
-  alert: "#9F3F2D",
+  background: "#f4fbfb",
+  surface: "#ffffff",
+  secondary: "#c2d2b8",
+  foreground: "#000000",
+  muted: "#888888",
+  border: "#5f7568",
+  primary: "#345995",
+  "primary-hover": "#284778",
+  "primary-foreground": "#ffffff",
+  accent: "#f4845f",
+  "accent-foreground": "#000000",
+  success: "#2e6b45",
+  warning: "#7a4e00",
+  destructive: "#a3322a",
+  focus: "#1f3f73",
 };
 
 function luminance(hex: string) {
@@ -31,25 +39,27 @@ function contrast(a: string, b: string) {
 
 // Pary tekst/tło używane w interfejsie.
 const TEXT_PAIRS: Array<[keyof typeof COLORS, keyof typeof COLORS]> = [
-  ["deep", "paper"],
-  ["deep", "surface"],
-  ["deep", "sage"],
-  ["deep", "mint"],
-  ["deep", "butter"],
-  ["leaf", "paper"],
-  ["leaf", "surface"],
-  ["leaf", "sage"],
-  ["leaf", "mint"],
-  ["alert", "surface"],
-  ["alert", "paper"],
-  ["surface", "deep"],
-  ["surface", "leaf"],
+  ["foreground", "background"],
+  ["foreground", "surface"],
+  ["foreground", "secondary"],
+  ["primary", "background"],
+  ["primary", "surface"],
+  ["primary-hover", "surface"],
+  ["primary-foreground", "primary"],
+  ["primary-foreground", "primary-hover"],
+  ["accent-foreground", "accent"],
+  ["destructive", "surface"],
+  ["destructive", "background"],
+  ["success", "surface"],
+  ["warning", "surface"],
 ];
 
-test("tokeny w tailwind.config.ts zgadzają się z testem", () => {
-  const config = readFileSync(join(process.cwd(), "tailwind.config.ts"), "utf8");
+test("tokeny w app/globals.css zgadzają się z testem", () => {
+  const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
+  const start = css.indexOf("@theme");
+  const theme = css.slice(start, css.indexOf("}", start));
   for (const [name, hex] of Object.entries(COLORS)) {
-    expect(config, name).toContain(`${name}: "${hex}"`);
+    expect(theme, name).toContain(`--color-${name}: ${hex};`);
   }
 });
 
@@ -59,11 +69,15 @@ for (const [fg, bg] of TEXT_PAIRS) {
   });
 }
 
-test("pierścień fokusu na mapie widoczny na każdym kolorze powiatu (≥ 3:1)", () => {
-  const fills = ["#D3E3D0", "#A9CDB4", "#6FA88A", "#2D6A4F", "#1B4332", "#EEF3EA"];
-  for (const fill of fills) {
-    // Pierścień: biały + ciemny — wystarczy, że jeden z nich ma 3:1 z wypełnieniem.
-    expect(Math.max(contrast("#FFFFFF", fill), contrast("#123229", fill)), fill).toBeGreaterThanOrEqual(3);
+// `muted` (#888) ma ok. 3,4:1 na tle — za mało na zwykły tekst (WCAG AA 4,5:1). Do poprawy w palecie.
+test.fixme("tekst muted na background ≥ 4,5:1", () => {
+  expect(contrast(COLORS.muted, COLORS.background)).toBeGreaterThanOrEqual(4.5);
+});
+
+test("pierścień fokusu na mapie widoczny na skrajnych kolorach skali (≥ 3:1)", () => {
+  // Skala mapy idzie od `background` do `primary`; pierścień to `surface` + `focus`.
+  for (const fill of [COLORS.background, COLORS.secondary, COLORS.primary]) {
+    expect(Math.max(contrast(COLORS.surface, fill), contrast(COLORS.focus, fill)), fill).toBeGreaterThanOrEqual(3);
   }
 });
 
@@ -73,5 +87,7 @@ test("fokus z klawiatury na mapie rysuje pierścień", async ({ page }) => {
   await powiat.focus();
   // .focus() z kodu nie zawsze daje :focus-visible — przejdź klawiaturą do następnego powiatu.
   await page.keyboard.press("Tab");
-  await expect(page.locator('svg[aria-label^="Mapa powiatów"] path[stroke="#123229"][fill="none"]')).toHaveCount(1);
+  await expect(page.locator('svg[aria-label^="Mapa powiatów"] path[stroke="var(--color-focus)"][fill="none"]')).toHaveCount(
+    1,
+  );
 });

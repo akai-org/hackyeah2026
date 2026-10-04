@@ -35,7 +35,7 @@ function ResourceLink({ href, icon: Icon, children }: { href: string; icon: type
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex min-h-12 items-center gap-2 font-bold text-leaf underline underline-offset-4 hover:text-deep"
+      className="inline-flex min-h-12 items-center gap-2 font-bold text-primary underline underline-offset-4 hover:text-primary-hover"
     >
       <Icon aria-hidden="true" className="size-5 shrink-0" />
       {children}
@@ -77,7 +77,7 @@ export function EducationList({ initialQuery = "", initialTags = "" }: { initial
 
   if (failed) {
     return (
-      <p role="alert" className="rounded-ui border-(length:--bw) border-alert bg-surface p-5 font-semibold text-alert">
+      <p role="alert" className="rounded-ui border-(length:--bw) border-destructive bg-surface p-5 font-semibold text-destructive">
         Nie udało się wczytać materiałów. Spróbuj odświeżyć stronę za chwilę.
       </p>
     );
@@ -87,7 +87,7 @@ export function EducationList({ initialQuery = "", initialTags = "" }: { initial
     return (
       <div role="status" aria-label="Wczytuję materiały" className="grid gap-6 md:grid-cols-2">
         {[0, 1, 2, 3].map((index) => (
-          <div key={index} className="h-48 animate-pulse border-(length:--bw) border-sage bg-paper" />
+          <div key={index} className="h-48 animate-pulse border-(length:--bw) border-border/40 bg-background" />
         ))}
       </div>
     );
@@ -101,14 +101,14 @@ export function EducationList({ initialQuery = "", initialTags = "" }: { initial
     <>
       {tags.length > 0 && (
         <div className="mb-6 flex flex-wrap items-center gap-2" aria-label="Wybrane tagi">
-          <span className="font-bold text-deep">Tagi:</span>
+          <span className="font-bold text-foreground">Tagi:</span>
           {tags.map((tag) => (
             <button
               key={tag.label}
               type="button"
               onClick={() => setTags((list) => list.filter((item) => item !== tag))}
               aria-label={`Usuń tag ${tag.label}`}
-              className="inline-flex min-h-10 items-center gap-1 rounded-full border-2 border-deep bg-mint px-3 text-sm font-semibold text-deep hover:bg-sage"
+              className="inline-flex min-h-10 items-center gap-1 rounded-full border-2 border-border bg-primary/10 px-3 text-sm font-semibold text-foreground hover:bg-primary/10"
             >
               #{tag.label}
               <X aria-hidden="true" className="size-4" />
@@ -116,19 +116,19 @@ export function EducationList({ initialQuery = "", initialTags = "" }: { initial
           ))}
         </div>
       )}
-      <label className="mb-6 grid max-w-md gap-1 font-bold text-deep">
+      <label className="mb-6 grid max-w-md gap-1 font-bold text-foreground">
         Szukaj materiału
         <input
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="np. spółdzielnia, kryzys psychiczny"
-          className="min-h-12 rounded-ui border-(length:--bw) border-deep bg-surface px-3 text-base font-normal text-ink placeholder:text-muted"
+          className="min-h-12 rounded-ui border-(length:--bw) border-border bg-surface px-3 text-base font-normal text-foreground placeholder:text-muted"
         />
       </label>
       {areas.length > 0 && (
         <fieldset>
-          <legend className="font-bold text-deep">Temat</legend>
+          <legend className="font-bold text-foreground">Temat</legend>
           <div className="mt-2 flex flex-wrap gap-2">
             {[["", "Wszystkie"] as const, ...areas].map(([slug, name]) => (
               <button
@@ -136,7 +136,7 @@ export function EducationList({ initialQuery = "", initialTags = "" }: { initial
                 type="button"
                 aria-pressed={area === slug}
                 onClick={() => setArea(slug)}
-                className="min-h-12 rounded-ui border-(length:--bw) border-deep bg-surface px-4 font-semibold text-deep hover:bg-sage aria-pressed:bg-deep aria-pressed:text-surface"
+                className="min-h-12 rounded-ui border-(length:--bw) border-border bg-surface px-4 font-semibold text-foreground hover:bg-primary/10 aria-pressed:bg-primary aria-pressed:text-primary-foreground"
               >
                 {name}
               </button>
@@ -154,20 +154,20 @@ export function EducationList({ initialQuery = "", initialTags = "" }: { initial
           <li key={item.id} className="hover-lift flex">
             <article
               aria-labelledby={`material-${item.id}`}
-              className="flex w-full flex-col border-(length:--bw) border-deep bg-surface p-6 shadow-paper"
+              className="flex w-full flex-col border-(length:--bw) border-border bg-surface p-6 shadow-raised"
             >
-              <BookOpen aria-hidden="true" className="size-8 text-leaf" strokeWidth={1.75} />
-              <h3 id={`material-${item.id}`} className="mt-3 text-xl font-bold text-deep">
+              <BookOpen aria-hidden="true" className="size-8 text-primary" strokeWidth={1.75} />
+              <h3 id={`material-${item.id}`} className="mt-3 text-xl font-bold text-foreground">
                 {item.title}
               </h3>
               {item.summary && <p className="mt-2">{item.summary}</p>}
 
               {item.content && (
-                <details className="mt-4 rounded-ui border-2 border-sage">
-                  <summary className="flex min-h-12 cursor-pointer items-center px-4 font-semibold text-deep">
+                <details className="mt-4 rounded-ui border-2 border-border/40">
+                  <summary className="flex min-h-12 cursor-pointer items-center px-4 font-semibold text-foreground">
                     Czytaj więcej
                   </summary>
-                  <div className="grid gap-3 border-t-2 border-sage p-4">
+                  <div className="grid gap-3 border-t-2 border-border/40 p-4">
                     {item.content
                       .split(/\n{2,}/)
                       .filter(Boolean)
@@ -183,12 +183,12 @@ export function EducationList({ initialQuery = "", initialTags = "" }: { initial
               {(item.areas.length > 0 || item.tags.length > 0) && (
                 <ul className="mt-4 flex flex-wrap gap-2" aria-label="Tematy">
                   {item.areas.map((entry) => (
-                    <li key={entry.slug} className="rounded-ui border-2 border-deep bg-mint px-2 py-0.5 text-sm font-semibold">
+                    <li key={entry.slug} className="rounded-ui border-2 border-border bg-primary/10 px-2 py-0.5 text-sm font-semibold">
                       {entry.name}
                     </li>
                   ))}
                   {item.tags.map((tag) => (
-                    <li key={tag} className="rounded-ui bg-paper px-2 py-0.5 text-sm">
+                    <li key={tag} className="rounded-ui bg-background px-2 py-0.5 text-sm">
                       #{tag}
                     </li>
                   ))}

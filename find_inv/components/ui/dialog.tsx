@@ -167,8 +167,8 @@ export function Dialog({
         pressedOnBackdrop.current = false;
       }}
       className={cn(
-        "m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] overflow-y-auto overscroll-contain rounded-ui border-(length:--bw) border-deep bg-surface p-0 text-ink shadow-paper",
-        "hub-dialog backdrop:bg-ink/55 backdrop:backdrop-blur-sm",
+        "m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] overflow-y-auto overscroll-contain rounded-ui border-(length:--bw) border-border bg-surface p-0 text-foreground shadow-raised",
+        "hub-dialog backdrop:bg-overlay/55 backdrop:backdrop-blur-sm",
         SIZES[size],
         className,
       )}
@@ -178,7 +178,7 @@ export function Dialog({
           <div className="flex min-w-0 items-center gap-3">
             {icon}
             <div className="min-w-0">
-              <h2 id={titleId} className="text-2xl font-bold text-deep">
+              <h2 id={titleId} className="text-2xl font-bold text-foreground">
                 {title}
               </h2>
               {description && (
@@ -194,7 +194,7 @@ export function Dialog({
             onClick={() => onCloseRef.current()}
             aria-label={closeLabel}
             title={closeLabel}
-            className="-mt-2 -mr-2 inline-flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-ui text-deep hover:bg-sage"
+            className="-mt-2 -mr-2 inline-flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-ui text-foreground hover:bg-primary/10"
           >
             <X aria-hidden="true" className="size-6" />
           </button>

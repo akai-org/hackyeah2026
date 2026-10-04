@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 const RATING_LABELS = ["", "Nie działa", "Słabo", "Średnio", "Dobrze", "Bardzo dobrze"];
 
 const inputClass =
-  "mt-2 w-full rounded-ui border-(length:--bw) bg-surface px-4 py-3 text-base text-ink placeholder:text-muted";
+  "mt-2 w-full rounded-ui border-(length:--bw) bg-surface px-4 py-3 text-base text-foreground placeholder:text-muted";
 
 const GROUPS: Array<{ status: TestStatus; title: string; empty?: string }> = [
   { status: "assigned", title: "Przypisane do mnie", empty: "ROPS nie przypisał Ci jeszcze żadnej innowacji." },
@@ -34,7 +34,7 @@ export function TesterPanel() {
   if (status === "loading") {
     return (
       <div className="flex items-center gap-3" role="status">
-        <Loader2 aria-hidden="true" className="size-6 animate-spin text-leaf" />
+        <Loader2 aria-hidden="true" className="size-6 animate-spin text-primary" />
         Sprawdzam uprawnienia…
       </div>
     );
@@ -42,14 +42,14 @@ export function TesterPanel() {
 
   if (user?.role !== "tester" && user?.role !== "admin") {
     return (
-      <div className="max-w-xl border-(length:--bw) border-deep bg-surface p-6 shadow-paper sm:p-8">
-        <h2 className="flex items-center gap-3 text-xl font-bold text-deep">
-          <FlaskConical aria-hidden="true" className="size-7 shrink-0 text-leaf" />
+      <div className="max-w-xl border-(length:--bw) border-border bg-surface p-6 shadow-raised sm:p-8">
+        <h2 className="flex items-center gap-3 text-xl font-bold text-foreground">
+          <FlaskConical aria-hidden="true" className="size-7 shrink-0 text-primary" />
           Ta część jest dla testerów
         </h2>
         <p className="mt-3">
           Rolę testera nadaje administrator ROPS. Wybierz innowację w{" "}
-          <Link href="/biblioteka" className="font-bold text-deep underline underline-offset-4">
+          <Link href="/biblioteka" className="font-bold text-primary underline underline-offset-4 hover:text-primary-hover">
             Bibliotece
           </Link>{" "}
           i na jej karcie kliknij „Zgłoś się jako tester”. Po zatwierdzeniu zobaczysz tu innowacje przypisane do Ciebie.
@@ -103,16 +103,16 @@ function Dashboard({ userId }: { userId: number | string }) {
   return (
     <>
       {offline && (
-        <p className="mb-6 border-l-4 border-alert pl-4 text-muted" role="status">
+        <p className="mb-6 border-l-4 border-destructive pl-4 text-muted" role="status">
           Brak połączenia z serwerem. Testy zapisują się tylko w tej karcie przeglądarki.
         </p>
       )}
 
       <dl className="grid max-w-2xl grid-cols-3 gap-4">
         {(["assigned", "requested", "submitted"] as const).map((status) => (
-          <div key={status} className="border-(length:--bw) border-deep bg-surface p-4 shadow-paper">
+          <div key={status} className="border-(length:--bw) border-border bg-surface p-4 shadow-raised">
             <dt className="font-bold text-muted">{GROUPS.find((group) => group.status === status)!.title}</dt>
-            <dd className="text-3xl font-bold text-deep">{tests ? count(status) : "–"}</dd>
+            <dd className="text-3xl font-bold text-foreground">{tests ? count(status) : "–"}</dd>
           </div>
         ))}
       </dl>
@@ -120,13 +120,13 @@ function Dashboard({ userId }: { userId: number | string }) {
       <div className="mt-12 grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
         <div>
           {loadError ? (
-            <p className="flex items-start gap-2 font-bold text-alert" role="alert">
+            <p className="flex items-start gap-2 font-bold text-destructive" role="alert">
               <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
               Nie udało się wczytać testów. Odśwież stronę.
             </p>
           ) : !tests ? (
             <p className="flex items-center gap-3" role="status">
-              <Loader2 aria-hidden="true" className="size-5 animate-spin text-leaf" />
+              <Loader2 aria-hidden="true" className="size-5 animate-spin text-primary" />
               Wczytuję testy…
             </p>
           ) : (
@@ -135,7 +135,7 @@ function Dashboard({ userId }: { userId: number | string }) {
               if (!items.length && !empty) return null;
               return (
                 <section key={status} aria-labelledby={`grupa-${status}`} className="mb-10">
-                  <h2 id={`grupa-${status}`} className="text-xl font-bold text-deep">
+                  <h2 id={`grupa-${status}`} className="text-xl font-bold text-foreground">
                     {title}
                   </h2>
                   {items.length ? (
@@ -176,7 +176,7 @@ export function Stars({ rating }: { rating: number }) {
         <Star
           key={value}
           aria-hidden="true"
-          className={cn("size-5", value <= rating ? "fill-leaf text-leaf" : "text-muted")}
+          className={cn("size-5", value <= rating ? "fill-primary text-primary" : "text-muted")}
         />
       ))}
     </span>
@@ -200,10 +200,10 @@ function TestItem({
   const assigned = report.status === "assigned";
 
   return (
-    <li className="border-(length:--bw) border-deep bg-surface p-5 shadow-paper">
+    <li className="border-(length:--bw) border-border bg-surface p-5 shadow-raised">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-lg font-bold text-deep">
+          <h3 className="text-lg font-bold text-foreground">
             <Link href={`/innowacje/${report.innovation_id}`} className="underline-offset-4 hover:underline">
               {title}
             </Link>
@@ -285,16 +285,16 @@ function FeedbackForm({ id, title, onSubmit }: { id: string; title: string; onSu
 
   const errorText = (key: keyof Errors) =>
     errors[key] && (
-      <p id={`${ids}-${key}-blad`} className="mt-2 flex items-start gap-2 font-bold text-alert">
+      <p id={`${ids}-${key}-blad`} className="mt-2 flex items-start gap-2 font-bold text-destructive">
         <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
         {errors[key]}
       </p>
     );
 
   return (
-    <form id={id} onSubmit={submit} noValidate aria-label={`Ocena testu: ${title}`} className="appear mt-6 border-t-2 border-deep pt-6">
+    <form id={id} onSubmit={submit} noValidate aria-label={`Ocena testu: ${title}`} className="appear mt-6 border-t-2 border-border pt-6">
       <fieldset aria-describedby={errors.rating ? `${ids}-rating-blad` : undefined}>
-        <legend className="font-bold text-deep">
+        <legend className="font-bold text-primary">
           Jak oceniasz innowację? <span className="font-normal text-muted">(wymagane)</span>
         </legend>
         <div className="mt-2 flex flex-wrap gap-2">
@@ -302,8 +302,8 @@ function FeedbackForm({ id, title, onSubmit }: { id: string; title: string; onSu
             <label
               key={value}
               className={cn(
-                "inline-flex min-h-12 cursor-pointer items-center gap-2 rounded-ui border-(length:--bw) border-deep px-4 py-2 has-focus-visible:outline-3 has-focus-visible:outline-offset-3 has-focus-visible:outline-deep",
-                rating === value ? "bg-mint font-bold text-ink" : "bg-surface text-ink hover:bg-sage",
+                "inline-flex min-h-12 cursor-pointer items-center gap-2 rounded-ui border-(length:--bw) border-border px-4 py-2 has-focus-visible:outline-3 has-focus-visible:outline-offset-3 has-focus-visible:outline-focus",
+                rating === value ? "bg-primary font-bold text-primary-foreground" : "bg-surface text-foreground hover:bg-primary/10",
               )}
             >
               <input
@@ -326,7 +326,7 @@ function FeedbackForm({ id, title, onSubmit }: { id: string; title: string; onSu
       </fieldset>
 
       <div className="mt-6">
-        <label htmlFor={`${ids}-dzialalo`} className="block font-bold text-deep">
+        <label htmlFor={`${ids}-dzialalo`} className="block font-bold text-foreground">
           Co zadziałało? <span className="font-normal text-muted">(wymagane)</span>
         </label>
         <textarea
@@ -340,13 +340,13 @@ function FeedbackForm({ id, title, onSubmit }: { id: string; title: string; onSu
           }}
           aria-invalid={!!errors.what_worked || undefined}
           aria-describedby={errors.what_worked ? `${ids}-what_worked-blad` : undefined}
-          className={cn(inputClass, errors.what_worked ? "border-alert" : "border-deep")}
+          className={cn(inputClass, errors.what_worked ? "border-destructive" : "border-border")}
         />
         {errorText("what_worked")}
       </div>
 
       <div className="mt-6">
-        <label htmlFor={`${ids}-usprawnienia`} className="block font-bold text-deep">
+        <label htmlFor={`${ids}-usprawnienia`} className="block font-bold text-foreground">
           Co trzeba zmienić lub usprawnić?
         </label>
         <p id={`${ids}-usprawnienia-podpowiedz`} className="mt-1 text-muted">
@@ -358,12 +358,12 @@ function FeedbackForm({ id, title, onSubmit }: { id: string; title: string; onSu
           value={improvements}
           onChange={(event) => setImprovements(event.target.value)}
           aria-describedby={`${ids}-usprawnienia-podpowiedz`}
-          className={cn(inputClass, "border-deep")}
+          className={cn(inputClass, "border-border")}
         />
       </div>
 
       <div className="mt-6">
-        <label htmlFor={`${ids}-koszt`} className="block font-bold text-deep">
+        <label htmlFor={`${ids}-koszt`} className="block font-bold text-foreground">
           Ile to kosztowało?
         </label>
         <input
@@ -372,7 +372,7 @@ function FeedbackForm({ id, title, onSubmit }: { id: string; title: string; onSu
           value={costNote}
           onChange={(event) => setCostNote(event.target.value)}
           placeholder="np. 500 zł na materiały, 4 godziny pracy wolontariusza"
-          className={cn(inputClass, "min-h-12 border-deep")}
+          className={cn(inputClass, "min-h-12 border-border")}
         />
       </div>
 
@@ -410,8 +410,8 @@ function InnovationPicker({
   }, [search]);
 
   return (
-    <section aria-labelledby={`${ids}-tytul`} className="self-start border-(length:--bw) border-deep bg-surface p-6 shadow-paper">
-      <h2 id={`${ids}-tytul`} className="text-xl font-bold text-deep">
+    <section aria-labelledby={`${ids}-tytul`} className="self-start border-(length:--bw) border-border bg-surface p-6 shadow-raised">
+      <h2 id={`${ids}-tytul`} className="text-xl font-bold text-foreground">
         Zgłoś się do testu
       </h2>
       <p className="mt-2 text-muted">Wybierz innowację. Administrator ROPS zdecyduje, czy Ci ją przypisać.</p>
@@ -432,7 +432,7 @@ function InnovationPicker({
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="np. seniorzy, samotność"
-          className={cn(inputClass, "mt-0 min-h-12 border-deep")}
+          className={cn(inputClass, "mt-0 min-h-12 border-border")}
         />
         <Button type="submit" aria-label="Szukaj">
           <Search aria-hidden="true" />
@@ -441,7 +441,7 @@ function InnovationPicker({
 
       {!results ? (
         <p className="mt-4 flex items-center gap-3" role="status">
-          <Loader2 aria-hidden="true" className="size-5 animate-spin text-leaf" />
+          <Loader2 aria-hidden="true" className="size-5 animate-spin text-primary" />
           Wczytuję innowacje…
         </p>
       ) : results.length === 0 ? (
@@ -451,8 +451,8 @@ function InnovationPicker({
       ) : (
         <ul className="mt-4 grid gap-5">
           {results.map((innovation) => (
-            <li key={innovation.id} className="border-l-4 border-leaf pl-4">
-              <Link href={`/innowacje/${innovation.id}`} className="font-bold text-deep underline-offset-4 hover:underline">
+            <li key={innovation.id} className="border-l-4 border-primary pl-4">
+              <Link href={`/innowacje/${innovation.id}`} className="font-bold text-foreground underline-offset-4 hover:underline">
                 {innovation.title}
               </Link>
               <p className="mt-1 line-clamp-2 text-muted">{innovation.short_desc}</p>

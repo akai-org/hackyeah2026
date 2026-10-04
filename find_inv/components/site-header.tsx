@@ -19,7 +19,7 @@ const NAV_LINKS = [
 ];
 
 const linkClass =
-  "inline-flex min-h-12 items-center whitespace-nowrap rounded-ui px-2.5 text-base font-bold text-deep underline-offset-4 hover:underline";
+  "inline-flex min-h-12 items-center whitespace-nowrap rounded-ui px-2.5 text-base font-bold text-foreground underline-offset-4 hover:text-primary hover:underline";
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
@@ -56,10 +56,10 @@ export function SiteHeader() {
   }, [open, searchOpen, openSearch]);
 
   return (
-    <header className="sticky top-0 z-40 border-b-(length:--bw) border-deep bg-paper">
+    <header className="sticky top-0 z-40 border-b-(length:--bw) border-border bg-background">
       <a
         href="#main"
-        className="focus-on-deep sr-only rounded-ui bg-deep px-5 py-3 font-bold text-surface focus:not-sr-only focus:absolute focus:top-3 focus:left-4 focus:z-50"
+        className="focus-on-primary sr-only rounded-ui bg-primary px-5 py-3 font-bold text-primary-foreground focus:not-sr-only focus:absolute focus:top-3 focus:left-4 focus:z-50"
       >
         Przejdź do treści
       </a>
@@ -75,11 +75,11 @@ export function SiteHeader() {
             onClick={openSearch}
             aria-haspopup="dialog"
             aria-keyshortcuts="Control+K"
-            className="hidden min-h-12 w-full max-w-md cursor-pointer items-center rounded-ui border-(length:--bw) border-deep bg-surface text-left hover:bg-paper sm:flex"
+            className="hidden min-h-12 w-full max-w-md cursor-pointer items-center rounded-ui border-(length:--bw) border-border bg-surface text-left hover:bg-background sm:flex"
           >
-            <Search aria-hidden="true" className="ml-3 size-5 text-leaf" />
+            <Search aria-hidden="true" className="ml-3 size-5 text-primary" />
             <span className="min-w-0 flex-1 px-3 text-base text-muted">Szukaj</span>
-            <kbd className="mr-3 rounded border border-sage px-2 py-1 text-sm font-semibold text-muted">Ctrl+K</kbd>
+            <kbd className="mr-3 rounded border border-border/40 px-2 py-1 text-sm font-semibold text-muted">Ctrl+K</kbd>
           </button>
         </div>
 
@@ -104,7 +104,7 @@ export function SiteHeader() {
             aria-expanded={open}
             aria-controls="menu-mobilne"
             onClick={() => setOpen((value) => !value)}
-            className="inline-flex min-h-12 min-w-12 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-ui border-(length:--bw) border-deep bg-surface px-4 font-bold text-deep hover:bg-sage nav-mobile xl:hidden"
+            className="inline-flex min-h-12 min-w-12 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-ui border-(length:--bw) border-border bg-surface px-4 font-bold text-primary hover:bg-primary/10 nav-mobile xl:hidden"
           >
             {open ? <X aria-hidden="true" className="size-5" /> : <Menu aria-hidden="true" className="size-5" />}
             {open ? "Zamknij" : "Menu"}
@@ -115,16 +115,16 @@ export function SiteHeader() {
       <div
         id="menu-mobilne"
         hidden={!open}
-        className="nav-mobile max-h-[calc(100dvh-5rem)] overflow-y-auto border-t-(length:--bw) border-deep bg-surface xl:hidden"
+        className="nav-mobile max-h-[calc(100dvh-5rem)] overflow-y-auto border-t-(length:--bw) border-border bg-surface xl:hidden"
       >
         <nav aria-label="Główna, wersja mobilna" className="mx-auto max-w-content px-4 py-3 sm:px-6">
           <button
             type="button"
             onClick={openSearch}
             aria-haspopup="dialog"
-            className="mb-3 flex min-h-12 w-full cursor-pointer items-center rounded-ui border-(length:--bw) border-deep bg-paper text-left sm:hidden"
+            className="mb-3 flex min-h-12 w-full cursor-pointer items-center rounded-ui border-(length:--bw) border-border bg-background text-left sm:hidden"
           >
-            <Search aria-hidden="true" className="ml-3 size-5 text-leaf" />
+            <Search aria-hidden="true" className="ml-3 size-5 text-primary" />
             <span className="min-w-0 flex-1 px-3 text-base text-muted">Szukaj</span>
           </button>
           <ul className="flex flex-col">
@@ -136,7 +136,7 @@ export function SiteHeader() {
               </li>
             ))}
           </ul>
-          <UserMenu className="mt-2 border-t-2 border-sage px-3 pt-3 sm:hidden" />
+          <UserMenu className="mt-2 border-t-2 border-border/40 px-3 pt-3 sm:hidden" />
         </nav>
       </div>
       <Dialog

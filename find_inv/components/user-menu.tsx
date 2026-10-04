@@ -33,7 +33,7 @@ export function UserMenu({ compact = false, className }: UserMenuProps) {
     <div className={cn("flex min-h-12 items-center gap-3", className)}>
       <p className="flex min-w-0 items-center gap-2">
         <span className="sr-only">Zalogowano jako</span>
-        <span className={cn("truncate font-bold text-deep", compact ? "sr-only" : "max-w-[14ch]")}>{user.name},</span>
+        <span className={cn("truncate font-bold text-foreground", compact ? "sr-only" : "max-w-[14ch]")}>{user.name},</span>
         <RoleBadge role={user.role} />
       </p>
       <Button

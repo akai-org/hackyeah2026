@@ -44,7 +44,7 @@ export function AdminTestRequestsView() {
   const submitted = data?.filter((row) => row.status === "submitted") ?? [];
 
   const innovationLink = (report: TestReport) => (
-    <Link href={`/innowacje/${report.innovation_id}`} className="font-bold text-deep underline underline-offset-4">
+    <Link href={`/innowacje/${report.innovation_id}`} className="font-bold text-foreground underline underline-offset-4">
       {report.innovation_title ?? `Innowacja #${report.innovation_id}`}
     </Link>
   );
@@ -64,25 +64,25 @@ export function AdminTestRequestsView() {
       ) : data ? (
         <>
           <section aria-labelledby={`${ids}-zgloszenia`} className="mb-12">
-            <h2 id={`${ids}-zgloszenia`} className="text-xl font-bold text-deep">
+            <h2 id={`${ids}-zgloszenia`} className="text-xl font-bold text-foreground">
               Zgłoszenia do testów <span className="tabular-nums">({requested.length})</span>
             </h2>
             {requested.length === 0 ? (
-              <p className="mt-4 flex items-center gap-2 rounded-ui border-2 border-deep bg-mint px-4 py-3 font-bold">
-                <CircleCheck aria-hidden="true" className="size-5 text-deep" />
+              <p className="mt-4 flex items-center gap-2 rounded-ui border-2 border-success bg-success/10 px-4 py-3 font-bold text-success">
+                <CircleCheck aria-hidden="true" className="size-5" />
                 Wszystkie zgłoszenia rozpatrzone.
               </p>
             ) : (
               <ul className="mt-4 grid gap-4 md:grid-cols-2">
                 {requested.map((report) => (
-                  <li key={report.id} className="appear flex flex-col border-(length:--bw) border-deep bg-surface p-5 shadow-paper">
-                    <h3 className="text-lg font-bold text-deep">{report.tester_name}</h3>
+                  <li key={report.id} className="appear flex flex-col border-(length:--bw) border-border bg-surface p-5 shadow-raised">
+                    <h3 className="text-lg font-bold text-foreground">{report.tester_name}</h3>
                     <p className="mt-1">chce testować: {innovationLink(report)}</p>
                     <dl className="mt-2 space-y-1 text-base">
                       {report.tester_organization && (
                         <div className="flex items-center gap-2">
                           <dt>
-                            <Building2 aria-hidden="true" className="size-4 text-leaf" />
+                            <Building2 aria-hidden="true" className="size-4 text-primary" />
                             <span className="sr-only">Organizacja</span>
                           </dt>
                           <dd>{report.tester_organization}</dd>
@@ -91,7 +91,7 @@ export function AdminTestRequestsView() {
                       {report.tester_email && (
                         <div className="flex items-center gap-2">
                           <dt>
-                            <Mail aria-hidden="true" className="size-4 text-leaf" />
+                            <Mail aria-hidden="true" className="size-4 text-primary" />
                             <span className="sr-only">E-mail</span>
                           </dt>
                           <dd className="break-all">{report.tester_email}</dd>
@@ -99,7 +99,7 @@ export function AdminTestRequestsView() {
                       )}
                     </dl>
                     {report.motivation && (
-                      <blockquote className="mt-3 border-l-4 border-leaf pl-3">
+                      <blockquote className="mt-3 border-l-4 border-secondary pl-3">
                         <span className="sr-only">Uzasadnienie: </span>
                         {report.motivation}
                       </blockquote>
@@ -137,26 +137,26 @@ export function AdminTestRequestsView() {
           </section>
 
           <section aria-labelledby={`${ids}-przypisane`} className="mb-12">
-            <h2 id={`${ids}-przypisane`} className="text-xl font-bold text-deep">
+            <h2 id={`${ids}-przypisane`} className="text-xl font-bold text-foreground">
               Trwające testy <span className="tabular-nums">({assigned.length})</span>
             </h2>
             {assigned.length === 0 ? (
               <p className="mt-4 text-muted">Nikt teraz niczego nie testuje.</p>
             ) : (
-              <div className="mt-4 overflow-x-auto border-(length:--bw) border-deep bg-surface">
+              <div className="mt-4 overflow-x-auto border-(length:--bw) border-border bg-surface">
                 <table className="w-full min-w-[32rem] border-collapse text-left">
                   <caption className="sr-only">Testerzy przypisani do innowacji</caption>
-                  <thead className="bg-sage">
+                  <thead className="bg-secondary">
                     <tr>
-                      <th scope="col" className="px-4 py-3 font-bold text-deep">Tester</th>
-                      <th scope="col" className="px-4 py-3 font-bold text-deep">Innowacja</th>
-                      <th scope="col" className="px-4 py-3 font-bold text-deep">Status</th>
+                      <th scope="col" className="px-4 py-3 font-bold text-foreground">Tester</th>
+                      <th scope="col" className="px-4 py-3 font-bold text-foreground">Innowacja</th>
+                      <th scope="col" className="px-4 py-3 font-bold text-foreground">Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {assigned.map((report) => (
-                      <tr key={report.id} className="border-t-2 border-sage">
-                        <th scope="row" className="px-4 py-3 text-left font-bold text-deep">
+                      <tr key={report.id} className="border-t-2 border-border/40">
+                        <th scope="row" className="px-4 py-3 text-left font-bold text-foreground">
                           {report.tester_name}
                         </th>
                         <td className="px-4 py-3">{innovationLink(report)}</td>
@@ -172,7 +172,7 @@ export function AdminTestRequestsView() {
           </section>
 
           <section aria-labelledby={`${ids}-oceny`}>
-            <h2 id={`${ids}-oceny`} className="text-xl font-bold text-deep">
+            <h2 id={`${ids}-oceny`} className="text-xl font-bold text-foreground">
               Oceny od testerów <span className="tabular-nums">({submitted.length})</span>
             </h2>
             {submitted.length === 0 ? (
@@ -180,7 +180,7 @@ export function AdminTestRequestsView() {
             ) : (
               <ul className="mt-4 grid gap-4">
                 {submitted.map((report) => (
-                  <li key={report.id} className="border-(length:--bw) border-deep bg-surface p-5 shadow-paper">
+                  <li key={report.id} className="border-(length:--bw) border-border bg-surface p-5 shadow-raised">
                     <h3 className="text-lg">{innovationLink(report)}</h3>
                     <p className="mt-1 text-muted">
                       {report.tester_name}

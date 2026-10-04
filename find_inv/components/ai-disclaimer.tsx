@@ -15,12 +15,12 @@ export function AiDisclaimer({ className, printable = true }: AiDisclaimerProps)
   return (
     <p
       className={cn(
-        "flex items-start gap-2 rounded-ui border-2 border-sage bg-surface px-4 py-2 text-base text-ink",
+        "flex items-start gap-2 rounded-ui border-2 border-border/40 bg-surface px-4 py-2 text-base text-foreground",
         !printable && "print:hidden",
         className,
       )}
     >
-      <Info aria-hidden="true" className="mt-1 size-5 shrink-0 text-deep" />
+      <Info aria-hidden="true" className="mt-1 size-5 shrink-0 text-foreground" />
       <span>Odpowiedzi generuje AI i mogą zawierać błędy — zweryfikuj przed wdrożeniem.</span>
     </p>
   );

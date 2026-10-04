@@ -12,7 +12,7 @@ import { getGapIndex, getPulse, type GminaPulse } from "@/lib/knowledge";
 import { cn, plural } from "@/lib/utils";
 
 // Indeks Luki Innowacyjnej: gdzie problemów jest dużo, a innowacji mało („białe plamy”).
-// Jedna seria → jeden kolor (leaf), bez legendy; słupki ≤ 24 px z zaokrąglonym końcem, wartość przy końcu słupka
+// Jedna seria → jeden kolor (primary), bez legendy; słupki ≤ 24 px z zaokrąglonym końcem, wartość przy końcu słupka
 // w kolorze tekstu. Każdy wiersz jest też zwykłym tekstem, więc wykres nie potrzebuje osobnej tabeli.
 
 type GapIndexProps = {
@@ -44,14 +44,14 @@ function Pulse({ entry, level }: { entry: GapEntry; level: Level }) {
   return (
     <div className="grid gap-6">
       <div>
-        <Heading className="text-lg font-bold text-deep">Najważniejsze wyzwania</Heading>
+        <Heading className="text-lg font-bold text-foreground">Najważniejsze wyzwania</Heading>
         {pulse.top_challenges.length ? (
           <ul className="mt-3 grid gap-3 md:grid-cols-3">
             {pulse.top_challenges.map((challenge) => (
-              <li key={challenge.id} className="border-l-4 border-leaf bg-paper py-3 pr-3 pl-4">
-                <p className="font-bold text-deep">{challenge.title}</p>
+              <li key={challenge.id} className="border-l-4 border-secondary bg-background py-3 pr-3 pl-4">
+                <p className="font-bold text-foreground">{challenge.title}</p>
                 <p className="mt-1">
-                  <span className="text-xl font-bold text-deep tabular-nums">
+                  <span className="text-xl font-bold text-foreground tabular-nums">
                     {formatNumber(challenge.indicator_value)}
                   </span>{" "}
                   {challenge.indicator_unit}
@@ -67,7 +67,7 @@ function Pulse({ entry, level }: { entry: GapEntry; level: Level }) {
         )}
       </div>
       <div>
-        <Heading className="text-lg font-bold text-deep">Co może pomóc</Heading>
+        <Heading className="text-lg font-bold text-foreground">Co może pomóc</Heading>
         <ul className="mt-3 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {pulse.matching_innovations.map((innovation) => (
             <li key={innovation.id} className="flex">
@@ -109,19 +109,19 @@ export function GapIndex({ limit, level = 3 }: GapIndexProps) {
           const panelId = `${ids}-puls-${index}`;
           const expanded = open === entry.powiat;
           return (
-            <li key={entry.powiat} className="border-(length:--bw) border-deep bg-surface">
+            <li key={entry.powiat} className="border-(length:--bw) border-border bg-surface">
               <div className="grid items-center gap-x-6 gap-y-2 p-4 md:grid-cols-[11rem_minmax(0,1fr)_15rem]">
-                <RowHeading className="text-lg font-bold text-deep">
+                <RowHeading className="text-lg font-bold text-foreground">
                   <span className="sr-only">{index + 1}. </span>Powiat {entry.powiat}
                 </RowHeading>
 
                 <div className="flex items-center gap-3">
-                  <div className="relative h-6 flex-1 border-l border-muted" aria-hidden="true">
-                    <div className="h-full rounded-r-[4px] bg-leaf" style={{ width: `${width}%` }} />
+                  <div className="relative h-6 flex-1 border-l border-border" aria-hidden="true">
+                    <div className="h-full rounded-r-[4px] bg-primary" style={{ width: `${width}%` }} />
                   </div>
                   <p className="w-24 shrink-0 tabular-nums">
                     <span className="sr-only">Indeks luki: </span>
-                    <span className="font-bold text-deep">{formatNumber(entry.gap_score)}</span>
+                    <span className="font-bold text-foreground">{formatNumber(entry.gap_score)}</span>
                     <span className="sr-only"> z {scaleMax}</span>
                   </p>
                 </div>
@@ -137,7 +137,7 @@ export function GapIndex({ limit, level = 3 }: GapIndexProps) {
               </div>
 
               {!limit && (
-                <div className="border-t-2 border-sage px-4 py-3">
+                <div className="border-t-2 border-border/40 px-4 py-3">
                   <Button
                     type="button"
                     variant="secondary"
@@ -161,7 +161,7 @@ export function GapIndex({ limit, level = 3 }: GapIndexProps) {
       {limit && sorted.length > limit && (
         <Link
           href="/luka-innowacyjna"
-          className="mt-6 inline-flex min-h-12 items-center font-bold text-leaf underline underline-offset-4 hover:text-deep"
+          className="mt-6 inline-flex min-h-12 items-center font-bold text-primary underline underline-offset-4 hover:text-primary-hover"
         >
           Zobacz wszystkie powiaty i puls każdego z nich
         </Link>
