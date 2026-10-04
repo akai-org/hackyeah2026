@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, BookOpen, ExternalLink, FileText, PlayCircle, X } from "lucide-react";
 
-import { MdContent, ResourceLink, educationHref, loadEducationMaterials, type EducationResource } from "@/components/education-material";
+import { ResourceLink, educationHref, loadEducationMaterials, type EducationResource } from "@/components/education-material";
 import { matchesSearchTags, normalizeText, parseSearchTags, queryStems, type SearchTag } from "@/lib/search-tags";
 import { useI18n } from "@/lib/i18n/client";
 
@@ -129,17 +129,6 @@ export function EducationList({ initialQuery = "", initialTags = "" }: { initial
               </h3>
               {item.summary && <p className="mt-2">{item.summary}</p>}
 
-              {item.content && (
-                <details className="mt-4 rounded-ui border-(length:--bw) border-border/40">
-                  <summary className="flex min-h-12 cursor-pointer items-center px-4 font-semibold text-foreground">
-                    {ed.readMore}
-                    <span className="sr-only">: {item.title}</span>
-                  </summary>
-                  <div className="grid gap-3 border-t-(length:--bw) border-border/40 p-4">
-                    <MdContent content={item.content} />
-                  </div>
-                </details>
-              )}
 
               {(item.areas.length > 0 || item.tags.length > 0) && (
                 <ul className="mt-4 flex flex-wrap gap-2" aria-label={ed.topics}>

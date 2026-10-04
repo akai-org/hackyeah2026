@@ -8,6 +8,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { API_URL } from "@/lib/api";
 import { useI18n } from "@/lib/i18n/client";
 import { readLocaleCookie } from "@/lib/i18n/config";
+import { cn } from "@/lib/utils";
 
 // Materiał edukacyjny (Zasobnik): wspólne elementy listy /edukacja i strony /edukacja/[id].
 // Endpointy /api/resources zwracają obiekty bez koperty { data } — dlatego zwykły fetch, z X-Lang (tłumaczenie).
@@ -39,33 +40,90 @@ export async function loadEducationMaterials(): Promise<EducationResource[]> {
   return body.items ?? [];
 }
 
-/** Prosty markdown z bazy: nagłówki „## ”, listy „- ” i akapity. `heading` — poziom nagłówków sekcji. */
-export function MdContent({ content, heading: Heading = "h4" }: { content: string; heading?: "h2" | "h3" | "h4" }) {
-  const blocks = content.split(/\n(?=##\s)|\n{2,}/).filter(Boolean);
+type MdBlock =
+  | { kind: "heading"; text: string }
+  | { kind: "paragraph"; text: string }
+  | { kind: "ul" | "ol"; items: string[] };
+
+/** Dzieli markdown z bazy na bloki linia po linii: nagłówek to tylko sama linia „## ”, nie tekst pod nim. */
+function parseMarkdown(content: string): MdBlock[] {
+  const blocks: MdBlock[] = [];
+  let paragraph: string[] = [];
+  const flush = () => {
+    if (paragraph.length) blocks.push({ kind: "paragraph", text: paragraph.join(" ") });
+    paragraph = [];
+  };
+  for (const raw of content.split("\n")) {
+    const line = raw.trim();
+    const bullet = line.match(/^[-*]\s+(.*)$/);
+    const numbered = line.match(/^\d+[.)]\s+(.*)$/);
+    if (!line) {
+      flush();
+    } else if (line.startsWith("#")) {
+      flush();
+      blocks.push({ kind: "heading", text: line.replace(/^#+\s*/, "") });
+    } else if (bullet || numbered) {
+      flush();
+      const kind = bullet ? "ul" : "ol";
+      const item = (bullet ?? numbered)![1];
+      const last = blocks.at(-1);
+      if (last && last.kind === kind) last.items.push(item);
+      else blocks.push({ kind, items: [item] });
+    } else {
+      paragraph.push(line);
+    }
+  }
+  flush();
+  return blocks;
+}
+
+/** Pogrubienia „**tekst**” jako <strong>; reszta to zwykły tekst (bez HTML z bazy). */
+function Inline({ text }: { text: string }) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g).filter(Boolean);
   return (
     <>
-      {blocks.map((block, i) => {
-        if (block.startsWith("## ")) {
+      {parts.map((part, i) =>
+        part.startsWith("**") && part.endsWith("**") ? (
+          <strong key={i} className="font-bold text-foreground">
+            {part.slice(2, -2)}
+          </strong>
+        ) : (
+          part
+        ),
+      )}
+    </>
+  );
+}
+
+/** Prosty markdown z bazy: nagłówki, listy punktowane i numerowane, akapity, **pogrubienia**. */
+export function MdContent({ content, heading: Heading = "h4" }: { content: string; heading?: "h2" | "h3" | "h4" }) {
+  return (
+    <>
+      {parseMarkdown(content).map((block, i) => {
+        if (block.kind === "heading") {
           return (
             <Heading key={i} className="font-bold text-foreground">
-              {block.slice(3).trim()}
+              <Inline text={block.text} />
             </Heading>
           );
         }
-        const lines = block.split("\n");
-        const isList = lines.some((l) => l.trimStart().startsWith("- "));
-        if (isList) {
+        if (block.kind === "paragraph") {
           return (
-            <ul key={i} className="ml-4 list-disc space-y-0.5">
-              {lines
-                .filter((l) => l.trimStart().startsWith("- "))
-                .map((l, j) => (
-                  <li key={j}>{l.replace(/^\s*-\s/, "")}</li>
-                ))}
-            </ul>
+            <p key={i}>
+              <Inline text={block.text} />
+            </p>
           );
         }
-        return <p key={i}>{block.trim()}</p>;
+        const List = block.kind;
+        return (
+          <List key={i} className={cn("ml-5 space-y-1", List === "ul" ? "list-disc" : "list-decimal")}>
+            {block.items.map((item, j) => (
+              <li key={j}>
+                <Inline text={item} />
+              </li>
+            ))}
+          </List>
+        );
       })}
     </>
   );

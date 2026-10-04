@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowRight, BookOpen } from "lucide-react";
+import { ArrowRight, BookOpen, ExternalLink } from "lucide-react";
 
 import { CutoutText } from "@/components/cutout-text";
-import { educationHref, loadEducationMaterials, type EducationResource } from "@/components/education-material";
+import { ResourceLink, educationHref, loadEducationMaterials, type EducationResource } from "@/components/education-material";
 import { buttonVariants } from "@/components/ui/button";
 import type { Tag } from "@/data/mock";
 import { useT } from "@/lib/i18n/client";
@@ -76,14 +76,22 @@ export function EducationMatches({ query, tags }: { query: string; tags: Tag[] }
                 </p>
               )}
               {material.summary && <p className="mt-3">{material.summary}</p>}
-              <Link
-                href={educationHref(material.id)}
-                className="mt-auto inline-flex min-h-12 items-center gap-2 pt-4 font-bold text-primary underline underline-offset-4 hover:text-primary-hover"
-              >
-                {t.region.education.details}
-                <span className="sr-only">: {material.title}</span>
-                <ArrowRight aria-hidden="true" className="size-5 shrink-0" />
-              </Link>
+              {/* Jak na karcie w /edukacja: strona materiału i (jeśli jest) źródło. */}
+              <div className="mt-auto flex flex-wrap gap-x-6 pt-4">
+                <Link
+                  href={educationHref(material.id)}
+                  className="inline-flex min-h-12 items-center gap-2 font-bold text-primary underline underline-offset-4 hover:text-primary-hover"
+                >
+                  {t.region.education.details}
+                  <span className="sr-only">: {material.title}</span>
+                  <ArrowRight aria-hidden="true" className="size-5 shrink-0" />
+                </Link>
+                {material.url && (
+                  <ResourceLink href={material.url} icon={ExternalLink} title={material.title}>
+                    {t.region.education.open}
+                  </ResourceLink>
+                )}
+              </div>
             </article>
           </li>
         ))}
