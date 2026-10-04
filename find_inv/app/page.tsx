@@ -29,7 +29,6 @@ export default async function HomePage() {
 
       {/* Hero */}
       <section aria-labelledby="hero-tytul" className="relative overflow-hidden bg-glow">
-        <div className="absolute inset-x-0 top-0 h-1 bg-primary" aria-hidden="true" />
         <div className="relative mx-auto max-w-content px-4 pt-24 pb-16 sm:px-6 lg:pt-32 lg:pb-24">
           <CutoutText id="hero-tytul" as="h1" size="hero" text={t.home.heroTitle} animate />
           <p className="anim-hero-lead mt-5 max-w-[44ch] text-xl leading-relaxed">

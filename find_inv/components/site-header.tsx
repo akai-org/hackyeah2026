@@ -146,6 +146,8 @@ export function SiteHeader() {
           <UserMenu className="mt-2 border-t-2 border-border/40 px-3 pt-3 sm:hidden" />
         </nav>
       </div>
+      {/* Akcent pod nagłówkiem — ten sam na każdej stronie. */}
+      <div className="pointer-events-none absolute inset-x-0 top-full h-1 bg-primary" aria-hidden="true" />
       <Dialog
         open={searchOpen}
         onClose={closeSearch}
