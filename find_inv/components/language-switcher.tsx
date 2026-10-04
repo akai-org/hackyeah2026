@@ -1,17 +1,15 @@
 "use client";
 
-import { Languages, Router } from "lucide-react";
+import { Languages } from "lucide-react";
 
 import { LOCALE_NAMES, LOCALES, isLocale } from "@/lib/i18n/config";
 import { useI18n } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
-import { useRouter } from 'next/navigation';
 
 // Wybór języka interfejsu: natywny <select> — działa z klawiatury i czytnikiem bez dodatkowej pracy.
 // Nazwy języków zawsze w ich własnym języku (z atrybutem lang), żeby każdy znalazł swój.
 export function LanguageSwitcher({ className }: { className?: string }) {
   const { locale, setLocale, t } = useI18n();
-  const router = useRouter();
 
   return (
     <label
@@ -30,7 +28,6 @@ export function LanguageSwitcher({ className }: { className?: string }) {
         aria-label={t.lang.change}
         onChange={(event) => isLocale(event.target.value) && setLocale(event.target.value)}
         className="absolute inset-0 cursor-pointer appearance-none opacity-0"
-        onSelect={() => router.refresh()}
       >
         {LOCALES.map((code) => (
           <option key={code} value={code} lang={code}>

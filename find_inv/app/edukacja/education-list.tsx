@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { BookOpen, ExternalLink, FileText, PlayCircle, X } from "lucide-react";
 
 import { API_URL } from "@/lib/api";
+import { readLocaleCookie } from "@/lib/i18n/config";
 import { matchesSearchTags, normalizeText, parseSearchTags, queryStems, type SearchTag } from "@/lib/search-tags";
 import { useI18n } from "@/lib/i18n/client";
 
@@ -24,7 +25,10 @@ export type EducationResource = {
 };
 
 async function loadEducation(): Promise<EducationResource[]> {
-  const response = await fetch(`${API_URL}/api/resources?type=education&limit=100`);
+  // X-Lang: backend tłumaczy materiały na język interfejsu (cookie z :3000 nie trafia do :8000).
+  const response = await fetch(`${API_URL}/api/resources?type=education&limit=100`, {
+    headers: { "X-Lang": readLocaleCookie() },
+  });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   const body = (await response.json()) as { items?: EducationResource[] };
   return body.items ?? [];

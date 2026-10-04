@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { LocaleBoundary } from "@/components/locale-boundary";
 import { LoginDialog } from "@/components/login-dialog";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -32,7 +33,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           <AuthProvider>
             <SiteHeader />
             <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
-              {children}
+              <LocaleBoundary>{children}</LocaleBoundary>
             </main>
             <SiteFooter />
             <LoginDialog />
