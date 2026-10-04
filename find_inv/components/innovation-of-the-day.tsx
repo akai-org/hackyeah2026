@@ -4,13 +4,14 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArrowRight, BookOpen } from "lucide-react";
 
+import { educationHref } from "@/components/education-material";
 import { API_URL } from "@/lib/api";
 import { useT } from "@/lib/i18n/client";
 import { readLocaleCookie } from "@/lib/i18n/config";
 
 // „Artykuł dnia”: jeden materiał z Edukacji (Zasobnik, GET /api/resources?type=education), losowany według
 // daty — przez cały dzień ten sam dla wszystkich (nie skacze po odświeżeniu), następnego dnia inny.
-// Link prowadzi do materiału na /edukacja (kotwica #material-{id}).
+// Link prowadzi do strony materiału /edukacja/{id}.
 
 /** Numer dnia w kalendarzu lokalnym — zmienia się o północy, nie o północy UTC. */
 function dayNumber(date: Date) {
@@ -129,7 +130,7 @@ function MaterialBody({ material, headingId }: { material: EducationMaterial; he
         </ul>
       )}
       <Link
-        href={`/edukacja#material-${material.id}`}
+        href={educationHref(material.id)}
         className="mt-5 inline-flex min-h-12 items-center gap-2 font-medium text-primary underline underline-offset-4 hover:text-primary-hover"
       >
         {t.home.readMaterial}
