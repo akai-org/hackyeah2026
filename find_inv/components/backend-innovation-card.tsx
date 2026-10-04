@@ -43,24 +43,24 @@ export function BackendInnovationCard({ innovation, headingLevel: Heading = "h3"
     <article
       aria-label={innovation.title}
       className={cn(
-        "relative flex flex-col border-(length:--bw) border-deep bg-surface p-6 shadow-paper",
+        "relative flex flex-col border-(length:--bw) border-border bg-surface p-6 shadow-raised",
         innovation.is_unmaintained && "opacity-80",
       )}
     >
       {/* taśma dekoracyjna */}
       <span
         aria-hidden="true"
-        className="simple-hidden absolute -top-3 right-6 h-6 w-20 rotate-[4deg] bg-butter [clip-path:polygon(0_8%,6%_0,100%_4%,95%_50%,100%_96%,4%_100%,0_55%)]"
+        className="simple-hidden absolute -top-3 right-6 h-6 w-20 rotate-[4deg] bg-accent [clip-path:polygon(0_8%,6%_0,100%_4%,95%_50%,100%_96%,4%_100%,0_55%)]"
       />
 
       {innovation.is_unmaintained && (
-        <span className="mb-3 inline-flex w-fit items-center gap-1.5 rounded-ui border-2 border-muted bg-paper px-2 py-0.5 text-sm text-muted">
+        <span className="mb-3 inline-flex w-fit items-center gap-1.5 rounded-ui border-2 border-border bg-background px-2 py-0.5 text-sm text-muted">
           <CircleHelp className="size-4" aria-hidden="true" />
           Nieaktualna
         </span>
       )}
 
-      <Heading className="pr-4 text-xl font-bold text-deep">{innovation.title}</Heading>
+      <Heading className="pr-4 text-xl font-bold text-foreground">{innovation.title}</Heading>
       <p className="mt-3">{innovation.short_desc}</p>
 
       <dl className="mt-4 space-y-2 text-sm">
@@ -98,7 +98,7 @@ export function BackendInnovationCard({ innovation, headingLevel: Heading = "h3"
           {innovation.tags.slice(0, 4).map((tag) => (
             <li
               key={tag}
-              className="inline-flex items-center gap-1 rounded-full border border-leaf bg-paper px-2.5 py-0.5 text-sm text-leaf"
+              className="inline-flex items-center gap-1 rounded-full border border-primary bg-background px-2.5 py-0.5 text-sm text-primary"
             >
               <Tag className="size-3" aria-hidden="true" />
               {tag}

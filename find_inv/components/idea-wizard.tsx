@@ -111,8 +111,8 @@ function TextAnswer({
         aria-describedby={`${ids}-podp`}
         placeholder={step.placeholder}
         className={cn(
-          "mt-4 w-full resize-y rounded-ui border-(length:--bw) bg-surface p-4 text-base text-ink placeholder:text-muted",
-          invalid ? "border-alert" : "border-deep",
+          "mt-4 w-full resize-y rounded-ui border-(length:--bw) bg-surface p-4 text-base text-foreground placeholder:text-muted",
+          invalid ? "border-destructive" : "border-border",
         )}
       />
       <p id={`${ids}-podp`} className="sr-only">
@@ -173,7 +173,7 @@ export function IdeaWizard({ onFinish, busy }: { onFinish: (answers: WizardAnswe
   }
 
   return (
-    <form onSubmit={next} noValidate className="mt-8 max-w-3xl rounded-ui border-(length:--bw) border-deep bg-surface p-6 sm:p-8">
+    <form onSubmit={next} noValidate className="mt-8 max-w-3xl rounded-ui border-(length:--bw) border-border bg-surface p-6 sm:p-8">
       <p className="font-bold text-muted">
         Krok {index + 1} z {STEPS.length}
       </p>
@@ -183,12 +183,12 @@ export function IdeaWizard({ onFinish, busy }: { onFinish: (answers: WizardAnswe
         aria-valuemin={1}
         aria-valuemax={STEPS.length}
         aria-valuenow={index + 1}
-        className="mt-2 h-2 overflow-hidden rounded-ui bg-sage"
+        className="mt-2 h-2 overflow-hidden rounded-ui bg-secondary"
       >
-        <div className="h-full bg-leaf" style={{ width: `${((index + 1) / STEPS.length) * 100}%` }} />
+        <div className="h-full bg-primary" style={{ width: `${((index + 1) / STEPS.length) * 100}%` }} />
       </div>
 
-      <h2 ref={headingRef} tabIndex={-1} id={`${ids}-pytanie`} className="mt-6 text-2xl font-bold text-deep">
+      <h2 ref={headingRef} tabIndex={-1} id={`${ids}-pytanie`} className="mt-6 text-2xl font-bold text-foreground">
         {step.question}
       </h2>
       <p className="mt-1 text-muted">{step.hint}</p>
@@ -209,14 +209,14 @@ export function IdeaWizard({ onFinish, busy }: { onFinish: (answers: WizardAnswe
           <ul className="space-y-2">
             {STAGES.map((stage) => (
               <li key={stage}>
-                <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-ui border-(length:--bw) border-deep bg-surface px-4 has-checked:bg-mint">
+                <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-ui border-(length:--bw) border-border bg-surface px-4 has-checked:border-primary has-checked:bg-primary/10">
                   <input
                     type="radio"
                     name={`${ids}-etap`}
                     value={stage}
                     checked={answers.stage === stage}
                     onChange={() => setAnswer("stage")(() => stage)}
-                    className="size-5 accent-deep"
+                    className="size-5 accent-primary"
                   />
                   {stage}
                 </label>
@@ -229,7 +229,7 @@ export function IdeaWizard({ onFinish, busy }: { onFinish: (answers: WizardAnswe
       {step.kind === "money" && (
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div>
-            <label htmlFor={`${ids}-budzet`} className="block font-bold text-deep">
+            <label htmlFor={`${ids}-budzet`} className="block font-bold text-foreground">
               Budżet
             </label>
             <input
@@ -238,11 +238,11 @@ export function IdeaWizard({ onFinish, busy }: { onFinish: (answers: WizardAnswe
               value={answers.budget}
               onChange={(event) => setAnswer("budget")(() => event.target.value)}
               placeholder="np. ok. 5 tys. zł rocznie"
-              className="mt-2 min-h-12 w-full rounded-ui border-(length:--bw) border-deep bg-surface px-4 text-base text-ink placeholder:text-muted"
+              className="mt-2 min-h-12 w-full rounded-ui border-(length:--bw) border-border bg-surface px-4 text-base text-foreground placeholder:text-muted"
             />
           </div>
           <div>
-            <label htmlFor={`${ids}-partnerzy`} className="block font-bold text-deep">
+            <label htmlFor={`${ids}-partnerzy`} className="block font-bold text-foreground">
               Partnerzy
             </label>
             <input
@@ -251,7 +251,7 @@ export function IdeaWizard({ onFinish, busy }: { onFinish: (answers: WizardAnswe
               value={answers.partners}
               onChange={(event) => setAnswer("partners")(() => event.target.value)}
               placeholder="np. GOPS, szkoła"
-              className="mt-2 min-h-12 w-full rounded-ui border-(length:--bw) border-deep bg-surface px-4 text-base text-ink placeholder:text-muted"
+              className="mt-2 min-h-12 w-full rounded-ui border-(length:--bw) border-border bg-surface px-4 text-base text-foreground placeholder:text-muted"
             />
           </div>
         </div>
@@ -260,7 +260,7 @@ export function IdeaWizard({ onFinish, busy }: { onFinish: (answers: WizardAnswe
       {invalid && (
         <p
           role="alert"
-          className="mt-3 flex items-start gap-2 rounded-ui border-2 border-alert bg-surface px-4 py-3 font-bold text-alert"
+          className="mt-3 flex items-start gap-2 rounded-ui border-2 border-destructive bg-surface px-4 py-3 font-bold text-destructive"
         >
           <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
           Napisz choć jedno zdanie, żeby przejść dalej.

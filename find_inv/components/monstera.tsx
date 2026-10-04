@@ -49,11 +49,10 @@ function wedge([x1, y1, x2, y2]: [number, number, number, number]): string {
 
 const SLIT_POINTS = SLITS.map(wedge);
 
+// Liść to dekoracja: domyślnie miękki `secondary`, `primary` tylko jako rzadki mocniejszy akcent.
 const COLORS = {
-  leaf: "text-leaf",
-  deep: "text-deep",
-  mint: "text-mint",
-  sage: "text-sage",
+  secondary: "text-secondary",
+  primary: "text-primary",
 } as const;
 
 const SIZES = {
@@ -70,7 +69,7 @@ type MonsteraProps = {
   className?: string;
 };
 
-export function Monstera({ size = "small", color = "mint", outlined = false, className }: MonsteraProps) {
+export function Monstera({ size = "small", color = "secondary", outlined = false, className }: MonsteraProps) {
   const id = useId().replace(/:/g, "");
   const maskId = `monstera-mask-${id}`;
   const filterId = `monstera-paper-${id}`;
@@ -106,9 +105,9 @@ export function Monstera({ size = "small", color = "mint", outlined = false, cla
           <filter id={filterId} x="-10%" y="-10%" width="125%" height="125%">
             <feMorphology in="SourceAlpha" operator="dilate" radius="6" result="grown" />
             <feOffset in="grown" dx="6" dy="6" result="shadowShape" />
-            <feFlood floodColor="#1B4332" floodOpacity="0.25" />
+            <feFlood style={{ floodColor: "var(--color-foreground)", floodOpacity: 0.22 }} />
             <feComposite in2="shadowShape" operator="in" result="shadow" />
-            <feFlood floodColor="#FAFCF7" />
+            <feFlood style={{ floodColor: "var(--color-surface)" }} />
             <feComposite in2="grown" operator="in" result="paper" />
             <feMerge>
               <feMergeNode in="shadow" />

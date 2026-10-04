@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Kreator pomysłów" };
 
 export default function CreatorPage() {
   return (
-    <PageBackdrop layout="side" leafColor="leaf">
+    <PageBackdrop layout="side">
       <div className="mx-auto max-w-content px-4 py-16 sm:px-6">
         <CutoutText as="h1" size="section" text="Masz pomysł?" />
         <p className="mt-4 max-w-[60ch] text-lg">

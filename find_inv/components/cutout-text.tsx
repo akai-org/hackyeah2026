@@ -34,7 +34,7 @@ export function CutoutText({
     <Tag
       id={id}
       aria-label={labelled ? text : undefined}
-      className={cn(SIZES[size], "font-bold text-deep", className)}
+      className={cn(SIZES[size], "font-bold text-foreground", className)}
     >
       {text}
     </Tag>

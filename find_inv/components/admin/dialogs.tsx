@@ -11,7 +11,7 @@ import type { AdminInnovationFull, InnovationInput } from "@/lib/admin-api";
 import { cn } from "@/lib/utils";
 
 export const fieldClass =
-  "mt-2 min-h-12 w-full rounded-ui border-(length:--bw) border-deep bg-surface px-4 text-base text-ink placeholder:text-muted";
+  "mt-2 min-h-12 w-full rounded-ui border-(length:--bw) border-border bg-surface px-4 text-base text-foreground placeholder:text-muted";
 
 // ---------- Okno modalne (natywny <dialog>: pułapka fokusu i Escape z przeglądarki) ----------
 
@@ -46,18 +46,18 @@ function AdminDialog({
         onClose();
       }}
       className={cn(
-        "m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] overflow-y-auto border-(length:--bw) border-deep bg-surface p-6 text-ink shadow-paper backdrop:bg-ink/50 sm:p-8",
+        "m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] overflow-y-auto border-(length:--bw) border-border bg-surface p-6 text-foreground shadow-raised backdrop:bg-overlay/60 sm:p-8",
         wide ? "max-w-3xl" : "max-w-md",
       )}
     >
       <div className="flex items-start justify-between gap-4">
-        <h2 id={`${ids}-tytul`} className="text-xl font-bold text-deep">
+        <h2 id={`${ids}-tytul`} className="text-xl font-bold text-foreground">
           {title}
         </h2>
         <button
           type="button"
           onClick={onClose}
-          className="rounded-ui p-1 text-muted hover:text-deep focus-visible:outline-2 focus-visible:outline-deep"
+          className="rounded-ui p-1 text-muted hover:text-primary-hover focus-visible:outline-2 focus-visible:outline-focus"
         >
           <X aria-hidden="true" className="size-5" />
           <span className="sr-only">Zamknij</span>
@@ -105,13 +105,13 @@ export function ConfirmDeleteDialog({
       onClose={onClose}
       description={
         <>
-          <p className="font-bold text-deep">{what}</p>
+          <p className="font-bold text-foreground">{what}</p>
           <p className="mt-2">{consequences} Tej operacji nie da się cofnąć.</p>
         </>
       }
     >
       {error && (
-        <p role="alert" className="mt-4 flex items-start gap-2 font-bold text-alert">
+        <p role="alert" className="mt-4 flex items-start gap-2 font-bold text-destructive">
           <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
           {error}
         </p>
@@ -120,7 +120,7 @@ export function ConfirmDeleteDialog({
         <Button type="button" variant="secondary" onClick={onClose} disabled={busy} autoFocus>
           Anuluj
         </Button>
-        <Button type="button" onClick={confirm} disabled={busy} className="border-alert bg-alert text-surface hover:border-deep hover:bg-deep">
+        <Button type="button" onClick={confirm} disabled={busy} className="border-destructive bg-destructive text-primary-foreground hover:border-foreground hover:bg-foreground">
           {busy ? <Loader2 aria-hidden="true" className="animate-spin" /> : <Trash2 aria-hidden="true" />}
           Usuń na stałe
         </Button>
@@ -232,7 +232,7 @@ export function InnovationFormDialog({
           };
           return (
             <div key={key} className={cn(multiline && "sm:col-span-2")}>
-              <label htmlFor={id} className="block font-bold text-deep">
+              <label htmlFor={id} className="block font-bold text-foreground">
                 {label}
                 {required && <span aria-hidden="true"> *</span>}
               </label>
@@ -251,7 +251,7 @@ export function InnovationFormDialog({
         })}
 
         <div>
-          <label htmlFor={`${ids}-status`} className="block font-bold text-deep">
+          <label htmlFor={`${ids}-status`} className="block font-bold text-foreground">
             Status
           </label>
           <select
@@ -268,7 +268,7 @@ export function InnovationFormDialog({
           </select>
         </div>
         <div>
-          <label htmlFor={`${ids}-koszt`} className="block font-bold text-deep">
+          <label htmlFor={`${ids}-koszt`} className="block font-bold text-foreground">
             Koszt wdrożenia
           </label>
           <select
@@ -286,7 +286,7 @@ export function InnovationFormDialog({
           </select>
         </div>
         <div>
-          <label htmlFor={`${ids}-czas`} className="block font-bold text-deep">
+          <label htmlFor={`${ids}-czas`} className="block font-bold text-foreground">
             Czas wdrożenia (miesiące)
           </label>
           <input
@@ -304,7 +304,7 @@ export function InnovationFormDialog({
         </div>
 
         <fieldset className="sm:col-span-2">
-          <legend className="font-bold text-deep">Tagi</legend>
+          <legend className="font-bold text-foreground">Tagi</legend>
           <div className="mt-2 flex flex-wrap gap-2">
             {TAXONOMY_TAGS.map((tag) => {
               const checked = form.tags.includes(tag);
@@ -312,8 +312,8 @@ export function InnovationFormDialog({
                 <label
                   key={tag}
                   className={cn(
-                    "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border-2 border-deep px-3 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-deep",
-                    checked ? "bg-mint font-bold" : "bg-surface",
+                    "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border-2 border-border px-3 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-focus",
+                    checked ? "bg-primary/10 font-bold" : "bg-surface",
                   )}
                 >
                   <input
@@ -330,7 +330,7 @@ export function InnovationFormDialog({
         </fieldset>
 
         {error && (
-          <p role="alert" className="flex items-start gap-2 font-bold text-alert sm:col-span-2">
+          <p role="alert" className="flex items-start gap-2 font-bold text-destructive sm:col-span-2">
             <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
             {error}
           </p>

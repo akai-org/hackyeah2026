@@ -142,7 +142,7 @@ export function MatchResults({ query }: { query: string }) {
       {/* Zrozumiałem: chipy tagów — jury widzi, że system „myśli”, zanim pokaże wyniki. */}
       <section aria-labelledby={`${ids}-tagi`} aria-busy={phase === "tagging"}>
         <div className="flex flex-wrap items-center gap-3">
-          <h2 id={`${ids}-tagi`} className="text-lg font-bold text-deep">
+          <h2 id={`${ids}-tagi`} className="text-lg font-bold text-foreground">
             Zrozumiałem:
           </h2>
           {phase === "tagging" && <span className="text-muted">czytam opis…</span>}
@@ -150,14 +150,14 @@ export function MatchResults({ query }: { query: string }) {
             {tags.map((tag) => (
               <li
                 key={tag}
-                className="appear inline-flex min-h-10 items-center gap-1 rounded-ui border-(length:--bw) border-deep bg-mint py-0.5 pr-0.5 pl-3 text-base text-ink"
+                className="appear inline-flex min-h-10 items-center gap-1 rounded-ui border-(length:--bw) border-primary bg-primary/10 py-0.5 pr-0.5 pl-3 text-base text-foreground"
               >
                 {TAG_LABELS[tag]}
                 <button
                   type="button"
                   onClick={() => removeTag(tag)}
                   aria-label={`Usuń tag ${TAG_LABELS[tag].toLowerCase()}`}
-                  className="inline-flex size-10 cursor-pointer items-center justify-center rounded-ui hover:bg-sage"
+                  className="inline-flex size-10 cursor-pointer items-center justify-center rounded-ui hover:bg-secondary/60"
                 >
                   <X aria-hidden="true" className="size-4" />
                 </button>
@@ -176,7 +176,7 @@ export function MatchResults({ query }: { query: string }) {
                   defaultValue=""
                   onChange={(event) => addTag(event.target.value)}
                   onKeyDown={(event) => event.key === "Escape" && setAddOpen(false)}
-                  className="min-h-12 cursor-pointer rounded-ui border-(length:--bw) border-deep bg-surface px-3 text-base"
+                  className="min-h-12 cursor-pointer rounded-ui border-(length:--bw) border-border bg-surface px-3 text-base"
                 >
                   <option value="">Wybierz temat</option>
                   {remaining.map((tag) => (
@@ -212,24 +212,24 @@ export function MatchResults({ query }: { query: string }) {
         )}
       </section>
 
-      {/* Plakietka stanu wyników: maślana, z ikoną zegara, role=status. */}
+      {/* Plakietka stanu wyników: akcent przy wstępnych, sukces po dopracowaniu, role=status. */}
       <p role="status" aria-live="polite" className="mt-6 min-h-10">
         {phase === "matching" && (
-          <span className="inline-flex items-center gap-2 rounded-ui border-2 border-deep bg-butter px-3 py-1.5 font-bold text-deep">
+          <span className="inline-flex items-center gap-2 rounded-ui border-2 border-accent bg-accent px-3 py-1.5 font-bold text-accent-foreground">
             <Clock aria-hidden="true" className="size-5" />
             Wstępne wyniki, dopracowuję…
           </span>
         )}
         {phase === "done" && refined && !error && (
-          <span className="inline-flex items-center gap-2 rounded-ui border-2 border-deep bg-mint px-3 py-1.5 font-bold text-deep">
+          <span className="inline-flex items-center gap-2 rounded-ui border-2 border-success bg-success/10 px-3 py-1.5 font-bold text-success">
             Wyniki dopracowane. Znaleziono {visible.length} z {total}.
           </span>
         )}
       </p>
 
       {phase === "irrelevant" && (
-        <div className="max-w-3xl border-(length:--bw) border-deep bg-surface p-6 shadow-paper">
-          <h2 className="text-xl font-bold text-deep">To nie wygląda na problem społeczny</h2>
+        <div className="max-w-3xl border-(length:--bw) border-border bg-surface p-6 shadow-raised">
+          <h2 className="text-xl font-bold text-foreground">To nie wygląda na problem społeczny</h2>
           <p className="mt-2">
             Napisz, kogo dotyczy kłopot i co się dzieje, na przykład „samotni seniorzy na wsi nie mają jak dojechać do
             lekarza”. Możesz też zacząć od jednego z obszarów:
@@ -252,7 +252,7 @@ export function MatchResults({ query }: { query: string }) {
       {error && (
         <p
           role="alert"
-          className="flex max-w-3xl items-start gap-2 rounded-ui border-2 border-alert bg-surface px-4 py-3 font-bold text-alert"
+          className="flex max-w-3xl items-start gap-2 rounded-ui border-2 border-destructive bg-surface px-4 py-3 font-bold text-destructive"
         >
           <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
           Nie udało się pobrać wyników. Sprawdź połączenie z internetem i kliknij „Szukaj” jeszcze raz.
@@ -261,12 +261,12 @@ export function MatchResults({ query }: { query: string }) {
 
       {(phase === "matching" || phase === "done") && !error && (
         <section aria-labelledby={`${ids}-wyniki`} aria-busy={phase === "matching"} className="mt-2">
-          <h2 id={`${ids}-wyniki`} ref={resultsHeadingRef} tabIndex={-1} className="text-2xl font-bold text-deep">
+          <h2 id={`${ids}-wyniki`} ref={resultsHeadingRef} tabIndex={-1} className="text-2xl font-bold text-foreground">
             Znalezione innowacje
           </h2>
 
           {phase === "done" && visible.length === 0 ? (
-            <div className="mt-6 max-w-3xl border-(length:--bw) border-deep bg-surface p-6">
+            <div className="mt-6 max-w-3xl border-(length:--bw) border-border bg-surface p-6">
               <p className="text-lg">
                 Nie znalazłem pasującej innowacji. Wybierz najbliższy obszar albo opisz problem inaczej.
               </p>
@@ -292,7 +292,7 @@ export function MatchResults({ query }: { query: string }) {
                   <li
                     key={`szkielet-${item}`}
                     aria-hidden="true"
-                    className="h-72 border-(length:--bw) border-sage bg-surface"
+                    className="h-72 border-(length:--bw) border-border/40 bg-surface"
                   />
                 ) : (
                   <li key={item.id} className="appear flex">

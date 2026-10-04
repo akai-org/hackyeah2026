@@ -42,7 +42,7 @@ const INSTITUTIONS = [
 ];
 
 const fieldClass =
-  "mt-2 w-full rounded-ui border-(length:--bw) border-deep bg-surface px-4 text-base text-ink placeholder:text-muted";
+  "mt-2 w-full rounded-ui border-(length:--bw) border-border bg-surface px-4 text-base text-foreground placeholder:text-muted";
 
 type Message = { role: "ai" | "user"; text: string };
 type Phase = "intro" | "chat" | "plan";
@@ -60,9 +60,9 @@ function Missing() {
 
 function PlanSection({ icon: Icon, title, children }: { icon: LucideIcon; title: string; children: React.ReactNode }) {
   return (
-    <section className="break-inside-avoid border-t-2 border-sage pt-6">
-      <h3 className="flex items-center gap-2 text-xl font-bold text-deep">
-        <Icon aria-hidden="true" className="size-6 shrink-0 text-leaf" />
+    <section className="break-inside-avoid border-t-2 border-border/40 pt-6">
+      <h3 className="flex items-center gap-2 text-xl font-bold text-foreground">
+        <Icon aria-hidden="true" className="size-6 shrink-0 text-primary" />
         {title}
       </h3>
       <div className="mt-3 text-lg">{children}</div>
@@ -75,18 +75,18 @@ function PlanDocument({ plan, innovationTitle, onRestart }: { plan: MiddlemanPla
   useEffect(() => headingRef.current?.focus(), []);
 
   return (
-    <article aria-labelledby="plan-tytul" className="appear border-(length:--bw) border-deep bg-surface p-6 shadow-paper sm:p-10">
+    <article aria-labelledby="plan-tytul" className="appear border-(length:--bw) border-border bg-surface p-6 shadow-raised sm:p-10">
       <h2 id="plan-tytul" ref={headingRef} tabIndex={-1} className="focus:outline-none">
         <CutoutText as="span" size="section" text="Twój plan wdrożenia" labelled={false} />
         <span className="sr-only">Twój plan wdrożenia</span>
       </h2>
       <p className="mt-3 text-lg">
-        Innowacja: <strong className="text-deep">{innovationTitle}</strong>
+        Innowacja: <strong className="text-foreground">{innovationTitle}</strong>
         {plan.source?.where_implemented && <span className="text-muted"> · działa już w: {plan.source.where_implemented}</span>}
       </p>
 
-      <p className="mt-6 flex items-start gap-3 rounded-ui border-2 border-deep bg-sage px-4 py-3">
-        <Info aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-deep" />
+      <p className="mt-6 flex items-start gap-3 rounded-ui border-2 border-border bg-secondary/60 px-4 py-3">
+        <Info aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-foreground" />
         To jest szkic. Sprawdź koszty i przepisy przed wdrożeniem.
       </p>
 
@@ -101,16 +101,16 @@ function PlanDocument({ plan, innovationTitle, onRestart }: { plan: MiddlemanPla
 
         <PlanSection icon={ClipboardList} title="Czego potrzeba">
           <dl className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-ui border-2 border-deep bg-paper p-4">
-              <dt className="flex items-center gap-2 font-bold text-deep">
-                <Banknote aria-hidden="true" className="size-5 text-leaf" />
+            <div className="rounded-ui border-2 border-border bg-background p-4">
+              <dt className="flex items-center gap-2 font-bold text-foreground">
+                <Banknote aria-hidden="true" className="size-5 text-primary" />
                 Szacowany koszt
               </dt>
               <dd className="mt-1">{plan.estimated_cost || <Missing />}</dd>
             </div>
-            <div className="rounded-ui border-2 border-deep bg-paper p-4">
-              <dt className="flex items-center gap-2 font-bold text-deep">
-                <MapPin aria-hidden="true" className="size-5 text-leaf" />
+            <div className="rounded-ui border-2 border-border bg-background p-4">
+              <dt className="flex items-center gap-2 font-bold text-foreground">
+                <MapPin aria-hidden="true" className="size-5 text-primary" />
                 Gdzie zorganizować
               </dt>
               <dd className="mt-1">{plan.location_suggestions || <Missing />}</dd>
@@ -122,8 +122,8 @@ function PlanDocument({ plan, innovationTitle, onRestart }: { plan: MiddlemanPla
           {plan.phases?.length ? (
             <ol className="grid gap-4 md:grid-cols-3">
               {plan.phases.map((phase) => (
-                <li key={phase.label} className="rounded-ui border-2 border-deep bg-paper p-4">
-                  <p className="font-bold text-deep">{phase.label}</p>
+                <li key={phase.label} className="rounded-ui border-2 border-border bg-background p-4">
+                  <p className="font-bold text-foreground">{phase.label}</p>
                   <ul className="mt-2 list-disc space-y-1 pl-5 text-base">
                     {phase.items.map((item) => (
                       <li key={item}>{item}</li>
@@ -135,7 +135,7 @@ function PlanDocument({ plan, innovationTitle, onRestart }: { plan: MiddlemanPla
           ) : null}
           {plan.steps?.length ? (
             <>
-              <p className="mt-5 font-bold text-deep">Kolejne kroki</p>
+              <p className="mt-5 font-bold text-foreground">Kolejne kroki</p>
               <ol className="mt-2 list-decimal space-y-1.5 pl-6">
                 {plan.steps.map((step) => (
                   <li key={step}>{step}</li>
@@ -183,7 +183,7 @@ function PlanDocument({ plan, innovationTitle, onRestart }: { plan: MiddlemanPla
         </PlanSection>
       </div>
 
-      <div className="print-hidden mt-10 flex flex-wrap gap-3 border-t-2 border-sage pt-6">
+      <div className="print-hidden mt-10 flex flex-wrap gap-3 border-t-2 border-border/40 pt-6">
         <Button type="button" onClick={() => window.print()}>
           <Download aria-hidden="true" />
           Pobierz plan (PDF)
@@ -333,8 +333,8 @@ export function Middleman({ innovationId, problem = "" }: MiddlemanProps) {
               key={step}
               aria-current={phase === step ? "step" : undefined}
               className={cn(
-                "rounded-full border-2 border-deep px-3 py-1 font-bold",
-                phase === step ? "bg-deep text-surface" : "bg-surface text-deep",
+                "rounded-full border-2 border-border px-3 py-1 font-bold",
+                phase === step ? "bg-primary text-primary-foreground" : "bg-surface text-foreground",
               )}
             >
               {index + 1}. {["O Twojej instytucji", "Rozmowa z asystentem", "Plan wdrożenia"][index]}
@@ -344,7 +344,7 @@ export function Middleman({ innovationId, problem = "" }: MiddlemanProps) {
       </div>
 
       {error && (
-        <p role="alert" className="print-hidden mt-6 flex max-w-2xl items-start gap-3 rounded-ui border-2 border-alert bg-surface px-4 py-3 font-bold text-alert">
+        <p role="alert" className="print-hidden mt-6 flex max-w-2xl items-start gap-3 rounded-ui border-2 border-destructive bg-surface px-4 py-3 font-bold text-destructive">
           <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
           {error}
         </p>
@@ -352,17 +352,17 @@ export function Middleman({ innovationId, problem = "" }: MiddlemanProps) {
 
       <div className="mt-8">
         {phase === "intro" && (
-          <form onSubmit={begin} className="max-w-3xl border-(length:--bw) border-deep bg-surface p-6 shadow-paper sm:p-8">
+          <form onSubmit={begin} className="max-w-3xl border-(length:--bw) border-border bg-surface p-6 shadow-raised sm:p-8">
             {needsPicker ? (
               <fieldset>
-                <legend className="text-xl font-bold text-deep">Którą innowację chcesz wdrożyć?</legend>
+                <legend className="text-xl font-bold text-foreground">Którą innowację chcesz wdrożyć?</legend>
                 <div className="mt-4 grid gap-3">
                   {libraryInnovations.map((item) => (
                     <label
                       key={item.id}
                       className={cn(
                         "flex cursor-pointer items-start gap-3 rounded-ui border-(length:--bw) p-4",
-                        picked === item.id ? "border-deep bg-mint" : "border-sage bg-surface hover:border-deep",
+                        picked === item.id ? "border-primary bg-primary/10" : "border-border bg-surface hover:border-primary",
                       )}
                     >
                       <input
@@ -372,10 +372,10 @@ export function Middleman({ innovationId, problem = "" }: MiddlemanProps) {
                         checked={picked === item.id}
                         onChange={() => setPicked(item.id)}
                         required
-                        className="mt-1.5 size-5 shrink-0 accent-deep"
+                        className="mt-1.5 size-5 shrink-0 accent-primary"
                       />
                       <span>
-                        <span className="block font-bold text-deep">{item.title}</span>
+                        <span className="block font-bold text-foreground">{item.title}</span>
                         <span className="block text-base text-muted">{item.targetGroup}</span>
                       </span>
                     </label>
@@ -385,12 +385,12 @@ export function Middleman({ innovationId, problem = "" }: MiddlemanProps) {
             ) : (
               <p className="text-lg">
                 Wybrana innowacja:{" "}
-                <strong className="text-deep">{libraryMatch?.title ?? `nr ${innovationId} z wyników wyszukiwania`}</strong>
+                <strong className="text-foreground">{libraryMatch?.title ?? `nr ${innovationId} z wyników wyszukiwania`}</strong>
               </p>
             )}
 
             <div className="mt-6">
-              <label htmlFor={`${ids}-instytucja`} className="block font-bold text-deep">
+              <label htmlFor={`${ids}-instytucja`} className="block font-bold text-foreground">
                 Twoja instytucja
               </label>
               <select
@@ -406,7 +406,7 @@ export function Middleman({ innovationId, problem = "" }: MiddlemanProps) {
             </div>
 
             <div className="mt-6">
-              <label htmlFor={`${ids}-potrzeba`} className="block font-bold text-deep">
+              <label htmlFor={`${ids}-potrzeba`} className="block font-bold text-foreground">
                 Jaki problem chcecie rozwiązać? <span className="font-normal text-muted">(nieobowiązkowe)</span>
               </label>
               <textarea
@@ -430,16 +430,16 @@ export function Middleman({ innovationId, problem = "" }: MiddlemanProps) {
         {phase === "chat" && session && (
           <section aria-labelledby={`${ids}-rozmowa`} className="max-w-3xl">
             <div className="flex flex-wrap items-baseline justify-between gap-3">
-              <h2 id={`${ids}-rozmowa`} className="text-xl font-bold text-deep">
+              <h2 id={`${ids}-rozmowa`} className="text-xl font-bold text-foreground">
                 Rozmowa o: {session.innovation.title}
               </h2>
               <p className="font-bold text-muted">
                 Pytanie {questionIndex} z {session.max_questions}
               </p>
             </div>
-            <div aria-hidden="true" className="mt-2 h-2 rounded-full bg-sage">
+            <div aria-hidden="true" className="mt-2 h-2 rounded-full bg-secondary">
               <div
-                className="h-2 rounded-full bg-leaf transition-[width] duration-300"
+                className="h-2 rounded-full bg-primary transition-[width] duration-300"
                 style={{ width: `${(questionIndex / session.max_questions) * 100}%` }}
               />
             </div>
@@ -449,8 +449,8 @@ export function Middleman({ innovationId, problem = "" }: MiddlemanProps) {
                 <div key={index} className={cn("appear flex", message.role === "user" ? "justify-end" : "justify-start")}>
                   <div
                     className={cn(
-                      "max-w-[85%] rounded-ui border-2 border-deep px-5 py-3 text-lg",
-                      message.role === "ai" ? "bg-surface shadow-paper" : "bg-mint",
+                      "max-w-[85%] rounded-ui border-2 border-border px-5 py-3 text-lg",
+                      message.role === "ai" ? "bg-surface shadow-raised" : "bg-primary/10",
                     )}
                   >
                     <p className="text-sm font-bold text-muted">{message.role === "ai" ? "Asystent" : "Ty"}</p>
@@ -460,7 +460,7 @@ export function Middleman({ innovationId, problem = "" }: MiddlemanProps) {
               ))}
               {busy && (
                 <div className="flex justify-start" aria-hidden={streaming ? undefined : true}>
-                  <div className="max-w-[85%] rounded-ui border-2 border-deep bg-surface px-5 py-3 text-lg shadow-paper">
+                  <div className="max-w-[85%] rounded-ui border-2 border-border bg-surface px-5 py-3 text-lg shadow-raised">
                     <p className="text-sm font-bold text-muted">Asystent</p>
                     {streaming ? (
                       <p>{streaming}</p>
@@ -481,9 +481,9 @@ export function Middleman({ innovationId, problem = "" }: MiddlemanProps) {
                 event.preventDefault();
                 send(false);
               }}
-              className="mt-6 border-(length:--bw) border-deep bg-surface p-5"
+              className="mt-6 border-(length:--bw) border-border bg-surface p-5"
             >
-              <label htmlFor={`${ids}-odpowiedz`} className="block font-bold text-deep">
+              <label htmlFor={`${ids}-odpowiedz`} className="block font-bold text-foreground">
                 Twoja odpowiedź
               </label>
               <textarea

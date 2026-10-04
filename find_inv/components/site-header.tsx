@@ -17,7 +17,7 @@ const NAV_LINKS = [
 const SEARCH_TAGS = ["Aplikacja", "Małe firmy", "Niewidomi", "Seniorzy", "Transport", "Zdrowie"];
 
 const linkClass =
-  "inline-flex min-h-12 items-center whitespace-nowrap rounded-ui px-2.5 text-base font-bold text-deep underline-offset-4 hover:underline";
+  "inline-flex min-h-12 items-center whitespace-nowrap rounded-ui px-2.5 text-base font-bold text-foreground underline-offset-4 hover:text-primary hover:underline";
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
@@ -103,10 +103,10 @@ export function SiteHeader() {
   }
 
   return (
-    <header className="relative z-10 border-b-(length:--bw) border-deep bg-paper">
+    <header className="relative z-10 border-b-(length:--bw) border-border bg-background">
       <a
         href="#tresc"
-        className="focus-on-deep sr-only rounded-ui bg-deep px-5 py-3 font-bold text-surface focus:not-sr-only focus:absolute focus:top-3 focus:left-4 focus:z-20"
+        className="focus-on-primary sr-only rounded-ui bg-primary px-5 py-3 font-bold text-primary-foreground focus:not-sr-only focus:absolute focus:top-3 focus:left-4 focus:z-20"
       >
         Przejdź do treści
       </a>
@@ -121,8 +121,8 @@ export function SiteHeader() {
             <label htmlFor="header-search" className="sr-only">
               Szukaj
             </label>
-            <div className="flex min-h-12 w-full items-center rounded-ui border-(length:--bw) border-deep bg-surface">
-              <Search aria-hidden="true" className="ml-3 size-5 text-leaf" />
+            <div className="flex min-h-12 w-full items-center rounded-ui border-(length:--bw) border-border bg-surface focus-within:outline-3 focus-within:outline-offset-3 focus-within:outline-focus">
+              <Search aria-hidden="true" className="ml-3 size-5 text-primary" />
               <input
                 id="header-search"
                 name="q"
@@ -130,9 +130,9 @@ export function SiteHeader() {
                 placeholder="Szukaj"
                 readOnly
                 onFocus={openSearch}
-                className="min-w-0 flex-1 bg-transparent px-3 text-base text-ink outline-none placeholder:text-muted"
+                className="min-w-0 flex-1 bg-transparent px-3 text-base text-foreground outline-none placeholder:text-muted"
               />
-              <kbd className="mr-3 rounded border border-sage px-2 py-1 text-sm font-semibold text-muted">Ctrl+K</kbd>
+              <kbd className="mr-3 rounded border border-border/40 px-2 py-1 text-sm font-semibold text-muted">Ctrl+K</kbd>
             </div>
           </form>
         </div>
@@ -158,7 +158,7 @@ export function SiteHeader() {
             aria-expanded={open}
             aria-controls="menu-mobilne"
             onClick={() => setOpen((value) => !value)}
-            className="inline-flex min-h-12 min-w-12 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-ui border-(length:--bw) border-deep bg-surface px-4 font-bold text-deep hover:bg-sage nav-mobile xl:hidden"
+            className="inline-flex min-h-12 min-w-12 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-ui border-(length:--bw) border-border bg-surface px-4 font-bold text-primary hover:bg-primary/10 nav-mobile xl:hidden"
           >
             {open ? <X aria-hidden="true" className="size-5" /> : <Menu aria-hidden="true" className="size-5" />}
             {open ? "Zamknij" : "Menu"}
@@ -169,15 +169,15 @@ export function SiteHeader() {
       <div
         id="menu-mobilne"
         hidden={!open}
-        className="nav-mobile border-t-(length:--bw) border-deep bg-surface xl:hidden"
+        className="nav-mobile border-t-(length:--bw) border-border bg-surface xl:hidden"
       >
         <nav aria-label="Główna, wersja mobilna" className="mx-auto max-w-content px-4 py-3 sm:px-6">
           <form action="/wyniki" method="get" role="search" className="mb-3 flex sm:hidden" onClick={(event) => { event.preventDefault(); openSearch(); }}>
             <label htmlFor="mobile-header-search" className="sr-only">
               Szukaj
             </label>
-            <div className="flex min-h-12 w-full items-center rounded-ui border-(length:--bw) border-deep bg-paper">
-              <Search aria-hidden="true" className="ml-3 size-5 text-leaf" />
+            <div className="flex min-h-12 w-full items-center rounded-ui border-(length:--bw) border-border bg-background focus-within:outline-3 focus-within:outline-offset-3 focus-within:outline-focus">
+              <Search aria-hidden="true" className="ml-3 size-5 text-primary" />
               <input
                 id="mobile-header-search"
                 name="q"
@@ -185,7 +185,7 @@ export function SiteHeader() {
                 placeholder="Szukaj"
                 readOnly
                 onFocus={openSearch}
-                className="min-w-0 flex-1 bg-transparent px-3 text-base text-ink outline-none placeholder:text-muted"
+                className="min-w-0 flex-1 bg-transparent px-3 text-base text-foreground outline-none placeholder:text-muted"
               />
             </div>
           </form>
@@ -198,12 +198,12 @@ export function SiteHeader() {
               </li>
             ))}
           </ul>
-          <UserMenu className="mt-2 border-t-2 border-sage px-3 pt-3 sm:hidden" />
+          <UserMenu className="mt-2 border-t-2 border-border/40 px-3 pt-3 sm:hidden" />
         </nav>
       </div>
       {searchOpen && (
         <div
-          className="fixed inset-0 z-[60] flex items-start justify-center bg-black/75 px-4 pt-[min(18vh,9rem)]"
+          className="fixed inset-0 z-[60] flex items-start justify-center bg-overlay/75 px-4 pt-[min(18vh,9rem)]"
         >
           <div
             ref={searchDialogRef}
@@ -211,11 +211,11 @@ export function SiteHeader() {
             aria-modal="true"
             aria-labelledby="szybkie-wyszukiwanie-tytul"
             onKeyDown={trapSearchFocus}
-            className="w-full max-w-2xl rounded-ui border-(length:--bw) border-deep bg-surface p-5 shadow-paper sm:p-8"
+            className="w-full max-w-2xl rounded-ui border-(length:--bw) border-border bg-surface p-5 shadow-raised sm:p-8"
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 id="szybkie-wyszukiwanie-tytul" className="mt-2 text-2xl font-bold text-deep">Czego szukasz?</h2>
+                <h2 id="szybkie-wyszukiwanie-tytul" className="mt-2 text-2xl font-bold text-primary">Czego szukasz?</h2>
               </div>
               <button
                 ref={closeSearchRef}
@@ -223,7 +223,7 @@ export function SiteHeader() {
                 aria-label="Zamknij wyszukiwanie"
                 title="Zamknij wyszukiwanie"
                 onClick={closeSearch}
-                className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-ui border-(length:--bw) border-deep bg-surface text-deep hover:bg-sage"
+                className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-ui border-(length:--bw) border-border bg-surface text-primary hover:bg-primary/10"
               >
                 <X aria-hidden="true" className="size-6" />
               </button>
@@ -242,7 +242,7 @@ export function SiteHeader() {
                     setSearchPlaceholder(placeholder);
                     searchInputRef.current?.focus();
                   }}
-                  className="min-h-12 rounded-ui border-(length:--bw) border-deep bg-paper px-4 font-semibold text-deep hover:bg-sage"
+                  className="min-h-12 rounded-ui border-(length:--bw) border-border bg-background px-4 font-semibold text-primary hover:bg-primary/10"
                 >
                   {label}
                 </button>
@@ -251,9 +251,9 @@ export function SiteHeader() {
             <form action="/wyniki" method="get" role="search" className="mt-6 flex gap-3">
               <label htmlFor="quick-search" className="sr-only">Szukaj</label>
               <input type="hidden" name="tags" value={selectedTags.join(",")} />
-              <div className="flex min-h-12 min-w-0 flex-1 flex-wrap items-center gap-2 rounded-ui border-(length:--bw) border-deep bg-paper px-3 py-2">
+              <div className="flex min-h-12 min-w-0 flex-1 flex-wrap items-center gap-2 rounded-ui border-(length:--bw) border-border bg-background px-3 py-2 focus-within:outline-3 focus-within:outline-offset-3 focus-within:outline-focus">
                 {selectedTags.map((tag) => (
-                  <span key={tag} className="rounded-full bg-mint px-2 py-1 text-sm font-semibold text-deep">#{tag}</span>
+                  <span key={tag} className="rounded-full bg-primary/10 px-2 py-1 text-sm font-semibold text-primary">#{tag}</span>
                 ))}
                 <input
                   ref={searchInputRef}
@@ -264,29 +264,29 @@ export function SiteHeader() {
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
                   placeholder={searchPlaceholder}
-                  className="min-w-[8rem] flex-1 bg-transparent px-1 text-base text-ink outline-none placeholder:text-muted"
+                  className="min-w-[8rem] flex-1 bg-transparent px-1 text-base text-foreground outline-none placeholder:text-muted"
                 />
               </div>
-              <button type="submit" className="inline-flex min-h-12 items-center gap-2 rounded-ui border-(length:--bw) border-deep bg-deep px-5 font-bold text-surface hover:bg-leaf">
+              <button type="submit" className="inline-flex min-h-12 items-center gap-2 rounded-ui border-(length:--bw) border-primary bg-primary px-5 font-bold text-primary-foreground hover:bg-primary-hover">
                 <Search aria-hidden="true" className="size-5" />
                 Szukaj
               </button>
             </form>
-            <details className="mt-4 rounded-ui border-(length:--bw) border-sage bg-paper">
-              <summary className="flex min-h-12 cursor-pointer items-center justify-between gap-4 px-4 font-semibold text-deep">
+            <details className="mt-4 rounded-ui border-(length:--bw) border-border/40 bg-background">
+              <summary className="flex min-h-12 cursor-pointer items-center justify-between gap-4 px-4 font-semibold text-primary">
                 Wybierz tagi
                 <span className="text-sm text-muted">{selectedTags.length ? `Wybrano: ${selectedTags.length}` : "wielokrotny wybór"}</span>
               </summary>
-              <div className="grid gap-1 border-t-(length:--bw) border-sage p-3 sm:grid-cols-2" aria-label="Lista tagów wyszukiwania">
+              <div className="grid gap-1 border-t-(length:--bw) border-border/40 p-3 sm:grid-cols-2" aria-label="Lista tagów wyszukiwania">
                 {SEARCH_TAGS.map((tag) => (
-                  <label key={tag} className="flex min-h-12 cursor-pointer items-center gap-3 rounded-ui px-3 hover:bg-sage">
+                  <label key={tag} className="flex min-h-12 cursor-pointer items-center gap-3 rounded-ui px-3 hover:bg-secondary/60">
                     <input
                       type="checkbox"
                       checked={selectedTags.includes(tag)}
                       onChange={() => setSelectedTags((current) => (current.includes(tag) ? current.filter((item) => item !== tag) : [...current, tag]))}
-                      className="size-5 accent-deep"
+                      className="size-5 accent-primary"
                     />
-                    <span className="text-base text-deep">#{tag}</span>
+                    <span className="text-base text-foreground">#{tag}</span>
                   </label>
                 ))}
               </div>

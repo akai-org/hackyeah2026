@@ -37,7 +37,7 @@ function syncUrl({ search, tags, cost, archived }: Filters) {
   window.history.replaceState(null, "", query ? `?${query}` : window.location.pathname);
 }
 
-const fieldClass = "min-h-12 rounded-ui border-(length:--bw) border-deep bg-surface px-4 text-base text-ink";
+const fieldClass = "min-h-12 rounded-ui border-(length:--bw) border-border bg-surface px-4 text-base text-foreground";
 
 export function LibraryBrowser({ initial }: { initial: Filters }) {
   const ids = useId();
@@ -95,7 +95,7 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
     <>
       <form role="search" onSubmit={(event) => event.preventDefault()} className="mt-8 grid max-w-4xl gap-6">
         <div>
-          <label htmlFor={`${ids}-szukaj`} className="block text-lg font-bold text-deep">
+          <label htmlFor={`${ids}-szukaj`} className="block text-lg font-bold text-foreground">
             Szukaj w Bibliotece
           </label>
           <div className="relative mt-2">
@@ -116,7 +116,7 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
 
         <div className="flex flex-wrap items-end gap-4">
           <div>
-            <label htmlFor={`${ids}-temat`} className="block font-bold text-deep">
+            <label htmlFor={`${ids}-temat`} className="block font-bold text-foreground">
               Temat
             </label>
             <select
@@ -134,7 +134,7 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
             </select>
           </div>
           <div>
-            <label htmlFor={`${ids}-koszt`} className="block font-bold text-deep">
+            <label htmlFor={`${ids}-koszt`} className="block font-bold text-foreground">
               Koszt
             </label>
             <select
@@ -150,12 +150,12 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
               ))}
             </select>
           </div>
-          <label className="flex min-h-12 cursor-pointer items-center gap-3 font-bold text-deep">
+          <label className="flex min-h-12 cursor-pointer items-center gap-3 font-bold text-foreground">
             <input
               type="checkbox"
               checked={filters.archived}
               onChange={(event) => update({ archived: event.target.checked })}
-              className="size-6 cursor-pointer accent-deep"
+              className="size-6 cursor-pointer accent-primary"
             />
             Pokaż też archiwalne
           </label>
@@ -163,21 +163,21 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
 
         {filters.tags.length > 0 && (
           <div role="group" aria-labelledby={`${ids}-wybrane`} className="flex flex-wrap items-center gap-2">
-            <p id={`${ids}-wybrane`} className="font-bold text-deep">
+            <p id={`${ids}-wybrane`} className="font-bold text-foreground">
               Wybrane tematy:
             </p>
             <ul className="flex flex-wrap gap-2">
               {filters.tags.map((tag) => (
                 <li
                   key={tag}
-                  className="inline-flex min-h-10 items-center gap-1 rounded-ui border-(length:--bw) border-deep bg-mint py-0.5 pr-0.5 pl-3 text-base text-ink"
+                  className="inline-flex min-h-10 items-center gap-1 rounded-ui border-(length:--bw) border-primary bg-primary/10 py-0.5 pr-0.5 pl-3 text-base text-foreground"
                 >
                   {TAG_LABELS[tag]}
                   <button
                     type="button"
                     onClick={() => update({ tags: filters.tags.filter((item) => item !== tag) })}
                     aria-label={`Usuń temat ${TAG_LABELS[tag].toLowerCase()}`}
-                    className="inline-flex size-10 cursor-pointer items-center justify-center rounded-ui hover:bg-sage"
+                    className="inline-flex size-10 cursor-pointer items-center justify-center rounded-ui hover:bg-primary/10"
                   >
                     <X aria-hidden="true" className="size-4" />
                   </button>
@@ -188,7 +188,7 @@ export function LibraryBrowser({ initial }: { initial: Filters }) {
         )}
       </form>
 
-      <p role="status" aria-live="polite" className="mt-8 flex min-h-8 items-center gap-2 font-bold text-deep">
+      <p role="status" aria-live="polite" className="mt-8 flex min-h-8 items-center gap-2 font-bold text-primary">
         {loading ? (
           <>
             <Loader2 aria-hidden="true" className="size-5 animate-spin" />

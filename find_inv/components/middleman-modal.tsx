@@ -121,19 +121,19 @@ export function MiddlemanModal({ innovationId, innovationTitle, onClose }: Props
       role="dialog"
       aria-modal="true"
       aria-labelledby="middleman-tytul"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 px-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/40 px-4"
     >
-      <div ref={containerRef} className="relative flex w-full max-w-lg flex-col rounded-ui border-(length:--bw) border-deep bg-surface p-6 shadow-paper max-h-[90vh] overflow-y-auto">
+      <div ref={containerRef} className="relative flex w-full max-w-lg flex-col rounded-ui border-(length:--bw) border-border bg-surface p-6 shadow-raised max-h-[90vh] overflow-y-auto">
         <button
           ref={closeRef}
           onClick={onClose}
           aria-label="Zamknij"
-          className="absolute right-4 top-4 inline-flex size-10 items-center justify-center rounded-ui hover:bg-sage"
+          className="absolute right-4 top-4 inline-flex size-10 items-center justify-center rounded-ui hover:bg-secondary/60"
         >
           <X className="size-5" />
         </button>
 
-        <h2 id="middleman-tytul" className="pr-10 text-xl font-bold text-deep">
+        <h2 id="middleman-tytul" className="pr-10 text-xl font-bold text-foreground">
           Plan wdrożenia: {innovationTitle}
         </h2>
         <p className="mt-1 text-sm text-muted">AI dostosuje plan do Twojej instytucji.</p>
@@ -141,7 +141,7 @@ export function MiddlemanModal({ innovationId, innovationTitle, onClose }: Props
         {plan ? (
           <div className="mt-6 space-y-4 text-sm">
             <div className="flex items-center justify-between gap-3">
-              <p className="font-bold text-leaf">Plan wdrożenia gotowy</p>
+              <p className="font-bold text-primary">Plan wdrożenia gotowy</p>
               <button
                 onClick={() => {
                   const lines = [
@@ -161,9 +161,9 @@ export function MiddlemanModal({ innovationId, innovationTitle, onClose }: Props
                 }}
                 aria-label="Kopiuj plan do schowka"
                 title="Kopiuj do schowka"
-                className="inline-flex items-center gap-1.5 rounded-ui border-(length:--bw) border-deep bg-paper px-3 py-1.5 text-xs font-bold hover:bg-sage"
+                className="inline-flex items-center gap-1.5 rounded-ui border-(length:--bw) border-border bg-background px-3 py-1.5 text-xs font-bold hover:bg-secondary/60"
               >
-                {copied ? <ClipboardCheck className="size-3.5 text-leaf" aria-hidden="true" /> : <Clipboard className="size-3.5" aria-hidden="true" />}
+                {copied ? <ClipboardCheck className="size-3.5 text-primary" aria-hidden="true" /> : <Clipboard className="size-3.5" aria-hidden="true" />}
                 {copied ? "Skopiowano!" : "Kopiuj"}
               </button>
             </div>
@@ -210,13 +210,13 @@ export function MiddlemanModal({ innovationId, innovationTitle, onClose }: Props
               {messages.map((m, i) => (
                 <div
                   key={i}
-                  className={cn("rounded-ui p-3 text-sm", m.role === "assistant" ? "bg-sage" : "bg-mint ml-8")}
+                  className={cn("rounded-ui p-3 text-sm", m.role === "assistant" ? "bg-secondary/60" : "bg-primary/10 ml-8")}
                 >
                   <span className="font-bold">{m.role === "assistant" ? "AI Ekspert" : "Ty"}</span>
                   <p className="mt-1 whitespace-pre-wrap">{m.content}</p>
                 </div>
               ))}
-              {loading && <div className="rounded-ui bg-sage p-3 text-sm text-muted">AI pisze…</div>}
+              {loading && <div className="rounded-ui bg-secondary/60 p-3 text-sm text-muted">AI pisze…</div>}
             </div>
             <div className="mt-4 flex gap-2">
               <input
@@ -226,7 +226,7 @@ export function MiddlemanModal({ innovationId, innovationTitle, onClose }: Props
                 onKeyDown={(e) => e.key === "Enter" && sendAnswer()}
                 placeholder="Twoja odpowiedź…"
                 aria-label="Odpowiedź dla AI"
-                className="flex-1 rounded-ui border-(length:--bw) border-deep bg-paper px-4 py-2 text-sm"
+                className="flex-1 rounded-ui border-(length:--bw) border-border bg-background px-4 py-2 text-sm"
               />
               <Button onClick={sendAnswer} disabled={loading || !input.trim()}>
                 <Send className="size-4" />

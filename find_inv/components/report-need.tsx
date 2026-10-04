@@ -24,7 +24,7 @@ export function ReportNeed({ query }: { query: string }) {
   return (
     <div className="mt-4">
       {state === "sent" ? (
-        <p role="status" className="flex items-start gap-2 font-bold text-deep">
+        <p role="status" className="flex items-start gap-2 font-bold text-foreground">
           <CircleCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
           Zgłoszenie wysłane. Dziękujemy.
         </p>
@@ -37,7 +37,7 @@ export function ReportNeed({ query }: { query: string }) {
       {state === "error" && (
         <p
           role="alert"
-          className="mt-3 flex items-start gap-2 rounded-ui border-2 border-alert bg-surface px-4 py-3 font-bold text-alert"
+          className="mt-3 flex items-start gap-2 rounded-ui border-2 border-destructive bg-surface px-4 py-3 font-bold text-destructive"
         >
           <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
           Nie udało się wysłać zgłoszenia. Spróbuj jeszcze raz za chwilę.

@@ -14,7 +14,7 @@ export default async function ImplementationPage({ searchParams }: PageProps<"/w
   const { innowacja, problem } = await searchParams;
   const innovationId = first(innowacja);
   return (
-    <PageBackdrop layout="gutters" leafColor="leaf">
+    <PageBackdrop layout="gutters">
       <Middleman key={innovationId ?? "wybor"} innovationId={innovationId} problem={first(problem) ?? ""} />
     </PageBackdrop>
   );

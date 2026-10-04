@@ -46,13 +46,13 @@ function repliesLabel(count: number): string {
 }
 
 const fieldClass =
-  "mt-2 w-full rounded-ui border-(length:--bw) bg-surface px-4 text-base text-ink placeholder:text-muted";
+  "mt-2 w-full rounded-ui border-(length:--bw) bg-surface px-4 text-base text-foreground placeholder:text-muted";
 
 function PostBody({ post }: { post: ForumPost }) {
   return (
     <>
       <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <span className="font-bold text-deep">{post.author_name}</span>
+        <span className="font-bold text-foreground">{post.author_name}</span>
         <RoleBadge role={post.badge} />
         <time dateTime={post.created_at} className="text-sm text-muted">
           {formatDate(post.created_at)}
@@ -153,14 +153,14 @@ export function ForumBoard() {
   return (
     <div className="mt-10 grid gap-12 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
       <aside aria-labelledby={`${ids}-nowy`} className="lg:sticky lg:top-6 lg:col-start-2 lg:row-start-1">
-        <form onSubmit={addThread} noValidate className="border-(length:--bw) border-deep bg-sage p-5 sm:p-6">
-          <h2 id={`${ids}-nowy`} className="text-xl font-bold text-deep">
+        <form onSubmit={addThread} noValidate className="border-(length:--bw) border-border bg-secondary/60 p-5 sm:p-6">
+          <h2 id={`${ids}-nowy`} className="text-xl font-bold text-foreground">
             Zadaj pytanie
           </h2>
 
           <p className="mt-3 flex flex-wrap items-center gap-2">
             <span>Piszesz jako</span>
-            <span className="font-bold text-deep">{author.author_name}</span>
+            <span className="font-bold text-foreground">{author.author_name}</span>
             <RoleBadge role={author.badge} />
           </p>
           {!user && (
@@ -170,7 +170,7 @@ export function ForumBoard() {
                 <button
                   type="button"
                   onClick={openLogin}
-                  className="cursor-pointer font-bold text-leaf underline underline-offset-4 hover:text-deep"
+                  className="cursor-pointer font-bold text-primary underline underline-offset-4 hover:text-primary-hover"
                 >
                   Zaloguj się
                 </button>
@@ -179,7 +179,7 @@ export function ForumBoard() {
             </p>
           )}
 
-          <label htmlFor={`${ids}-tytul`} className="mt-5 block font-bold text-deep">
+          <label htmlFor={`${ids}-tytul`} className="mt-5 block font-bold text-foreground">
             Temat
           </label>
           <input
@@ -194,10 +194,10 @@ export function ForumBoard() {
             aria-invalid={threadError === "title" || undefined}
             aria-describedby={threadError === "title" ? `${ids}-blad` : undefined}
             placeholder="Na przykład: jak znaleźć wolontariuszy na wsi?"
-            className={cn(fieldClass, "min-h-12", threadError === "title" ? "border-alert" : "border-deep")}
+            className={cn(fieldClass, "min-h-12", threadError === "title" ? "border-destructive" : "border-border")}
           />
 
-          <label htmlFor={`${ids}-tresc`} className="mt-5 block font-bold text-deep">
+          <label htmlFor={`${ids}-tresc`} className="mt-5 block font-bold text-foreground">
             Treść
           </label>
           <textarea
@@ -211,11 +211,11 @@ export function ForumBoard() {
             }}
             aria-invalid={threadError === "content" || undefined}
             aria-describedby={threadError === "content" ? `${ids}-blad` : undefined}
-            className={cn(fieldClass, "min-h-28 py-3", threadError === "content" ? "border-alert" : "border-deep")}
+            className={cn(fieldClass, "min-h-28 py-3", threadError === "content" ? "border-destructive" : "border-border")}
           />
 
           {threadError && (
-            <p id={`${ids}-blad`} className="mt-3 flex items-start gap-2 font-bold text-alert">
+            <p id={`${ids}-blad`} className="mt-3 flex items-start gap-2 font-bold text-destructive">
               <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
               {threadError === "title" ? "Wpisz temat wątku." : "Wpisz treść pytania."}
             </p>
@@ -244,11 +244,11 @@ export function ForumBoard() {
                 <article
                   aria-labelledby={`${ids}-wpis-${thread.id}`}
                   className={cn(
-                    "border-(length:--bw) border-deep bg-surface p-5 shadow-paper sm:p-6",
+                    "border-(length:--bw) border-border bg-surface p-5 shadow-raised sm:p-6",
                     focusPost === thread.id && "appear",
                   )}
                 >
-                  <h3 id={`${ids}-wpis-${thread.id}`} tabIndex={-1} className="text-xl font-bold text-deep">
+                  <h3 id={`${ids}-wpis-${thread.id}`} tabIndex={-1} className="text-xl font-bold text-foreground">
                     {thread.title}
                   </h3>
                   <div className="mt-3">
@@ -264,7 +264,7 @@ export function ForumBoard() {
                           id={`${ids}-wpis-${post.id}`}
                           tabIndex={-1}
                           className={cn(
-                            "border-l-4 border-leaf bg-paper py-3 pr-3 pl-4",
+                            "border-l-4 border-secondary bg-background py-3 pr-3 pl-4",
                             focusPost === post.id && "appear",
                           )}
                         >
@@ -276,7 +276,7 @@ export function ForumBoard() {
 
                   {replyingTo === thread.id ? (
                     <form onSubmit={(event) => addReply(event, thread.id)} noValidate className="mt-5">
-                      <label htmlFor={replyFieldId} className="block font-bold text-deep">
+                      <label htmlFor={replyFieldId} className="block font-bold text-foreground">
                         Twoja odpowiedź
                       </label>
                       <textarea
@@ -290,10 +290,10 @@ export function ForumBoard() {
                         }}
                         aria-invalid={replyError || undefined}
                         aria-describedby={replyError ? `${replyFieldId}-blad` : undefined}
-                        className={cn(fieldClass, "min-h-24 py-3", replyError ? "border-alert" : "border-deep")}
+                        className={cn(fieldClass, "min-h-24 py-3", replyError ? "border-destructive" : "border-border")}
                       />
                       {replyError && (
-                        <p id={`${replyFieldId}-blad`} className="mt-2 flex items-start gap-2 font-bold text-alert">
+                        <p id={`${replyFieldId}-blad`} className="mt-2 flex items-start gap-2 font-bold text-destructive">
                           <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
                           Wpisz treść odpowiedzi.
                         </p>

@@ -292,7 +292,7 @@ export function DictationStatus({ dictation }: { dictation: Dictation }) {
       className={cn(
         "flex items-start gap-2 font-semibold",
         dictation.message && "mt-3",
-        dictation.state === "error" ? "text-alert" : "text-deep",
+        dictation.state === "error" ? "text-destructive" : "text-foreground",
       )}
     >
       {dictation.state === "recording" && <Mic aria-hidden="true" className="mt-0.5 size-5 shrink-0" />}
@@ -370,9 +370,9 @@ export function DictationSuggestion({ dictation }: { dictation: Dictation }) {
   return (
     <section
       aria-labelledby={`${ids}-pytanie`}
-      className="appear mt-3 max-w-[65ch] rounded-ui border-(length:--bw) border-deep bg-mint p-4"
+      className="appear mt-3 max-w-[65ch] rounded-ui border-(length:--bw) border-primary bg-primary/10 p-4"
     >
-      <p id={`${ids}-pytanie`} ref={headingRef} tabIndex={-1} className="font-bold text-deep focus:outline-none">
+      <p id={`${ids}-pytanie`} ref={headingRef} tabIndex={-1} className="font-bold text-foreground focus:outline-none">
         Czy o to chodziło?
       </p>
       {suggestion.condensed ? (
@@ -384,7 +384,7 @@ export function DictationSuggestion({ dictation }: { dictation: Dictation }) {
             {count(suggestion.corrected)} słów).
           </p>
           <details className="mt-2 text-sm">
-            <summary className="cursor-pointer font-bold text-deep">Pokaż całą wypowiedź</summary>
+            <summary className="cursor-pointer font-bold text-foreground">Pokaż całą wypowiedź</summary>
             <p className="mt-1 rounded-ui bg-surface px-3 py-2 text-muted">{suggestion.original}</p>
           </details>
         </>

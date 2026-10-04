@@ -1,23 +1,20 @@
 import Link from "next/link";
-import { Smile } from "lucide-react";
 
-const linkClass = "inline-flex min-h-12 items-center font-bold text-leaf underline underline-offset-4 hover:text-deep";
+const linkClass = "inline-flex min-h-12 items-center font-bold text-primary underline underline-offset-4 hover:text-primary-hover";
 
 export function SiteFooter() {
   return (
-    <footer className="relative overflow-hidden border-t-(length:--bw) border-deep">
-      <Smile aria-hidden="true" className="simple-hidden absolute -bottom-10 -left-10 size-32 text-leaf opacity-60" />
-
+    <footer className="relative overflow-hidden border-t-(length:--bw) border-border/40">
       <div className="relative mx-auto grid max-w-content gap-10 px-4 py-12 sm:px-6 md:grid-cols-3">
         <div>
-          <p className="text-lg font-bold text-deep">HubMI</p>
+          <p className="text-lg font-bold text-foreground">HubMI</p>
           <p className="mt-2 max-w-[38ch] text-muted">
             Małopolski Hub Innowacji Społecznych. Prototyp stworzony podczas HackYeah 2026.
           </p>
         </div>
 
         <div>
-          <h2 className="text-lg font-bold text-deep">
+          <h2 className="text-lg font-bold text-foreground">
             Kontakt
           </h2>
           <address className="mt-2 not-italic">
@@ -45,7 +42,7 @@ export function SiteFooter() {
         </div>
 
         <div>
-          <h2 className="text-lg font-bold text-deep">Dostępność</h2>
+          <h2 className="text-lg font-bold text-foreground">Dostępność</h2>
           <ul className="mt-1">
             <li>
               <Link href="/deklaracja-dostepnosci" className={linkClass}>
