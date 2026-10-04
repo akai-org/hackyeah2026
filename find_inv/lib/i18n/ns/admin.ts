@@ -14,6 +14,11 @@ export const pl = {
     engagement: "Zaangażowanie",
     ideas: "Pomysły",
   },
+  navGroups: {
+    overview: "Przegląd",
+    content: "Treści",
+    people: "Ludzie",
+  },
   shell: {
     checking: "Sprawdzam uprawnienia…",
     title: "Panel ROPS",
@@ -345,6 +350,11 @@ export const en: AdminMessages = {
     engagement: "Engagement",
     ideas: "Ideas",
   },
+  navGroups: {
+    overview: "Overview",
+    content: "Content",
+    people: "People",
+  },
   shell: {
     checking: "Checking permissions…",
     title: "ROPS panel",
@@ -672,6 +682,11 @@ export const uk: AdminMessages = {
     trends: "Тренди",
     engagement: "Залученість",
     ideas: "Ідеї",
+  },
+  navGroups: {
+    overview: "Огляд",
+    content: "Контент",
+    people: "Люди",
   },
   shell: {
     checking: "Перевіряю права доступу…",
