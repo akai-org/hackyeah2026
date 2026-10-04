@@ -143,7 +143,8 @@ const plCore = {
     selected: (n: number) => `Wybrano: ${n}`,
     multiSelect: "wielokrotny wybór",
     tagList: "Lista tagów wyszukiwania",
-    tagLabels: { Aplikacja: "Aplikacja", "Małe firmy": "Małe firmy", Niewidomi: "Niewidomi", Seniorzy: "Seniorzy", Transport: "Transport", Zdrowie: "Zdrowie" } as Record<string, string>,
+    loadingTags: "Wczytuję tagi…",
+    innovationCount: (n: number) => `${n} ${plPlural(n, "innowacja", "innowacje", "innowacji")}`,
   },
   home: {
     heroTitle: "Z czym masz kłopot?",
@@ -426,7 +427,8 @@ const enCore: CoreMessages = {
     selected: (n: number) => `Selected: ${n}`,
     multiSelect: "multiple choice",
     tagList: "Search tag list",
-    tagLabels: { Aplikacja: "App", "Małe firmy": "Small businesses", Niewidomi: "Blind people", Seniorzy: "Seniors", Transport: "Transport", Zdrowie: "Health" },
+    loadingTags: "Loading tags…",
+    innovationCount: (n: number) => `${n} ${n === 1 ? "innovation" : "innovations"}`,
   },
   home: {
     heroTitle: "What's the problem?",
@@ -707,7 +709,8 @@ const ukCore: CoreMessages = {
     selected: (n: number) => `Обрано: ${n}`,
     multiSelect: "множинний вибір",
     tagList: "Список тегів пошуку",
-    tagLabels: { Aplikacja: "Застосунок", "Małe firmy": "Малий бізнес", Niewidomi: "Незрячі", Seniorzy: "Літні люди", Transport: "Транспорт", Zdrowie: "Здоров’я" },
+    loadingTags: "Завантажую теги…",
+    innovationCount: (n: number) => `${n} ${ukPlural(n, "інновація", "інновації", "інновацій")}`,
   },
   home: {
     heroTitle: "Що вас турбує?",

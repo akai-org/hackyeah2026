@@ -1,11 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type RefObject } from "react";
+import { useEffect, useState, type RefObject } from "react";
 import { BookOpen, Lightbulb, MapPin, Search, Sparkles, type LucideIcon } from "lucide-react";
 
 import { useT } from "@/lib/i18n/client";
-import { SEARCH_TAGS } from "@/lib/search-tags";
+import type { Tag } from "@/data/mock";
+import { loadTags, type TagCount } from "@/lib/search-tags";
 
 // Treść okna szybkiego wyszukiwania (Ctrl+K). Kategoria mówi, GDZIE szukać: „Szukaj” prowadzi na stronę
 // kategorii z wpisanym tekstem i wybranymi tagami. Układ okna jest taki sam dla każdej kategorii
@@ -20,21 +21,16 @@ const CATEGORIES: Array<{ value: SearchCategory; icon: LucideIcon }> = [
   { value: "articles", icon: BookOpen },
 ];
 
-/** Adres strony wyników dla kategorii, tekstu i tagów (etykiet z SEARCH_TAGS). */
-export function searchHref(category: SearchCategory, query: string, labels: string[] = []) {
+/** Adres strony wyników dla kategorii, tekstu i tagów taksonomii. `labelOf` — nazwa tagu do opisu dla AI. */
+export function searchHref(category: SearchCategory, query: string, tags: Tag[] = [], labelOf: (tag: Tag) => string = String) {
   const params = new URLSearchParams();
   if (category === "all") {
-    // Dopasowanie AI czyta tylko tekst — tagi dopisujemy do opisu.
-    params.set("q", [query, ...labels].filter(Boolean).join(", "));
+    // Dopasowanie AI czyta tylko tekst — nazwy tagów dopisujemy do opisu.
+    params.set("q", [query, ...tags.map(labelOf)].filter(Boolean).join(", "));
     return `/wyniki?${params}`;
   }
   if (query) params.set("q", query);
-  if (category === "innovations") {
-    const taxonomy = SEARCH_TAGS.filter((tag) => labels.includes(tag.label)).map((tag) => tag.taxonomy);
-    if (taxonomy.length) params.set("tags", taxonomy.join(","));
-  } else if (labels.length) {
-    params.set("tagi", labels.join(","));
-  }
+  if (tags.length) params.set(category === "innovations" ? "tags" : "tagi", tags.join(","));
   const path = { problems: "/wyzwania", innovations: "/biblioteka", articles: "/edukacja" }[category];
   const search = params.toString();
   return search ? `${path}?${search}` : path;
@@ -45,7 +41,17 @@ export function QuickSearch({ inputRef, onNavigate }: { inputRef: RefObject<HTML
   const t = useT();
   const [category, setCategory] = useState<SearchCategory>("all");
   const [query, setQuery] = useState("");
-  const [tags, setTags] = useState<string[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
+  // Tagi do wyboru z backendu (GET /api/tags), najczęstsze na górze.
+  const [available, setAvailable] = useState<TagCount[] | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    loadTags().then((list) => active && setAvailable(list));
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const current = t.quickSearch.categories[category];
 
@@ -58,7 +64,7 @@ export function QuickSearch({ inputRef, onNavigate }: { inputRef: RefObject<HTML
       return;
     }
     onNavigate();
-    router.push(searchHref(category, trimmed, tags));
+    router.push(searchHref(category, trimmed, tags, (tag) => t.tags[tag]));
   }
 
   return (
@@ -88,7 +94,7 @@ export function QuickSearch({ inputRef, onNavigate }: { inputRef: RefObject<HTML
         <div className="flex min-h-12 min-w-0 flex-1 flex-wrap items-center gap-2 rounded-ui border-(length:--bw) border-border bg-background px-3 py-2">
           {tags.map((tag) => (
             <span key={tag} className="rounded-full bg-primary/10 px-2 py-1 text-sm font-semibold text-foreground">
-              #{t.quickSearch.tagLabels[tag] ?? tag}
+              #{t.tags[tag]}
             </span>
           ))}
           <input
@@ -117,20 +123,32 @@ export function QuickSearch({ inputRef, onNavigate }: { inputRef: RefObject<HTML
           {t.quickSearch.chooseTags}
           <span className="text-sm text-muted">{tags.length ? t.quickSearch.selected(tags.length) : t.quickSearch.multiSelect}</span>
         </summary>
-        <div className="grid gap-1 border-t-(length:--bw) border-border/40 p-3 sm:grid-cols-2" aria-label={t.quickSearch.tagList}>
-          {SEARCH_TAGS.map(({ label }) => (
-            <label key={label} className="flex min-h-12 cursor-pointer items-center gap-3 rounded-ui px-3 hover:bg-primary/10">
-              <input
-                type="checkbox"
-                checked={tags.includes(label)}
-                onChange={() =>
-                  setTags((list) => (list.includes(label) ? list.filter((item) => item !== label) : [...list, label]))
-                }
-                className="size-5 accent-primary"
-              />
-              <span className="text-base text-foreground">#{t.quickSearch.tagLabels[label] ?? label}</span>
-            </label>
-          ))}
+        {/* Przewijana lista wszystkich tagów (nie skacze wysokość okna przy 25 pozycjach). */}
+        <div
+          role="group"
+          aria-label={t.quickSearch.tagList}
+          className="grid max-h-64 gap-1 overflow-y-auto overscroll-contain border-t-(length:--bw) border-border/40 p-3 sm:grid-cols-2"
+        >
+          {available === null ? (
+            <p className="px-3 py-2 text-muted">{t.quickSearch.loadingTags}</p>
+          ) : (
+            available.map(({ tag, count }) => (
+              <label key={tag} className="flex min-h-12 cursor-pointer items-center gap-3 rounded-ui px-3 hover:bg-primary/10">
+                <input
+                  type="checkbox"
+                  checked={tags.includes(tag)}
+                  onChange={() => setTags((list) => (list.includes(tag) ? list.filter((item) => item !== tag) : [...list, tag]))}
+                  className="size-5 shrink-0 accent-primary"
+                />
+                <span className="min-w-0 flex-1 text-base text-foreground">#{t.tags[tag]}</span>
+                {count > 0 && (
+                  <span className="text-sm text-muted tabular-nums" aria-label={t.quickSearch.innovationCount(count)}>
+                    {count}
+                  </span>
+                )}
+              </label>
+            ))
+          )}
         </div>
       </details>
     </>
