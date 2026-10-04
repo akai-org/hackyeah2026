@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { TAG_LABELS, type ForumPost } from "@/data/mock";
 import { apiFetch, apiPost } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { markInnovationUsed, useUsedInnovation } from "@/lib/used-innovation";
 import { cn } from "@/lib/utils";
 
 const MONTHS = [
@@ -76,7 +77,8 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
   const [innovation, setInnovation] = useState<Innovation | null>(innovationProp ?? null);
   const [posts, setPosts] = useState<ForumPost[]>([]);
   const [nickname, setNickname] = useState(user?.name ?? "");
-  const [usedInnovation, setUsedInnovation] = useState(false);
+  // Wspólne z oceną gwiazdkami (star-rating): ocena pojawia się dopiero po tym potwierdzeniu.
+  const usedInnovation = useUsedInnovation(innovationId);
   const [usedCount, setUsedCount] = useState(0);
   const [isAssignedTester, setIsAssignedTester] = useState(false);
   const [comment, setComment] = useState("");
@@ -270,12 +272,17 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
             <div className="mt-4">
               {usedInnovation ? (
                 <p className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-bold text-foreground">
-                  Potwierdzono ({usedCount} {usedCount === 1 ? "osoba" : usedCount < 5 ? "osoby" : "osób"})
+                  {usedCount > 0
+                    ? `Potwierdzono (${usedCount} ${usedCount === 1 ? "osoba" : usedCount < 5 ? "osoby" : "osób"})`
+                    : "Potwierdzono, że używasz tej inicjatywy"}
                 </p>
               ) : (
                 <button
                   type="button"
-                  onClick={() => { setUsedInnovation(true); setUsedCount((c) => c + 1); }}
+                  onClick={() => {
+                    markInnovationUsed(innovationId);
+                    setUsedCount((c) => c + 1);
+                  }}
                   className="inline-flex min-h-10 items-center gap-2 rounded-ui border-(length:--bw) border-border bg-surface px-4 text-sm font-medium text-foreground hover:bg-primary/10"
                 >
                   Używałem tej inicjatywy

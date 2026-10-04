@@ -5,6 +5,7 @@ import { Star } from "lucide-react";
 
 import { apiFetch, apiPost } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { useUsedInnovation } from "@/lib/used-innovation";
 import { cn } from "@/lib/utils";
 
 interface RatingData {
@@ -18,8 +19,11 @@ interface Props {
   innovationId: number;
 }
 
+// Ocena tylko dla zalogowanych, którzy potwierdzili w dyskusji „Używałem tej inicjatywy”.
+// Pozostali nie widzą tej sekcji wcale (bez zaślepki).
 export function StarRating({ innovationId }: Props) {
   const { user } = useAuth();
+  const used = useUsedInnovation(innovationId);
   const [data, setData] = useState<RatingData | null>(null);
   const [hover, setHover] = useState(0);
   const [submitted, setSubmitted] = useState(false);
@@ -47,6 +51,8 @@ export function StarRating({ innovationId }: Props) {
       setSubmitting(false);
     }
   }
+
+  if (!user || !used) return null;
 
   const displayAvg = data?.average ?? 0;
   const displayCount = data?.count ?? 0;
