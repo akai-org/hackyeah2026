@@ -11,16 +11,31 @@ import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n/client";
 
-export const ADMIN_LINKS = [
-  { href: "/admin/statystyki", key: "stats", icon: Gauge },
-  { href: "/admin/innowacje", key: "innovations", icon: Library },
-  { href: "/admin/uzytkownicy", key: "users", icon: Users },
-  { href: "/admin/testy", key: "tests", icon: FlaskConical },
-  { href: "/admin/forum", key: "forum", icon: MessagesSquare },
-  { href: "/admin/potrzeby", key: "needs", icon: Inbox },
-  { href: "/admin/trendy", key: "trends", icon: BarChart3 },
-  { href: "/admin/zaangazowanie", key: "engagement", icon: Activity },
-  { href: "/admin/pomysly", key: "ideas", icon: Lightbulb },
+export const ADMIN_LINK_GROUPS = [
+  {
+    key: "overview",
+    links: [
+      { href: "/admin/statystyki", key: "stats", icon: Gauge },
+      { href: "/admin/trendy", key: "trends", icon: BarChart3 },
+      { href: "/admin/zaangazowanie", key: "engagement", icon: Activity },
+    ],
+  },
+  {
+    key: "content",
+    links: [
+      { href: "/admin/innowacje", key: "innovations", icon: Library },
+      { href: "/admin/pomysly", key: "ideas", icon: Lightbulb },
+      { href: "/admin/potrzeby", key: "needs", icon: Inbox },
+      { href: "/admin/forum", key: "forum", icon: MessagesSquare },
+    ],
+  },
+  {
+    key: "people",
+    links: [
+      { href: "/admin/uzytkownicy", key: "users", icon: Users },
+      { href: "/admin/testy", key: "tests", icon: FlaskConical },
+    ],
+  },
 ] as const;
 
 // Panel ROPS: wpuszcza tylko rolę admin. Jury loguje się jednym kliknięciem z tego ekranu.
@@ -73,39 +88,49 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="mx-auto max-w-content px-4 py-10 sm:px-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="font-bold text-muted">{a.shell.title}</p>
-          <p className="text-sm text-muted">{a.shell.loggedIn(user.name)}</p>
-        </div>
+      <div>
+        <p className="font-bold text-muted">{a.shell.title}</p>
+        <p className="text-sm text-muted">{a.shell.loggedIn(user.name)}</p>
       </div>
 
-      <nav aria-label={a.shell.navLabel} className="mt-4 border-b-(length:--bw) border-border">
-        <ul className="-mb-(--bw) flex flex-wrap gap-1">
-          {ADMIN_LINKS.map(({ href, key, icon: Icon }) => {
-            const active = pathname === href;
-            return (
-              <li key={href}>
-                <Link
-                  href={href}
-                  aria-current={active ? "page" : undefined}
-                  className={cn(
-                    "inline-flex min-h-12 items-center gap-2 rounded-t-ui border-(length:--bw) px-4 font-bold",
-                    active
-                      ? "border-border border-b-surface bg-surface text-foreground"
-                      : "border-transparent text-primary underline-offset-4 hover:underline",
-                  )}
-                >
-                  <Icon aria-hidden="true" className="size-5 shrink-0" />
-                  {a.nav[key]}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+      <div className="mt-4 lg:mt-8 lg:grid lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-10">
+        {/* Mobile/tablet: jeden rząd przewijany w poziomie zamiast zawijania. Desktop: pionowy sidebar z grupami. */}
+        <nav aria-label={a.shell.navLabel} className="-mx-4 border-b-(length:--bw) border-border sm:-mx-6 lg:mx-0 lg:border-b-0">
+          <div className="flex snap-x gap-1 overflow-x-auto px-4 pb-2 [scrollbar-width:thin] sm:px-6 lg:sticky lg:top-24 lg:flex-col lg:gap-6 lg:overflow-visible lg:p-0">
+            {ADMIN_LINK_GROUPS.map((group) => (
+              <div key={group.key} className="flex shrink-0 gap-1 lg:flex-col">
+                <p className="hidden px-3 pb-1 text-xs font-bold tracking-wide text-muted uppercase lg:block">
+                  {a.navGroups[group.key]}
+                </p>
+                <ul className="flex gap-1 lg:flex-col">
+                  {group.links.map(({ href, key, icon: Icon }) => {
+                    const active = pathname === href;
+                    return (
+                      <li key={href} className="snap-start">
+                        <Link
+                          href={href}
+                          aria-current={active ? "page" : undefined}
+                          className={cn(
+                            "flex min-h-11 items-center gap-2 rounded-ui border-(length:--bw) px-3 font-bold whitespace-nowrap",
+                            active
+                              ? "border-border bg-surface text-foreground"
+                              : "border-transparent text-primary underline-offset-4 hover:underline",
+                          )}
+                        >
+                          <Icon aria-hidden="true" className="size-5 shrink-0" />
+                          {a.nav[key]}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </nav>
 
-      <div className="pt-8">{children}</div>
+        <div className="min-w-0 pt-8 lg:pt-0">{children}</div>
+      </div>
     </div>
   );
 }
