@@ -55,6 +55,10 @@
     color-scheme: light;
     /* Grubość ramek pól, przycisków i kart. */
     --bw: 2px;
+
+    .animate-pulse-slow {
+  animation: pulse 3s ease-in-out infinite;
+}
   }
 
   body {
@@ -271,11 +275,11 @@ html[data-contrast="high"] {
   --color-background: #000000;
   --color-surface: #0d0d0d;
   --color-secondary: #1c1c1c;
-  --color-foreground: #fff500;
+  --color-foreground: #d4ff00;
   --color-muted: #ffffff;
-  --color-border: #fff500;
+  --color-border: #d4ff00;
 
-  --color-primary: #fff500;
+  --color-primary: #d4ff00;
   --color-primary-hover: #ffffff;
   --color-primary-foreground: #000000;
 
@@ -284,7 +288,7 @@ html[data-contrast="high"] {
 
   --color-success: #5ee08a;
   --color-warning: #ffc94d;
-  --color-destructive: #ff8a80;
+  --color-destructive: #ff4838b6;
 
   --color-focus: #7fe7ff;
   --color-overlay: #000000;
@@ -378,5 +382,16 @@ html[data-contrast="high"] :is(.cutout-char, .shadow-cutout) {
 
   .bg-dots::before {
     display: none;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+
+  50% {
+    opacity: 0.7;
   }
 }
