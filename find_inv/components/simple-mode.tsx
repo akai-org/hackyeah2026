@@ -13,6 +13,7 @@ import {
 } from "react";
 
 import { Switch } from "@/components/ui/switch";
+import { usePresence } from "@/lib/use-presence";
 import { cn } from "@/lib/utils";
 import { Accessibility } from "lucide-react";
 
@@ -141,6 +142,7 @@ export function AccessibilitySettings({ className }: { className?: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const panelId = useId();
+  const panel = usePresence(open);
 
   useEffect(() => {
     if (!open) return;
@@ -177,12 +179,13 @@ export function AccessibilitySettings({ className }: { className?: string }) {
         <span className="sr-only">Dostępność</span>
       </button>
 
-      {open && (
+      {panel.mounted && (
         <div
           id={panelId}
           role="dialog"
           aria-label="Ustawienia dostępności"
-          className="fixed right-4 bottom-20 z-30 w-[min(22rem,calc(100vw-2rem))] rounded-ui border-(length:--bw) border-deep bg-surface p-4 shadow-paper"
+          data-closing={panel.closing || undefined}
+          className="popover-panel fixed right-4 bottom-20 z-30 w-[min(22rem,calc(100vw-2rem))] rounded-ui border-(length:--bw) border-deep bg-surface p-4 shadow-paper"
         >
           <p className="text-lg font-semibold text-deep">Ustawienia dostępności</p>
           <div className="mt-3 grid gap-2">

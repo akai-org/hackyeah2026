@@ -13,7 +13,8 @@ const config = {
         mint: "#DCE8D8",
         butter: "#F4845F",
         deep: "#123229",
-        leaf: "#1F6F54",
+        // #1A5E47: min. 4,8:1 także na `sage` (poprzedni #1F6F54 miał tam 3,8:1).
+        leaf: "#1A5E47",
         ink: "#123229",
         muted: "#123229",
         alert: "#9F3F2D",

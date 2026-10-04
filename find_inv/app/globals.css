@@ -8,6 +8,8 @@
     color-scheme: light;
     /* Grubość ramek pól, przycisków i kart. */
     --bw: 2px;
+    /* Wysokość przyklejonego nagłówka — odstęp dla kotwic i skip linka. */
+    --header-h: 5.5rem;
   }
 
   body {
@@ -16,6 +18,19 @@
     font-size: 1.125rem;
     line-height: 1.6;
     overflow-x: clip;
+  }
+
+  /* Płynne przewijanie do kotwic (tylko gdy użytkownik nie ogranicza ruchu). Zmiany strony w Next.js
+     przewijają bez animacji dzięki data-scroll-behavior="smooth" na <html>. */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  /* Cel kotwicy nie chowa się pod przyklejonym nagłówkiem. */
+  [id] {
+    scroll-margin-top: calc(var(--header-h) + 1rem);
   }
 
   ::selection {
@@ -222,6 +237,164 @@ html[data-contrast="high"] ::selection {
       opacity: 1;
       translate: 0 0;
     }
+  }
+}
+
+/* ---------- Hover przycisków i opcji ----------
+   Obramowane przyciski, opcje (kategorie, tagi, role, tryby kreatora) i karty-wybory z klasą hover:bg-*:
+   płynna zmiana koloru, a na hover delikatne uniesienie o 1 px z lekkim cieniem; wciśnięcie je dociska. */
+
+@layer base {
+  :where(button, a, label, summary, [role="button"]) {
+    transition:
+      background-color 160ms ease-out,
+      border-color 160ms ease-out,
+      color 160ms ease-out,
+      box-shadow 160ms ease-out,
+      translate 160ms ease-out;
+  }
+
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    :where(button, a, label, [role="button"])[class*="border-deep"][class*="hover:bg-"]:not(:disabled, [aria-disabled="true"]):hover {
+      translate: -1px -1px;
+      box-shadow: 2px 2px 0 rgba(18, 50, 41, 0.3);
+    }
+
+    :where(button, a, label, [role="button"])[class*="border-deep"][class*="hover:bg-"]:not(:disabled):active {
+      translate: 0 0;
+      box-shadow: 0 0 0 rgba(18, 50, 41, 0.3);
+    }
+  }
+}
+
+/* ---------- Wspólne okno <Dialog>: wejście i wyjście okna oraz rozmytego tła ---------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  dialog.hub-dialog[open] {
+    animation: dialog-in 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  dialog.hub-dialog[open]::backdrop {
+    animation: dialog-backdrop-in 200ms ease-out;
+  }
+
+  /* Czas = CLOSE_MS w components/ui/dialog.tsx. */
+  dialog.hub-dialog[data-closing] {
+    animation: dialog-out 160ms cubic-bezier(0.4, 0, 1, 1) forwards;
+  }
+
+  dialog.hub-dialog[data-closing]::backdrop {
+    animation: dialog-backdrop-out 160ms ease-in forwards;
+  }
+}
+
+/* Panel dostępności i inne dymki (lib/use-presence.ts): wyrastają z przycisku w prawym dolnym rogu. */
+@media (prefers-reduced-motion: no-preference) {
+  .popover-panel {
+    transform-origin: bottom right;
+    animation: popover-in 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .popover-panel[data-closing] {
+    animation: popover-out 160ms cubic-bezier(0.4, 0, 1, 1) forwards;
+    pointer-events: none;
+  }
+}
+
+@keyframes popover-in {
+  from {
+    opacity: 0;
+    scale: 0.96;
+    translate: 0 4px;
+  }
+}
+
+@keyframes popover-out {
+  to {
+    opacity: 0;
+    scale: 0.96;
+    translate: 0 4px;
+  }
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    translate: 0 6px;
+    scale: 0.985;
+  }
+}
+
+@keyframes dialog-out {
+  to {
+    opacity: 0;
+    translate: 0 4px;
+    scale: 0.985;
+  }
+}
+
+@keyframes dialog-backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes dialog-backdrop-out {
+  to {
+    opacity: 0;
+  }
+}
+
+/* ---------- Kreator pomysłów: zmiana trybu i kroki asystenta ---------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  .step-in-forward {
+    animation: kreator-in-right 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  .step-in-back {
+    animation: kreator-in-left 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+}
+
+@keyframes kreator-in-right {
+  from {
+    opacity: 0;
+    translate: 16px 0;
+  }
+}
+
+@keyframes kreator-in-left {
+  from {
+    opacity: 0;
+    translate: -16px 0;
+  }
+}
+
+/* ---------- Wejście sekcji w viewport i hover kart (components/reveal-on-scroll.tsx) ---------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-reveal] {
+    transition:
+      opacity 400ms ease-out,
+      translate 400ms ease-out;
+  }
+
+  [data-reveal].reveal-pending {
+    opacity: 0;
+    translate: 0 12px;
+  }
+
+  .hover-lift {
+    transition:
+      translate 180ms ease-out,
+      box-shadow 180ms ease-out;
+  }
+
+  .hover-lift:hover,
+  .hover-lift:focus-within {
+    translate: 0 -2px;
+    box-shadow: 0 14px 28px rgba(18, 50, 41, 0.18);
   }
 }
 

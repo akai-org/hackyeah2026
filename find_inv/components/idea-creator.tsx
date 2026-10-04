@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { CircleAlert, ListChecks, Loader2, PenLine, Sparkles } from "lucide-react";
 
 import { DictationButton, DictationNotice, DictationStatus, useDictation } from "@/components/dictation";
@@ -15,6 +16,9 @@ import { cn } from "@/lib/utils";
 // (POST /api/ideas/analyze) → użytkownik poprawia fiszkę, dodaje pliki i zapisuje ją dla ROPS.
 
 type Mode = "free" | "wizard";
+
+/** Czas płynnej zmiany wysokości przy przełączeniu trybu. */
+const MODE_MS = 320;
 
 const MODES: Array<{ value: Mode; label: string; text: string; icon: typeof PenLine }> = [
   { value: "free", label: "Opiszę pomysł sam", text: "Jeden opis własnymi słowami — AI rozpisze go na fiszkę.", icon: PenLine },
@@ -38,6 +42,42 @@ export function IdeaCreator() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const startRef = useRef<HTMLDivElement>(null);
   const dictation = useDictation(setText, () => setError(false));
+
+  // Zmiana trybu bez skoku treści: kontener płynnie zmienia wysokość ze starej na nową (reszta strony,
+  // ze stopką, jedzie razem z nim), a nowa treść wjeżdża z boku — „Asystent” leży na prawo od „Opiszę sam”.
+  // Przy prefers-reduced-motion zwykła podmiana.
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const [direction, setDirection] = useState<"forward" | "back" | null>(null);
+
+  function changeMode(value: Mode) {
+    if (value === mode) return;
+    const body = bodyRef.current;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!body || reduce) {
+      setMode(value);
+      setCard(null);
+      return;
+    }
+    const from = body.offsetHeight;
+    body.style.height = `${from}px`;
+    flushSync(() => {
+      setDirection(value === "wizard" ? "forward" : "back");
+      setMode(value);
+      setCard(null);
+    });
+    const to = (body.firstElementChild as HTMLElement | null)?.offsetHeight ?? from;
+    body.style.overflow = "clip";
+    // Klatka przerwy, żeby przeglądarka zapamiętała wysokość startową, potem przejście do nowej.
+    requestAnimationFrame(() => {
+      body.style.transition = `height ${MODE_MS}ms cubic-bezier(0.2, 0.8, 0.2, 1)`;
+      body.style.height = `${to}px`;
+    });
+    window.setTimeout(() => {
+      body.style.removeProperty("height");
+      body.style.removeProperty("transition");
+      body.style.removeProperty("overflow");
+    }, MODE_MS + 50);
+  }
 
   function toggleTag(tag: Tag) {
     setChosen((current) => (current.includes(tag) ? current.filter((item) => item !== tag) : [...current, tag]));
@@ -96,17 +136,14 @@ export function IdeaCreator() {
             {MODES.map(({ value, label, text: description, icon: Icon }) => (
               <label
                 key={value}
-                className="flex cursor-pointer items-start gap-3 rounded-ui border-(length:--bw) border-deep bg-surface p-4 has-checked:bg-mint"
+                className="flex cursor-pointer items-start gap-3 rounded-ui border-(length:--bw) border-deep bg-surface p-4 hover:bg-paper has-checked:bg-mint"
               >
                 <input
                   type="radio"
                   name={`${ids}-tryb`}
                   value={value}
                   checked={mode === value}
-                  onChange={() => {
-                    setMode(value);
-                    setCard(null);
-                  }}
+                  onChange={() => changeMode(value)}
                   disabled={analyzing}
                   className="mt-1 size-5 shrink-0 accent-deep"
                 />
@@ -123,92 +160,104 @@ export function IdeaCreator() {
         </fieldset>
       </div>
 
-      {mode === "wizard" ? (
-        // Po utworzeniu fiszki asystent znika (ale pamięta odpowiedzi) — „Popraw opis” wraca do pytań.
-        <div hidden={Boolean(card)}>
-          <IdeaWizard onFinish={finishWizard} busy={analyzing} />
-        </div>
-      ) : (
-        <form onSubmit={analyzeText} noValidate className="mt-8 max-w-3xl">
-          <label htmlFor={fieldId} className="block text-lg font-bold text-deep">
-            Opisz swój pomysł społeczny
-          </label>
-          <p id={hintId} className="mt-1 text-muted">
-            Co chcesz zrobić, dla kogo i gdzie. Możesz dodać, na jakim etapie jest pomysł, ile może kosztować i kto
-            pomoże — AI rozpisze to na pola fiszki.
-          </p>
-          <textarea
-            ref={textareaRef}
-            id={fieldId}
-            rows={5}
-            value={text}
-            onChange={(event) => {
-              setText(event.target.value);
-              if (event.target.value.trim().length >= 10) setError(false);
-            }}
-            aria-invalid={error || undefined}
-            aria-describedby={[hintId, dictation.supported ? dictationHintId : null, error ? errorId : null]
-              .filter(Boolean)
-              .join(" ")}
-            placeholder="Na przykład: chcę zorganizować w świetlicy wiejskiej spotkania, na których młodzież uczy seniorów obsługi smartfona"
-            className={cn(
-              "mt-2 min-h-[160px] w-full resize-y rounded-ui border-(length:--bw) bg-surface p-4 text-base text-ink placeholder:text-muted",
-              error ? "border-alert" : "border-deep",
-            )}
-          />
-          <DictationButton dictation={dictation} className="mt-3" />
-          <DictationStatus dictation={dictation} />
-          <DictationNotice dictation={dictation} id={dictationHintId} />
-          {error && (
-            <p
-              id={errorId}
-              role="alert"
-              className="mt-3 flex items-start gap-2 rounded-ui border-2 border-alert bg-surface px-4 py-3 font-bold text-alert"
-            >
-              <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
-              Opisz pomysł w co najmniej jednym zdaniu, żeby AI mogło go przeanalizować.
-            </p>
+      {/* flow-root: marginesy treści nie wychodzą poza kontenery, więc pomiar wysokości jest dokładny. */}
+      <div ref={bodyRef} className="flow-root">
+        <div
+          key={mode}
+          className={cn(
+            "flow-root",
+            direction === "forward" && "step-in-forward",
+            direction === "back" && "step-in-back",
           )}
-
-          <fieldset className="mt-8">
-            <legend className="text-lg font-bold text-deep">Czego dotyczy pomysł?</legend>
-            <p className="mt-1 text-muted">Nieobowiązkowe. Resztę tagów zaproponuje AI.</p>
-            {TAG_GROUPS.map((group, groupIndex) => (
-              <div key={group.title} role="group" aria-labelledby={`${ids}-grupa-${groupIndex}`} className="mt-4">
-                <p id={`${ids}-grupa-${groupIndex}`} className="font-bold text-muted">
-                  {group.title}
+        >
+          {mode === "wizard" ? (
+            // Po utworzeniu fiszki asystent znika (ale pamięta odpowiedzi) — „Popraw opis” wraca do pytań.
+            <div hidden={Boolean(card)}>
+              <IdeaWizard onFinish={finishWizard} busy={analyzing} />
+            </div>
+          ) : (
+            <form onSubmit={analyzeText} noValidate className="mt-8 max-w-3xl">
+              <label htmlFor={fieldId} className="block text-lg font-bold text-deep">
+                Opisz swój pomysł społeczny
+              </label>
+              <p id={hintId} className="mt-1 text-muted">
+                Co chcesz zrobić, dla kogo i gdzie. Możesz dodać, na jakim etapie jest pomysł, ile może kosztować i kto
+                pomoże — AI rozpisze to na pola fiszki.
+              </p>
+              <textarea
+                ref={textareaRef}
+                id={fieldId}
+                rows={5}
+                value={text}
+                onChange={(event) => {
+                  setText(event.target.value);
+                  if (event.target.value.trim().length >= 10) setError(false);
+                }}
+                aria-invalid={error || undefined}
+                aria-describedby={[hintId, dictation.supported ? dictationHintId : null, error ? errorId : null]
+                  .filter(Boolean)
+                  .join(" ")}
+                placeholder="Na przykład: chcę zorganizować w świetlicy wiejskiej spotkania, na których młodzież uczy seniorów obsługi smartfona"
+                className={cn(
+                  "mt-2 min-h-[160px] w-full resize-y rounded-ui border-(length:--bw) bg-surface p-4 text-base text-ink placeholder:text-muted",
+                  error ? "border-alert" : "border-deep",
+                )}
+              />
+              <DictationButton dictation={dictation} className="mt-3" />
+              <DictationStatus dictation={dictation} />
+              <DictationNotice dictation={dictation} id={dictationHintId} />
+              {error && (
+                <p
+                  id={errorId}
+                  role="alert"
+                  className="mt-3 flex items-start gap-2 rounded-ui border-2 border-alert bg-surface px-4 py-3 font-bold text-alert"
+                >
+                  <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
+                  Opisz pomysł w co najmniej jednym zdaniu, żeby AI mogło go przeanalizować.
                 </p>
-                <ul className="mt-2 flex flex-wrap gap-2">
-                  {group.tags.map((tag) => {
-                    const active = chosen.includes(tag);
-                    return (
-                      <li key={tag}>
-                        <button
-                          type="button"
-                          aria-pressed={active}
-                          onClick={() => toggleTag(tag)}
-                          className={cn(
-                            "inline-flex min-h-12 cursor-pointer items-center gap-1.5 rounded-ui border-(length:--bw) border-deep px-4 py-2 text-base",
-                            active ? "bg-mint font-bold text-ink" : "bg-surface text-ink hover:bg-sage",
-                          )}
-                        >
-                          {active && <span aria-hidden="true">✓</span>}
-                          {TAG_LABELS[tag]}
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            ))}
-          </fieldset>
+              )}
 
-          <Button type="submit" disabled={analyzing} className="mt-8">
-            {analyzing ? <Loader2 aria-hidden="true" className="animate-spin" /> : <Sparkles aria-hidden="true" />}
-            Analizuj pomysł
-          </Button>
-        </form>
-      )}
+              <fieldset className="mt-8">
+                <legend className="text-lg font-bold text-deep">Czego dotyczy pomysł?</legend>
+                <p className="mt-1 text-muted">Nieobowiązkowe. Resztę tagów zaproponuje AI.</p>
+                {TAG_GROUPS.map((group, groupIndex) => (
+                  <div key={group.title} role="group" aria-labelledby={`${ids}-grupa-${groupIndex}`} className="mt-4">
+                    <p id={`${ids}-grupa-${groupIndex}`} className="font-bold text-muted">
+                      {group.title}
+                    </p>
+                    <ul className="mt-2 flex flex-wrap gap-2">
+                      {group.tags.map((tag) => {
+                        const active = chosen.includes(tag);
+                        return (
+                          <li key={tag}>
+                            <button
+                              type="button"
+                              aria-pressed={active}
+                              onClick={() => toggleTag(tag)}
+                              className={cn(
+                                "inline-flex min-h-12 cursor-pointer items-center gap-1.5 rounded-ui border-(length:--bw) border-deep px-4 py-2 text-base",
+                                active ? "bg-mint font-bold text-ink" : "bg-surface text-ink hover:bg-sage",
+                              )}
+                            >
+                              {active && <span aria-hidden="true">✓</span>}
+                              {TAG_LABELS[tag]}
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                ))}
+              </fieldset>
+
+              <Button type="submit" disabled={analyzing} className="mt-8">
+                {analyzing ? <Loader2 aria-hidden="true" className="animate-spin" /> : <Sparkles aria-hidden="true" />}
+                Analizuj pomysł
+              </Button>
+            </form>
+          )}
+        </div>
+      </div>
 
       <p role="status" aria-live="polite" className={cn("flex items-center gap-2 font-bold text-deep", analyzing && "mt-4")}>
         {analyzing && (

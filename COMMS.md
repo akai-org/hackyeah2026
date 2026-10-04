@@ -34,6 +34,18 @@ Middleman zadaje pytania z kontekstem innowacji i gminy.
 
 ---
 
+## [FYI ALL] Wspólny dialog `components/ui/dialog.tsx` (A1, runda 2)
+Używajcie `<Dialog open onClose title ...>` zamiast własnych `role="dialog"`. Natywny `<dialog>` + `showModal()`:
+Esc i klik w rozmyte tło wołają `onClose`, focus trap (Tab/Shift+Tab, łącznie z przyciskiem `aria-label="Zamknij"`),
+focus wraca na element, który otworzył okno. Propsy: `title`, `description?`, `icon?`, `size="sm|md|lg|xl"`,
+`initialFocusRef?`, `closeLabel?`. Treść (`children`) bez własnego nagłówka i przycisku X — daje je Dialog.
+Przykład: `<Dialog open={open} onClose={() => setOpen(false)} title="Zgłoś się jako tester" size="sm">…</Dialog>`.
+Podmienione przez A1: okno logowania (`login-dialog.tsx`), szybkie wyszukiwanie w nagłówku (Ctrl+K).
+**[NEED A2]** `middleman-modal.tsx` → przepnijcie na `<Dialog>` (usuńcie własny trap/Escape).
+**[NEED A3]** `tester-apply-modal.tsx` → to samo; `onClose` przekazujcie stabilnie, tytuł do propsa `title`.
+
+---
+
 ## STATUS BOARD
 
 | Agent | Robi teraz | Ostatni merge | Blokuje kogo |
@@ -70,6 +82,19 @@ Middleman zadaje pytania z kontekstem innowacji i gminy.
 ## 🟥 Agent 1 — Core
 
 <!-- Dopisuj wpisy tutaj na górze -->
+
+[03:20] [FYI A2] Kreator (`idea-creator.tsx`, `idea-wizard.tsx`) — na prośbę zespołu A1 dodał animacje: zmiana trybu przez View Transitions (`changeMode`), kroki asystenta wjeżdżają z prawej/lewej (`step-in-forward/back`), płynny pasek postępu. Logika bez zmian.
+[02:40] [DONE] runda 2 — wszystkie zadania A1 (1–12). `/wyzwania` na `/api/challenges` (filtr powiatu, źródła z linkami), nowa `/edukacja` na `/api/resources?type=education` (link w nawigacji i stopce). 91 testów e2e zielonych. Branch `agent-1/ux-a11y` → PR do `main`.
+[02:10] [DONE] zad. 7–10: animacje sekcji (reduced-motion off), artykuł dnia wprost z API (bez mocków; brak danych → sekcja znika), usunięty zmyślony kafelek „Wymaga uwagi”, Forum w nawigacji, usunięte `/test-krojow`, `/konto`, `/testerzy` (panel `/testerzy/panel` zostaje).
+[02:10] [FYI A3] `tester-panel.tsx`: link „Wyślij zgłoszenie” (/testerzy) → „Biblioteka” + „zgłoś się na jej karcie” (strona /testerzy usunięta). `components/tester-form.tsx` nie jest już nigdzie używany — wykorzystajcie w modalu albo usuńcie.
+[02:10] [FYI A3] `lib/knowledge.ts` `listInnovations()` po błędzie API zwraca po cichu `MOCK_INNOVATIONS` — dane przykładowe wyglądają jak prawdziwe (zasada 10). Artykuł dnia (A1) woła już API bezpośrednio.
+[01:30] [FYI ALL] Testy e2e frontendu: Playwright w `find_inv/e2e/`, `npm run test:e2e` (pierwszy raz: `npx playwright install chromium`; backend musi działać na :8000). Dopisujcie swoje spec-e.
+[01:30] [DONE] zad. 5 (mapa): zmierzone CLS przy ładowaniu i wyborze powiatu = 0 → bez zmian. Zad. 6: `leaf` #1F6F54 → #1A5E47 (na `sage` 3,8 → 4,8:1), dwukolorowy pierścień fokusu na mapie.
+[01:30] [FYI A2] Hero: przycisk dyktowania i notka pojawiają się dopiero po hydracji (`dictation.supported`) → przesunięcie „Przykładów” o 60 px (CLS ≈ 0,012). Można zarezerwować miejsce albo renderować przycisk jako disabled do czasu sprawdzenia.
+[00:45] [DONE] zad. 2: sticky header + skip link „Przejdź do treści” → `#main` (zmienione z `#tresc`). Zmienna CSS `--header-h` — używajcie jej przy `sticky`/`scroll-margin`.
+[00:45] [FYI A3] Forum: `lg:top-6` → `lg:top-[calc(var(--header-h)+1rem)]` w `forum-board.tsx` i `forum-thread.tsx` (aside chował się pod przyklejonym nagłówkiem). Jedna klasa, nic więcej.
+[00:35] [DONE] runda 2 / zad. 1: wspólny `<Dialog>` w `components/ui/dialog.tsx` (patrz [FYI ALL] wyżej).
+[00:20] A1 start: agent-1/ux-a11y
 
 [10:XX] [DONE] Sesja 3: admin panel polish (refresh stats, dates, counts), MiddlemanModal focus trap + WCAG 2.4.2 dynamic titles, voice-fix integration, live tester counts, setup.sh auto-seed.
 [16:45] [DONE] Finalne poprawki: middleman mock 2-turnowy (pyta follow-up → plan), fix nested <main> admin, fix search_log missing imports, +4 innowacje (21 total), wyszukiwanie w full_desc+tags.

@@ -106,7 +106,7 @@ export function FeaturedInnovations({ headingId, children }: { headingId: string
         style={{ transitionDuration: `${FADE_MS}ms` }}
       >
         {byAudience[index].map((innovation) => (
-          <li key={innovation.id} className="flex">
+          <li key={innovation.id} className="hover-lift flex">
             <MatchCard innovation={innovation} />
           </li>
         ))}
