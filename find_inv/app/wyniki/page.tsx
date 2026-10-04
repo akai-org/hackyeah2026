@@ -35,9 +35,20 @@ function ResultsContent() {
 
   const [tagResult, setTagResult] = useState<TagResult | null>(null);
   const [innovations, setInnovations] = useState<BackendInnovation[]>([]);
-  const [tagsLoading, setTagsLoading] = useState(false);
+  const [tagsLoading, setTagsLoading] = useState(Boolean(query));
   const [matchLoading, setMatchLoading] = useState(false);
   const [searchError, setSearchError] = useState(false);
+
+  // Nowe zapytanie → czyścimy wyniki od razu przy renderze (zamiast setState w efekcie).
+  const [prevQuery, setPrevQuery] = useState(query);
+  if (query !== prevQuery) {
+    setPrevQuery(query);
+    setTagsLoading(Boolean(query));
+    setMatchLoading(false);
+    setInnovations([]);
+    setTagResult(null);
+    setSearchError(false);
+  }
 
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
@@ -55,14 +66,12 @@ function ResultsContent() {
 
   useEffect(() => {
     if (!query) return;
-    setTagsLoading(true);
-    setMatchLoading(false);
-    setInnovations([]);
-    setTagResult(null);
-    setSearchError(false);
+    // Odpowiedź dla starego zapytania nie może nadpisać wyników nowego.
+    let stale = false;
 
     apiPost<TagResult>("/api/tag", { text: query })
       .then((result) => {
+        if (stale) return null;
         setTagResult(result);
         setTagsLoading(false);
         setMatchLoading(true);
@@ -71,9 +80,11 @@ function ResultsContent() {
           tags: result.tags,
         });
       })
-      .then((match) => setInnovations(match.innovations))
-      .catch(() => { setTagsLoading(false); setSearchError(true); })
-      .finally(() => setMatchLoading(false));
+      .then((match) => { if (match && !stale) setInnovations(match.innovations); })
+      .catch(() => { if (!stale) { setTagsLoading(false); setSearchError(true); } })
+      .finally(() => { if (!stale) setMatchLoading(false); });
+
+    return () => { stale = true; };
   }, [query]);
 
   useEffect(() => {
@@ -163,7 +174,7 @@ function ResultsContent() {
         {searchError ? (
           <p role="alert" className="flex items-start gap-3 rounded-ui border-(length:--bw) border-destructive bg-surface px-5 py-4 font-bold text-destructive">
             <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
-            {t.results.searchError ?? "Nie udało się połączyć z serwerem. Sprawdź połączenie i spróbuj ponownie."}
+            {t.results.searchError}
           </p>
         ) : matchLoading ? (
           <>
