@@ -11,12 +11,12 @@
 @theme {
   --color-*: initial;
 
-  --color-background: #f4fbfb;
+  --color-background: #f7f8fa;
   --color-surface: #ffffff;
-  --color-secondary: #c2d2b8;
+  --color-secondary: #ece6da;
   --color-foreground: #000000;
-  --color-muted: #888888;
-  --color-border: #5f7568;
+  --color-muted: #5b626c;
+  --color-border: #5c6470;
 
   --color-primary: #345995;
   --color-primary-hover: #284778;
