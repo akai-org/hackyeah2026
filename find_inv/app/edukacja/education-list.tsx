@@ -116,9 +116,9 @@ export function EducationList({ initialQuery = "", initialTags = "" }: { initial
         {ed.count(visible.length)}
       </p>
 
-      <ul className="mt-4 grid gap-6 md:grid-cols-2">
+      <ul className="mt-4 grid grid-cols-1 gap-6 md:grid-cols-2">
         {visible.map((item) => (
-          <li key={item.id} className="hover-lift flex">
+          <li key={item.id} className="hover-lift flex min-w-0">
             <article
               aria-labelledby={`material-${item.id}`}
               className="flex h-full w-full flex-col border-(length:--bw) border-border bg-surface p-6 shadow-raised"
