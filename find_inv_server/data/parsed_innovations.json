@@ -3544,5 +3544,737 @@
       "transport"
     ],
     "id": 114
+  },
+  {
+    "title": "Wibraap — instrument elektroniczny i aplikacja do odczuwania dźwięku przez wibracje",
+    "short_desc": "Urządzenie elektroniczne (kamizelka + aplikacja), które przetwarza dźwięki na wibracje odczuwalne przez ciało — umożliwia osobom niesłyszącym pozasłuchowe doświadczanie muzyki.",
+    "full_desc": "Na czym polega: Wibraap to zestaw składający się z wibrującej kamizelki i aplikacji mobilnej/komputerowej. Przetwarza dowolne dźwięki (mikrofon, własne próbki, instrument elektroniczny) na wibracje wyczuwalne przez ciało. Zaprojektowana zgodnie ze standardem WCAG, działa na Android i Windows.\n\nGrupa docelowa: Osoby niesłyszące i niedosłyszące, osoby z niepełnosprawnością sprzężoną.\n\nSkuteczność: Pozytywnie zaopiniowana przez Radę Innowacji Społecznych. Testowana z użytkownikami Głuchymi — wysoka ocena komfortu i inkluzywności na wydarzeniach muzycznych.",
+    "category": "niepełnosprawność sensoryczna",
+    "categories": [
+      "niepełnosprawność sensoryczna"
+    ],
+    "area": "niepełnosprawność sensoryczna",
+    "target_group": "Osoby niesłyszące i niedosłyszące.",
+    "location": "Małopolska",
+    "status": "active",
+    "cost_level": "medium",
+    "implementation_time_months": null,
+    "testers_count": 0,
+    "where_implemented": "Małopolska",
+    "who_can_use": "Osoby niesłyszące, niedosłyszące, placówki kulturalne, szkoły muzyczne.",
+    "source_url": "https://rops.krakow.pl/innowacje-spoleczne/biblioteka-innowacji-spolecznych/dla-osob-z-niepelnosprawnoscia-sensoryczna",
+    "video_url": null,
+    "materials_url": "https://rops.krakow.pl/mpliki/IS/ikony_PUBLIKACJE/Innowacje_spoleczne_dla_dostepnosci.pdf",
+    "project": "Inkubator Dostępności",
+    "authors": "Piotr Peszat",
+    "tags": [
+      "niepełnosprawność",
+      "dostępność",
+      "wykluczenie_cyfrowe"
+    ],
+    "id": 115
+  },
+  {
+    "title": "Strażnik — aplikacja mobilna wykrywająca alarmy dźwiękowe dla osób niesłyszących",
+    "short_desc": "Aplikacja mobilna współpracująca z opaską/smartwatchem — wykrywa dźwiękowe sygnały alarmowe (pożar, tlenek węgla) i powiadamia osobę niesłyszącą przez wibracje.",
+    "full_desc": "Na czym polega: Aplikacja 'Strażnik' wykrywa dźwięki alarmowe z otoczenia i powiadamia użytkownika przez wibracje w opasce, latarkę w telefonie lub połączenie alarmowe do wskazanej osoby. Rozwiązuje problem braku percepcji alarmów dźwiękowych u osób Głuchych — szczególnie w nocy, gdy nie korzystają z aparatów słuchowych.\n\nGrupa docelowa: Osoby niesłyszące i niedosłyszące.\n\nSkuteczność: Pozytywnie zaopiniowana przez Radę Innowacji Społecznych. Testujące osoby oceniły jako kluczowe narzędzie bezpieczeństwa.",
+    "category": "niepełnosprawność sensoryczna",
+    "categories": [
+      "niepełnosprawność sensoryczna"
+    ],
+    "area": "niepełnosprawność sensoryczna",
+    "target_group": "Osoby niesłyszące i niedosłyszące.",
+    "location": "Małopolska",
+    "status": "active",
+    "cost_level": "low",
+    "implementation_time_months": null,
+    "testers_count": 0,
+    "where_implemented": "Małopolska",
+    "who_can_use": "Osoby niesłyszące i niedosłyszące, opiekunowie.",
+    "source_url": "https://rops.krakow.pl/innowacje-spoleczne/biblioteka-innowacji-spolecznych/dla-osob-z-niepelnosprawnoscia-sensoryczna",
+    "video_url": null,
+    "materials_url": "https://rops.krakow.pl/mpliki/IS/ikony_PUBLIKACJE/Innowacje_spoleczne_dla_dostepnosci.pdf",
+    "project": "Inkubator Dostępności",
+    "authors": "Marcin Kotliński",
+    "tags": [
+      "niepełnosprawność",
+      "dostępność",
+      "wykluczenie_cyfrowe"
+    ],
+    "id": 116
+  },
+  {
+    "title": "Hop Hop – mobilny plac zabaw wspierający rehabilitację dzieci w domu",
+    "short_desc": "Zestaw meblo-zabawek z scenariuszami ćwiczeń, umożliwiający domową rehabilitację dzieci w wieku przedszkolnym z zaburzeniami integracji sensorycznej i niepełnosprawnościami ruchowymi.",
+    "full_desc": "Na czym polega: Mobilny plac zabaw składa się ze scenariuszy zabaw rehabilitacyjnych oraz zestawu meblo-zabawek do ćwiczeń ruchowych. Wspomaga terapię dzieci z trudnościami motoryki dużej, zaburzeniami integracji sensorycznej i wadami postawy. Umożliwia rehabilitację w warunkach domowych bez konieczności specjalistycznej wizyty.\n\nGrupa docelowa: Dzieci w wieku przedszkolnym z zaburzeniami integracji sensorycznej, niepełnosprawnościami ruchowymi. Przedszkola, gabinety SI, fizjoterapeuci.\n\nSkuteczność: Pozytywnie zaopiniowana przez Radę Innowacji Społecznych. Testujący fizjoterapeuci i rodzice ocenili jako elastyczne i intuicyjne narzędzie.",
+    "category": "dzieci, młodzież i rodzina",
+    "categories": [
+      "dzieci, młodzież i rodzina",
+      "dostępność i mobilność"
+    ],
+    "area": "dzieci, młodzież i rodzina",
+    "target_group": "Dzieci w wieku przedszkolnym z zaburzeniami integracji sensorycznej, niepełnosprawnościami ruchowymi, wadami postawy.",
+    "location": "Małopolska",
+    "status": "active",
+    "cost_level": "medium",
+    "implementation_time_months": null,
+    "testers_count": 0,
+    "where_implemented": "Małopolska",
+    "who_can_use": "Rodziny, przedszkola, gabinety integracji sensorycznej, fizjoterapeuci.",
+    "source_url": "https://rops.krakow.pl/innowacje-spoleczne/biblioteka-innowacji-spolecznych/dla-osob-o-ograniczonej-mobilnosci",
+    "video_url": null,
+    "materials_url": "https://rops.krakow.pl/mpliki/IS/ikony_PUBLIKACJE/Innowacje_spoleczne_dla_dostepnosci.pdf",
+    "project": "Inkubator Dostępności",
+    "authors": "Aleksandra Satława",
+    "tags": [
+      "dzieci",
+      "niepełnosprawność",
+      "dostępność",
+      "edukacja"
+    ],
+    "id": 117
+  },
+  {
+    "title": "Himalaje Autyzmu — model pracy przygotowujący osoby neuroatypowe do wizyt medycznych",
+    "short_desc": "Przetestowane scenariusze i metody pracy asystenta, umożliwiające osobom z autyzmem i zachowaniami trudnymi bezstresowe przejście procedur medycznych.",
+    "full_desc": "Na czym polega: Model pracy asystenta z osobą neuroatypową (autyzm, ADHD, niepełnosprawność intelektualna) przejawiającą zachowania trudne. Obejmuje serię spotkań z pacjentem i opiekunem, przygotowanie scenariusza wizyt lekarskich, współpracę z personelem medycznym. Redukuje stres, umożliwia diagnostykę i leczenie wcześniej niedostępne.\n\nGrupa docelowa: Osoby neuroatypowe (autyzm, ADHD) przejawiające zachowania agresywne/autoagresywne. Opiekunowie, rodzice, personel medyczny.\n\nSkuteczność: Pozytywnie zaopiniowana przez Radę Innowacji Społecznych. Skrócenie czasu oczekiwania na badania z 4 lat do 3 miesięcy w jednym przypadku.",
+    "category": "niepełnosprawność intelektualna",
+    "categories": [
+      "niepełnosprawność intelektualna",
+      "zdrowie i medycyna"
+    ],
+    "area": "niepełnosprawność intelektualna",
+    "target_group": "Osoby neuroatypowe z autyzmem, ADHD, niepełnosprawnością intelektualną. Personel medyczny, opiekunowie.",
+    "location": "Małopolska",
+    "status": "active",
+    "cost_level": "low",
+    "implementation_time_months": null,
+    "testers_count": 0,
+    "where_implemented": "Małopolska",
+    "who_can_use": "Placówki medyczne, asystenci osoby niepełnosprawnej, rodzice dzieci neuroatypowych.",
+    "source_url": "https://rops.krakow.pl/innowacje-spoleczne/biblioteka-innowacji-spolecznych/dla-osob-z-niepelnosprawnoscia-intelektualna",
+    "video_url": null,
+    "materials_url": "https://rops.krakow.pl/mpliki/IS/ikony_PUBLIKACJE/Innowacje_spoleczne_dla_dostepnosci.pdf",
+    "project": "Inkubator Dostępności",
+    "authors": "Chrześcijańskie Stowarzyszenie Osób Niepełnosprawnych, Ich Rodzin i Przyjaciół \"Ognisko\"",
+    "tags": [
+      "niepełnosprawność",
+      "zdrowie_psychiczne",
+      "dzieci",
+      "edukacja"
+    ],
+    "id": 118
+  },
+  {
+    "title": "Gra o zdrowie — terapeutyczna gra planszowa aktywizująca zawodowo osoby z zaburzeniami psychicznymi",
+    "short_desc": "Gra planszowa wymagająca wcielania się w role z rynku pracy, przygotowująca osoby po kryzysach psychicznych do podjęcia zatrudnienia.",
+    "full_desc": "Na czym polega: Terapeutyczna gra planszowa dedykowana osobom z doświadczeniem problemów ze zdrowiem psychicznym. Gracze wcielają się w role (pracownik, pracodawca, kandydat), odkrywają swój potencjał zawodowy i przygotowują się do wyzwań rynku pracy. Gra zawiera karty społeczne, prawne i finansowe, karty dotyczące instytucji i urzędów, podręcznik edukacyjny. Elementy dostępne cyfrowo i fizycznie zgodnie ze standardami WCAG.\n\nGrupa docelowa: Osoby z zaburzeniami psychicznymi, dzienne oddziały psychiatryczne, WTZ.\n\nSkuteczność: Pozytywnie zaopiniowana przez Radę Innowacji Społecznych. Uczestnicy testów grali 4h — oceniali jako skuteczne narzędzie oswajania tematu pracy.",
+    "category": "rynek pracy",
+    "categories": [
+      "rynek pracy",
+      "zdrowie i medycyna"
+    ],
+    "area": "rynek pracy",
+    "target_group": "Osoby z zaburzeniami psychicznymi doświadczające kryzysów psychicznych. Dzienne oddziały psychiatryczne, WTZ.",
+    "location": "Małopolska",
+    "status": "active",
+    "cost_level": "medium",
+    "implementation_time_months": null,
+    "testers_count": 0,
+    "where_implemented": "Małopolska",
+    "who_can_use": "Terapeuci, psycholodzy, pracownicy WTZ, dzienne oddziały psychiatryczne.",
+    "source_url": "https://rops.krakow.pl/innowacje-spoleczne/biblioteka-innowacji-spolecznych/dla-rynku-pracy",
+    "video_url": null,
+    "materials_url": "https://rops.krakow.pl/mpliki/IS/ikony_PUBLIKACJE/Innowacje_spoleczne_dla_dostepnosci.pdf",
+    "project": "Inkubator Dostępności",
+    "authors": "Paulina Dąbrowska",
+    "tags": [
+      "rynek_pracy",
+      "zdrowie_psychiczne",
+      "edukacja",
+      "niepełnosprawność"
+    ],
+    "id": 119
+  },
+  {
+    "title": "Zakupy na jednym wózku — wózek zakupowy dostosowany dla dzieci z niepełnosprawnością ruchową",
+    "short_desc": "Wózek zakupowy z wyprofilowanym siedziskiem, zagłówkiem i pasami bezpieczeństwa, umożliwiający dzieciom z mózgowym porażeniem dziecięcym udział w zakupach rodzinnych.",
+    "full_desc": "Na czym polega: Dostosowanie siedziska w wózku zakupowym do potrzeb dziecka z niepełnosprawnością ruchową. Wózek posiada specjalne siedzisko z profilowanymi gąbkami stabilizacyjnymi, pięciopunktowe pasy bezpieczeństwa, zagłówek i stabilizator odcinka lędźwiowego. Umożliwia dziecku uczestnictwo w zakupach, samodzielny wybór produktów, budowanie kompetencji społecznych.\n\nGrupa docelowa: Dzieci z niepełnosprawnością ruchową (mózgowe porażenie dziecięce). Rodzice, opiekunowie. Supermarkety.\n\nSkuteczność: Pozytywnie zaopiniowana przez Radę Innowacji Społecznych. Rodzice i dzieci ocenili jako znaczące zwiększenie samodzielności.",
+    "category": "dostępność i mobilność",
+    "categories": [
+      "dostępność i mobilność",
+      "dzieci, młodzież i rodzina"
+    ],
+    "area": "dostępność i mobilność",
+    "target_group": "Dzieci z niepełnosprawnością ruchową i ich rodziny.",
+    "location": "Małopolska",
+    "status": "active",
+    "cost_level": "medium",
+    "implementation_time_months": null,
+    "testers_count": 0,
+    "where_implemented": "Małopolska",
+    "who_can_use": "Sklepy wielkopowierzchniowe, rodziny dzieci z niepełnosprawnością ruchową.",
+    "source_url": "https://rops.krakow.pl/innowacje-spoleczne/biblioteka-innowacji-spolecznych/dla-osob-o-ograniczonej-mobilnosci",
+    "video_url": null,
+    "materials_url": "https://rops.krakow.pl/mpliki/IS/ikony_PUBLIKACJE/Innowacje_spoleczne_dla_dostepnosci.pdf",
+    "project": "Inkubator Dostępności",
+    "authors": "Jolanta Fień, Fundacja \"APROBATA\"",
+    "tags": [
+      "niepełnosprawność",
+      "dostępność",
+      "dzieci",
+      "rodzina"
+    ],
+    "id": 120
+  },
+  {
+    "title": "Wsparcie imprez masowych — modułowe maty naprowadzające dla osób niewidomych",
+    "short_desc": "Modułowe maty z liniami wodzącymi i polami uwagi, tworzące bezpieczne ścieżki poruszania się dla osób z dysfunkcją wzroku na koncertach, festiwalach i w budynkach.",
+    "full_desc": "Na czym polega: Modułowe maty antypoślizgowe z fakturowymi oznaczeniami, liniami wodzącymi i polami uwagi tworzone z kontrastu kolorystycznego (żółte podłoże, żółto-czarne ostrzeżenia). Dołączony podręcznik dla organizatorów imprez masowych. Nie utrudniają korzystania osobom na wózkach inwalidzkich.\n\nGrupa docelowa: Osoby niewidome i niedowidzące. Organizatorzy imprez masowych, instytucje kultury.\n\nSkuteczność: Pozytywnie zaopiniowana przez Radę Innowacji Społecznych. Użytkownicy ocenili jako wyraźne i czytelne wsparcie w samodzielnym poruszaniu się.",
+    "category": "niepełnosprawność sensoryczna",
+    "categories": [
+      "niepełnosprawność sensoryczna",
+      "dostępność i mobilność"
+    ],
+    "area": "niepełnosprawność sensoryczna",
+    "target_group": "Osoby niewidome i niedowidzące. Organizatorzy wydarzeń kulturalnych.",
+    "location": "Małopolska",
+    "status": "active",
+    "cost_level": "medium",
+    "implementation_time_months": null,
+    "testers_count": 0,
+    "where_implemented": "Małopolska",
+    "who_can_use": "Organizatorzy imprez masowych, instytucje kultury, szkoły.",
+    "source_url": "https://rops.krakow.pl/innowacje-spoleczne/biblioteka-innowacji-spolecznych/dla-osob-z-niepelnosprawnoscia-sensoryczna",
+    "video_url": null,
+    "materials_url": "https://rops.krakow.pl/mpliki/IS/ikony_PUBLIKACJE/Innowacje_spoleczne_dla_dostepnosci.pdf",
+    "project": "Inkubator Dostępności",
+    "authors": "Tomasz Koźmiński",
+    "tags": [
+      "niepełnosprawność",
+      "dostępność",
+      "NGO"
+    ],
+    "id": 121
+  },
+  {
+    "title": "Paszport pacjenta z chorobą rzadką — elektroniczny nośnik danych medycznych",
+    "short_desc": "System informatyczny (aplikacja webowa + chip NFC) zapisujący dane o chorobie rzadkiej, lekach i lekarzach prowadzących pacjenta — umożliwia szybką pomoc medyczną w sytuacjach nagłych.",
+    "full_desc": "Na czym polega: System składa się z aplikacji webowej (dla personelu Centrum Referencyjnego), elektronicznego nośnika NFC wydawanego pacjentowi oraz programatora chipów. Chip zawiera dane o chorobie, standardy postępowania, listę leków i lekarzy prowadzących. Ułatwia diagnostykę i leczenie zarówno w sytuacjach nagłych, jak i podczas rutynowych wizyt specjalistycznych.\n\nGrupa docelowa: Pacjenci z chorobami rzadkimi, personel medyczny.\n\nSkuteczność: Pozytywnie zaopiniowana przez Radę Innowacji Społecznych. Lekarze i pacjenci ocenili jako znaczące ułatwienie diagnostyki.",
+    "category": "zdrowie i medycyna",
+    "categories": [
+      "zdrowie i medycyna"
+    ],
+    "area": "zdrowie i medycyna",
+    "target_group": "Pacjenci z chorobami rzadkimi i personel medyczny.",
+    "location": "Małopolska",
+    "status": "active",
+    "cost_level": "medium",
+    "implementation_time_months": null,
+    "testers_count": 0,
+    "where_implemented": "Małopolska",
+    "who_can_use": "Centra Chorób Rzadkich, szpitale, pacjenci z chorobami rzadkimi.",
+    "source_url": "https://rops.krakow.pl/innowacje-spoleczne/biblioteka-innowacji-spolecznych/dla-zdrowia-i-medycyny",
+    "video_url": null,
+    "materials_url": "https://rops.krakow.pl/mpliki/IS/ikony_PUBLIKACJE/Innowacje_spoleczne_dla_dostepnosci.pdf",
+    "project": "Inkubator Dostępności",
+    "authors": "Jacek Sztajnke, Katarzyna Witkowska",
+    "tags": [
+      "zdrowie_psychiczne",
+      "dostępność",
+      "wykluczenie_cyfrowe"
+    ],
+    "id": 122
+  },
+  {
+    "title": "Druk 3D — zabawki edukacyjne dla dzieci niewidomych z alfabetem Braille'a",
+    "short_desc": "Puzzle 3D drukowane przestrzennie, których elementy mają litery w alfabecie Braille'a — po złożeniu tworzą kształt odpowiadający słowu, wspierając naukę czytania i pisania u dzieci niewidomych.",
+    "full_desc": "Na czym polega: Edukacyjne zabawki dla dzieci z dysfunkcją wzroku w formie puzzli 3D. Każda układanka podzielona jest na tyle elementów, z ilu znaków składa się dane słowo. Na częściach umieszczone są litery Braille'a — po połączeniu powstaje przedmiot kształtem odwzorowujący słowo. Ćwiczą percepcję dotykową, wyobraźnię przestrzenną i umiejętności czytania/pisania.\n\nGrupa docelowa: Dzieci niewidome i słabowidzące. Szkoły specjalne, terapeuci, biblioteki.\n\nSkuteczność: Pozytywnie zaopiniowana przez Radę Innowacji Społecznych. Nauczyciele ocenili jako atrakcyjne i wartościowe pomoce dydaktyczne.",
+    "category": "niepełnosprawność sensoryczna",
+    "categories": [
+      "niepełnosprawność sensoryczna",
+      "dzieci, młodzież i rodzina"
+    ],
+    "area": "niepełnosprawność sensoryczna",
+    "target_group": "Dzieci niewidome i słabowidzące. Szkoły specjalne, terapeuci, bibliotekarze.",
+    "location": "Małopolska",
+    "status": "active",
+    "cost_level": "medium",
+    "implementation_time_months": null,
+    "testers_count": 0,
+    "where_implemented": "Małopolska",
+    "who_can_use": "Szkoły specjalne, biblioteki szkolne, nauczyciele, terapeuci dzieci niewidomych.",
+    "source_url": "https://rops.krakow.pl/innowacje-spoleczne/biblioteka-innowacji-spolecznych/dla-osob-z-niepelnosprawnoscia-sensoryczna",
+    "video_url": null,
+    "materials_url": "https://rops.krakow.pl/mpliki/IS/ikony_PUBLIKACJE/Innowacje_spoleczne_dla_dostepnosci.pdf",
+    "project": "Inkubator Dostępności",
+    "authors": "Społeczna 21 Sp. z o.o.",
+    "tags": [
+      "niepełnosprawność",
+      "edukacja",
+      "dzieci"
+    ],
+    "id": 123
+  },
+  {
+    "title": "Szkolenie: Społeczne aspekty pracy z osobami z zaburzeniami psychicznymi",
+    "short_desc": "Materiał edukacyjny ROPS dla kadr pomocy społecznej (pracownicy socjalni): Szkolenie: Społeczne aspekty pracy z osobami z zaburzeniami psychicznymi.",
+    "full_desc": "Na czym polega: Szkolenie/seminarium ROPS Kraków dla kadr pracownicy socjalni. Temat: Szkolenie: Społeczne aspekty pracy z osobami z zaburzeniami psychicznymi.\n\nGrupa docelowa: Pracownicy socjalni OPS.",
+    "category": "edukacja kadry pomocy społecznej",
+    "categories": [
+      "edukacja kadry pomocy społecznej"
+    ],
+    "area": "edukacja kadry pomocy społecznej",
+    "target_group": "Pracownicy socjalni OPS.",
+    "location": "Małopolska",
+    "status": "active",
+    "cost_level": "low",
+    "implementation_time_months": null,
+    "testers_count": 0,
+    "where_implemented": "Małopolska",
+    "who_can_use": "Pracownicy socjalni OPS.",
+    "source_url": "https://rops.krakow.pl/dla-kadr-pomocy-spolecznej/pracownicy-socjalni-materialy-edukacyjne,szkolenie-spoleczne-aspekty-pracy-z-osobami-z-zaburzeniami-psychicznymi",
+    "video_url": null,
+    "materials_url": null,
+    "project": null,
+    "authors": "ROPS Kraków",
+    "tags": [
+      "zdrowie_psychiczne",
+      "edukacja",
+      "OPS"
+    ],
+    "id": 124
+  },
+  {
+    "title": "Wpływ wsparcia otoczenia osoby osadzonej w jednostce penitencjarnej na proces integracji społecznej",
+    "short_desc": "Materiał edukacyjny ROPS dla kadr pomocy społecznej (pracownicy socjalni): Wpływ wsparcia otoczenia osoby osadzonej w jednostce penitencjarnej na proces integracji społecznej.",
+    "full_desc": "Na czym polega: Szkolenie/seminarium ROPS Kraków dla kadr pracownicy socjalni. Temat: Wpływ wsparcia otoczenia osoby osadzonej w jednostce penitencjarnej na proces integracji społecznej.\n\nGrupa docelowa: Pracownicy socjalni OPS.",
+    "category": "edukacja kadry pomocy społecznej",
+    "categories": [
+      "edukacja kadry pomocy społecznej"
+    ],
+    "area": "edukacja kadry pomocy społecznej",
+    "target_group": "Pracownicy socjalni OPS.",
+    "location": "Małopolska",
+    "status": "active",
+    "cost_level": "low",
+    "implementation_time_months": null,
+    "testers_count": 0,
+    "where_implemented": "Małopolska",
+    "who_can_use": "Pracownicy socjalni OPS.",
+    "source_url": "https://rops.krakow.pl/dla-kadr-pomocy-spolecznej/pracownicy-socjalni-materialy-edukacyjne,wplyw-wsparcia-otoczenia-osoby-osadzonej-w-jednostce-penitencjarnej-na-proces-integracji-spolecznej",
+    "video_url": null,
+    "materials_url": null,
+    "project": null,
+    "authors": "ROPS Kraków",
+    "tags": [
+      "edukacja",
+      "OPS",
+      "ubóstwo"
+    ],
+    "id": 125
+  },
+  {
+    "title": "Motywowanie do zmiany – jak wspierać a nie wyręczać",
+    "short_desc": "Materiał edukacyjny ROPS dla kadr pomocy społecznej (pracownicy socjalni): Motywowanie do zmiany – jak wspierać a nie wyręczać.",
+    "full_desc": "Na czym polega: Szkolenie/seminarium ROPS Kraków dla kadr pracownicy socjalni. Temat: Motywowanie do zmiany – jak wspierać a nie wyręczać.\n\nGrupa docelowa: Pracownicy socjalni OPS.",
+    "category": "edukacja kadry pomocy społecznej",
+    "categories": [
+      "edukacja kadry pomocy społecznej"
+    ],
+    "area": "edukacja kadry pomocy społecznej",
+    "target_group": "Pracownicy socjalni OPS.",
+    "location": "Małopolska",
+    "status": "active",
+    "cost_level": "low",
+    "implementation_time_months": null,
+    "testers_count": 0,
+    "where_implemented": "Małopolska",
+    "who_can_use": "Pracownicy socjalni OPS.",
+    "source_url": "https://rops.krakow.pl/dla-kadr-pomocy-spolecznej/pracownicy-socjalni-materialy-edukacyjne,motywowanie-do-zmiany-jak-wspierac-a-nie-wyreczac",
+    "video_url": null,
+    "materials_url": null,
+    "project": null,
+    "authors": "ROPS Kraków",
+    "tags": [
+      "edukacja",
+      "OPS"
+    ],
+    "id": 126
+  },
+  {
+    "title": "Specyfika pracy z klientem uzależnionym w kontekście budowania planu wsparcia",
+    "short_desc": "Materiał edukacyjny ROPS dla kadr pomocy społecznej (pracownicy socjalni): Specyfika pracy z klientem uzależnionym w kontekście budowania planu wsparcia.",
+    "full_desc": "Na czym polega: Szkolenie/seminarium ROPS Kraków dla kadr pracownicy socjalni. Temat: Specyfika pracy z klientem uzależnionym w kontekście budowania planu wsparcia.\n\nGrupa docelowa: Pracownicy socjalni OPS.",
+    "category": "edukacja kadry pomocy społecznej",
+    "categories": [
+      "edukacja kadry pomocy społecznej"
+    ],
+    "area": "edukacja kadry pomocy społecznej",
+    "target_group": "Pracownicy socjalni OPS.",
+    "location": "Małopolska",
+    "status": "active",
+    "cost_level": "low",
+    "implementation_time_months": null,
+    "testers_count": 0,
+    "where_implemented": "Małopolska",
+    "who_can_use": "Pracownicy socjalni OPS.",
+    "source_url": "https://rops.krakow.pl/dla-kadr-pomocy-spolecznej/pracownicy-socjalni-materialy-edukacyjne,specyfika-pracy-z-klientem-uzaleznionym-w-kontekscie-budowania-planu-wsparcia",
+    "video_url": null,
+    "materials_url": null,
+    "project": null,
+    "authors": "ROPS Kraków",
+    "tags": [
+      "edukacja",
+      "OPS",
+      "uzależnienia"
+    ],
+    "id": 127
+  },
+  {
+    "title": "Trudny klient czy trudności klienta – metoda Dialogu Motywującego w pracy socjalnej",
+    "short_desc": "Materiał edukacyjny ROPS dla kadr pomocy społecznej (pracownicy socjalni): Trudny klient czy trudności klienta – metoda Dialogu Motywującego w pracy socjalnej.",
+    "full_desc": "Na czym polega: Szkolenie/seminarium ROPS Kraków dla kadr pracownicy socjalni. Temat: Trudny klient czy trudności klienta – metoda Dialogu Motywującego w pracy socjalnej.\n\nGrupa docelowa: Pracownicy socjalni OPS.",
+    "category": "edukacja kadry pomocy społecznej",
+    "categories": [
+      "edukacja kadry pomocy społecznej"
+    ],
+    "area": "edukacja kadry pomocy społecznej",
+    "target_group": "Pracownicy socjalni OPS.",
+    "location": "Małopolska",
+    "status": "active",
+    "cost_level": "low",
+    "implementation_time_months": null,
+    "testers_count": 0,
+    "where_implemented": "Małopolska",
+    "who_can_use": "Pracownicy socjalni OPS.",
+    "source_url": "https://rops.krakow.pl/dla-kadr-pomocy-spolecznej/pracownicy-socjalni-materialy-edukacyjne,trudny-klient-czy-trudnosci-klienta-wykorzystanie-w-pracy-socjalnej-metody-dialogu-motywujacego",
+    "video_url": null,
+    "materials_url": null,
+    "project": null,
+    "authors": "ROPS Kraków",
+    "tags": [
+      "edukacja",
+      "OPS"
+    ],
+    "id": 128
+  },
+  {
+    "title": "Klient w procesie zmian – jak skutecznie reagować na jego postawy",
+    "short_desc": "Materiał edukacyjny ROPS dla kadr pomocy społecznej (pracownicy socjalni): Klient w procesie zmian – jak skutecznie reagować na jego postawy.",
+    "full_desc": "Na czym polega: Szkolenie/seminarium ROPS Kraków dla kadr pracownicy socjalni. Temat: Klient w procesie zmian – jak skutecznie reagować na jego postawy.\n\nGrupa docelowa: Pracownicy socjalni OPS.",
+    "category": "edukacja kadry pomocy społecznej",
+    "categories": [
+      "edukacja kadry pomocy społecznej"
+    ],
+    "area": "edukacja kadry pomocy społecznej",
+    "target_group": "Pracownicy socjalni OPS.",
+    "location": "Małopolska",
+    "status": "active",
+    "cost_level": "low",
+    "implementation_time_months": null,
+    "testers_count": 0,
+    "where_implemented": "Małopolska",
+    "who_can_use": "Pracownicy socjalni OPS.",
+    "source_url": "https://rops.krakow.pl/dla-kadr-pomocy-spolecznej/pracownicy-socjalni-materialy-edukacyjne,klient-w-procesie-zmian-jak-skutecznie-reagowac-na-jego-postawy",
+    "video_url": null,
+    "materials_url": null,
+    "project": null,
+    "authors": "ROPS Kraków",
+    "tags": [
+      "edukacja",
+      "OPS"
+    ],
+    "id": 129
+  },
+  {
+    "title": "Stres i wypalenie zawodowe – jak radzić sobie z problemami zawodowymi? (pracownicy socjalni)",
+    "short_desc": "Materiał edukacyjny ROPS dla kadr pomocy społecznej (pracownicy socjalni): Stres i wypalenie zawodowe – jak radzić sobie z problemami zawodowymi? (pracownicy socjalni).",
+    "full_desc": "Na czym polega: Szkolenie/seminarium ROPS Kraków dla kadr pracownicy socjalni. Temat: Stres i wypalenie zawodowe – jak radzić sobie z problemami zawodowymi? (pracownicy socjalni).\n\nGrupa docelowa: Pracownicy socjalni OPS.",
+    "category": "edukacja kadry pomocy społecznej",
+    "categories": [
+      "edukacja kadry pomocy społecznej"
+    ],
+    "area": "edukacja kadry pomocy społecznej",
+    "target_group": "Pracownicy socjalni OPS.",
+    "location": "Małopolska",
+    "status": "active",
+    "cost_level": "low",
+    "implementation_time_months": null,
+    "testers_count": 0,
+    "where_implemented": "Małopolska",
+    "who_can_use": "Pracownicy socjalni OPS.",
+    "source_url": "https://rops.krakow.pl/dla-kadr-pomocy-spolecznej/pracownicy-socjalni-materialy-edukacyjne,stres-i-wypalenie-zawodowe-jak-mozna-radzic-sobie-z-problemami-zawodowymi",
+    "video_url": null,
+    "materials_url": null,
+    "project": null,
+    "authors": "ROPS Kraków",
+    "tags": [
+      "edukacja",
+      "OPS",
+      "zdrowie_psychiczne"
+    ],
+    "id": 130
+  },
+  {
+    "title": "Sposoby motywowania uczestników ŚDS do aktywnego uczestnictwa w procesie terapeutycznym (Dialog Motywujący)",
+    "short_desc": "Materiał edukacyjny ROPS dla kadr pomocy społecznej (Środowiskowe Domy Samopomocy): Sposoby motywowania uczestników ŚDS do aktywnego uczestnictwa w procesie terapeutycznym (Dialog Motywujący).",
+    "full_desc": "Na czym polega: Szkolenie/seminarium ROPS Kraków dla kadr Środowiskowe Domy Samopomocy. Temat: Sposoby motywowania uczestników ŚDS do aktywnego uczestnictwa w procesie terapeutycznym (Dialog Motywujący).\n\nGrupa docelowa: Kadra Środowiskowych Domów Samopomocy.",
+    "category": "edukacja kadry pomocy społecznej",
+    "categories": [
+      "edukacja kadry pomocy społecznej"
+    ],
+    "area": "edukacja kadry pomocy społecznej",
+    "target_group": "Kadra Środowiskowych Domów Samopomocy.",
+    "location": "Małopolska",
+    "status": "active",
+    "cost_level": "low",
+    "implementation_time_months": null,
+    "testers_count": 0,
+    "where_implemented": "Małopolska",
+    "who_can_use": "Kadra Środowiskowych Domów Samopomocy.",
+    "source_url": "https://rops.krakow.pl/dla-kadr-pomocy-spolecznej/srodowiskowe-domy-samopomocy-materialy-edukacyjne,sposoby-motywowania-uczestnikow-srodowiskowych-domow-samopomocy-do-aktywnego-uczestnictwa-w-procesie-terapeutycznym-z-wykorzystaniem-metody-dialogu-motywujacego",
+    "video_url": null,
+    "materials_url": null,
+    "project": null,
+    "authors": "ROPS Kraków",
+    "tags": [
+      "edukacja",
+      "zdrowie_psychiczne",
+      "niepełnosprawność"
+    ],
+    "id": 131
+  },
+  {
+    "title": "Stres i wypalenie zawodowe – jak radzić sobie z problemami zawodowymi? (kadra ŚDS)",
+    "short_desc": "Materiał edukacyjny ROPS dla kadr pomocy społecznej (Środowiskowe Domy Samopomocy): Stres i wypalenie zawodowe – jak radzić sobie z problemami zawodowymi? (kadra ŚDS).",
+    "full_desc": "Na czym polega: Szkolenie/seminarium ROPS Kraków dla kadr Środowiskowe Domy Samopomocy. Temat: Stres i wypalenie zawodowe – jak radzić sobie z problemami zawodowymi? (kadra ŚDS).\n\nGrupa docelowa: Kadra Środowiskowych Domów Samopomocy.",
+    "category": "edukacja kadry pomocy społecznej",
+    "categories": [
+      "edukacja kadry pomocy społecznej"
+    ],
+    "area": "edukacja kadry pomocy społecznej",
+    "target_group": "Kadra Środowiskowych Domów Samopomocy.",
+    "location": "Małopolska",
+    "status": "active",
+    "cost_level": "low",
+    "implementation_time_months": null,
+    "testers_count": 0,
+    "where_implemented": "Małopolska",
+    "who_can_use": "Kadra Środowiskowych Domów Samopomocy.",
+    "source_url": "https://rops.krakow.pl/dla-kadr-pomocy-spolecznej/srodowiskowe-domy-samopomocy-materialy-edukacyjne,stres-i-wypalenie-zawodowe-jak-mozna-radzic-sobie-z-problemami-zawodowymi",
+    "video_url": null,
+    "materials_url": null,
+    "project": null,
+    "authors": "ROPS Kraków",
+    "tags": [
+      "edukacja",
+      "zdrowie_psychiczne"
+    ],
+    "id": 132
+  },
+  {
+    "title": "Superwizja dla kadr ŚDS",
+    "short_desc": "Materiał edukacyjny ROPS dla kadr pomocy społecznej (Środowiskowe Domy Samopomocy): Superwizja dla kadr ŚDS.",
+    "full_desc": "Na czym polega: Szkolenie/seminarium ROPS Kraków dla kadr Środowiskowe Domy Samopomocy. Temat: Superwizja dla kadr ŚDS.\n\nGrupa docelowa: Kadra Środowiskowych Domów Samopomocy.",
+    "category": "edukacja kadry pomocy społecznej",
+    "categories": [
+      "edukacja kadry pomocy społecznej"
+    ],
+    "area": "edukacja kadry pomocy społecznej",
+    "target_group": "Kadra Środowiskowych Domów Samopomocy.",
+    "location": "Małopolska",
+    "status": "active",
+    "cost_level": "low",
+    "implementation_time_months": null,
+    "testers_count": 0,
+    "where_implemented": "Małopolska",
+    "who_can_use": "Kadra Środowiskowych Domów Samopomocy.",
+    "source_url": "https://rops.krakow.pl/dla-kadr-pomocy-spolecznej/srodowiskowe-domy-samopomocy-materialy-edukacyjne,superwizja-dla-kadr-sds",
+    "video_url": null,
+    "materials_url": null,
+    "project": null,
+    "authors": "ROPS Kraków",
+    "tags": [
+      "edukacja",
+      "zdrowie_psychiczne",
+      "niepełnosprawność"
+    ],
+    "id": 133
+  },
+  {
+    "title": "Wzbudzanie aktywności wśród seniorów – mieszkańców DPS oraz uczestników placówek wsparcia dziennego",
+    "short_desc": "Materiał edukacyjny ROPS dla kadr pomocy społecznej (Środowiskowe Domy Samopomocy / DPS): Wzbudzanie aktywności wśród seniorów – mieszkańców DPS oraz uczestników placówek wsparcia dziennego.",
+    "full_desc": "Na czym polega: Szkolenie/seminarium ROPS Kraków dla kadr Środowiskowe Domy Samopomocy / DPS. Temat: Wzbudzanie aktywności wśród seniorów – mieszkańców DPS oraz uczestników placówek wsparcia dziennego.\n\nGrupa docelowa: Kadra DPS i ŚDS.",
+    "category": "edukacja kadry pomocy społecznej",
+    "categories": [
+      "edukacja kadry pomocy społecznej"
+    ],
+    "area": "edukacja kadry pomocy społecznej",
+    "target_group": "Kadra DPS i ŚDS.",
+    "location": "Małopolska",
+    "status": "active",
+    "cost_level": "low",
+    "implementation_time_months": null,
+    "testers_count": 0,
+    "where_implemented": "Małopolska",
+    "who_can_use": "Kadra DPS i ŚDS.",
+    "source_url": "https://rops.krakow.pl/dla-kadr-pomocy-spolecznej/srodowiskowe-domy-samopomocy-materialy-edukacyjne,seminarium-pn-wzbudzanie-aktywnosci-wsrod-seniorow-mieszkancow-domow-pomocy-spolecznej-oraz-uczestnikow-placowek-wsparcia-dziennego",
+    "video_url": null,
+    "materials_url": null,
+    "project": null,
+    "authors": "ROPS Kraków",
+    "tags": [
+      "edukacja",
+      "seniorzy",
+      "DPS"
+    ],
+    "id": 134
+  },
+  {
+    "title": "Przemoc psychiczna wobec osób upośledzonych umysłowo i chorujących psychicznie – rozpoznanie, wsparcie, przeciwdziałanie",
+    "short_desc": "Materiał edukacyjny ROPS dla kadr pomocy społecznej (Środowiskowe Domy Samopomocy): Przemoc psychiczna wobec osób upośledzonych umysłowo i chorujących psychicznie – rozpoznanie, wsparcie, przeciwdziałanie.",
+    "full_desc": "Na czym polega: Szkolenie/seminarium ROPS Kraków dla kadr Środowiskowe Domy Samopomocy. Temat: Przemoc psychiczna wobec osób upośledzonych umysłowo i chorujących psychicznie – rozpoznanie, wsparcie, przeciwdziałanie.\n\nGrupa docelowa: Kadra Środowiskowych Domów Samopomocy.",
+    "category": "edukacja kadry pomocy społecznej",
+    "categories": [
+      "edukacja kadry pomocy społecznej"
+    ],
+    "area": "edukacja kadry pomocy społecznej",
+    "target_group": "Kadra Środowiskowych Domów Samopomocy.",
+    "location": "Małopolska",
+    "status": "active",
+    "cost_level": "low",
+    "implementation_time_months": null,
+    "testers_count": 0,
+    "where_implemented": "Małopolska",
+    "who_can_use": "Kadra Środowiskowych Domów Samopomocy.",
+    "source_url": "https://rops.krakow.pl/dla-kadr-pomocy-spolecznej/srodowiskowe-domy-samopomocy-materialy-edukacyjne,seminarium-pn-przemoc-psychiczna-wobec-osob-uposledzonych-umyslowo-i-chorujacych-psychicznie-rozpoznanie-metody-wsparcia-sposoby-przeciwdzialania",
+    "video_url": null,
+    "materials_url": null,
+    "project": null,
+    "authors": "ROPS Kraków",
+    "tags": [
+      "edukacja",
+      "zdrowie_psychiczne",
+      "niepełnosprawność"
+    ],
+    "id": 135
+  },
+  {
+    "title": "Wzbudzanie aktywności wśród seniorów – mieszkańców Domów Pomocy Społecznej",
+    "short_desc": "Materiał edukacyjny ROPS dla kadr pomocy społecznej (Domy Pomocy Społecznej): Wzbudzanie aktywności wśród seniorów – mieszkańców Domów Pomocy Społecznej.",
+    "full_desc": "Na czym polega: Szkolenie/seminarium ROPS Kraków dla kadr Domy Pomocy Społecznej. Temat: Wzbudzanie aktywności wśród seniorów – mieszkańców Domów Pomocy Społecznej.\n\nGrupa docelowa: Kadra Domów Pomocy Społecznej.",
+    "category": "edukacja kadry pomocy społecznej",
+    "categories": [
+      "edukacja kadry pomocy społecznej"
+    ],
+    "area": "edukacja kadry pomocy społecznej",
+    "target_group": "Kadra Domów Pomocy Społecznej.",
+    "location": "Małopolska",
+    "status": "active",
+    "cost_level": "low",
+    "implementation_time_months": null,
+    "testers_count": 0,
+    "where_implemented": "Małopolska",
+    "who_can_use": "Kadra Domów Pomocy Społecznej.",
+    "source_url": "https://rops.krakow.pl/dla-kadr-pomocy-spolecznej/domy-pomocy-spolecznej-materialy-edukacyjne,wzbudzanie-aktywnosci-wsrod-seniorow-mieszkancow-domow-pomocy-spolecznej-oraz-uczestnikow-placowek-wsparcia-dziennego",
+    "video_url": null,
+    "materials_url": null,
+    "project": null,
+    "authors": "ROPS Kraków",
+    "tags": [
+      "edukacja",
+      "seniorzy",
+      "DPS"
+    ],
+    "id": 136
+  },
+  {
+    "title": "Metody pracy z Seniorem z uwzględnieniem najczęściej występujących schorzeń wieku podeszłego",
+    "short_desc": "Materiał edukacyjny ROPS dla kadr pomocy społecznej (Domy Pomocy Społecznej): Metody pracy z Seniorem z uwzględnieniem najczęściej występujących schorzeń wieku podeszłego.",
+    "full_desc": "Na czym polega: Szkolenie/seminarium ROPS Kraków dla kadr Domy Pomocy Społecznej. Temat: Metody pracy z Seniorem z uwzględnieniem najczęściej występujących schorzeń wieku podeszłego.\n\nGrupa docelowa: Kadra Domów Pomocy Społecznej.",
+    "category": "edukacja kadry pomocy społecznej",
+    "categories": [
+      "edukacja kadry pomocy społecznej"
+    ],
+    "area": "edukacja kadry pomocy społecznej",
+    "target_group": "Kadra Domów Pomocy Społecznej.",
+    "location": "Małopolska",
+    "status": "active",
+    "cost_level": "low",
+    "implementation_time_months": null,
+    "testers_count": 0,
+    "where_implemented": "Małopolska",
+    "who_can_use": "Kadra Domów Pomocy Społecznej.",
+    "source_url": "https://rops.krakow.pl/dla-kadr-pomocy-spolecznej/domy-pomocy-spolecznej-materialy-edukacyjne,metody-pracy-z-seniorem-z-uwzglednieniem-najczesciej-wystepujacych-schorzen-wieku-podeszleg",
+    "video_url": null,
+    "materials_url": null,
+    "project": null,
+    "authors": "ROPS Kraków",
+    "tags": [
+      "edukacja",
+      "seniorzy",
+      "DPS",
+      "zdrowie_psychiczne"
+    ],
+    "id": 137
+  },
+  {
+    "title": "Profesjonalne wspieranie w życiu codziennym seniora",
+    "short_desc": "Materiał edukacyjny ROPS dla kadr pomocy społecznej (Domy Pomocy Społecznej): Profesjonalne wspieranie w życiu codziennym seniora.",
+    "full_desc": "Na czym polega: Szkolenie/seminarium ROPS Kraków dla kadr Domy Pomocy Społecznej. Temat: Profesjonalne wspieranie w życiu codziennym seniora.\n\nGrupa docelowa: Kadra Domów Pomocy Społecznej.",
+    "category": "edukacja kadry pomocy społecznej",
+    "categories": [
+      "edukacja kadry pomocy społecznej"
+    ],
+    "area": "edukacja kadry pomocy społecznej",
+    "target_group": "Kadra Domów Pomocy Społecznej.",
+    "location": "Małopolska",
+    "status": "active",
+    "cost_level": "low",
+    "implementation_time_months": null,
+    "testers_count": 0,
+    "where_implemented": "Małopolska",
+    "who_can_use": "Kadra Domów Pomocy Społecznej.",
+    "source_url": "https://rops.krakow.pl/dla-kadr-pomocy-spolecznej/domy-pomocy-spolecznej-materialy-edukacyjne,profesjonalne-wspieranie-w-zyciu-codziennym-seniora",
+    "video_url": null,
+    "materials_url": null,
+    "project": null,
+    "authors": "ROPS Kraków",
+    "tags": [
+      "edukacja",
+      "seniorzy",
+      "DPS"
+    ],
+    "id": 138
+  },
+  {
+    "title": "Wsparcie domów pomocy społecznej w oparciu o duński model pracy",
+    "short_desc": "Materiał edukacyjny ROPS dla kadr pomocy społecznej (Domy Pomocy Społecznej): Wsparcie domów pomocy społecznej w oparciu o duński model pracy.",
+    "full_desc": "Na czym polega: Szkolenie/seminarium ROPS Kraków dla kadr Domy Pomocy Społecznej. Temat: Wsparcie domów pomocy społecznej w oparciu o duński model pracy.\n\nGrupa docelowa: Kadra Domów Pomocy Społecznej.",
+    "category": "edukacja kadry pomocy społecznej",
+    "categories": [
+      "edukacja kadry pomocy społecznej"
+    ],
+    "area": "edukacja kadry pomocy społecznej",
+    "target_group": "Kadra Domów Pomocy Społecznej.",
+    "location": "Małopolska",
+    "status": "active",
+    "cost_level": "low",
+    "implementation_time_months": null,
+    "testers_count": 0,
+    "where_implemented": "Małopolska",
+    "who_can_use": "Kadra Domów Pomocy Społecznej.",
+    "source_url": "https://rops.krakow.pl/dla-kadr-pomocy-spolecznej/domy-pomocy-spolecznej-materialy-edukacyjne,wsparcie-domow-pomocy-spolecznej-w-oparciu-o-dunski-model-pracy",
+    "video_url": null,
+    "materials_url": null,
+    "project": null,
+    "authors": "ROPS Kraków",
+    "tags": [
+      "edukacja",
+      "seniorzy",
+      "DPS"
+    ],
+    "id": 139
   }
 ]

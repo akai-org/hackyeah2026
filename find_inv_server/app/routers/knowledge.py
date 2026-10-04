@@ -284,7 +284,8 @@ async def create_forum_post(body: dict):
 
     author_name = (body.get("authorName") or "Gość").strip()[:128]
     badge = body.get("badge", "user")
-    if badge not in {"user", "tester", "admin", "consultant"}:
+    # user_of = „Używałem tej inicjatywy” zaznaczone w dyskusji pod kartą innowacji.
+    if badge not in {"user", "user_of", "tester", "admin", "consultant"}:
         badge = "user"
     parent_id = body.get("parentId") or None
     innovation_id = body.get("innovationId") or None

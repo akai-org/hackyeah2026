@@ -67,6 +67,7 @@ export const pl = {
     applyTester: "Zgłoś się jako tester",
     discussion: "Dyskusja społeczności",
     discussionLead: "Komentarze mieszkańców, testerów i konsultantów dotyczące tej innowacji.",
+    goToDiscussion: "Przejdź do dyskusji",
     sentToast: "Zgłoszenie wysłane!",
   },
   rating: {
@@ -179,6 +180,7 @@ export const en: LibraryMessages = {
     applyTester: "Apply as a tester",
     discussion: "Community discussion",
     discussionLead: "Comments from residents, testers and consultants about this innovation.",
+    goToDiscussion: "Go to discussion",
     sentToast: "Application sent!",
   },
   rating: {
@@ -289,6 +291,7 @@ export const uk: LibraryMessages = {
     applyTester: "Зголоситися тестувальником",
     discussion: "Обговорення спільноти",
     discussionLead: "Коментарі мешканців, тестувальників і консультантів щодо цієї інновації.",
+    goToDiscussion: "Перейти до обговорення",
     sentToast: "Заявку надіслано!",
   },
   rating: {

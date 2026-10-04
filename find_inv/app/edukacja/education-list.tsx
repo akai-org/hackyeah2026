@@ -30,6 +30,37 @@ async function loadEducation(): Promise<EducationResource[]> {
   return body.items ?? [];
 }
 
+function MdContent({ content }: { content: string }) {
+  const blocks = content.split(/\n(?=##\s)|\n{2,}/).filter(Boolean);
+  return (
+    <>
+      {blocks.map((block, i) => {
+        if (block.startsWith("## ")) {
+          return (
+            <h4 key={i} className="font-bold text-foreground">
+              {block.slice(3).trim()}
+            </h4>
+          );
+        }
+        const lines = block.split("\n");
+        const isList = lines.some((l) => l.trimStart().startsWith("- "));
+        if (isList) {
+          return (
+            <ul key={i} className="ml-4 list-disc space-y-0.5">
+              {lines
+                .filter((l) => l.trimStart().startsWith("- "))
+                .map((l, j) => (
+                  <li key={j}>{l.replace(/^\s*-\s/, "")}</li>
+                ))}
+            </ul>
+          );
+        }
+        return <p key={i}>{block.trim()}</p>;
+      })}
+    </>
+  );
+}
+
 function ResourceLink({ href, icon: Icon, children }: { href: string; icon: typeof ExternalLink; children: string }) {
   const newTab = useI18n().t.region.newTab;
   return (
@@ -173,14 +204,7 @@ export function EducationList({ initialQuery = "", initialTags = "" }: { initial
                     {ed.readMore}
                   </summary>
                   <div className="grid gap-3 border-t-2 border-border/40 p-4">
-                    {item.content
-                      .split(/\n{2,}/)
-                      .filter(Boolean)
-                      .map((paragraph, index) => (
-                        <p key={index} className="whitespace-pre-line">
-                          {paragraph}
-                        </p>
-                      ))}
+                    <MdContent content={item.content} />
                   </div>
                 </details>
               )}

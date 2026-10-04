@@ -10,15 +10,15 @@ import { DataTable } from "@/components/admin/trends-view";
 import { getReportedNeeds } from "@/lib/admin-api";
 import { cn } from "@/lib/utils";
 
-// Kolory jak w trends-view; druga seria (wyszukiwania) w ciemniejszej zieleni marki.
-const LEAF = "#2D6A4F";
-const DEEP = "#1B4332";
-const INK = "#14251C";
-const MUTED = "#3D5A4A";
-const GRID = "#D3E3D0";
-const SURFACE = "#FAFCF7";
+// Kolory z tokenów, jak w trends-view (działa też w trybie wysokiego kontrastu); druga seria w akcencie.
+const LEAF = "var(--color-primary)";
+const DEEP = "var(--color-accent)";
+const INK = "var(--color-foreground)";
+const MUTED = "var(--color-muted)";
+const GRID = "var(--color-secondary)";
+const SURFACE = "var(--color-surface)";
 
-const tooltipStyle = { background: SURFACE, border: `2px solid ${DEEP}`, borderRadius: 12, color: INK, fontSize: 16, padding: "8px 12px" };
+const tooltipStyle = { background: SURFACE, border: "2px solid var(--color-border)", borderRadius: 12, color: INK, fontSize: 16, padding: "8px 12px" };
 
 // Etykiety zgłaszających i trendów są w słowniku (admin.needs).
 const PERIODS = [3, 6, 12];
@@ -99,7 +99,7 @@ export function AdminNeedsView() {
                       <Tooltip contentStyle={tooltipStyle} cursor={{ fill: GRID, opacity: 0.6 }} />
                       <Legend wrapperStyle={{ color: INK, fontSize: 15 }} />
                       <Bar dataKey="needs" name={n.reported} fill={LEAF} radius={[0, 4, 4, 0]} isAnimationActive={false} />
-                      <Bar dataKey="searches" name={n.searches} fill={DEEP} fillOpacity={0.45} radius={[0, 4, 4, 0]} isAnimationActive={false} />
+                      <Bar dataKey="searches" name={n.searches} fill={DEEP} radius={[0, 4, 4, 0]} isAnimationActive={false} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>

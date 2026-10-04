@@ -66,7 +66,7 @@ export function InnovationOfTheDaySection({ id }: { id: string }) {
   if (state === "empty") return null;
 
   return (
-    <section id={id} data-reveal aria-labelledby={headingId} className="border-y-(length:--bw) border-border bg-secondary">
+    <section id={id} data-reveal aria-labelledby={headingId} className="border-y-(length:--bw) border-border bg-dots">
       <div className="mx-auto max-w-content px-4 py-10 sm:px-6 lg:py-12">
         <article className="mx-auto max-w-3xl border-(length:--bw) border-border bg-surface p-6 shadow-raised md:p-8">
           <p className="text-sm font-medium text-muted">{t.home.articleOfTheDay}</p>
