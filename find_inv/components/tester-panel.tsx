@@ -204,7 +204,7 @@ function TestItem({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-lg font-bold text-deep">
-            <Link href={`/biblioteka/${report.innovation_id}`} className="underline-offset-4 hover:underline">
+            <Link href={`/innowacje/${report.innovation_id}`} className="underline-offset-4 hover:underline">
               {title}
             </Link>
           </h3>
@@ -452,7 +452,7 @@ function InnovationPicker({
         <ul className="mt-4 grid gap-5">
           {results.map((innovation) => (
             <li key={innovation.id} className="border-l-4 border-leaf pl-4">
-              <Link href={`/biblioteka/${innovation.id}`} className="font-bold text-deep underline-offset-4 hover:underline">
+              <Link href={`/innowacje/${innovation.id}`} className="font-bold text-deep underline-offset-4 hover:underline">
                 {innovation.title}
               </Link>
               <p className="mt-1 line-clamp-2 text-muted">{innovation.short_desc}</p>

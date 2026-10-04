@@ -1,16 +1,37 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { CircleAlert, Info, MessageSquareReply, Send } from "lucide-react";
+import { CircleAlert, Info, Loader2, MessageSquareReply, Send } from "lucide-react";
 
 import { RoleBadge } from "@/components/role-badge";
 import { Toast, useToast } from "@/components/toast";
 import { Button } from "@/components/ui/button";
-import { MOCK_FORUM_POSTS, type ForumPost } from "@/data/mock";
+import { type ForumPost } from "@/data/mock";
+import { apiFetch, apiPost } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
-// Forum (mock): wpisy żyją w stanie komponentu, nic nie idzie do backendu.
+interface ApiForumPost {
+  id: number;
+  parentId: number | null;
+  content: string;
+  authorName: string;
+  badge: ForumPost["badge"];
+  createdAt: string | null;
+}
+
+function fromApi(post: ApiForumPost): ForumPost {
+  const utc = post.createdAt ? new Date(`${post.createdAt}Z`) : new Date();
+  const local = new Date(utc.getTime() - utc.getTimezoneOffset() * 60_000).toISOString().slice(0, 19);
+  return {
+    id: post.id,
+    parent_id: post.parentId,
+    content: post.content,
+    author_name: post.authorName,
+    badge: post.badge,
+    created_at: local,
+  };
+}
 
 const MONTHS = [
   "stycznia",
@@ -68,7 +89,8 @@ export function ForumBoard() {
   const ids = useId();
   const toast = useToast();
 
-  const [posts, setPosts] = useState<ForumPost[]>(MOCK_FORUM_POSTS);
+  const [posts, setPosts] = useState<ForumPost[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState(true);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [threadError, setThreadError] = useState<"title" | "content" | null>(null);
@@ -82,6 +104,13 @@ export function ForumBoard() {
   const replyRef = useRef<HTMLTextAreaElement>(null);
 
   const author = { author_name: user?.name ?? "Gość", badge: user?.role ?? ("user" as const) };
+
+  useEffect(() => {
+    apiFetch<ApiForumPost[]>("/api/forum")
+      .then((data) => setPosts(data.map(fromApi)))
+      .catch(() => {})
+      .finally(() => setLoadingPosts(false));
+  }, []);
 
   const threads = posts
     .filter((post) => post.parent_id === null)
@@ -101,7 +130,21 @@ export function ForumBoard() {
     return Math.max(0, ...posts.map((post) => post.id)) + 1;
   }
 
-  function addThread(event: React.FormEvent<HTMLFormElement>) {
+  async function savePost(content: string, parentId: number | null, title?: string): Promise<ForumPost> {
+    try {
+      const saved = await apiPost<ApiForumPost>("/api/forum", {
+        content: title ? `${title}\n\n${content}` : content,
+        parentId,
+        authorName: author.author_name,
+        badge: author.badge,
+      });
+      return { ...fromApi(saved), title: title };
+    } catch {
+      return { id: nextId(), parent_id: parentId, title, content, created_at: nowLocalIso(), ...author };
+    }
+  }
+
+  async function addThread(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!title.trim()) {
       setThreadError("title");
@@ -113,34 +156,28 @@ export function ForumBoard() {
       contentRef.current?.focus();
       return;
     }
-    const id = nextId();
-    setPosts((current) => [
-      ...current,
-      { id, parent_id: null, title: title.trim(), content: content.trim(), created_at: nowLocalIso(), ...author },
-    ]);
+    const post = await savePost(content.trim(), null, title.trim());
+    setPosts((current) => [...current, post]);
     setTitle("");
     setContent("");
     setThreadError(null);
-    setFocusPost(id);
+    setFocusPost(post.id);
     toast.show("Wątek dodany na górze listy.");
   }
 
-  function addReply(event: React.FormEvent<HTMLFormElement>, parentId: number) {
+  async function addReply(event: React.FormEvent<HTMLFormElement>, parentId: number) {
     event.preventDefault();
     if (!reply.trim()) {
       setReplyError(true);
       replyRef.current?.focus();
       return;
     }
-    const id = nextId();
-    setPosts((current) => [
-      ...current,
-      { id, parent_id: parentId, content: reply.trim(), created_at: nowLocalIso(), ...author },
-    ]);
+    const post = await savePost(reply.trim(), parentId);
+    setPosts((current) => [...current, post]);
     setReply("");
     setReplyError(false);
     setReplyingTo(null);
-    setFocusPost(id);
+    setFocusPost(post.id);
     toast.show("Odpowiedź dodana.");
   }
 
@@ -150,10 +187,19 @@ export function ForumBoard() {
     setReplyError(false);
   }
 
+  if (loadingPosts) {
+    return (
+      <div className="mt-10 flex items-center gap-2 text-muted" role="status">
+        <Loader2 aria-hidden="true" className="size-5 animate-spin" />
+        Wczytywanie wątków…
+      </div>
+    );
+  }
+
   return (
     <div className="mt-10 grid gap-12 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
       <aside aria-labelledby={`${ids}-nowy`} className="lg:sticky lg:top-[calc(var(--header-h)+1rem)] lg:col-start-2 lg:row-start-1">
-        <form onSubmit={addThread} noValidate className="border-(length:--bw) border-deep bg-sage p-5 sm:p-6">
+        <form onSubmit={(e) => { void addThread(e); }} noValidate className="border-(length:--bw) border-deep bg-sage p-5 sm:p-6">
           <h2 id={`${ids}-nowy`} className="text-xl font-bold text-deep">
             Zadaj pytanie
           </h2>
@@ -275,7 +321,7 @@ export function ForumBoard() {
                   )}
 
                   {replyingTo === thread.id ? (
-                    <form onSubmit={(event) => addReply(event, thread.id)} noValidate className="mt-5">
+                    <form onSubmit={(event) => { void addReply(event, thread.id); }} noValidate className="mt-5">
                       <label htmlFor={replyFieldId} className="block font-bold text-deep">
                         Twoja odpowiedź
                       </label>

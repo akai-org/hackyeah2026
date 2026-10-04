@@ -367,3 +367,80 @@ async def apply_as_tester(body: dict):
         raise
     except Exception:
         return {"data": {"id": None, "message": "Zgłoszenie przyjęte (demo)"}}
+
+
+@router.post("/innovations/{innovation_id}/rating")
+async def rate_innovation(innovation_id: int, body: dict):
+    rating = body.get("rating")
+    if not isinstance(rating, int) or rating < 1 or rating > 5:
+        raise HTTPException(status_code=400, detail="Ocena musi być liczbą od 1 do 5")
+
+    session_token = (body.get("session_token") or "").strip()[:64] or None
+
+    try:
+        from app.models import InnovationRating
+        from sqlalchemy import func as sqlfunc
+
+        async with get_db() as db:
+            if await db.get(Innovation, innovation_id) is None:
+                raise HTTPException(status_code=404, detail="Nie ma takiej innowacji")
+
+            row = InnovationRating(
+                innovation_id=innovation_id,
+                session_token=session_token,
+                rating=rating,
+            )
+            db.add(row)
+            await db.commit()
+
+            result = await db.execute(
+                select(
+                    sqlfunc.avg(InnovationRating.rating).label("avg"),
+                    sqlfunc.count(InnovationRating.id).label("count"),
+                ).where(InnovationRating.innovation_id == innovation_id)
+            )
+            row_agg = result.one()
+            avg = round(float(row_agg.avg), 1) if row_agg.avg else 0.0
+            count = int(row_agg.count)
+
+        return {"data": {"average": avg, "count": count}}
+    except HTTPException:
+        raise
+    except Exception:
+        return {"data": {"average": float(rating), "count": 1}}
+
+
+@router.get("/innovations/{innovation_id}/rating")
+async def get_innovation_rating(innovation_id: int):
+    try:
+        from app.models import InnovationRating, TestReport
+        from sqlalchemy import func as sqlfunc
+
+        async with get_db() as db:
+            result = await db.execute(
+                select(
+                    sqlfunc.avg(InnovationRating.rating).label("avg"),
+                    sqlfunc.count(InnovationRating.id).label("count"),
+                ).where(InnovationRating.innovation_id == innovation_id)
+            )
+            row = result.one()
+
+            tester_result = await db.execute(
+                select(
+                    sqlfunc.avg(TestReport.rating).label("avg"),
+                    sqlfunc.count(TestReport.id).label("count"),
+                ).where(
+                    TestReport.innovation_id == innovation_id,
+                    TestReport.rating.isnot(None),
+                )
+            )
+            tester_row = tester_result.one()
+
+        return {"data": {
+            "average": round(float(row.avg), 1) if row.avg else 0.0,
+            "count": int(row.count),
+            "tester_average": round(float(tester_row.avg), 1) if tester_row.avg else None,
+            "tester_count": int(tester_row.count),
+        }}
+    except Exception:
+        return {"data": {"average": 0.0, "count": 0, "tester_average": None, "tester_count": 0}}

@@ -1,0 +1,113 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { Star } from "lucide-react";
+
+import { apiFetch, apiPost } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
+import { cn } from "@/lib/utils";
+
+interface RatingData {
+  average: number;
+  count: number;
+  tester_average: number | null;
+  tester_count: number;
+}
+
+interface Props {
+  innovationId: number;
+}
+
+export function StarRating({ innovationId }: Props) {
+  const { user } = useAuth();
+  const [data, setData] = useState<RatingData | null>(null);
+  const [hover, setHover] = useState(0);
+  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    apiFetch<RatingData>(`/api/innovations/${innovationId}/rating`)
+      .then(setData)
+      .catch(() => {});
+  }, [innovationId]);
+
+  async function submit(rating: number) {
+    if (submitting || submitted) return;
+    setSubmitting(true);
+    try {
+      const result = await apiPost<RatingData>(`/api/innovations/${innovationId}/rating`, {
+        rating,
+        session_token: user ? undefined : undefined,
+      });
+      setData(result);
+      setSubmitted(true);
+    } catch {
+      // silent
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const displayAvg = data?.average ?? 0;
+  const displayCount = data?.count ?? 0;
+
+  return (
+    <div className="mt-6">
+      <h2 className="text-lg font-bold text-deep">Oceń tę innowację</h2>
+
+      <div className="mt-3 flex flex-wrap items-center gap-4">
+        <div
+          role="group"
+          aria-label="Ocena od 1 do 5 gwiazdek"
+          className="flex gap-1"
+          onMouseLeave={() => setHover(0)}
+        >
+          {[1, 2, 3, 4, 5].map((star) => (
+            <button
+              key={star}
+              type="button"
+              disabled={submitted || submitting}
+              aria-label={`${star} ${star === 1 ? "gwiazdka" : star < 5 ? "gwiazdki" : "gwiazdek"}`}
+              onClick={() => { void submit(star); }}
+              onMouseEnter={() => setHover(star)}
+              onFocus={() => setHover(star)}
+              onBlur={() => setHover(0)}
+              className={cn(
+                "cursor-pointer rounded p-0.5 transition-colors focus-visible:outline-2 focus-visible:outline-deep disabled:cursor-default",
+                star <= (hover || (submitted ? displayAvg : 0))
+                  ? "text-butter"
+                  : "text-muted",
+              )}
+            >
+              <Star
+                aria-hidden="true"
+                className="size-7"
+                fill={star <= (hover || (submitted ? Math.round(displayAvg) : 0)) ? "currentColor" : "none"}
+              />
+            </button>
+          ))}
+        </div>
+
+        <div className="text-sm text-muted">
+          {submitted ? (
+            <span className="font-bold text-deep">Dziękujemy za ocenę!</span>
+          ) : displayCount > 0 ? (
+            `${displayAvg.toFixed(1)} / 5 (${displayCount} ${displayCount === 1 ? "ocena" : displayCount < 5 ? "oceny" : "ocen"})`
+          ) : (
+            "Brak ocen — bądź pierwszy"
+          )}
+        </div>
+      </div>
+
+      {data?.tester_count != null && data.tester_count > 0 && data.tester_average != null && (
+        <p className="mt-2 text-sm text-muted">
+          Ocena testerów:{" "}
+          <strong className="text-deep">
+            {data.tester_average.toFixed(1)} / 5
+          </strong>{" "}
+          ({data.tester_count} {data.tester_count === 1 ? "tester" : data.tester_count < 5 ? "testerów" : "testerów"})
+        </p>
+      )}
+    </div>
+  );
+}

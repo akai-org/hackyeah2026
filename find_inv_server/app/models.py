@@ -171,6 +171,30 @@ class TestReport(Base):
     user: Mapped["User"] = relationship("User")
 
 
+class InnovationRating(Base):
+    """Ocena 1–5 gwiazdek wystawiona przez dowolnego użytkownika (nie tylko testera)."""
+
+    __tablename__ = "innovation_ratings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    innovation_id: Mapped[int] = mapped_column(Integer, ForeignKey("innovations.id"), index=True)
+    # Sesja użytkownika (jeśli jest) lub None dla anonimowego.
+    session_token: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    rating: Mapped[int] = mapped_column(Integer)  # 1–5
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class TesterAssignment(Base):
+    """Tabela przypisań tester ↔ innowacja (widok admina). Badge 'Tester' na komentarzu widać tylko, gdy jest tu wpis."""
+
+    __tablename__ = "tester_assignments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    tester_user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), index=True)
+    innovation_id: Mapped[int] = mapped_column(Integer, ForeignKey("innovations.id"), index=True)
+    assigned_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
 class Event(Base):
     """Zdarzenie analityczne (wyświetlenie karty, klik, start Middlemana…). Z nich liczy /api/admin/analytics/*."""
 

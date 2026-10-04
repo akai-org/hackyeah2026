@@ -7,7 +7,7 @@ import { ArrowLeft, ChevronRight, CircleAlert, MessageSquareReply, Send, Tag } f
 import { RoleBadge } from "@/components/role-badge";
 import { Toast, useToast } from "@/components/toast";
 import { Button } from "@/components/ui/button";
-import { TAG_LABELS, getInnovationThread, type ForumPost } from "@/data/mock";
+import { TAG_LABELS, type ForumPost } from "@/data/mock";
 import { apiFetch, apiPost } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
@@ -74,9 +74,11 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
   const toast = useToast();
 
   const [innovation, setInnovation] = useState<Innovation | null>(innovationProp ?? null);
-  const [posts, setPosts] = useState<ForumPost[]>(() => getInnovationThread(innovationId));
+  const [posts, setPosts] = useState<ForumPost[]>([]);
   const [nickname, setNickname] = useState(user?.name ?? "");
   const [usedInnovation, setUsedInnovation] = useState(false);
+  const [usedCount, setUsedCount] = useState(0);
+  const [isAssignedTester, setIsAssignedTester] = useState(false);
   const [comment, setComment] = useState("");
   const [commentError, setCommentError] = useState(false);
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
@@ -102,16 +104,18 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
     };
   }, [innovationId, innovationProp, embedded]);
 
-  // Komentarze zapisane w bazie dokładamy do wątku demo (liczą się do statystyk w panelu admina).
   useEffect(() => {
     apiFetch<ApiForumPost[]>(`/api/forum?innovation_id=${innovationId}`)
-      .then((saved) => {
-        const mock = getInnovationThread(innovationId);
-        const ids = new Set(mock.map((p) => p.id));
-        setPosts([...mock, ...saved.map(fromApi).filter((p) => !ids.has(p.id))]);
-      })
+      .then((saved) => setPosts(saved.map(fromApi)))
       .catch(() => {});
   }, [innovationId]);
+
+  useEffect(() => {
+    if (!user || (user.role !== "tester" && user.role !== "admin")) return;
+    apiFetch<{ assigned: boolean }>(`/api/innovations/${innovationId}/tester-status`)
+      .then((data) => setIsAssignedTester(data.assigned))
+      .catch(() => {});
+  }, [innovationId, user]);
 
   useEffect(() => {
     if (focusPost === null) return;
@@ -127,7 +131,9 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
   }
 
   const authorName = nickname.trim() || user?.name || "Gość";
-  const authorBadge = usedInnovation ? ("user_of" as const) : (user?.role ?? ("user" as const));
+  // Badge "tester" pokazuje się tylko, gdy tester jest przypisany do tej innowacji.
+  const effectiveRole = user?.role === "tester" && !isAssignedTester ? "user" : user?.role;
+  const authorBadge = effectiveRole ?? ("user" as const);
 
   /** Zapis w bazie; bez backendu post zostaje tylko lokalnie. */
   async function savePost(content: string, parentId: number | null): Promise<ForumPost> {
@@ -191,7 +197,7 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
       {/* Back link — tylko w widoku pełnoekranowym */}
       {!embedded && (
         <Link
-          href={`/biblioteka/${innovationId}`}
+          href={`/innowacje/${innovationId}`}
           className="inline-flex items-center gap-2 text-sm font-bold text-leaf underline underline-offset-4 hover:text-deep"
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
@@ -226,7 +232,7 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
             </ul>
           )}
           <Link
-            href={`/biblioteka/${innovationId}`}
+            href={`/innowacje/${innovationId}`}
             className="ml-auto inline-flex items-center gap-1.5 rounded-ui border-2 border-deep bg-surface px-4 py-2 text-sm font-bold text-deep shadow-paper hover:bg-sage"
           >
             Szczegóły innowacji
@@ -261,16 +267,21 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
               className={fieldClass}
             />
 
-            <label htmlFor={`${ids}-uzywalem`} className="mt-4 flex min-h-12 cursor-pointer items-center gap-3 font-medium text-deep">
-              <input
-                id={`${ids}-uzywalem`}
-                type="checkbox"
-                checked={usedInnovation}
-                onChange={(event) => setUsedInnovation(event.target.checked)}
-                className="size-5 accent-leaf"
-              />
-              Używałem tej inicjatywy
-            </label>
+            <div className="mt-4">
+              {usedInnovation ? (
+                <p className="inline-flex items-center gap-2 rounded-full bg-mint px-4 py-2 text-sm font-bold text-deep">
+                  Potwierdzono ({usedCount} {usedCount === 1 ? "osoba" : usedCount < 5 ? "osoby" : "osób"})
+                </p>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => { setUsedInnovation(true); setUsedCount((c) => c + 1); }}
+                  className="inline-flex min-h-10 items-center gap-2 rounded-ui border-(length:--bw) border-deep bg-surface px-4 text-sm font-medium text-ink hover:bg-sage"
+                >
+                  Używałem tej inicjatywy
+                </button>
+              )}
+            </div>
 
             <label htmlFor={`${ids}-komentarz`} className="mt-5 block font-bold text-deep">
               Twój komentarz
