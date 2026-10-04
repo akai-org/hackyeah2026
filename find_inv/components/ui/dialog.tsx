@@ -62,6 +62,8 @@ export function Dialog({
   const openerRef = useRef<HTMLElement | null>(null);
   const pressedOnBackdrop = useRef(false);
   const closingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // close() wywołane przy odmontowaniu to nie decyzja użytkownika — zdarzenie „close” nie może wtedy wołać onClose.
+  const closedByUnmount = useRef(false);
   const onCloseRef = useRef(onClose);
   const ids = useId();
   const titleId = `${ids}-tytul`;
@@ -83,7 +85,8 @@ export function Dialog({
         dialog.removeAttribute("data-closing");
       }
       if (dialog.open) return;
-      openerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      // ??=: przy ponownym otwarciu po sprzątaniu efektu (StrictMode) opener to wciąż przycisk, nie <body>.
+      openerRef.current ??= document.activeElement instanceof HTMLElement ? document.activeElement : null;
       dialog.showModal();
       const target =
         initialFocusRef?.current ?? bodyRef.current?.querySelector<HTMLElement>(FOCUSABLE) ?? closeRef.current;
@@ -104,14 +107,20 @@ export function Dialog({
   }, [open, initialFocusRef]);
 
   // Odmontowanie otwartego okna (np. zmiana strony) też oddaje focus.
+  // W trybie deweloperskim React wywołuje to sprzątanie także zaraz po pierwszym montowaniu (StrictMode) —
+  // dlatego nie wołamy onClose rodzica (inaczej okno montowane od razu otwarte, np. Middleman, znikało po chwili),
+  // a focus oddajemy tylko, gdy okno naprawdę zniknęło z dokumentu.
   useEffect(() => {
     const dialog = dialogRef.current;
     return () => {
       if (closingTimer.current) clearTimeout(closingTimer.current);
       if (!dialog?.open) return;
+      closedByUnmount.current = true;
       dialog.close();
       const opener = openerRef.current;
-      if (opener?.isConnected) requestAnimationFrame(() => opener.focus());
+      requestAnimationFrame(() => {
+        if (!dialog.isConnected && opener?.isConnected) opener.focus();
+      });
     };
   }, []);
 
@@ -155,6 +164,10 @@ export function Dialog({
         onCloseRef.current();
       }}
       onClose={() => {
+        if (closedByUnmount.current) {
+          closedByUnmount.current = false;
+          return;
+        }
         restoreFocus();
         if (open) onCloseRef.current();
       }}
