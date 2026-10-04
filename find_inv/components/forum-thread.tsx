@@ -7,7 +7,7 @@ import { ArrowLeft, ChevronRight, CircleAlert, MessageSquareReply, Send, Tag } f
 import { RoleBadge } from "@/components/role-badge";
 import { Toast, useToast } from "@/components/toast";
 import { Button } from "@/components/ui/button";
-import { TAG_LABELS, type ForumPost } from "@/data/mock";
+import { TAG_LABELS, type ForumBadge, type ForumPost } from "@/data/mock";
 import { apiFetch, apiPost } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
@@ -77,7 +77,6 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
   const [posts, setPosts] = useState<ForumPost[]>([]);
   const [nickname, setNickname] = useState(user?.name ?? "");
   const [usedInnovation, setUsedInnovation] = useState(false);
-  const [usedCount, setUsedCount] = useState(0);
   const [isAssignedTester, setIsAssignedTester] = useState(false);
   const [comment, setComment] = useState("");
   const [commentError, setCommentError] = useState(false);
@@ -132,8 +131,10 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
 
   const authorName = nickname.trim() || user?.name || "Gość";
   // Badge "tester" pokazuje się tylko, gdy tester jest przypisany do tej innowacji.
-  const effectiveRole = user?.role === "tester" && !isAssignedTester ? "user" : user?.role;
-  const authorBadge = effectiveRole ?? ("user" as const);
+  const effectiveRole = user?.role === "tester" && !isAssignedTester ? "user" : (user?.role ?? "user");
+  // Zwykły użytkownik nie ma plakietki; „Użytkownik” dostaje dopiero po zaznaczeniu „Używałem tej inicjatywy”.
+  // Tester, konsultant i admin zachowują swoją rolę niezależnie od checkboxa.
+  const authorBadge: ForumBadge = effectiveRole === "user" && usedInnovation ? "user_of" : effectiveRole;
 
   /** Zapis w bazie; bez backendu post zostaje tylko lokalnie. */
   async function savePost(content: string, parentId: number | null): Promise<ForumPost> {
@@ -251,7 +252,7 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
             <p className="mt-3 flex flex-wrap items-center gap-2 text-base">
               <span>Piszesz jako</span>
               <span className="font-bold text-foreground">{authorName}</span>
-              <RoleBadge role={authorBadge} />
+              {authorBadge !== "user" && <RoleBadge role={authorBadge} />}
             </p>
 
             <label htmlFor={`${ids}-nick`} className="mt-5 block font-bold text-foreground">
@@ -267,21 +268,21 @@ export function ForumThread({ innovationId, embedded, innovation: innovationProp
               className={fieldClass}
             />
 
-            <div className="mt-4">
-              {usedInnovation ? (
-                <p className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-bold text-foreground">
-                  Potwierdzono ({usedCount} {usedCount === 1 ? "osoba" : usedCount < 5 ? "osoby" : "osób"})
-                </p>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => { setUsedInnovation(true); setUsedCount((c) => c + 1); }}
-                  className="inline-flex min-h-10 items-center gap-2 rounded-ui border-(length:--bw) border-border bg-surface px-4 text-sm font-medium text-foreground hover:bg-primary/10"
-                >
-                  Używałem tej inicjatywy
-                </button>
-              )}
-            </div>
+            <label className="mt-4 flex min-h-12 cursor-pointer items-center gap-3 font-bold text-foreground">
+              <input
+                type="checkbox"
+                checked={usedInnovation}
+                onChange={(event) => setUsedInnovation(event.target.checked)}
+                aria-describedby={`${ids}-uzywalem-opis`}
+                className="size-6 shrink-0 cursor-pointer accent-primary"
+              />
+              Używałem tej inicjatywy
+            </label>
+            <p id={`${ids}-uzywalem-opis`} className="mt-1 text-sm text-muted">
+              {effectiveRole === "user"
+                ? "Przy Twoich komentarzach w tej dyskusji pojawi się plakietka „Użytkownik”."
+                : "Twoje komentarze i tak mają plakietkę Twojej roli."}
+            </p>
 
             <label htmlFor={`${ids}-komentarz`} className="mt-5 block font-bold text-foreground">
               Twój komentarz

@@ -2,10 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Archive, ExternalLink, FileText, MessageSquareText, MessageSquarePlus, Pause, Play, Video } from "lucide-react";
+import { Archive, ArrowDown, ExternalLink, FileText, MessageSquareText, MessageSquarePlus, Pause, Play, Video } from "lucide-react";
 
 import { ForumThread } from "@/components/forum-thread";
-import { StarRating } from "@/components/star-rating";
 import { TesterApplyModal } from "@/components/tester-apply-modal";
 import { Toast, useToast } from "@/components/toast";
 import { TestRequestBox } from "@/components/test-request";
@@ -220,6 +219,14 @@ export function InnovationDetail({ id }: { id: number }) {
 
       <p className="mt-4 max-w-[60ch] text-lg">{innovation.short_desc}</p>
 
+      {/* Kotwica jak w „Szybkim dostępie” na stronie głównej: płynne przewijanie z globals.css
+          (wyłączone przy prefers-reduced-motion), scroll-margin pod przyklejonym nagłówkiem. */}
+      <a href="#dyskusja" className={buttonVariants({ variant: "secondary", className: "mt-6" })}>
+        <MessageSquareText aria-hidden="true" />
+        Przejdź do dyskusji
+        <ArrowDown aria-hidden="true" />
+      </a>
+
       {/* Osadzone wideo (YouTube / Vimeo) */}
       {innovation.video_url && isYoutubeOrVimeo && (
         <VideoEmbed url={innovation.video_url} />
@@ -330,8 +337,6 @@ export function InnovationDetail({ id }: { id: number }) {
         )}
       </div>
 
-      <StarRating innovationId={id} />
-
       <TestRequestBox innovation={innovation} />
 
       {/* Zgłoś się jako tester */}
@@ -357,7 +362,7 @@ export function InnovationDetail({ id }: { id: number }) {
       </div>
 
       {/* Forum dyskusji */}
-      <section aria-labelledby="dyskusja-tytul" className="mt-12 border-t-2 border-border/40 pt-10">
+      <section id="dyskusja" aria-labelledby="dyskusja-tytul" className="mt-12 border-t-2 border-border/40 pt-10">
         <h2 id="dyskusja-tytul" className="text-2xl font-bold text-foreground">Dyskusja społeczności</h2>
         <p className="mt-1 text-base text-muted">Komentarze mieszkańców, testerów i konsultantów dotyczące tej innowacji.</p>
         <div className="mt-6">
