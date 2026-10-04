@@ -9,6 +9,7 @@ from sqlalchemy import and_, func, or_, select
 from app import knowledge_store as store
 from app.database import get_db
 from app.models import Innovation
+from app.utils import TAXONOMY_TAGS
 from data import challenges as ch
 
 router = APIRouter(prefix="/api", tags=["knowledge"])
@@ -99,6 +100,30 @@ async def list_innovations(
     if not include_archived:
         found = [i for i in found if i.get("status") != "archived"]
     return {"data": _page([store.public(i) for i in found[offset : offset + limit]], len(found), limit, offset)}
+
+
+@router.get("/tags")
+async def list_tags():
+    """Tagi taksonomii do wyboru w wyszukiwarce: [{tag, count}] — liczba aktywnych innowacji z tagiem.
+
+    Najpierw najczęstsze; tagi bez innowacji też są (count=0), bo pasują do wyzwań i materiałów edukacyjnych.
+    """
+    counts = dict.fromkeys(TAXONOMY_TAGS, 0)
+    try:
+        async with get_db() as db:
+            rows = (await db.execute(select(Innovation.tags).where(Innovation.status != "archived"))).scalars().all()
+        tag_lists = [json.loads(raw or "[]") for raw in rows]
+    except Exception:
+        tag_lists = []
+    if not tag_lists:  # bez bazy: katalog z parsed_innovations.json
+        tag_lists = [i.get("tags", []) for i in store.search_innovations() if i.get("status") != "archived"]
+    for tags in tag_lists:
+        for tag in set(tags):
+            if tag in counts:
+                counts[tag] += 1
+    order = {tag: i for i, tag in enumerate(TAXONOMY_TAGS)}
+    ranked = sorted(counts.items(), key=lambda item: (-item[1], order[item[0]]))
+    return {"data": [{"tag": tag, "count": count} for tag, count in ranked], "error": None}
 
 
 def _page(innovations: list[dict], total: int, limit: int, offset: int) -> dict:

@@ -94,3 +94,13 @@ def test_library_filters_narrow_results():
         visible = page(include_archived="false")
         assert all(i["status"] != "archived" for i in visible["innovations"])
         assert visible["total"] == len(visible["innovations"])
+
+
+def test_tags_lists_whole_taxonomy_with_counts():
+    from app.utils import TAXONOMY_TAGS
+
+    with TestClient(app) as c:
+        tags = c.get("/api/tags").json()["data"]
+    assert [t["tag"] for t in tags] != [] and {t["tag"] for t in tags} == set(TAXONOMY_TAGS)
+    counts = [t["count"] for t in tags]
+    assert counts == sorted(counts, reverse=True) and all(isinstance(n, int) and n >= 0 for n in counts)

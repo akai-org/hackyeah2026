@@ -134,7 +134,7 @@ const plCore = {
   quickSearch: {
     where: "Gdzie szukać",
     categories: {
-      all: { label: "Wszystko", placeholder: "Opisz problem własnymi słowami" },
+      all: { label: "Wszystko", placeholder: "Szukaj wszędzie, np. seniorzy, wolontariat" },
       problems: { label: "Problemy", placeholder: "Szukaj problemu, np. opieka zdrowotna" },
       innovations: { label: "Innowacje", placeholder: "Szukaj innowacji, np. wolontariat" },
       articles: { label: "Artykuły", placeholder: "Szukaj artykułu, np. spółdzielnia" },
@@ -143,7 +143,8 @@ const plCore = {
     selected: (n: number) => `Wybrano: ${n}`,
     multiSelect: "wielokrotny wybór",
     tagList: "Lista tagów wyszukiwania",
-    tagLabels: { Aplikacja: "Aplikacja", "Małe firmy": "Małe firmy", Niewidomi: "Niewidomi", Seniorzy: "Seniorzy", Transport: "Transport", Zdrowie: "Zdrowie" } as Record<string, string>,
+    loadingTags: "Wczytuję tagi…",
+    innovationCount: (n: number) => `${n} ${plPlural(n, "innowacja", "innowacje", "innowacji")}`,
   },
   home: {
     heroTitle: "Z czym masz kłopot?",
@@ -224,6 +225,9 @@ const plCore = {
     privacy: "Dyktowanie może przetwarzać dźwięk w zewnętrznej usłudze przeglądarki. Nie podawaj danych osobowych.",
   },
   results: {
+    articles: "Artykuły z Edukacji",
+    articlesLead: "Materiały edukacyjne pasujące do Twojego wyszukiwania.",
+    allArticles: "Zobacz wszystkie w Edukacji",
     pageTitle: (q: string) => `Wyniki: ${q} – HubMI`,
     noQuery: "Nie podano opisu problemu.",
     backHome: "Wróć do strony głównej",
@@ -417,7 +421,7 @@ const enCore: CoreMessages = {
   quickSearch: {
     where: "Where to search",
     categories: {
-      all: { label: "Everything", placeholder: "Describe the problem in your own words" },
+      all: { label: "Everything", placeholder: "Search everything, e.g. seniors, volunteering" },
       problems: { label: "Problems", placeholder: "Search problems, e.g. healthcare" },
       innovations: { label: "Innovations", placeholder: "Search innovations, e.g. volunteering" },
       articles: { label: "Articles", placeholder: "Search articles, e.g. cooperative" },
@@ -426,7 +430,8 @@ const enCore: CoreMessages = {
     selected: (n: number) => `Selected: ${n}`,
     multiSelect: "multiple choice",
     tagList: "Search tag list",
-    tagLabels: { Aplikacja: "App", "Małe firmy": "Small businesses", Niewidomi: "Blind people", Seniorzy: "Seniors", Transport: "Transport", Zdrowie: "Health" },
+    loadingTags: "Loading tags…",
+    innovationCount: (n: number) => `${n} ${n === 1 ? "innovation" : "innovations"}`,
   },
   home: {
     heroTitle: "What's the problem?",
@@ -507,6 +512,9 @@ const enCore: CoreMessages = {
     privacy: "Dictation may process audio in an external browser service. Don't share personal data.",
   },
   results: {
+    articles: "Articles from Education",
+    articlesLead: "Educational materials matching your search.",
+    allArticles: "See all in Education",
     pageTitle: (q: string) => `Results: ${q} – HubMI`,
     noQuery: "No problem description was given.",
     backHome: "Back to the home page",
@@ -698,7 +706,7 @@ const ukCore: CoreMessages = {
   quickSearch: {
     where: "Де шукати",
     categories: {
-      all: { label: "Усе", placeholder: "Опишіть проблему своїми словами" },
+      all: { label: "Усе", placeholder: "Шукати всюди, напр. літні люди, волонтерство" },
       problems: { label: "Проблеми", placeholder: "Пошук проблеми, напр. охорона здоров’я" },
       innovations: { label: "Інновації", placeholder: "Пошук інновації, напр. волонтерство" },
       articles: { label: "Статті", placeholder: "Пошук статті, напр. кооператив" },
@@ -707,7 +715,8 @@ const ukCore: CoreMessages = {
     selected: (n: number) => `Обрано: ${n}`,
     multiSelect: "множинний вибір",
     tagList: "Список тегів пошуку",
-    tagLabels: { Aplikacja: "Застосунок", "Małe firmy": "Малий бізнес", Niewidomi: "Незрячі", Seniorzy: "Літні люди", Transport: "Транспорт", Zdrowie: "Здоров’я" },
+    loadingTags: "Завантажую теги…",
+    innovationCount: (n: number) => `${n} ${ukPlural(n, "інновація", "інновації", "інновацій")}`,
   },
   home: {
     heroTitle: "Що вас турбує?",
@@ -788,6 +797,9 @@ const ukCore: CoreMessages = {
     privacy: "Диктування може обробляти звук у зовнішньому сервісі браузера. Не вказуйте персональних даних.",
   },
   results: {
+    articles: "Статті з розділу «Освіта»",
+    articlesLead: "Освітні матеріали, що відповідають вашому пошуку.",
+    allArticles: "Переглянути всі в розділі «Освіта»",
     pageTitle: (q: string) => `Результати: ${q} – HubMI`,
     noQuery: "Опис проблеми не вказано.",
     backHome: "Повернутися на головну",

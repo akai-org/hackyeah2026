@@ -4,24 +4,9 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, BookOpen, ExternalLink, FileText, PlayCircle, X } from "lucide-react";
 
-import { MdContent, ResourceLink, educationHref, type EducationResource } from "@/components/education-material";
-import { API_URL } from "@/lib/api";
-import { readLocaleCookie } from "@/lib/i18n/config";
+import { ResourceLink, educationHref, loadEducationMaterials, type EducationResource } from "@/components/education-material";
 import { matchesSearchTags, normalizeText, parseSearchTags, queryStems, type SearchTag } from "@/lib/search-tags";
 import { useI18n } from "@/lib/i18n/client";
-
-// Materiały edukacyjne z GET /api/resources?type=education (Zasobnik). Ten endpoint zwraca { items, total }
-// bez koperty { data }, dlatego zwykły fetch zamiast apiFetch.
-
-async function loadEducation(): Promise<EducationResource[]> {
-  // X-Lang: backend tłumaczy materiały na język interfejsu (cookie z :3000 nie trafia do :8000).
-  const response = await fetch(`${API_URL}/api/resources?type=education&limit=100`, {
-    headers: { "X-Lang": readLocaleCookie() },
-  });
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  const body = (await response.json()) as { items?: EducationResource[] };
-  return body.items ?? [];
-}
 
 export function EducationList({ initialQuery = "", initialTags = "" }: { initialQuery?: string; initialTags?: string }) {
   const { t } = useI18n();
@@ -35,7 +20,7 @@ export function EducationList({ initialQuery = "", initialTags = "" }: { initial
 
   useEffect(() => {
     let active = true;
-    loadEducation()
+    loadEducationMaterials()
       .then((data) => active && setItems(data))
       .catch(() => active && setFailed(true));
     return () => {
@@ -86,13 +71,13 @@ export function EducationList({ initialQuery = "", initialTags = "" }: { initial
           <span className="font-bold text-foreground">{ch.tags}</span>
           {tags.map((tag) => (
             <button
-              key={tag.label}
+              key={tag.id}
               type="button"
               onClick={() => setTags((list) => list.filter((item) => item !== tag))}
-              aria-label={ch.removeTag(t.quickSearch.tagLabels[tag.label] ?? tag.label)}
+              aria-label={ch.removeTag(t.tags[tag.id])}
               className="inline-flex min-h-10 items-center gap-1 rounded-full border-2 border-border bg-primary/10 px-3 text-sm font-semibold text-foreground hover:bg-primary/10"
             >
-              #{t.quickSearch.tagLabels[tag.label] ?? tag.label}
+              #{t.tags[tag.id]}
               <X aria-hidden="true" className="size-4" />
             </button>
           ))}
@@ -144,17 +129,6 @@ export function EducationList({ initialQuery = "", initialTags = "" }: { initial
               </h3>
               {item.summary && <p className="mt-2">{item.summary}</p>}
 
-              {item.content && (
-                <details className="mt-4 rounded-ui border-(length:--bw) border-border/40">
-                  <summary className="flex min-h-12 cursor-pointer items-center px-4 font-semibold text-foreground">
-                    {ed.readMore}
-                    <span className="sr-only">: {item.title}</span>
-                  </summary>
-                  <div className="grid gap-3 border-t-(length:--bw) border-border/40 p-4">
-                    <MdContent content={item.content} />
-                  </div>
-                </details>
-              )}
 
               {(item.areas.length > 0 || item.tags.length > 0) && (
                 <ul className="mt-4 flex flex-wrap gap-2" aria-label={ed.topics}>

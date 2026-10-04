@@ -157,13 +157,13 @@ export function ChallengesView({
           <span className="font-bold text-foreground">{ch.tags}</span>
           {tags.map((tag) => (
             <button
-              key={tag.label}
+              key={tag.id}
               type="button"
               onClick={() => setTags((list) => list.filter((item) => item !== tag))}
-              aria-label={ch.removeTag(t.quickSearch.tagLabels[tag.label] ?? tag.label)}
+              aria-label={ch.removeTag(t.tags[tag.id])}
               className="inline-flex min-h-10 items-center gap-1 rounded-full border-2 border-border bg-primary/10 px-3 text-sm font-semibold text-foreground hover:bg-primary/10"
             >
-              #{t.quickSearch.tagLabels[tag.label] ?? tag.label}
+              #{t.tags[tag.id]}
               <X aria-hidden="true" className="size-4" />
             </button>
           ))}
